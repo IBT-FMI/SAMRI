@@ -1,56 +1,52 @@
-import os                                    # system functions
-import nipype.interfaces.freesurfer as fs    # freesurfer
-import nipype.interfaces.utility as util     # utility
-import nipype.pipeline.engine as pe          # pypeline engine
+import nipype.pipeline.engine as pe				# workflow and node wrappers
+import os										# system functions
+import nipype.interfaces.freesurfer as fs		# freesurfer
+import nipype.interfaces.utility as util		# utility
+import nipype.pipeline.engine as pe				# pypeline engine
+import nipype.interfaces.dcmstack as dcmstack
+from dcmstack.extract import default_extractor
+from nipype.interfaces.nipy.preprocess import FmriRealign4d
+from os import listdir
+from dicom import read_file
 
-def pathfinder(subject, foldername):
-	import os
-	experiment_dir = '/home/chymera/data/export_ME'
-	return os.path.join(experiment_dir, foldername, subject)
+def preproc_workflow(data_dir, workflow_base=".", force_convert=False):
 
-#Specification of the folder where the dicom-files are located at
-experiment_dir = '/home/chymera/data/export_ME'
+	if "dicom" in data_dir:
+		stacker = pe.Node(interface=dcmstack.DcmStack(), name='stack')
+		dicom_files = listdir(data_dir)
+		echo_times=[]
+		for dicom_file in dicom_files:
+			meta = default_extractor(read_file(data_dir+dicom_file, stop_before_pixels=True, force=True))
+			echo_times += [meta["EchoTime"]]
 
-#Specification of a list containing the identifier of each subject
-subjects_list = ['4457','4460','4462']
+		for echo_time in list(set(echo_times)):
+			echo_indices = [i for i, j in enumerate(echo_times) if j == echo_time]
+			stacker.inputs.embed_meta = True
+			# destination_file_name = nii_dir+"/"
+			# stacker.inputs.out_path = destination_file_name
+			# result = stacker.run()
+			# print(result.outputs.out_file)
+			# stacker.inputs.dicom_files = [data_dir+dicom_files[index] for index in echo_indices]
+			stacker.inputs.dicom_files = [data_dir+dicom_files[index] for index in echo_indices]
 
-#Specification of the name of the dicom and output folder
-dicom_dir_name = 'dicom' #if the path to the dicoms is: '~SOMEPATH/experiment/dicom'
-data_dir_name = 'data'   #if the path to the data should be: '~SOMEPATH/experiment/data'
+		# nii_dir = convert_dcm_dir(data_dir)
+	elif "nii" in data_dir:
+		nii_dir = data_dir
+	else:
+		raise RuntimeError("Format of files in path is ambiguous (we determine the format frm the path, and not the extension). Most likely your path contains both 'nii' and 'dicom'.")
 
-#Node: Infosource - we use IdentityInterface to create our own node, to specify
-#                   the list of subjects the pipeline should be executed on
-infosource = pe.Node(interface=util.IdentityInterface(fields=['subject_id']),
-					name="infosource")
-infosource.iterables = ('subject_id', subjects_list)
+	realigner = pe.Node(interface=FmriRealign4d(), name='realign')
+	# realigner.inputs.in_files = 'somefuncrun.nii'
+	realigner.inputs.tr = 1.5
+	# realigner.inputs.in_file = "in_files"
+	realigner.inputs.slice_order = range(0,20)
 
-#Node: DICOMConvert - converts the .dcm files into .nii and moves them into
-#                     the folder "data" with a subject specific subfolder
-dicom2nifti = pe.Node(interface=fs.DICOMConvert(), name="dicom2nifti")
+	workflow = pe.Workflow(name='preproc')
+	workflow.base_dir = workflow_base
+	workflow.connect([
+		(stacker, realigner, [('out_file', 'in_file')])
+		])
+	workflow.run()
 
-dicom2nifti.inputs.base_output_dir = experiment_dir + '/' + data_dir_name
-dicom2nifti.inputs.file_mapping = [('nifti','*.nii'),('info','dicom.txt'),('dti','*dti.bv*')]
-dicom2nifti.inputs.out_type = 'nii'
-dicom2nifti.inputs.subject_dir_template = '%s'
-
-#Node ParseDICOMDIR - for creating a nicer nifti overview textfile
-dcminfo = pe.Node(interface=fs.ParseDICOMDir(), name="dcminfo")
-dcminfo.inputs.sortbyrun = True
-dcminfo.inputs.summarize = True
-dcminfo.inputs.dicom_info_file = 'nifti_overview.txt'
-
-#Initiation of the preparation pipeline
-prepareflow = pe.Workflow(name="prepareflow")
-
-#Define where the workingdir of the all_consuming_workflow should be stored at
-prepareflow.base_dir = experiment_dir + '/workingdir_prepareflow'
-
-#Connect all components
-prepareflow.connect([(infosource, dicom2nifti,[('subject_id', 'subject_id')]),
-					(infosource, dicom2nifti,[(('subject_id', pathfinder, dicom_dir_name),
-											'dicom_dir')]),
-					(infosource, dcminfo,[(('subject_id', pathfinder, dicom_dir_name),
-											'dicom_dir')]),
-					])
-
-prepareflow.run(plugin='MultiProc', plugin_args={'n_procs' : 2})
+if __name__ == "__main__":
+	preproc_workflow("/home/chymera/data2/dc.rs/export_ME/dicom/4459/1/EPI/")

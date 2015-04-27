@@ -21,6 +21,7 @@ def convert_dcm_dir(dicom_dir, multi_epi_check=True):
 			stacker.inputs.embed_meta = True
 			stacker.inputs.dicom_files = [dicom_dir+dicom_files[index] for index in echo_indices]
 			stacker.inputs.out_path = nii_dir+"/"
+			stacker.inputs.out_format = "EPI"+str(echo_time[:2])
 
 	else:
 		stacker.inputs.dicom_files = dicom_dir

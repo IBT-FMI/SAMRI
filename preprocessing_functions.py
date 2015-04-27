@@ -5,7 +5,7 @@ from dicom import read_file
 from os import listdir, path, makedirs
 from shutil import move
 
-def convert_dcm_dir(dicom_dir, multi_epi=False, workaround=True):
+def convert_dcm_dir(dicom_dir, multi_epi=False):
 
 	nii_dir = dicom_dir.replace("dicom", "nii")
 	if not path.exists(nii_dir):
@@ -23,18 +23,10 @@ def convert_dcm_dir(dicom_dir, multi_epi=False, workaround=True):
 			stacker.inputs.embed_meta = True
 			file_name = "EPI"+str(echo_time)[:2]
 			destination_file_name = nii_dir+"/"
-			if workaround:
-				stacker.inputs.dicom_files = [dicom_dir+dicom_files[index] for index in echo_indices]
-				stacker.inputs.out_format = file_name
-			else:
-				stacker.inputs.dicom_files = [dicom_dir+dicom_files[index] for index in echo_indices]
-				stacker.inputs.out_path = destination_file_name
+			stacker.inputs.dicom_files = [dicom_dir+dicom_files[index] for index in echo_indices]
+			stacker.inputs.out_path = destination_file_name
 			result = stacker.run()
-			if workaround:
-				move(result.outputs.out_file, destination_file_name)
-				print(destination_file_name)
-			else:
-				print(result.outputs.out_file)
+			print(result.outputs.out_file)
 
 	else:
 		stacker.inputs.dicom_files = dicom_dir
@@ -46,4 +38,4 @@ def convert_dcm_dir(dicom_dir, multi_epi=False, workaround=True):
 		print(destination_file_name)
 
 if __name__ == "__main__":
-	convert_dcm_dir("/home/chymera/data2/dc.rs/export_ME/dicom/4459/1/EPI/", multi_epi=True, workaround=False)
+	convert_dcm_dir("/home/chymera/data2/dc.rs/export_ME/dicom/4459/1/EPI/", multi_epi=True)

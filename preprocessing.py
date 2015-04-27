@@ -36,10 +36,9 @@ def preproc_workflow(data_dir, workflow_base=".", force_convert=False):
 		raise RuntimeError("Format of files in path is ambiguous (we determine the format frm the path, and not the extension). Most likely your path contains both 'nii' and 'dicom'.")
 
 	realigner = pe.Node(interface=FmriRealign4d(), name='realign')
-	# realigner.inputs.in_files = 'somefuncrun.nii'
 	realigner.inputs.tr = 1.5
-	# realigner.inputs.in_file = "in_files"
-	realigner.inputs.slice_order = range(0,20)
+	realigner.inputs.time_interp = True
+	realigner.inputs.slice_order = range(0,20)[::2]+range(0,20)[1::2]
 
 	workflow = pe.Workflow(name='preproc')
 	workflow.base_dir = workflow_base

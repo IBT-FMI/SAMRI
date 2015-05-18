@@ -3,7 +3,7 @@ from dcmstack.extract import minimal_extractor
 from dicom import read_file
 from os import listdir, path, makedirs
 
-def convert_dcm_to_nii(dicom_dir, d5_key="EchoTime"):
+def dcm_to_nii(dicom_dir, d5_key="EchoTime"):
 	nii_dir = dicom_dir.replace("dicom", "nii")
 	if not path.exists(nii_dir):
 		makedirs(nii_dir)

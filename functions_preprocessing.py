@@ -3,18 +3,18 @@ from dcmstack.extract import minimal_extractor
 from dicom import read_file
 from os import listdir, path, makedirs
 
-def convert_dcm_dir(dicom_dir, multi_epi_check=True):
+def convert_dcm_to_nii(dicom_dir, d5_key="EchoTime"):
 	nii_dir = dicom_dir.replace("dicom", "nii")
-	# if not path.exists(nii_dir):
-		# makedirs(nii_dir)
+	if not path.exists(nii_dir):
+		makedirs(nii_dir)
 	stacker = dcmstack.DcmStack()
 
-	if multi_epi_check:
+	if d5_key:
 		dicom_files = listdir(dicom_dir)
 		echo_times=[]
 		for dicom_file in dicom_files:
 			meta = minimal_extractor(read_file(dicom_dir+dicom_file, stop_before_pixels=True, force=True))
-			echo_times += [float(meta["EchoTime"])]
+			echo_times += [float(meta[d5_key])]
 
 		for echo_time in list(set(echo_times)):
 			echo_indices = [i for i, j in enumerate(echo_times) if j == echo_time]
@@ -22,17 +22,15 @@ def convert_dcm_dir(dicom_dir, multi_epi_check=True):
 			stacker.inputs.dicom_files = [dicom_dir+dicom_files[index] for index in echo_indices]
 			stacker.inputs.out_path = nii_dir+"/"
 			stacker.inputs.out_format = "EPI"+str(echo_time)[:2]
+			result = stacker.run()
 
 	else:
 		stacker.inputs.dicom_files = dicom_dir
-		file_name = "EPI"
-		stacker.inputs.out_format = file_name
-		destination_file_name = nii_dir+"/"+file_name+".nii.gz"
-		move(result.outputs.out_file, destination_file_name)
+		stacker.inputs.out_path = nii_dir+"/"
+		result = stacker.run()
 
-	result = stacker.run()
 	return nii_dir
 
 if __name__ == "__main__":
 	for nr in [4460]:
-		convert_dcm_dir("/home/chymera/data/dc.rs/export_ME/dicom/"+str(nr)+"/1/EPI/")
+		convert_dcm_to_nifti("/home/chymera/data/dc.rs/export_ME/dicom/"+str(nr)+"/1/EPI/")

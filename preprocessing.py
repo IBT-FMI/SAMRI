@@ -15,7 +15,7 @@ from functions_preprocessing import *
 dcm_to_nii_imports = ["import nipype.interfaces.dcmstack as dcmstack",
 					"from dcmstack.extract import minimal_extractor",
 					"from dicom import read_file",
-					"from os import listdir, path, makedirs"]
+					"from os import listdir, path, makedirs, getcwd"]
 
 def preproc_workflow(data_dir, workflow_base=".", force_convert=False):
 
@@ -38,7 +38,7 @@ def preproc_workflow(data_dir, workflow_base=".", force_convert=False):
 	workflow.connect([
 		(stacker, realigner, [('out_file', 'in_file')])
 		])
-	workflow.run()
+	workflow.run(plugin="MultiProc")
 
 if __name__ == "__main__":
-	preproc_workflow("/home/chymera/data/dc.rs/export_ME/dicom/4459/1/EPI/")
+	preproc_workflow("/home/chymera/data/dc.rs/export_ME/dicom/4459/1/EPI/", workflow_base="/home/chymera/data/dc.rs/export_ME/")

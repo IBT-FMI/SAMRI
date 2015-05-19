@@ -47,6 +47,6 @@ def check_dicom_header(filesdir, check_value=False, given_value=False, firstonly
 			break
 
 if __name__ == "__main__":
-	# read_header_dicom("/home/chymera/data2/dc.rs/export_ME/dicom/4459/1/EPI/")
-	check_dicom_header("/home/chymera/data2/dc.rs/export_ME/dicom/4459/1/EPI/", firstonly=True)
-	# read_header_nii("/home/chymera/data2/dc.rs/export_ME/nii/4459/1/EPI/")
+	# read_header_dicom("/home/chymera/data/dc.rs/export_ME/dicom/4459/1/EPI/")
+	check_dicom_header("/home/chymera/data/dc.rs/export_ME/dicom/4459/1/EPI/", firstonly=True)
+	# read_header_nii("/home/chymera/data/dc.rs/export_ME/nii/4459/1/EPI/")

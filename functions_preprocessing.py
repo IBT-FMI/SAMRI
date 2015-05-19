@@ -1,12 +1,15 @@
 import nipype.interfaces.dcmstack as dcmstack
 from dcmstack.extract import minimal_extractor
 from dicom import read_file
-from os import listdir, path, makedirs
+from os import listdir, path, makedirs, getcwd
 
-def dcm_to_nii(dicom_dir, d5_key="EchoTime"):
-	nii_dir = dicom_dir.replace("dicom", "nii")
-	if not path.exists(nii_dir):
-		makedirs(nii_dir)
+def dcm_to_nii(dicom_dir, d5_key="EchoTime", node=True):
+	if not node:
+		nii_dir = dicom_dir.replace("dicom", "nii")
+		if not path.exists(nii_dir):
+			makedirs(nii_dir)
+	else:
+		nii_dir = getcwd()
 	stacker = dcmstack.DcmStack()
 
 	if d5_key:
@@ -29,7 +32,7 @@ def dcm_to_nii(dicom_dir, d5_key="EchoTime"):
 		stacker.inputs.out_path = nii_dir+"/"
 		result = stacker.run()
 
-	return nii_dir
+	return [nii_dir+nii_file for nii_file in listdir(nii_dir)]
 
 if __name__ == "__main__":
 	for nr in [4460]:

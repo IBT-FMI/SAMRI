@@ -20,7 +20,7 @@ class DcmToNii(BaseInterface):
 		from functions_preprocessing import dcm_to_nii
 		dcm_dir = self.inputs.dcm_dir
 		group_by = self.inputs.group_by
-		dcm_to_nii(dcm_dir, group_by)
+		self.result = dcm_to_nii(dcm_dir, group_by, node=True)
 		return runtime
 
 	def _list_outputs(self):

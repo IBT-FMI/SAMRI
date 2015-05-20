@@ -3,7 +3,6 @@ import os										# system functions
 import nipype.interfaces.freesurfer as fs		# freesurfer
 import nipype.interfaces.utility as util		# utility
 import nipype.pipeline.engine as pe				# pypeline engine
-from nipype.interfaces.utility import Function	# wrap your own functions
 import nipype.interfaces.dcmstack as dcmstack
 from dcmstack.extract import default_extractor
 from nipype.interfaces.nipy.preprocess import FmriRealign4d
@@ -13,18 +12,7 @@ import numpy as np
 from functions_preprocessing import *
 from extra_interfaces import DcmToNii
 
-dcm_to_nii_imports = ["import nipype.interfaces.dcmstack as dcmstack",
-					"from dcmstack.extract import minimal_extractor",
-					"from dicom import read_file",
-					"from os import listdir, path, makedirs, getcwd"]
-
 def preproc_workflow(data_dir, workflow_base=".", force_convert=False):
-
-	dcm_to_nii_function = Function(input_names=["dicom_dir", "d5_key"],
-										output_names=['out_file'],
-										function=dcm_to_nii,
-										imports=dcm_to_nii_imports)
-
 	stacker = pe.Node(name="dcm_to_nii", interface=DcmToNii())
 	stacker.inputs.dcm_dir = data_dir
 	stacker.inputs.group_by = "EchoTime"
@@ -36,6 +24,7 @@ def preproc_workflow(data_dir, workflow_base=".", force_convert=False):
 
 	workflow = pe.Workflow(name='preproc')
 	workflow.base_dir = workflow_base
+
 	workflow.connect([
 		(stacker, realigner, [('nii_files', 'in_file')])
 		])

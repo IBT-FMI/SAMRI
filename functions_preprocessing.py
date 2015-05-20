@@ -4,12 +4,12 @@ from dicom import read_file
 from os import listdir, path, makedirs, getcwd
 
 def dcm_to_nii(dcm_dir, d5_key="EchoTime", node=False):
-	if not node:
+	if node:
+		nii_dir = getcwd()
+	else:
 		nii_dir = dcm_dir.replace("dicom", "nii")
 		if not path.exists(nii_dir):
 			makedirs(nii_dir)
-	else:
-		nii_dir = getcwd()
 	stacker = dcmstack.DcmStack()
 
 	results=[]

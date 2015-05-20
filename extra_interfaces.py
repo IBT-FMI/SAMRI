@@ -25,7 +25,5 @@ class DcmToNii(BaseInterface):
 
 	def _list_outputs(self):
 		outputs = self._outputs().get()
-		print outputs
-		print self.result
 		outputs["nii_files"] = self.result
 		return outputs

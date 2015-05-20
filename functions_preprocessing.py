@@ -3,7 +3,7 @@ from dcmstack.extract import minimal_extractor
 from dicom import read_file
 from os import listdir, path, makedirs, getcwd
 
-def dcm_to_nii(dcm_dir, d5_key="EchoTime", node=False):
+def dcm_to_nii(dcm_dir, group_by="EchoTime", node=False):
 	if node:
 		nii_dir = getcwd()
 	else:
@@ -13,12 +13,12 @@ def dcm_to_nii(dcm_dir, d5_key="EchoTime", node=False):
 	stacker = dcmstack.DcmStack()
 
 	results=[]
-	if d5_key:
+	if group_by:
 		dicom_files = listdir(dcm_dir)
 		echo_times=[]
 		for dicom_file in dicom_files:
 			meta = minimal_extractor(read_file(dcm_dir+dicom_file, stop_before_pixels=True, force=True))
-			echo_times += [float(meta[d5_key])]
+			echo_times += [float(meta[group_by])]
 
 		for echo_time in list(set(echo_times)):
 			echo_indices = [i for i, j in enumerate(echo_times) if j == echo_time]
@@ -28,7 +28,6 @@ def dcm_to_nii(dcm_dir, d5_key="EchoTime", node=False):
 			stacker.inputs.out_format = "EPI"+str(echo_time)[:2]
 			result = stacker.run()
 			results += [result.outputs.out_file]
-			print results
 
 	else:
 		stacker.inputs.dicom_files = dcm_dir

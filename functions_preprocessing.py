@@ -26,12 +26,15 @@ def dcm_to_nii(dcm_dir, d5_key="EchoTime", node=False):
 			stacker.inputs.dicom_files = [dcm_dir+dicom_files[index] for index in echo_indices]
 			stacker.inputs.out_path = nii_dir+"/"
 			stacker.inputs.out_format = "EPI"+str(echo_time)[:2]
-			results += [stacker.run()]
+			result = stacker.run()
+			results += [result.outputs.out_file]
+			print results
 
 	else:
 		stacker.inputs.dicom_files = dcm_dir
 		stacker.inputs.out_path = nii_dir+"/"
-		results += [stacker.run()]
+		result = stacker.run()
+		results += [result.outputs.out_file]
 
 	return results
 

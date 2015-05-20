@@ -14,7 +14,7 @@ from extra_interfaces import DcmToNii
 
 def preproc_workflow(data_dir, workflow_base=".", force_convert=False):
 	stacker = pe.Node(name="dcm_to_nii", interface=DcmToNii())
-	stacker.inputs.dcm_dir = data_dir
+	stacker.iterables = ("dcm_dir", data_dir)
 	stacker.inputs.group_by = "EchoTime"
 
 	realigner = pe.Node(interface=FmriRealign4d(), name='realign')
@@ -31,4 +31,6 @@ def preproc_workflow(data_dir, workflow_base=".", force_convert=False):
 	workflow.run(plugin="MultiProc")
 
 if __name__ == "__main__":
-	preproc_workflow("/home/chymera/data/dc.rs/export_ME/dicom/4459/1/EPI/", workflow_base="/home/chymera/data/dc.rs/export_ME/")
+	IDs=[4457,4459,4460]
+	data_dirs=["/home/chymera/data/dc.rs/export_ME/dicom/"+str(ID)+"/1/EPI/" for ID in IDs]
+	preproc_workflow(data_dirs, workflow_base="/home/chymera/data/dc.rs/export_ME/")

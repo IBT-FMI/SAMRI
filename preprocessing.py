@@ -11,6 +11,7 @@ from os import listdir
 from dicom import read_file
 import numpy as np
 from functions_preprocessing import *
+from extra_interfaces import DcmToNii
 
 dcm_to_nii_imports = ["import nipype.interfaces.dcmstack as dcmstack",
 					"from dcmstack.extract import minimal_extractor",
@@ -24,9 +25,9 @@ def preproc_workflow(data_dir, workflow_base=".", force_convert=False):
 										function=dcm_to_nii,
 										imports=dcm_to_nii_imports)
 
-	stacker = pe.Node(name="dcm_to_nii", interface=dcm_to_nii_function)
-	stacker.inputs.dicom_dir = data_dir
-	stacker.inputs.d5_key = "EchoTime"
+	stacker = pe.Node(name="dcm_to_nii", interface=DcmToNii())
+	stacker.inputs.dcm_dir = data_dir
+	stacker.inputs.group_by = "EchoTime"
 
 	realigner = pe.Node(interface=FmriRealign4d(), name='realign')
 	realigner.inputs.tr = 1.5
@@ -36,7 +37,7 @@ def preproc_workflow(data_dir, workflow_base=".", force_convert=False):
 	workflow = pe.Workflow(name='preproc')
 	workflow.base_dir = workflow_base
 	workflow.connect([
-		(stacker, realigner, [('out_file', 'in_file')])
+		(stacker, realigner, [('nii_files', 'in_file')])
 		])
 	workflow.run(plugin="MultiProc")
 

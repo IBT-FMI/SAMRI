@@ -30,7 +30,7 @@ def preproc_workflow(data_dir, workflow_base=".", force_convert=False, source_pa
 
 	#define the structure of the data folders and files.
 	#Each '%s' will later be filled by a template argument.
-	datasource.inputs.template = 'source_pattern'
+	datasource.inputs.template = source_pattern
 
 	#First way: define the arguments for the template '%s/%s.nii' for each field individual
 	datasource.inputs.template_args['func'] = [['subject_id', 'EPI']]
@@ -38,16 +38,8 @@ def preproc_workflow(data_dir, workflow_base=".", force_convert=False, source_pa
 
 	datasource.inputs.sort_filelist = True
 
-	#initiate the meta workflow
-	metaflow = pe.Workflow(name='metaflow')
-
-	#connect infosource, datasource and inputnode to each other
-	metaflow.connect([(infosource, datasource,[('subject_id','subject_id')])])
-	metaflow.run(plugin="MultiProc")
-
-	return
 	stacker = pe.Node(name="dcm_to_nii", interface=DcmToNii())
-	stacker.iterables = ("dcm_dir", data_dir)
+	# stacker.iterables = ("dcm_dir", data_dirk)
 	stacker.inputs.group_by = "EchoTime"
 
 	realigner = pe.Node(interface=FmriRealign4d(), name='realign')
@@ -59,8 +51,11 @@ def preproc_workflow(data_dir, workflow_base=".", force_convert=False, source_pa
 	workflow.base_dir = workflow_base
 
 	workflow.connect([
+		(infosource, datasource,[('subject_id','subject_id')]),
+		(datasource, stacker,[(('func', 'struct'),'dcm_dir')]),
 		(stacker, realigner, [('nii_files', 'in_file')])
 		])
+	workflow.write_graph()
 	workflow.run(plugin="MultiProc")
 
 if __name__ == "__main__":

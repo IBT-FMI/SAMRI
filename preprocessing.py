@@ -1,10 +1,6 @@
-import nipype.pipeline.engine as pe				# workflow and node wrappers
-import os										# system functions
-import nipype.interfaces.freesurfer as fs		# freesurfer
 import nipype.interfaces.utility as util		# utility
 import nipype.pipeline.engine as pe				# pypeline engine
 from nipype.interfaces.nipy.preprocess import FmriRealign4d
-from os import listdir
 from extra_interfaces import DcmToNii
 import nipype.interfaces.io as nio
 
@@ -55,6 +51,8 @@ def preproc_workflow(data_dir, workflow_base=".", force_convert=False, source_pa
 		(datasource, stacker,[(('func', 'struct'),'dcm_dir')]),
 		(stacker, realigner, [('nii_files', 'in_file')])
 		])
+	print datasource.outputs
+	print datasource.outputs.func
 	workflow.write_graph()
 	workflow.run(plugin="MultiProc")
 

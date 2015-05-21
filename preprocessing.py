@@ -35,7 +35,7 @@ def preproc_workflow(data_dir, workflow_base=".", force_convert=False, source_pa
 	datasource.inputs.sort_filelist = True
 
 	stacker = pe.Node(name="dcm_to_nii", interface=DcmToNii())
-	stacker.iterables = ("dcm_dir", data_dir)
+	# stacker.iterables = ("dcm_dir", data_dir)
 	stacker.inputs.group_by = "EchoTime"
 
 	realigner = pe.Node(interface=FmriRealign4d(), name='realign')
@@ -47,7 +47,9 @@ def preproc_workflow(data_dir, workflow_base=".", force_convert=False, source_pa
 	workflow.base_dir = workflow_base
 
 	workflow.connect([
-		(stacker, realigner, [('nii_files', 'in_file')])
+		(infosource, datasource, [('subject_id', 'subject_id')]),
+		(datasource, stacker, [('func', 'dcm_dir')]),
+		(stacker, realigner, [('nii_files', 'in_file')]),
 		])
 	print datasource.outputs
 	print datasource.outputs.func

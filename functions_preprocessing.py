@@ -10,6 +10,7 @@ def dcm_to_nii(dcm_dir, group_by="EchoTime", node=False):
 		nii_dir = dcm_dir.replace("dicom", "nii")
 		if not path.exists(nii_dir):
 			makedirs(nii_dir)
+	dcm_dir = dcm_dir+"/"
 	stacker = dcmstack.DcmStack()
 
 	results=[]

@@ -53,11 +53,12 @@ def preproc_workflow(data_dir, workflow_base=".", force_convert=False, source_pa
 		])
 	print datasource.outputs
 	print datasource.outputs.func
+	print datasource.outputs.struct
 	workflow.write_graph()
 	workflow.run(plugin="MultiProc")
 
 if __name__ == "__main__":
-	IDs=[4457,4459,4460]
+	IDs=[4457,4459]
 	data_dirs=["/home/chymera/data/dc.rs/export_ME/dicom/"+str(ID)+"/1/EPI/" for ID in IDs]
 	source_pattern="/home/chymera/data/dc.rs/export_ME/dicom/%s/1/%s/"
 

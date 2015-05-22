@@ -17,7 +17,7 @@ class DcmToNii(BaseInterface):
 	output_spec = DcmToNiiOutputSpec
 
 	def _run_interface(self, runtime):
-		from functions_preprocessing import dcm_to_nii
+		from extra_functions import dcm_to_nii
 		dcm_dir = self.inputs.dcm_dir
 		group_by = self.inputs.group_by
 		self.result = dcm_to_nii(dcm_dir, group_by, node=True)

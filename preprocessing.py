@@ -4,7 +4,6 @@ from nipype.interfaces.nipy.preprocess import FmriRealign4d
 from extra_interfaces import DcmToNii
 from nipype.interfaces.dcmstack import DcmStack
 import nipype.interfaces.io as nio
-from copy import deepcopy
 
 def preproc_workflow(data_dir, workflow_base=".", force_convert=False, source_pattern="", IDs=""):
 	# make IDs strings
@@ -19,20 +18,15 @@ def preproc_workflow(data_dir, workflow_base=".", force_convert=False, source_pa
 	#initiate the DataGrabber node with the infield: 'subject_id'
 	#and the outfield: 'func' and 'struct'
 	datasource = pe.Node(interface=nio.DataGrabber(infields=['subject_id'], outfields=['func', 'struct']), name = 'datasource')
-	#to specify the location of the experiment folder
-	# datasource.inputs.base_directory = '~/experiment_folder'
-	#define the structure of the data folders and files.
-	#Each '%s' will later be filled by a template argument.
 	datasource.inputs.template = source_pattern
 	#First way: define the arguments for the template '%s/%s.nii' for each field individual
 	datasource.inputs.template_args['func'] = [['subject_id', 'EPI']]
 	datasource.inputs.template_args['struct'] = [['subject_id','anatomical']]
 	datasource.inputs.sort_filelist = True
 
-	struct_stacker = pe.Node(name="struct_stack", interface=DcmStack())
-
-	stacker = pe.Node(name="dcm_to_nii", interface=DcmToNii())
+	stacker = pe.Node(interface=DcmToNii(), name="dcm_to_nii")
 	stacker.inputs.group_by = "EchoTime"
+	struct_stacker = pe.Node(interface=DcmStack(), name="struct_stack")
 
 	realigner = pe.Node(interface=FmriRealign4d(), name='realign')
 	realigner.inputs.tr = 1.5
@@ -43,7 +37,7 @@ def preproc_workflow(data_dir, workflow_base=".", force_convert=False, source_pa
 	struct_realigner.inputs.time_interp = True
 	struct_realigner.inputs.slice_order = range(0,20)[::2]+range(0,20)[1::2]
 
-	workflow = pe.Workflow(name='preproc')
+	workflow = pe.Workflow(name='Preprocessing')
 	workflow.base_dir = workflow_base
 
 	workflow.connect([

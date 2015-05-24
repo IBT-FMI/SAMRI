@@ -33,7 +33,6 @@ def preproc_workflow(workflow_base=".", force_convert=False, source_pattern="", 
 	realigner.inputs.tr = 1.5
 	realigner.inputs.time_interp = True
 	realigner.inputs.slice_order = range(0,20)[::2]+range(0,20)[1::2]
-	struct_realigner = pe.Node(interface=SpaceTimeRealigner(), name='realign_structural')
 
 	workflow = pe.Workflow(name='Preprocessing')
 	workflow.base_dir = workflow_base
@@ -43,7 +42,6 @@ def preproc_workflow(workflow_base=".", force_convert=False, source_pattern="", 
 		(datasource, stacker, [('func', 'dcm_dir')]),
 		(datasource, struct_stacker, [('struct', 'dicom_files')]),
 		(stacker, realigner, [('nii_files', 'in_file')]),
-		(struct_stacker, struct_realigner, [('out_file', 'in_file')]),
 		])
 	print datasource.outputs
 	print datasource.outputs.func

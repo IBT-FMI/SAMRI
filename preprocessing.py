@@ -29,7 +29,7 @@ def preproc_workflow(workflow_base=".", force_convert=False, source_pattern="", 
 	stacker.inputs.group_by = "EchoTime"
 	struct_stacker = pe.Node(interface=DcmStack(), name="stack_convert_structural")
 
-	realigner = pe.Node(interface=FmriRealign4d(), name='ralign_functional')
+	realigner = pe.Node(interface=FmriRealign4d(), name='realign_functional')
 	realigner.inputs.tr = 1.5
 	realigner.inputs.time_interp = True
 	realigner.inputs.slice_order = range(0,20)[::2]+range(0,20)[1::2]

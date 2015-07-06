@@ -51,6 +51,6 @@ def preproc_workflow(workflow_base=".", force_convert=False, source_pattern="", 
 
 if __name__ == "__main__":
 	IDs=[4457,4459]
-	source_pattern="/home/chymera/data/dc.rs/export_ME/dicom/%s/1/%s/"
+	source_pattern="/mnt/data7/NIdata/dc.rs/export_ME/dicom/%s/1/%s/"
 
-	preproc_workflow(workflow_base="/home/chymera/data/dc.rs/export_ME/", source_pattern=source_pattern, IDs=IDs)
+	preproc_workflow(workflow_base="/home/chymera/NIdata/dc.rs/export_ME/", source_pattern=source_pattern, IDs=IDs)

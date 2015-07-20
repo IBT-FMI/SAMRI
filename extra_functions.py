@@ -36,7 +36,7 @@ def dcm_to_nii(dcm_dir, group_by="EchoTime", node=False):
 		result = stacker.run()
 		results += [result.outputs.out_file]
 
-	return results
+	return results, echo_times
 
 if __name__ == "__main__":
 	for nr in [4460]:

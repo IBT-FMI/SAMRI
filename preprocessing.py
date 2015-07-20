@@ -18,7 +18,7 @@ def preproc_workflow(workflow_base=".", force_convert=False, source_pattern="", 
 
 	#initiate the DataGrabber node with the infield: 'subject_id'
 	#and the outfield: 'func' and 'struct'
-	datasource = pe.Node(interface=nio.DataGrabber(infields=['subject_id'], outfields=['func', 'struct']), name = 'data_source')
+	datasource = pe.Node(interface=nio.DataGrabber(infields=['subject_id'], outfields=['func', 'struct']), name='data_source')
 	datasource.inputs.template = source_pattern
 	#First way: define the arguments for the template '%s/%s.nii' for each field individual
 	datasource.inputs.template_args['func'] = [['subject_id', 'EPI']]
@@ -37,6 +37,10 @@ def preproc_workflow(workflow_base=".", force_convert=False, source_pattern="", 
 		(datasource, stacker, [('func', 'dcm_dir')]),
 		(datasource, struct_stacker, [('struct', 'dicom_files')]),
 		])
+
+	print stacker.outputs.echo_times
+	print stacker.outputs.nii_files
+
 	workflow.write_graph()
 	workflow.run(plugin="MultiProc")
 

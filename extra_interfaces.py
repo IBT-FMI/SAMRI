@@ -11,6 +11,7 @@ class DcmToNiiInputSpec(BaseInterfaceInputSpec):
 
 class DcmToNiiOutputSpec(TraitedSpec):
 	nii_files = traits.List(File(exists=True))
+	echo_times = traits.List(traits.Str(exists=True))
 
 class DcmToNii(BaseInterface):
 	input_spec = DcmToNiiInputSpec
@@ -26,7 +27,7 @@ class DcmToNii(BaseInterface):
 	def _list_outputs(self):
 		outputs = self._outputs().get()
 		outputs["nii_files"] = self.result[0]
-		outputs["nii_files"] = self.result[1]
+		outputs["echo_times"] = self.result[1]
 		return outputs
 
 

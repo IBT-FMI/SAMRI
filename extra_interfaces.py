@@ -11,7 +11,7 @@ class DcmToNiiInputSpec(BaseInterfaceInputSpec):
 
 class DcmToNiiOutputSpec(TraitedSpec):
 	nii_files = traits.List(File(exists=True))
-	echo_times = traits.List(traits.Str(exists=True))
+	echo_times = traits.List(traits.Float(exists=True))
 
 class DcmToNii(BaseInterface):
 	input_spec = DcmToNiiInputSpec

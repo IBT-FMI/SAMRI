@@ -21,7 +21,8 @@ def dcm_to_nii(dcm_dir, group_by="EchoTime", node=False):
 			meta = minimal_extractor(read_file(dcm_dir+dicom_file, stop_before_pixels=True, force=True))
 			echo_times += [float(meta[group_by])]
 
-		for echo_time in list(set(echo_times)):
+		echo_time_set = list(set(echo_times))
+		for echo_time in echo_time_set:
 			echo_indices = [i for i, j in enumerate(echo_times) if j == echo_time]
 			stacker.inputs.embed_meta = True
 			stacker.inputs.dicom_files = [dcm_dir+dicom_files[index] for index in echo_indices]
@@ -36,7 +37,7 @@ def dcm_to_nii(dcm_dir, group_by="EchoTime", node=False):
 		result = stacker.run()
 		results += [result.outputs.out_file]
 
-	return results, echo_times
+	return results, echo_time_set
 
 if __name__ == "__main__":
 	for nr in [4460]:

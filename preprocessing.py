@@ -2,7 +2,7 @@ import nipype.interfaces.utility as util		# utility
 import nipype.pipeline.engine as pe				# pypeline engine
 from nipype.interfaces.nipy.preprocess import FmriRealign4d
 from nipype.interfaces.nipy import SpaceTimeRealigner
-from extra_interfaces import DcmToNii
+from extra_interfaces import DcmToNii, MEICA, VoxelResize
 from nipype.interfaces.dcmstack import DcmStack
 import nipype.interfaces.io as nio
 
@@ -27,7 +27,16 @@ def preproc_workflow(workflow_base=".", force_convert=False, source_pattern="", 
 
 	stacker = pe.Node(interface=DcmToNii(), name="stack_convert_functional")
 	stacker.inputs.group_by = "EchoTime"
+
 	struct_stacker = pe.Node(interface=DcmStack(), name="stack_convert_structural")
+
+	voxelresize = pe.Node(interface=VoxelResize(), name="voxel_resize")
+	voxelresize.inputs.resize_factor = 10
+
+	meica = pe.Node(interface=MEICA(), name="multi_echo_ICA")
+	meica.inputs.TR = 1.5
+	meica.inputs.tpattern = "altminus"
+	meica.inputs.cpus = 3
 
 	workflow = pe.Workflow(name='Preprocessing')
 	workflow.base_dir = workflow_base
@@ -35,11 +44,11 @@ def preproc_workflow(workflow_base=".", force_convert=False, source_pattern="", 
 	workflow.connect([
 		(infosource, datasource, [('subject_id', 'subject_id')]),
 		(datasource, stacker, [('func', 'dcm_dir')]),
+		(stacker, voxelresize, [('nii_files', 'nii_files')]),
 		(datasource, struct_stacker, [('struct', 'dicom_files')]),
+		(stacker, meica, [('echo_times', 'echo_times')]),
+		(voxelresize, meica, [('resized_files', 'echo_files')]),
 		])
-
-	print stacker.outputs.echo_times
-	print stacker.outputs.nii_files
 
 	workflow.write_graph()
 	workflow.run(plugin="MultiProc")

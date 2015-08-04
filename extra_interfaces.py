@@ -30,6 +30,36 @@ class DcmToNii(BaseInterface):
 		outputs["echo_times"] = self.result[1]
 		return outputs
 
+class VoxelResizeInputSpec(BaseInterfaceInputSpec):
+	nii_files = traits.List(File(exists=True, mandatory=True))
+	resize_factor = traits.Int(10, usedefault=True, desc="Factor by which to multiply the voxel size in the header")
+
+class VoxelResizeOutputSpec(TraitedSpec):
+	resized_files = traits.List(File(exists=True))
+
+class VoxelResize(BaseInterface):
+	input_spec = VoxelResizeInputSpec
+	output_spec = VoxelResizeOutputSpec
+
+	def _run_interface(self, runtime):
+		import nibabel as nb
+		nii_files = self.inputs.nii_files
+		resize_factor = self.inputs.resize_factor
+
+		self.result = []
+		for nii_file in nii_files:
+			nii_img = nb.load(nii_file)
+			nii_img.header["pixdim"][1:4] = nii_img.header["pixdim"][1:4]*resize_factor
+
+			_, fname = os.path.split(nii_file)
+			nii_img.to_filename(fname)
+			self.result.append(os.path.abspath(fname))
+		return runtime
+
+	def _list_outputs(self):
+		outputs = self._outputs().get()
+		outputs["resized_files"] = self.result
+		return outputs
 
 class MEICAInputSpec(CommandLineInputSpec):
 	echo_files = traits.List(File(exists=True), mandatory=True, position=0, argstr="-d %s", desc="4D files, for each echo time (called DSINPUTS by meica.py)")

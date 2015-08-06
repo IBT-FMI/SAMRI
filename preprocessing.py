@@ -50,7 +50,7 @@ def preproc_workflow(workflow_base=".", force_convert=False, source_pattern="", 
 		(voxelresize, meica, [('resized_files', 'echo_files')]),
 		])
 
-	workflow.write_graph()
+	workflow.write_graph(graph2use="orig")
 	workflow.run(plugin="MultiProc")
 
 if __name__ == "__main__":

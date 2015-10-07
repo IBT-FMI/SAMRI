@@ -32,7 +32,7 @@ class DcmToNii(BaseInterface):
 
 class VoxelResizeInputSpec(BaseInterfaceInputSpec):
 	nii_files = traits.List(File(exists=True, mandatory=True))
-	resize_factor = traits.Int(10, usedefault=True, desc="Factor by which to multiply the voxel size in the header")
+	resize_factors = traits.List(traits.Int([10,10,10], usedefault=True, desc="Factor by which to multiply the voxel size in the header"))
 
 class VoxelResizeOutputSpec(TraitedSpec):
 	resized_files = traits.List(File(exists=True))
@@ -44,12 +44,26 @@ class VoxelResize(BaseInterface):
 	def _run_interface(self, runtime):
 		import nibabel as nb
 		nii_files = self.inputs.nii_files
-		resize_factor = self.inputs.resize_factor
+		resize_factors = self.inputs.resize_factors
 
 		self.result = []
 		for nii_file in nii_files:
 			nii_img = nb.load(nii_file)
-			nii_img.header["pixdim"][1:4] = nii_img.header["pixdim"][1:4]*resize_factor
+			aff = nii_img.affine
+			# take original image affine, and scale the voxel size and first voxel coordinates for each dimension
+			aff[0,0] = aff[0,0]*resize_factors[0]
+			aff[0,3] = aff[0,3]*resize_factors[0]
+			aff[1,1] = aff[1,1]*resize_factors[1]
+			aff[1,3] = aff[1,3]*resize_factors[1]
+			aff[2,2] = aff[2,2]*resize_factors[2]
+			aff[2,3] = aff[2,3]*resize_factors[2]
+			#apply the affine
+			nii_img.set_sform(aff)
+			nii_img.set_qform(aff)
+
+			#set the sform and qform codes to “scanner” (other settings will lead to AFNI/meica.py assuming talairach space)
+			nii_img.header["qform_code"] = 1
+			nii_img.header["sform_code"] = 1
 
 			_, fname = os.path.split(nii_file)
 			nii_img.to_filename(fname)

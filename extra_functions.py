@@ -1,4 +1,5 @@
 import nipype.interfaces.dcmstack as dcmstack
+import nibabel as nb
 from dcmstack.extract import minimal_extractor
 from dicom import read_file
 from os import listdir, path, makedirs, getcwd
@@ -38,6 +39,22 @@ def dcm_to_nii(dcm_dir, group_by="EchoTime", node=False):
 		results += [result.outputs.out_file]
 
 	return results, echo_time_set
+
+def print_tags(nii_file):
+	nii_img = nb.load(nii_file)
+	print nii_img.header
+
+def edit_tags(nii_files):
+	for nii_file in nii_files:
+		nii_img = nb.load(nii_file)
+		nii_img.header["pixdim"][1:4] = nii_img.header["pixdim"][1:4]*10
+		nii_img.header["pixdim"][4] = 1
+		nii_img.header["pixdim"][4] = 1.5
+		nii_img.header["xyzt_units"] = 0
+		nii_img.header["xyzt_units"] = 10
+		nii_img.header["dim_info"] = 0
+		print nii_img.header
+
 
 if __name__ == "__main__":
 	for nr in [4460]:

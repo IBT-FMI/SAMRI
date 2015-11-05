@@ -5,6 +5,26 @@ import nibabel as nb
 import numpy as np
 import os
 
+class Bru2NiiInputSpec(CommandLineInputSpec):
+	bru_dir = File(exists=True, argstr="-a%s", desc='ex: -a mprage.nii.gz  Anatomical dataset (optional)')
+	group_by = traits.Str(desc='everything below this value will be set to zero', mandatory=False)
+	actual_size = traits.Bool(True, usedefault=False, argstr='-a', desc="Keep actual size - otherwise x10 scale so animals match human.")
+	actual_size = traits.Bool(True, usedefault=False, argstr='-f', desc="Force conversion of localizers images (multiple slice orientations)")
+	output_filename = traits.Str(argstr="-o %s", desc="Output filename ('.nii' will be appended)")
+
+class Bru2NiiOutputSpec(TraitedSpec):
+	nii_file = File(exists=True)
+
+class Bru2Nii(CommandLine):
+	input_spec = Bru2NiiInputSpec
+	output_spec = Bru2NiiOutputSpec
+	_cmd = "Bru2"
+
+def _list_outputs(self):
+	outputs = self._outputs().get()
+	outputs["nii_files"] = self.result
+	return outputs
+
 class DcmToNiiInputSpec(BaseInterfaceInputSpec):
 	dcm_dir = Directory(exists=True, mandatory=True)
 	group_by = traits.Str(desc='everything below this value will be set to zero', mandatory=False)

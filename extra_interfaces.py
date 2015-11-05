@@ -5,19 +5,19 @@ import nibabel as nb
 import numpy as np
 import os
 
-class Bru2NiiInputSpec(CommandLineInputSpec):
-	bru_dir = File(exists=True, argstr="-a%s", desc='ex: -a mprage.nii.gz  Anatomical dataset (optional)')
+class Bru2InputSpec(CommandLineInputSpec):
+	input_dir = File(desc = "Input Directory", exists=True, mandatory=True, position = 0, argstr="%s")
 	group_by = traits.Str(desc='everything below this value will be set to zero', mandatory=False)
-	actual_size = traits.Bool(True, usedefault=False, argstr='-a', desc="Keep actual size - otherwise x10 scale so animals match human.")
-	actual_size = traits.Bool(True, usedefault=False, argstr='-f', desc="Force conversion of localizers images (multiple slice orientations)")
+	actual_size = traits.Bool(argstr='-a', desc="Keep actual size - otherwise x10 scale so animals match human.")
+	actual_size = traits.Bool(argstr='-f', desc="Force conversion of localizers images (multiple slice orientations)")
 	output_filename = traits.Str(argstr="-o %s", desc="Output filename ('.nii' will be appended)")
 
-class Bru2NiiOutputSpec(TraitedSpec):
+class Bru2OutputSpec(TraitedSpec):
 	nii_file = File(exists=True)
 
-class Bru2Nii(CommandLine):
-	input_spec = Bru2NiiInputSpec
-	output_spec = Bru2NiiOutputSpec
+class Bru2(CommandLine):
+	input_spec = Bru2InputSpec
+	output_spec = Bru2OutputSpec
 	_cmd = "Bru2"
 
 def _list_outputs(self):

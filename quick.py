@@ -1,9 +1,9 @@
 import nipype.pipeline.engine as pe				# pypeline engine
 from extra_interfaces import Bru2
 
-def quick_melodic(workflow_base=".", series_directory):
+def quick_melodic(workflow_base=".", series_dir):
 	Bru2_converter = pe.Node(interface=Bru2(), name="convert_resize")
-	Bru2_converter.inputs.input_dir = series_directory
+	Bru2_converter.inputs.input_dir = series_dir
 
 	melodic = pe.Node(interface=MELODIC(), name="MELODIC")
 	melodic.report = True
@@ -16,6 +16,5 @@ def quick_melodic(workflow_base=".", series_directory):
 	workflow.run(plugin="MultiProc")
 
 if __name__ == "__main__":
-	IDs=[4457,4459]
-	source_pattern="~/NIdata/ofM.dr/20151027_141609_4011_ofM_1_1/16"
-	preproc_workflow(workflow_base="/home/chymera/NIdata/export_ME/", source_pattern=source_pattern, IDs=IDs)
+	series_dir="~/NIdata/ofM.dr/20151027_141609_4011_ofM_1_1/16"
+	preproc_workflow(workflow_base="~/NIdata/ofM.dr/", series_dir=series_dir)

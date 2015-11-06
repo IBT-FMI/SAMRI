@@ -60,6 +60,35 @@ class DcmToNii(BaseInterface):
 		outputs["echo_times"] = self.result[1]
 		return outputs
 
+class FindScanInputSpec(BaseInterfaceInputSpec):
+	scans_directory = Directory(exists=True, mandatory=True)
+	query = traits.Str(desc='what query to look for', mandatory=True)
+	query_file = traits.Str(desc='what fie to look in to', mandatory=True)
+
+class FindScanOutputSpec(TraitedSpec):
+	positive_scans = traits.List(File(exists=True))
+class FindScan(BaseInterface):
+
+	input_spec = FindScanInputSpec
+	output_spec = FindScanOutputSpec
+
+	def _run_interface(self, runtime):
+		scans_directory = self.inputs.scans_directory
+		query = self.inputs.query
+		query_file = self.inputs.query_file
+
+		self.result = []
+		for sub_dir in os.listdir(scans_directory):
+			if os.path.isdir(scans_directory+"/"+sub_dir):
+				if query in open(scans_directory+"/"+sub_dir+"/"+query_file).read():
+					self.result.append(sub_dir)
+		return runtime
+
+	def _list_outputs(self):
+		outputs = self._outputs().get()
+		outputs["positive_scans"] = self.result
+		return outputs
+
 class VoxelResizeInputSpec(BaseInterfaceInputSpec):
 	nii_files = traits.List(File(exists=True, mandatory=True))
 	resize_factors = traits.List(traits.Int([10,10,10], usedefault=True, desc="Factor by which to multiply the voxel size in the header"))

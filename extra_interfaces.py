@@ -81,8 +81,11 @@ class FindScan(BaseInterface):
 		self.result = []
 		for sub_dir in os.listdir(scans_directory):
 			if os.path.isdir(scans_directory+"/"+sub_dir):
-				if query in open(scans_directory+"/"+sub_dir+"/"+query_file).read():
-					self.result.append(scans_directory+"/"+sub_dir)
+				try:
+					if query in open(scans_directory+"/"+sub_dir+"/"+query_file).read():
+						self.result.append(scans_directory+"/"+sub_dir)
+				except IOError:
+					pass
 		return runtime
 
 	def _list_outputs(self):

@@ -66,7 +66,8 @@ class FindScanInputSpec(BaseInterfaceInputSpec):
 	query_file = traits.Str(desc='what fie to look in to', mandatory=True)
 
 class FindScanOutputSpec(TraitedSpec):
-	positive_scans = traits.List(File(exists=True))
+	positive_scans = traits.List(Directory(exists=True))
+
 class FindScan(BaseInterface):
 
 	input_spec = FindScanInputSpec
@@ -81,7 +82,7 @@ class FindScan(BaseInterface):
 		for sub_dir in os.listdir(scans_directory):
 			if os.path.isdir(scans_directory+"/"+sub_dir):
 				if query in open(scans_directory+"/"+sub_dir+"/"+query_file).read():
-					self.result.append(sub_dir)
+					self.result.append(scans_directory+"/"+sub_dir)
 		return runtime
 
 	def _list_outputs(self):

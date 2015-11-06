@@ -1,4 +1,4 @@
-from nipype.interfaces.base import BaseInterface, BaseInterfaceInputSpec, traits, File, TraitedSpec, Directory, CommandLineInputSpec, CommandLine, InputMultiPath
+from nipype.interfaces.base import BaseInterface, BaseInterfaceInputSpec, traits, File, TraitedSpec, Directory, CommandLineInputSpec, CommandLine, InputMultiPath, isdefined
 from nipype.utils.filemanip import split_filename
 
 import nibabel as nb
@@ -6,11 +6,11 @@ import numpy as np
 import os
 
 class Bru2InputSpec(CommandLineInputSpec):
-	input_dir = File(desc = "Input Directory", exists=True, mandatory=True, position = 0, argstr="%s")
+	input_dir = Directory(desc = "Input Directory", exists=True, mandatory=True, position=-1, argstr="%s")
 	group_by = traits.Str(desc='everything below this value will be set to zero', mandatory=False)
 	actual_size = traits.Bool(argstr='-a', desc="Keep actual size - otherwise x10 scale so animals match human.")
-	actual_size = traits.Bool(argstr='-f', desc="Force conversion of localizers images (multiple slice orientations)")
-	output_filename = traits.Str(argstr="-o %s", desc="Output filename ('.nii' will be appended)")
+	force_conversion = traits.Bool(argstr='-f', desc="Force conversion of localizers images (multiple slice orientations)")
+	output_filename = traits.Str(argstr="-o %s", desc="Output filename ('.nii' will be appended)", genfile=True)
 
 class Bru2OutputSpec(TraitedSpec):
 	nii_file = File(exists=True)
@@ -20,10 +20,20 @@ class Bru2(CommandLine):
 	output_spec = Bru2OutputSpec
 	_cmd = "Bru2"
 
-def _list_outputs(self):
-	outputs = self._outputs().get()
-	outputs["nii_files"] = self.result
-	return outputs
+	def _list_outputs(self):
+		outputs = self._outputs().get()
+		if isdefined(self.inputs.output_filename):
+			output_filename1 = self.inputs.output_filename
+		else:
+			output_filename1 = self._gen_filename('output_filename')
+		outputs["nii_file"] = output_filename1+os.path.basename(os.path.normpath(self.inputs.input_dir))+".nii"
+		return outputs
+
+	def _gen_filename(self, name):
+		if name == 'output_filename':
+			outfile = os.getcwd()+"/"
+			print outfile
+			return outfile
 
 class DcmToNiiInputSpec(BaseInterfaceInputSpec):
 	dcm_dir = Directory(exists=True, mandatory=True)
@@ -81,7 +91,7 @@ class VoxelResize(BaseInterface):
 			nii_img.set_sform(aff)
 			nii_img.set_qform(aff)
 
-			#set the sform and qform codes to “scanner” (other settings will lead to AFNI/meica.py assuming talairach space)
+			#set the sform and qform codes to "scanner" (other settings will lead to AFNI/meica.py assuming talairach space)
 			nii_img.header["qform_code"] = 1
 			nii_img.header["sform_code"] = 1
 

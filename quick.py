@@ -5,7 +5,7 @@ from nipype.interfaces.fsl import MELODIC
 from os import path, listdir
 import nipype.interfaces.io as nio
 
-def quick_melodic(workflow_base="."):
+def quick_melodic(workflow_base=".", workflow_denominator="QuickMELODIC"):
 	workflow_base = path.expanduser(workflow_base)
 	IDs=[]
 	for sub_dir in listdir(workflow_base):
@@ -32,10 +32,10 @@ def quick_melodic(workflow_base="."):
 	melodic.inputs.dim = 8
 
 	datasink = pe.Node(nio.DataSink(), name='sinker')
-	datasink.inputs.base_directory = workflow_base+"/"+"OUTPUTS"
+	datasink.inputs.base_directory = workflow_base+"/"+workflow_denominator+".results"
 
 	#SET UP WORKFLOW:
-	workflow = pe.Workflow(name='QuickMELODIC')
+	workflow = pe.Workflow(name=workflow_denominator+".work")
 	workflow.base_dir = workflow_base
 
 	workflow.connect([

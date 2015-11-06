@@ -1,5 +1,5 @@
 import nipype.pipeline.engine as pe
-import nipype.interfaces.utility as util		# utility
+import nipype.interfaces.utility as util
 from extra_interfaces import Bru2, FindScan
 from nipype.interfaces.fsl import MELODIC
 from os import path, listdir
@@ -32,10 +32,10 @@ def quick_melodic(workflow_base=".", workflow_denominator="QuickMELODIC"):
 	melodic.inputs.dim = 8
 
 	datasink = pe.Node(nio.DataSink(), name='sinker')
-	datasink.inputs.base_directory = workflow_base+"/"+workflow_denominator+".results"
+	datasink.inputs.base_directory = workflow_base+"/"+workflow_denominator+"_results"
 
 	#SET UP WORKFLOW:
-	workflow = pe.Workflow(name=workflow_denominator+".work")
+	workflow = pe.Workflow(name=workflow_denominator+"_work")
 	workflow.base_dir = workflow_base
 
 	workflow.connect([

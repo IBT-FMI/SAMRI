@@ -2,11 +2,12 @@ import nipype.interfaces.utility as util		# utility
 import nipype.pipeline.engine as pe				# pypeline engine
 from nipype.interfaces.nipy.preprocess import FmriRealign4d
 from nipype.interfaces.nipy import SpaceTimeRealigner
-from extra_interfaces import DcmToNii, MEICA, VoxelResize
+from extra_interfaces import DcmToNii, MEICA, VoxelResize, Bru2, FindScan
 from nipype.interfaces.dcmstack import DcmStack
 import nipype.interfaces.io as nio
+from os import path, listdir
 
-def preproc_workflow(workflow_base=".", force_convert=False, source_pattern="", IDs=""):
+def dcm_preproc(workflow_base=".", force_convert=False, source_pattern="", IDs=""):
 	# make IDs strings
 	if "int" or "float" in str([type(ID) for ID in IDs]):
 		IDs = [str(ID) for ID in IDs]
@@ -52,6 +53,43 @@ def preproc_workflow(workflow_base=".", force_convert=False, source_pattern="", 
 
 	workflow.write_graph(graph2use="orig")
 	workflow.run(plugin="MultiProc")
+
+def bg_preproc(workflow_base=".", workflow_denominator="Bruker_GLM_Preprocessing", scan_type="7_EPI_CBV", resize=True):
+
+	workflow_base = path.expanduser(workflow_base)
+	IDs=[]
+	for sub_dir in listdir(workflow_base):
+		if sub_dir[:3] == "201":
+			IDs.append(sub_dir)
+
+	infosource = pe.Node(interface=util.IdentityInterface(fields=['measurement_id']), name="measurement_info_source")
+	#define the list of subjects your pipeline should be executed on
+	infosource.iterables = ('measurement_id', IDs)
+
+	datasource1 = pe.Node(interface=nio.DataGrabber(infields=['measurement_id'], outfields=['measurement_path']), name='data_source1')
+	datasource1.inputs.template = workflow_base+"/%s"
+	datasource1.inputs.template_args['measurement_id'] = [['measurement_id']]
+	datasource1.inputs.sort_filelist = True
+
+	find_scan = pe.Node(interface=FindScan(), name="find_scan")
+	find_scan.inputs.query = scan_type
+	find_scan.inputs.query_file = "acqp"
+
+	Bru2_converter = pe.MapNode(interface=Bru2(), name="convert_resize", iterfield=['input_dir'])
+	if resize == False:
+		Bru2_converter.inputs.actual_size=True
+
+	workflow = pe.Workflow(name="Preprocessing")
+	workflow.base_dir = workflow_base+"/"+workflow_denominator
+
+	workflow.connect([
+		(infosource, datasource1, [('measurement_id', 'measurement_id')]),
+		(datasource1, find_scan, [('measurement_path', 'scans_directory')]),
+		(find_scan, Bru2_converter, [('positive_scans', 'input_dir')])
+		])
+
+	return workflow
+
 
 if __name__ == "__main__":
 	IDs=[4457,4459]

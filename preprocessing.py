@@ -54,7 +54,7 @@ def dcm_preproc(workflow_base=".", force_convert=False, source_pattern="", IDs="
 	workflow.write_graph(graph2use="orig")
 	workflow.run(plugin="MultiProc")
 
-def bg_preproc(workflow_base, functional_scan_type, structural_scan_type=None, resize=True, omit_ID=[]):
+def bru2_preproc(workflow_base, functional_scan_type, structural_scan_type=None, resize=True, omit_ID=[]):
 	IDs=[]
 	for sub_dir in listdir(workflow_base):
 		if sub_dir[:3] == "201" and sub_dir not in omit_ID:

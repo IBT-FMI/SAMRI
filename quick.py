@@ -6,9 +6,9 @@ from os import path, listdir
 from preprocessing import bg_preproc
 import nipype.interfaces.io as nio
 
-def quick_melodic(workflow_base, scan_type, workflow_denominator="QuickMELODIC", omit_ID=[]):
+def quick_melodic(workflow_base, functional_scan_type, workflow_denominator="QuickMELODIC", omit_ID=[]):
 	workflow_base = path.expanduser(workflow_base)
-	bg_preproc_workflow = bg_preproc(workflow_base, scan_type, omit_ID=omit_ID, resize=False)
+	bg_preproc_workflow = bg_preproc(workflow_base, functional_scan_type, omit_ID=omit_ID, resize=False)
 
 	melodic = pe.Node(interface=MELODIC(), name="MELODIC")
 	melodic.inputs.report = True
@@ -35,4 +35,4 @@ def quick_melodic(workflow_base, scan_type, workflow_denominator="QuickMELODIC",
 	pipeline.run(plugin="MultiProc")
 
 if __name__ == "__main__":
-	quick_melodic(workflow_base="~/NIdata/ofM.dr/", scan_type="7_EPI_CBV", omit_ID=["20151026_135856_4006_1_1"])
+	quick_melodic(workflow_base="~/NIdata/ofM.dr/", functional_scan_type="7_EPI_CBV", omit_ID=["20151026_135856_4006_1_1"])

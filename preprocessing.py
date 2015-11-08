@@ -84,14 +84,14 @@ def bru2_preproc(workflow_base, functional_scan_type, structural_scan_type=None,
 
 	converter_functional = pe.MapNode(interface=Bru2(), name="bru2_functional", iterfield=['input_dir'])
 	if resize == False:
-		converter.inputs.actual_size=True
+		converter_functional.inputs.actual_size=True
 
 	workflow = pe.Workflow(name="Preprocessing")
 
 	workflow_connections = [
 		(infosource, datasource1, [('measurement_id', 'measurement_id')]),
 		(datasource1, find_functional_scan, [('measurement_path', 'scans_directory')]),
-		(find_functional_scan, converter, [('positive_scans', 'input_dir')])
+		(find_functional_scan, converter_functional, [('positive_scans', 'input_dir')])
 		]
 
 	if structural_scan_type:

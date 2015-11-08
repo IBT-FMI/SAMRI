@@ -8,7 +8,7 @@ import nipype.interfaces.io as nio
 
 def quick_melodic(workflow_base, functional_scan_type, workflow_denominator="QuickMELODIC", omit_ID=[]):
 	workflow_base = path.expanduser(workflow_base)
-	bg_preproc_workflow = bg_preproc(workflow_base, functional_scan_type, omit_ID=omit_ID, resize=False)
+	bru2_preproc_workflow = bru2_preproc(workflow_base, functional_scan_type, omit_ID=omit_ID, resize=False)
 
 	melodic = pe.Node(interface=MELODIC(), name="MELODIC")
 	melodic.inputs.report = True
@@ -28,7 +28,7 @@ def quick_melodic(workflow_base, functional_scan_type, workflow_denominator="Qui
 	pipeline = pe.Workflow(name=workflow_denominator+"_work")
 	pipeline.base_dir = workflow_base
 
-	pipeline.connect([(bg_preproc_workflow, analysis_workflow, [('bru2_functional.nii_file','MELODIC.in_files')])
+	pipeline.connect([(bru2_preproc_workflow, analysis_workflow, [('bru2_functional.nii_file','MELODIC.in_files')])
 		])
 
 	pipeline.write_graph(graph2use="orig")

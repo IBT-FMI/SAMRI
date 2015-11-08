@@ -28,7 +28,7 @@ def quick_melodic(workflow_base, functional_scan_type, workflow_denominator="Qui
 	pipeline = pe.Workflow(name=workflow_denominator+"_work")
 	pipeline.base_dir = workflow_base
 
-	pipeline.connect([(bg_preproc_workflow, analysis_workflow, [('bru2_convert.nii_file','MELODIC.in_files')])
+	pipeline.connect([(bg_preproc_workflow, analysis_workflow, [('bru2_functional.nii_file','MELODIC.in_files')])
 		])
 
 	pipeline.write_graph(graph2use="orig")

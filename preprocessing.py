@@ -77,10 +77,12 @@ def bg_preproc(workflow_base, functional_scan_type, structural_scan_type=None, r
 		find_structural_scan = pe.Node(interface=FindScan(), name="find_scan")
 		find_structural_scan.inputs.query = structural_scan_type
 		find_structural_scan.inputs.query_file = "visu_pars"
-		converter = pe.MapNode(interface=Bru2(), name="bru2_convert", iterfield=['input_dir'])
+		converter_structural = pe.MapNode(interface=Bru2(), name="bru2_structural", iterfield=['input_dir'])
 		converter_structural.inputs.force_conversion=True
+		if resize == False:
+			converter_structural.inputs.actual_size=True
 
-	converter = pe.MapNode(interface=Bru2(), name="bru2_convert", iterfield=['input_dir'])
+	converter_functional = pe.MapNode(interface=Bru2(), name="bru2_functional", iterfield=['input_dir'])
 	if resize == False:
 		converter.inputs.actual_size=True
 
@@ -95,7 +97,7 @@ def bg_preproc(workflow_base, functional_scan_type, structural_scan_type=None, r
 	if structural_scan_type:
 		workflow_connections.extend([
 			(datasource1, find_structural_scan, [('measurement_path', 'scans_directory')]),
-			(find_structural_scan, converter, [('positive_scans', 'input_dir')])
+			(find_structural_scan, converter_structural, [('positive_scans', 'input_dir')])
 			])
 
 	workflow.connect(workflow_connections)

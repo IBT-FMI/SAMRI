@@ -54,7 +54,7 @@ def dcm_preproc(workflow_base=".", force_convert=False, source_pattern="", IDs="
 	workflow.write_graph(graph2use="orig")
 	workflow.run(plugin="MultiProc")
 
-def bg_preproc(workflow_base, functional_scan_type, anatomical_scan_type=None, resize=True, omit_ID=[]):
+def bg_preproc(workflow_base, functional_scan_type, structural_scan_type=None, resize=True, omit_ID=[]):
 	IDs=[]
 	for sub_dir in listdir(workflow_base):
 		if sub_dir[:3] == "201" and sub_dir not in omit_ID:
@@ -73,14 +73,15 @@ def bg_preproc(workflow_base, functional_scan_type, anatomical_scan_type=None, r
 	find_functional_scan.inputs.query = functional_scan_type
 	find_functional_scan.inputs.query_file = "visu_pars"
 
-	if anatomical_scan_type:
-		find_anatomical_scan = pe.Node(interface=FindScan(), name="find_scan")
-		find_anatomical_scan.inputs.query = anatomical_scan_type
-		find_anatomical_scan.inputs.query_file = "visu_pars"
+	if structural_scan_type:
+		find_structural_scan = pe.Node(interface=FindScan(), name="find_scan")
+		find_structural_scan.inputs.query = structural_scan_type
+		find_structural_scan.inputs.query_file = "visu_pars"
+		converter = pe.MapNode(interface=Bru2(), name="bru2_convert", iterfield=['input_dir'])
+		converter_structural.inputs.force_conversion=True
 
 	converter = pe.MapNode(interface=Bru2(), name="bru2_convert", iterfield=['input_dir'])
 	if resize == False:
-		converter.inputs.force_conversion=True
 		converter.inputs.actual_size=True
 
 	workflow = pe.Workflow(name="Preprocessing")
@@ -91,10 +92,10 @@ def bg_preproc(workflow_base, functional_scan_type, anatomical_scan_type=None, r
 		(find_functional_scan, converter, [('positive_scans', 'input_dir')])
 		]
 
-	if anatomical_scan_type:
+	if structural_scan_type:
 		workflow_connections.extend([
-			(datasource1, find_anatomical_scan, [('measurement_path', 'scans_directory')]),
-			(find_anatomical_scan, converter, [('positive_scans', 'input_dir')])
+			(datasource1, find_structural_scan, [('measurement_path', 'scans_directory')]),
+			(find_structural_scan, converter, [('positive_scans', 'input_dir')])
 			])
 
 	workflow.connect(workflow_connections)

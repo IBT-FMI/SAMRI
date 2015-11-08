@@ -4,6 +4,7 @@ from nipype.interfaces.fsl import GLM, MELODIC, FAST, BET
 import nipype.interfaces.io as nio
 from os import path
 from preprocessing import bru2_preproc
+from nipype.interfaces.nipy.preprocess import FmriRealign4d
 
 def fsl_glm(workflow_base, functional_scan_type, structural_scan_type, workflow_denominator="FSL_GLM", omit_ID=[]):
 	workflow_base = path.expanduser(workflow_base)
@@ -11,9 +12,11 @@ def fsl_glm(workflow_base, functional_scan_type, structural_scan_type, workflow_
 
 	spatial_filtering = pe.Node(interface=FAST(), name="FAST")
 	spatial_filtering.inputs.output_biascorrected = True
-	spatial_filtering.inputs.bias_iters = 6
+	spatial_filtering.inputs.bias_iters = 8
 
 	skullstripping = pe.Node(interface=BET(), name="BET")
+
+	realigner = FmriRealign4d()
 
 	melodic = pe.Node(interface=MELODIC(), name="MELODIC")
 	melodic.inputs.report = True
@@ -27,7 +30,8 @@ def fsl_glm(workflow_base, functional_scan_type, structural_scan_type, workflow_
 
 	analysis_workflow.connect([
 		(spatial_filtering, skullstripping, [('restored_image', 'in_file')]),
-		(skullstripping, melodic, [('out_file', 'in_files')]),
+		(skullstripping, realigner, [('out_file', 'in_file')]),
+		(realigner, melodic, [('out_file', 'in_files')]),
 		(melodic, datasink, [('report_dir', 'MELODIC_reports')])
 		])
 

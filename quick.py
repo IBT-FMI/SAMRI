@@ -6,10 +6,9 @@ from os import path, listdir
 from preprocessing import bg_preproc
 import nipype.interfaces.io as nio
 
-def quick_melodic(workflow_base=".", workflow_denominator="QuickMELODIC", scan_type="7_EPI_CBV"):
-
-	print workflow_base
-	bg_preproc_workflow = bg_preproc(workflow_base=workflow_base, workflow_denominator=workflow_denominator, scan_type=scan_type)
+def quick_melodic(workflow_base, scan_type, workflow_denominator="QuickMELODIC", omit_ID=[]):
+	workflow_base = path.expanduser(workflow_base)
+	bg_preproc_workflow = bg_preproc(workflow_base, scan_type, omit_ID=omit_ID, resize=False)
 
 	melodic = pe.Node(interface=MELODIC(), name="MELODIC")
 	melodic.inputs.report = True
@@ -20,21 +19,20 @@ def quick_melodic(workflow_base=".", workflow_denominator="QuickMELODIC", scan_t
 
 	#SET UP ANALYSIS WORKFLOW:
 	analysis_workflow = pe.Workflow(name="ICA")
-	analysis_workflow.base_dir = workflow_base+"/"+workflow_denominator
 
 	analysis_workflow.connect([
-		(melodic, datasink, [('report_dir', 'reports')])
+		(melodic, datasink, [('report_dir', 'MELODIC_reports')])
 		])
 
 	#SET UP COMBINED WORKFLOW:
 	pipeline = pe.Workflow(name=workflow_denominator+"_work")
 	pipeline.base_dir = workflow_base
 
-	pipeline.connect([(bg_preproc_workflow, analysis_workflow, [('Bru2_converter.nii_file','melodic.in_files')])
+	pipeline.connect([(bg_preproc_workflow, analysis_workflow, [('bru2_convert.nii_file','MELODIC.in_files')])
 		])
 
 	pipeline.write_graph(graph2use="orig")
 	pipeline.run(plugin="MultiProc")
 
 if __name__ == "__main__":
-	quick_melodic(workflow_base="~/NIdata/ofM.dr/")
+	quick_melodic(workflow_base="~/NIdata/ofM.dr/", scan_type="7_EPI_CBV", omit_ID=["20151026_135856_4006_1_1"])

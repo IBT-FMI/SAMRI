@@ -54,12 +54,10 @@ def dcm_preproc(workflow_base=".", force_convert=False, source_pattern="", IDs="
 	workflow.write_graph(graph2use="orig")
 	workflow.run(plugin="MultiProc")
 
-def bg_preproc(workflow_base=".", workflow_denominator="Bruker_GLM_Preprocessing", scan_type="7_EPI_CBV", resize=True):
-
-	workflow_base = path.expanduser(workflow_base)
+def bg_preproc(workflow_base, functional_scan_type, anatomical_scan_type=None, resize=True, omit_ID=[]):
 	IDs=[]
 	for sub_dir in listdir(workflow_base):
-		if sub_dir[:3] == "201":
+		if sub_dir[:3] == "201" and sub_dir not in omit_ID:
 			IDs.append(sub_dir)
 
 	infosource = pe.Node(interface=util.IdentityInterface(fields=['measurement_id']), name="measurement_info_source")
@@ -71,22 +69,35 @@ def bg_preproc(workflow_base=".", workflow_denominator="Bruker_GLM_Preprocessing
 	datasource1.inputs.template_args['measurement_id'] = [['measurement_id']]
 	datasource1.inputs.sort_filelist = True
 
-	find_scan = pe.Node(interface=FindScan(), name="find_scan")
-	find_scan.inputs.query = scan_type
-	find_scan.inputs.query_file = "acqp"
+	find_functional_scan = pe.Node(interface=FindScan(), name="find_scan")
+	find_functional_scan.inputs.query = functional_scan_type
+	find_functional_scan.inputs.query_file = "visu_pars"
 
-	Bru2_converter = pe.MapNode(interface=Bru2(), name="convert_resize", iterfield=['input_dir'])
+	if anatomical_scan_type:
+		find_anatomical_scan = pe.Node(interface=FindScan(), name="find_scan")
+		find_anatomical_scan.inputs.query = anatomical_scan_type
+		find_anatomical_scan.inputs.query_file = "visu_pars"
+
+	converter = pe.MapNode(interface=Bru2(), name="bru2_convert", iterfield=['input_dir'])
 	if resize == False:
-		Bru2_converter.inputs.actual_size=True
+		converter.inputs.force_conversion=True
+		converter.inputs.actual_size=True
 
 	workflow = pe.Workflow(name="Preprocessing")
-	workflow.base_dir = workflow_base+"/"+workflow_denominator
 
-	workflow.connect([
+	workflow_connections = [
 		(infosource, datasource1, [('measurement_id', 'measurement_id')]),
-		(datasource1, find_scan, [('measurement_path', 'scans_directory')]),
-		(find_scan, Bru2_converter, [('positive_scans', 'input_dir')])
-		])
+		(datasource1, find_functional_scan, [('measurement_path', 'scans_directory')]),
+		(find_functional_scan, converter, [('positive_scans', 'input_dir')])
+		]
+
+	if anatomical_scan_type:
+		workflow_connections.extend([
+			(datasource1, find_anatomical_scan, [('measurement_path', 'scans_directory')]),
+			(find_anatomical_scan, converter, [('positive_scans', 'input_dir')])
+			])
+
+	workflow.connect(workflow_connections)
 
 	return workflow
 

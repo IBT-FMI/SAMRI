@@ -1,14 +1,16 @@
 import nipype.pipeline.engine as pe
 import nipype.interfaces.utility as util
 from extra_interfaces import Bru2, FindScan
-from nipype.interfaces.fsl import MELODIC
+from nipype.interfaces.fsl import MELODIC, BET
 from os import path, listdir
-from preprocessing import bg_preproc
+from preprocessing import bru2_preproc
 import nipype.interfaces.io as nio
 
 def quick_melodic(workflow_base, functional_scan_type, workflow_denominator="QuickMELODIC", omit_ID=[]):
 	workflow_base = path.expanduser(workflow_base)
 	bru2_preproc_workflow = bru2_preproc(workflow_base, functional_scan_type, omit_ID=omit_ID, resize=False)
+
+	skullstripping = pe.Node(interface=BET(), name="fslBET")
 
 	melodic = pe.Node(interface=MELODIC(), name="MELODIC")
 	melodic.inputs.report = True
@@ -21,6 +23,7 @@ def quick_melodic(workflow_base, functional_scan_type, workflow_denominator="Qui
 	analysis_workflow = pe.Workflow(name="ICA")
 
 	analysis_workflow.connect([
+		(skullstripping, melodic, [('out_file', 'in_files')]),
 		(melodic, datasink, [('report_dir', 'MELODIC_reports')])
 		])
 
@@ -28,7 +31,7 @@ def quick_melodic(workflow_base, functional_scan_type, workflow_denominator="Qui
 	pipeline = pe.Workflow(name=workflow_denominator+"_work")
 	pipeline.base_dir = workflow_base
 
-	pipeline.connect([(bru2_preproc_workflow, analysis_workflow, [('bru2_functional.nii_file','MELODIC.in_files')])
+	pipeline.connect([(bru2_preproc_workflow, analysis_workflow, [('bru2_functional.nii_file','fslBET.in_file')])
 		])
 
 	pipeline.write_graph(graph2use="orig")

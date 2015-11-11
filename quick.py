@@ -6,11 +6,12 @@ from os import path, listdir
 from preprocessing import bru2_preproc
 import nipype.interfaces.io as nio
 
-def quick_melodic(workflow_base, functional_scan_type, workflow_denominator="QuickMELODIC", omit_ID=[]):
+def quick_melodic(workflow_base, functional_scan_type, experiment_type=None, workflow_denominator="QuickMELODIC", omit_ID=[]):
 	workflow_base = path.expanduser(workflow_base)
-	bru2_preproc_workflow = bru2_preproc(workflow_base, functional_scan_type, omit_ID=omit_ID, resize=False)
+	bru2_preproc_workflow = bru2_preproc(workflow_base, functional_scan_type, experiment_type=None, omit_ID=omit_ID)
 
 	skullstripping = pe.Node(interface=BET(), name="fslBET")
+	skullstripping.inputs.functional = True
 
 	melodic = pe.Node(interface=MELODIC(), name="MELODIC")
 	melodic.inputs.report = True
@@ -38,4 +39,4 @@ def quick_melodic(workflow_base, functional_scan_type, workflow_denominator="Qui
 	pipeline.run(plugin="MultiProc")
 
 if __name__ == "__main__":
-	quick_melodic(workflow_base="~/NIdata/ofM.dr/", functional_scan_type="7_EPI_CBV", omit_ID=["20151026_135856_4006_1_1"])
+	quick_melodic(workflow_base="~/NIdata/ofM.dr/", functional_scan_type="7_EPI_CBV", experiment_type="<ofM>",omit_ID=["20151026_135856_4006_1_1"])

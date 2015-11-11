@@ -54,14 +54,21 @@ def dcm_preproc(workflow_base=".", force_convert=False, source_pattern="", IDs="
 	workflow.write_graph(graph2use="orig")
 	workflow.run(plugin="MultiProc")
 
-def bru2_preproc(workflow_base, functional_scan_type, structural_scan_type=None, resize=True, omit_ID=[]):
+def bru2_preproc(workflow_base, functional_scan_type, experiment_type=None, structural_scan_type=None, resize=True, omit_ID=[]):
 	IDs=[]
-	for sub_dir in listdir(workflow_base):
-		if sub_dir[:3] == "201" and sub_dir not in omit_ID:
-			IDs.append(sub_dir)
+	if experiment_type:
+		for sub_dir in listdir(workflow_base):
+			try:
+				if experiment_type in open(workflow_base+"/"+sub_dir+"/subject").read():
+					IDs.append(sub_dir)
+			except IOError:
+				pass
+	else:
+		for sub_dir in listdir(workflow_base):
+			if sub_dir[:3] == "201" and sub_dir not in omit_ID:
+				IDs.append(sub_dir)
 
 	infosource = pe.Node(interface=util.IdentityInterface(fields=['measurement_id']), name="measurement_info_source")
-	#define the list of subjects your pipeline should be executed on
 	infosource.iterables = ('measurement_id', IDs)
 
 	datasource1 = pe.Node(interface=nio.DataGrabber(infields=['measurement_id'], outfields=['measurement_path']), name='data_source1')

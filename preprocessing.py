@@ -68,16 +68,16 @@ def bru2_preproc(workflow_base, functional_scan_type, experiment_type=None, stru
 			if sub_dir[:3] == "201" and sub_dir not in omit_ID:
 				IDs.append(sub_dir)
 
-	infosource = pe.Node(interface=util.IdentityInterface(fields=['measurement_id']), name="measurement_info_source")
+	infosource = pe.Node(interface=util.IdentityInterface(fields=['measurement_id']), name="experiment_source")
 	infosource.iterables = ('measurement_id', IDs)
 
-	datasource1 = pe.Node(interface=nio.DataGrabber(infields=['measurement_id'], outfields=['measurement_path']), name='data_source1')
+	datasource1 = pe.Node(interface=nio.DataGrabber(infields=['measurement_id'], outfields=['measurement_path']), name='data_source')
 	datasource1.inputs.template = workflow_base+"/%s"
 	datasource1.inputs.template_args['measurement_path'] = [['measurement_id']]
 	datasource1.inputs.template_args['measurement_path1'] = [['measurement_id']]
 	datasource1.inputs.sort_filelist = True
 
-	find_functional_scan = pe.Node(interface=FindScan(), name="find_functional_scan")
+	find_functional_scan = pe.Node(interface=FindScan(), name="functional_scan_filter")
 	find_functional_scan.inputs.query = functional_scan_type
 	find_functional_scan.inputs.query_file = "visu_pars"
 
@@ -90,7 +90,7 @@ def bru2_preproc(workflow_base, functional_scan_type, experiment_type=None, stru
 		if resize == False:
 			converter_structural.inputs.actual_size=True
 
-	converter_functional = pe.Node(interface=Bru2(), name="bru2_functional")
+	converter_functional = pe.Node(interface=Bru2(), name="bru2nii")
 	if resize == False:
 		converter_functional.inputs.actual_size=True
 

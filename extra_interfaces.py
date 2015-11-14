@@ -26,12 +26,12 @@ class Bru2(CommandLine):
 			output_filename1 = self.inputs.output_filename
 		else:
 			output_filename1 = self._gen_filename('output_filename')
-		outputs["nii_file"] = output_filename1+os.path.basename(os.path.normpath(self.inputs.input_dir))+".nii"
+		outputs["nii_file"] = output_filename1+".nii"
 		return outputs
 
 	def _gen_filename(self, name):
 		if name == 'output_filename':
-			outfile = os.getcwd()+"/"
+			outfile = os.getcwd()+"/"+os.path.basename(os.path.normpath(self.inputs.input_dir))
 			print outfile
 			return outfile
 

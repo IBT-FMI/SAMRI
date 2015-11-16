@@ -74,7 +74,6 @@ def bru2_preproc(workflow_base, functional_scan_type, experiment_type=None, stru
 	datasource1 = pe.Node(interface=nio.DataGrabber(infields=['measurement_id'], outfields=['measurement_path']), name='data_source')
 	datasource1.inputs.template = workflow_base+"/%s"
 	datasource1.inputs.template_args['measurement_path'] = [['measurement_id']]
-	datasource1.inputs.template_args['measurement_path1'] = [['measurement_id']]
 	datasource1.inputs.sort_filelist = True
 
 	find_functional_scan = pe.Node(interface=FindScan(), name="functional_scan_filter")
@@ -85,7 +84,7 @@ def bru2_preproc(workflow_base, functional_scan_type, experiment_type=None, stru
 		find_structural_scan = pe.Node(interface=FindScan(), name="find_structural_scan")
 		find_structural_scan.inputs.query = structural_scan_type
 		find_structural_scan.inputs.query_file = "visu_pars"
-		converter_structural = pe.MapNode(interface=Bru2(), name="bru2_structural", iterfield=['input_dir'])
+		converter_structural = pe.Node(interface=Bru2(), name="bru2nii_structural")
 		converter_structural.inputs.force_conversion=True
 		if resize == False:
 			converter_structural.inputs.actual_size=True
@@ -104,7 +103,7 @@ def bru2_preproc(workflow_base, functional_scan_type, experiment_type=None, stru
 
 	if structural_scan_type:
 		workflow_connections.extend([
-			(datasource1, find_structural_scan, [('measurement_path1', 'scans_directory')]),
+			(datasource1, find_structural_scan, [('measurement_path', 'scans_directory')]),
 			(find_structural_scan, converter_structural, [('positive_scan', 'input_dir')])
 			])
 

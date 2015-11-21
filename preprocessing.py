@@ -57,12 +57,13 @@ def dcm_preproc(workflow_base=".", force_convert=False, source_pattern="", IDs="
 def bru2_preproc(workflow_base, functional_scan_type, experiment_type=None, structural_scan_type=None, resize=True, omit_ID=[]):
 	IDs=[]
 	if experiment_type:
-		for sub_dir in listdir(workflow_base) and sub_dir not in omit_ID:
-			try:
-				if experiment_type in open(workflow_base+"/"+sub_dir+"/subject").read():
-					IDs.append(sub_dir)
-			except IOError:
-				pass
+		for sub_dir in listdir(workflow_base):
+			if sub_dir not in omit_ID:
+				try:
+					if experiment_type in open(workflow_base+"/"+sub_dir+"/subject").read():
+						IDs.append(sub_dir)
+				except IOError:
+					pass
 	else:
 		for sub_dir in listdir(workflow_base):
 			if sub_dir[:3] == "201" and sub_dir not in omit_ID:

@@ -18,99 +18,99 @@ def fsl_glm(workflow_base, functional_scan_type, structural_scan_type=None, expe
 	realigner.inputs.slice_times = "asc_alt_2"
 
 	meaner = pe.Node(interface=MeanImage(), name="temporal_mean")
-	masker = pe.Node(interface=ApplyMask(), name="mask_application")
+	functional_masker = pe.Node(interface=ApplyMask(), name="functional_masker")
 
-	spatial_filtering = pe.Node(interface=FAST(), name="FAST")
-	spatial_filtering.inputs.segments = False
-	spatial_filtering.inputs.output_biascorrected = True
-	spatial_filtering.inputs.bias_iters = 8
+	functional_FAST = pe.Node(interface=FAST(), name="functional_FAST")
+	functional_FAST.inputs.segments = False
+	functional_FAST.inputs.output_biascorrected = True
+	functional_FAST.inputs.bias_iters = 8
 
-	spatial_filtering_structural = pe.Node(interface=FAST(), name="FAST_structural")
+	spatial_filtering_structural = pe.Node(interface=FAST(), name="structural_FAST")
 	spatial_filtering_structural.inputs.segments = False
 	spatial_filtering_structural.inputs.output_biascorrected = True
 	spatial_filtering_structural.inputs.bias_iters = 8
 
-	skullstripping = pe.Node(interface=BET(), name="BET")
-	skullstripping.inputs.mask = True
-	skullstripping.inputs.frac = 0.8
+	functional_BET = pe.Node(interface=BET(), name="functional_BET")
+	functional_BET.inputs.mask = True
+	functional_BET.inputs.frac = 0.8
 
-	skullstripping_structural = pe.Node(interface=BET(), name="BET_structural")
-	skullstripping_structural.inputs.mask = True
-	skullstripping_structural.inputs.frac = 0.8
+	structural_BET = pe.Node(interface=BET(), name="structural_BET")
+	structural_BET.inputs.mask = True
+	structural_BET.inputs.frac = 0.8
 
-	struct_reg = pe.Node(ants.Registration(), name='struct_antsRegister')
-	struct_reg.inputs.fixed_image = "/home/chymera/data/reference/QBI_atlas100.nii"
-	struct_reg.inputs.output_transform_prefix = "output_"
-	struct_reg.inputs.transforms = ['Rigid', 'Affine', 'SyN']
-	struct_reg.inputs.transform_parameters = [(0.1,), (0.1,), (0.2, 3.0, 0.0)]
-	struct_reg.inputs.number_of_iterations = [[10000, 11110, 11110]] * 2 + [[100, 30, 20]]
-	struct_reg.inputs.dimension = 3
-	struct_reg.inputs.write_composite_transform = True
-	struct_reg.inputs.collapse_output_transforms = True
-	struct_reg.inputs.initial_moving_transform_com = True
-	struct_reg.inputs.metric = ['Mattes'] * 2 + [['Mattes', 'CC']]
-	struct_reg.inputs.metric_weight = [1] * 2 + [[0.5, 0.5]]
-	struct_reg.inputs.radius_or_number_of_bins = [32] * 2 + [[32, 4]]
-	struct_reg.inputs.sampling_strategy = ['Regular'] * 2 + [[None, None]]
-	struct_reg.inputs.sampling_percentage = [0.3] * 2 + [[None, None]]
-	struct_reg.inputs.convergence_threshold = [1.e-8] * 2 + [-0.01]
-	struct_reg.inputs.convergence_window_size = [20] * 2 + [5]
-	struct_reg.inputs.smoothing_sigmas = [[4, 2, 1]] * 2 + [[1, 0.5, 0]]
-	struct_reg.inputs.sigma_units = ['vox'] * 3
-	struct_reg.inputs.shrink_factors = [[3, 2, 1]]*2 + [[4, 2, 1]]
-	struct_reg.inputs.use_estimate_learning_rate_once = [True] * 3
-	struct_reg.inputs.use_histogram_matching = [False] * 2 + [True]
-	struct_reg.inputs.winsorize_lower_quantile = 0.005
-	struct_reg.inputs.winsorize_upper_quantile = 0.995
-	struct_reg.inputs.args = '--float'
-	struct_reg.inputs.output_warped_image = 'output_warped_image.nii.gz'
-	struct_reg.inputs.num_threads = 4
-	struct_reg.plugin_args = {'qsub_args': '-pe orte 4', 'sbatch_args': '--mem=6G -c 4'}
+	structural_registration = pe.Node(ants.Registration(), name='structural_registration')
+	structural_registration.inputs.fixed_image = "/home/chymera/data/reference/QBI_atlas100.nii"
+	structural_registration.inputs.output_transform_prefix = "output_"
+	structural_registration.inputs.transforms = ['Rigid', 'Affine', 'SyN']
+	structural_registration.inputs.transform_parameters = [(0.1,), (0.1,), (0.2, 3.0, 0.0)]
+	structural_registration.inputs.number_of_iterations = [[10000, 11110, 11110]] * 2 + [[100, 30, 20]]
+	structural_registration.inputs.dimension = 3
+	structural_registration.inputs.write_composite_transform = True
+	structural_registration.inputs.collapse_output_transforms = True
+	structural_registration.inputs.initial_moving_transform_com = True
+	structural_registration.inputs.metric = ['Mattes'] * 2 + [['Mattes', 'CC']]
+	structural_registration.inputs.metric_weight = [1] * 2 + [[0.5, 0.5]]
+	structural_registration.inputs.radius_or_number_of_bins = [32] * 2 + [[32, 4]]
+	structural_registration.inputs.sampling_strategy = ['Regular'] * 2 + [[None, None]]
+	structural_registration.inputs.sampling_percentage = [0.3] * 2 + [[None, None]]
+	structural_registration.inputs.convergence_threshold = [1.e-8] * 2 + [-0.01]
+	structural_registration.inputs.convergence_window_size = [20] * 2 + [5]
+	structural_registration.inputs.smoothing_sigmas = [[4, 2, 1]] * 2 + [[1, 0.5, 0]]
+	structural_registration.inputs.sigma_units = ['vox'] * 3
+	structural_registration.inputs.shrink_factors = [[3, 2, 1]]*2 + [[4, 2, 1]]
+	structural_registration.inputs.use_estimate_learning_rate_once = [True] * 3
+	structural_registration.inputs.use_histogram_matching = [False] * 2 + [True]
+	structural_registration.inputs.winsorize_lower_quantile = 0.005
+	structural_registration.inputs.winsorize_upper_quantile = 0.995
+	structural_registration.inputs.args = '--float'
+	structural_registration.inputs.output_warped_image = 'output_warped_image.nii.gz'
+	structural_registration.inputs.num_threads = 4
+	structural_registration.plugin_args = {'qsub_args': '-pe orte 4', 'sbatch_args': '--mem=6G -c 4'}
 
-	struct_warpall = pe.Node(ants.ApplyTransforms(),name='struct_warp')
-	struct_warpall.inputs.reference_image = "/home/chymera/data/reference/QBI_atlas100.nii"
-	struct_warpall.inputs.input_image_type = 3
-	struct_warpall.inputs.interpolation = 'Linear'
-	struct_warpall.inputs.invert_transform_flags = [False]
-	struct_warpall.inputs.terminal_output = 'file'
-	struct_warpall.num_threads = 4
+	structural_warp = pe.Node(ants.ApplyTransforms(),name='structural_warp')
+	structural_warp.inputs.reference_image = "/home/chymera/data/reference/QBI_atlas100.nii"
+	structural_warp.inputs.input_image_type = 3
+	structural_warp.inputs.interpolation = 'Linear'
+	structural_warp.inputs.invert_transform_flags = [False]
+	structural_warp.inputs.terminal_output = 'file'
+	structural_warp.num_threads = 4
 
-	reg = pe.Node(ants.Registration(), name='antsRegister')
-	reg.inputs.fixed_image = "/home/chymera/data/reference/QBI_atlas100.nii"
-	reg.inputs.output_transform_prefix = "output_"
-	reg.inputs.transforms = ['Rigid', 'Affine', 'SyN']
-	reg.inputs.transform_parameters = [(0.1,), (0.1,), (0.2, 3.0, 0.0)]
-	reg.inputs.number_of_iterations = [[10000, 11110, 11110]] * 2 + [[100, 30, 20]]
-	reg.inputs.dimension = 3
-	reg.inputs.write_composite_transform = True
-	reg.inputs.collapse_output_transforms = True
-	reg.inputs.initial_moving_transform_com = True
-	reg.inputs.metric = ['Mattes'] * 2 + [['Mattes', 'CC']]
-	reg.inputs.metric_weight = [1] * 2 + [[0.5, 0.5]]
-	reg.inputs.radius_or_number_of_bins = [32] * 2 + [[32, 4]]
-	reg.inputs.sampling_strategy = ['Regular'] * 2 + [[None, None]]
-	reg.inputs.sampling_percentage = [0.3] * 2 + [[None, None]]
-	reg.inputs.convergence_threshold = [1.e-8] * 2 + [-0.01]
-	reg.inputs.convergence_window_size = [20] * 2 + [5]
-	reg.inputs.smoothing_sigmas = [[4, 2, 1]] * 2 + [[1, 0.5, 0]]
-	reg.inputs.sigma_units = ['vox'] * 3
-	reg.inputs.shrink_factors = [[3, 2, 1]]*2 + [[4, 2, 1]]
-	reg.inputs.use_estimate_learning_rate_once = [True] * 3
-	reg.inputs.use_histogram_matching = [False] * 2 + [True]
-	reg.inputs.winsorize_lower_quantile = 0.005
-	reg.inputs.winsorize_upper_quantile = 0.995
-	reg.inputs.args = '--float'
-	reg.inputs.output_warped_image = 'output_warped_image.nii.gz'
-	reg.inputs.num_threads = 4
-	reg.plugin_args = {'qsub_args': '-pe orte 4', 'sbatch_args': '--mem=6G -c 4'}
+	functional_registration = pe.Node(ants.Registration(), name='functional_registration')
+	functional_registration.inputs.fixed_image = "/home/chymera/data/reference/QBI_atlas100.nii"
+	functional_registration.inputs.output_transform_prefix = "output_"
+	functional_registration.inputs.transforms = ['Rigid', 'Affine', 'SyN']
+	functional_registration.inputs.transform_parameters = [(0.1,), (0.1,), (0.2, 3.0, 0.0)]
+	functional_registration.inputs.number_of_iterations = [[10000, 11110, 11110]] * 2 + [[100, 30, 20]]
+	functional_registration.inputs.dimension = 3
+	functional_registration.inputs.write_composite_transform = True
+	functional_registration.inputs.collapse_output_transforms = True
+	functional_registration.inputs.initial_moving_transform_com = True
+	functional_registration.inputs.metric = ['Mattes'] * 2 + [['Mattes', 'CC']]
+	functional_registration.inputs.metric_weight = [1] * 2 + [[0.5, 0.5]]
+	functional_registration.inputs.radius_or_number_of_bins = [32] * 2 + [[32, 4]]
+	functional_registration.inputs.sampling_strategy = ['Regular'] * 2 + [[None, None]]
+	functional_registration.inputs.sampling_percentage = [0.3] * 2 + [[None, None]]
+	functional_registration.inputs.convergence_threshold = [1.e-8] * 2 + [-0.01]
+	functional_registration.inputs.convergence_window_size = [20] * 2 + [5]
+	functional_registration.inputs.smoothing_sigmas = [[4, 2, 1]] * 2 + [[1, 0.5, 0]]
+	functional_registration.inputs.sigma_units = ['vox'] * 3
+	functional_registration.inputs.shrink_factors = [[3, 2, 1]]*2 + [[4, 2, 1]]
+	functional_registration.inputs.use_estimate_learning_rate_once = [True] * 3
+	functional_registration.inputs.use_histogram_matching = [False] * 2 + [True]
+	functional_registration.inputs.winsorize_lower_quantile = 0.005
+	functional_registration.inputs.winsorize_upper_quantile = 0.995
+	functional_registration.inputs.args = '--float'
+	functional_registration.inputs.output_warped_image = 'output_warped_image.nii.gz'
+	functional_registration.inputs.num_threads = 4
+	functional_registration.plugin_args = {'qsub_args': '-pe orte 4', 'sbatch_args': '--mem=6G -c 4'}
 
-	warpall = pe.Node(ants.ApplyTransforms(),name='functional_warp')
-	warpall.inputs.reference_image = "/home/chymera/data/reference/QBI_atlas100.nii"
-	warpall.inputs.input_image_type = 3
-	warpall.inputs.interpolation = 'Linear'
-	warpall.inputs.invert_transform_flags = [False]
-	warpall.inputs.terminal_output = 'file'
-	warpall.num_threads = 4
+	functional_warp = pe.Node(ants.ApplyTransforms(),name='functional_warp')
+	functional_warp.inputs.reference_image = "/home/chymera/data/reference/QBI_atlas100.nii"
+	functional_warp.inputs.input_image_type = 3
+	functional_warp.inputs.interpolation = 'Linear'
+	functional_warp.inputs.invert_transform_flags = [False]
+	functional_warp.inputs.terminal_output = 'file'
+	functional_warp.num_threads = 4
 
 	melodic = pe.Node(interface=MELODIC(), name="MELODIC")
 	melodic.inputs.report = True
@@ -124,17 +124,17 @@ def fsl_glm(workflow_base, functional_scan_type, structural_scan_type=None, expe
 
 	analysis_workflow.connect([
 		(realigner, meaner, [('out_file', 'in_file')]),
-		(realigner, masker, [('out_file', 'in_file')]),
-		(meaner, skullstripping, [('out_file', 'in_file')]),
-		(skullstripping_structural, spatial_filtering_structural, [('out_file', 'in_files')]),
-		(skullstripping, spatial_filtering, [('out_file', 'in_files')]),
-		(skullstripping, masker, [('mask_file', 'mask_file')]),
-		(spatial_filtering, reg, [('restored_image', 'moving_image')]),
-		(spatial_filtering_structural, struct_reg, [('restored_image', 'moving_image')]),
-		(masker, struct_warpall, [('out_file', 'input_image')]),
-		(reg, warpall, [('composite_transform', 'transforms')]),
-		(struct_reg, struct_warpall, [('composite_transform', 'transforms')]),
-		(masker, warpall, [('out_file', 'input_image')]),
+		(realigner, functional_masker, [('out_file', 'in_file')]),
+		(meaner, functional_BET, [('out_file', 'in_file')]),
+		(structural_BET, spatial_filtering_structural, [('out_file', 'in_files')]),
+		(functional_BET, functional_FAST, [('out_file', 'in_files')]),
+		(functional_BET, functional_masker, [('mask_file', 'mask_file')]),
+		(functional_FAST, functional_registration, [('restored_image', 'moving_image')]),
+		(spatial_filtering_structural, structural_registration, [('restored_image', 'moving_image')]),
+		(functional_masker, structural_warp, [('out_file', 'input_image')]),
+		(functional_registration, functional_warp, [('composite_transform', 'transforms')]),
+		(structural_registration, structural_warp, [('composite_transform', 'transforms')]),
+		(functional_masker, functional_warp, [('out_file', 'input_image')]),
 		])
 		# (warpall, melodic, [('output_image', 'in_files')]),
 		# (melodic, datasink, [('report_dir', 'MELODIC_reports')])
@@ -145,7 +145,7 @@ def fsl_glm(workflow_base, functional_scan_type, structural_scan_type=None, expe
 
 	pipeline.connect([
 		(bru2_preproc_workflow, analysis_workflow, [('bru2nii.nii_file','realign.in_file')]),
-		(bru2_preproc_workflow, analysis_workflow, [('bru2nii_structural.nii_file','BET_structural.in_file')])
+		(bru2_preproc_workflow, analysis_workflow, [('bru2nii_structural.nii_file','structural_BET.in_file')])
 		])
 
 	pipeline.write_graph(graph2use="flat")

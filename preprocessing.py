@@ -69,49 +69,48 @@ def bru2_preproc(workflow_base, functional_scan_type, experiment_type=None, stru
 			if sub_dir[:3] == "201" and sub_dir not in omit_ID:
 				IDs.append(sub_dir)
 
-	infosource = pe.Node(interface=util.IdentityInterface(fields=['measurement_id']), name="experiment_source")
+	infosource = pe.Node(interface=util.IdentityInterface(fields=['measurement_id']), name="infosource")
 	infosource.iterables = ('measurement_id', IDs)
 
-	datasource1 = pe.Node(interface=nio.DataGrabber(infields=['measurement_id'], outfields=['measurement_path']), name='data_source')
-	datasource1.inputs.template = workflow_base+"/%s"
-	datasource1.inputs.template_args['measurement_path'] = [['measurement_id']]
-	datasource1.inputs.sort_filelist = True
+	data_source = pe.Node(interface=nio.DataGrabber(infields=['measurement_id'], outfields=['measurement_path']), name='data_source')
+	data_source.inputs.template = workflow_base+"/%s"
+	data_source.inputs.template_args['measurement_path'] = [['measurement_id']]
+	data_source.inputs.sort_filelist = True
 
-	find_functional_scan = pe.Node(interface=FindScan(), name="functional_scan_filter")
-	find_functional_scan.inputs.query = functional_scan_type
-	find_functional_scan.inputs.query_file = "visu_pars"
+	functional_scan_finder = pe.Node(interface=FindScan(), name="functional_scan_finder")
+	functional_scan_finder.inputs.query = functional_scan_type
+	functional_scan_finder.inputs.query_file = "visu_pars"
 
 	if structural_scan_type:
-		find_structural_scan = pe.Node(interface=FindScan(), name="find_structural_scan")
-		find_structural_scan.inputs.query = structural_scan_type
-		find_structural_scan.inputs.query_file = "visu_pars"
-		converter_structural = pe.Node(interface=Bru2(), name="bru2nii_structural")
-		converter_structural.inputs.force_conversion=True
+		structural_scan_finder = pe.Node(interface=FindScan(), name="structural_scan_finder")
+		structural_scan_finder.inputs.query = structural_scan_type
+		structural_scan_finder.inputs.query_file = "visu_pars"
+		structural_bru2nii = pe.Node(interface=Bru2(), name="structural_bru2nii")
+		structural_bru2nii.inputs.force_conversion=True
 		if resize == False:
-			converter_structural.inputs.actual_size=True
+			structural_bru2nii.inputs.actual_size=True
 
-	converter_functional = pe.Node(interface=Bru2(), name="bru2nii")
+	functional_bru2nii = pe.Node(interface=Bru2(), name="functional_bru2nii")
 	if resize == False:
-		converter_functional.inputs.actual_size=True
+		functional_bru2nii.inputs.actual_size=True
 
 	workflow = pe.Workflow(name="Preprocessing")
 
 	workflow_connections = [
 		(infosource, datasource1, [('measurement_id', 'measurement_id')]),
-		(datasource1, find_functional_scan, [('measurement_path', 'scans_directory')]),
-		(find_functional_scan, converter_functional, [('positive_scan', 'input_dir')])
+		(data_source, functional_scan_finder, [('measurement_path', 'scans_directory')]),
+		(functional_scan_finder, functional_bru2nii, [('positive_scan', 'input_dir')])
 		]
 
 	if structural_scan_type:
 		workflow_connections.extend([
-			(datasource1, find_structural_scan, [('measurement_path', 'scans_directory')]),
-			(find_structural_scan, converter_structural, [('positive_scan', 'input_dir')])
+			(data_source, structural_scan_finder, [('measurement_path', 'scans_directory')]),
+			(structural_scan_finder, structural_bru2nii, [('positive_scan', 'input_dir')])
 			])
 
 	workflow.connect(workflow_connections)
 
 	return workflow
-
 
 if __name__ == "__main__":
 	IDs=[4457,4459]

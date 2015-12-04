@@ -12,7 +12,7 @@ def fsl_glm(workflow_base, functional_scan_type, structural_scan_type=None, expe
 	workflow_base = path.expanduser(workflow_base)
 	bru2_preproc_workflow = bru2_preproc(workflow_base, functional_scan_type, structural_scan_type=structural_scan_type, experiment_type=experiment_type, omit_ID=omit_ID)
 
-	meaner = pe.Node(interface=MeanImage(), name="temporal_mean")
+	temporal_mean = pe.Node(interface=MeanImage(), name="temporal_mean")
 	functional_masker = pe.Node(interface=ApplyMask(), name="functional_masker")
 
 	structural_cutoff = pe.Node(interface=ImageMaths(), name="structural_cutoff")
@@ -104,6 +104,10 @@ def fsl_glm(workflow_base, functional_scan_type, structural_scan_type=None, expe
 	functional_cutoff = pe.Node(interface=ImageMaths(), name="functional_cutoff")
 	functional_cutoff.inputs.op_string = "-thrP 45"
 
+	functional_BET = pe.Node(interface=BET(), name="functional_BET")
+	functional_BET.inputs.mask = True
+	functional_BET.inputs.frac = 0.5
+
 	melodic = pe.Node(interface=MELODIC(), name="MELODIC")
 	melodic.inputs.report = True
 	melodic.inputs.dim = 8
@@ -116,10 +120,9 @@ def fsl_glm(workflow_base, functional_scan_type, structural_scan_type=None, expe
 
 	analysis_workflow.connect([
 		(structural_cutoff, structural_BET, [('out_file', 'in_file')]),
-		(realigner, structural_warp, [('out_file', 'input_image')]),
 		(structural_BET, structural_registration, [('out_file', 'moving_image')]),
 		(structural_registration, structural_warp, [('composite_transform', 'transforms')]),
-		(meaner, functional_FAST, [('out_file', 'in_file')]),
+		(temporal_mean, functional_FAST, [('out_file', 'in_files')]),
 		(functional_FAST, functional_cutoff, [('restored_image', 'in_file')]),
 		(functional_cutoff, functional_BET, [('out_file', 'in_file')]),
 		(functional_BET, functional_registration, [('out_file', 'moving_image')]),
@@ -139,9 +142,9 @@ def fsl_glm(workflow_base, functional_scan_type, structural_scan_type=None, expe
 	pipeline.base_dir = workflow_base
 
 	pipeline.connect([
-		(bru2_preproc_workflow, analysis_workflow, [('realign.out_file','structural_warp.input_image')]),
-		(bru2_preproc_workflow, analysis_workflow, [('realign.out_file','functional_warp.input_image')]),
-		(bru2_preproc_workflow, analysis_workflow, [('realign.out_file','meaner.input_image')]),
+		(bru2_preproc_workflow, analysis_workflow, [('realigner.out_file','structural_warp.input_image')]),
+		(bru2_preproc_workflow, analysis_workflow, [('realigner.out_file','functional_warp.input_image')]),
+		(bru2_preproc_workflow, analysis_workflow, [('realigner.out_file','temporal_mean.in_file')]),
 		(bru2_preproc_workflow, analysis_workflow, [('structural_FAST.restored_image','structural_cutoff.in_file')])
 		])
 

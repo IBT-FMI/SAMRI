@@ -107,7 +107,7 @@ def bru2_preproc(workflow_base, functional_scan_type, experiment_type=None, stru
 	realigner.inputs.slice_times = "asc_alt_2"
 
 	workflow_connections = [
-		(infosource, datasource1, [('measurement_id', 'measurement_id')]),
+		(infosource, data_source, [('measurement_id', 'measurement_id')]),
 		(data_source, functional_scan_finder, [('measurement_path', 'scans_directory')]),
 		(functional_scan_finder, functional_bru2nii, [('positive_scan', 'input_dir')]),
 		(functional_bru2nii, realigner, [('nii_file', 'in_file')]),

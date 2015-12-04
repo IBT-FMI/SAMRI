@@ -1,6 +1,6 @@
 import nipype.pipeline.engine as pe
 import nipype.interfaces.utility as util
-from nipype.interfaces.fsl import GLM, MELODIC, FAST, BET, MeanImage, FLIRT, ApplyMask
+from nipype.interfaces.fsl import GLM, MELODIC, FAST, BET, MeanImage, FLIRT, ApplyMask, ImageMaths
 # from nipype.interfaces.fsl import GLM, MELODIC, FAST, BET
 import nipype.interfaces.io as nio
 from os import path
@@ -25,21 +25,24 @@ def fsl_glm(workflow_base, functional_scan_type, structural_scan_type=None, expe
 	functional_FAST.inputs.output_biascorrected = True
 	functional_FAST.inputs.bias_iters = 8
 
-	spatial_filtering_structural = pe.Node(interface=FAST(), name="structural_FAST")
-	spatial_filtering_structural.inputs.segments = False
-	spatial_filtering_structural.inputs.output_biascorrected = True
-	spatial_filtering_structural.inputs.bias_iters = 8
+	structural_FAST = pe.Node(interface=FAST(), name="structural_FAST")
+	structural_FAST.inputs.segments = False
+	structural_FAST.inputs.output_biascorrected = True
+	structural_FAST.inputs.bias_iters = 8
+
+	structural_cutoff = pe.Node(interface=ImageMaths(), name="structural_cutoff")
+	structural_cutoff.inputs.op_string = "-thrP 45"
 
 	functional_BET = pe.Node(interface=BET(), name="functional_BET")
 	functional_BET.inputs.mask = True
-	functional_BET.inputs.frac = 0.8
+	functional_BET.inputs.frac = 0.5
 
 	structural_BET = pe.Node(interface=BET(), name="structural_BET")
 	structural_BET.inputs.mask = True
-	structural_BET.inputs.frac = 0.8
+	structural_BET.inputs.frac = 0.5
 
 	structural_registration = pe.Node(ants.Registration(), name='structural_registration')
-	structural_registration.inputs.fixed_image = "/home/chymera/data/reference/QBI_atlas100.nii"
+	structural_registration.inputs.fixed_image = "/home/chymera/NIdata/templates/QBI_atlas100RD.nii.gz"
 	structural_registration.inputs.output_transform_prefix = "output_"
 	structural_registration.inputs.transforms = ['Rigid', 'Affine', 'SyN']
 	structural_registration.inputs.transform_parameters = [(0.1,), (0.1,), (0.2, 3.0, 0.0)]
@@ -68,7 +71,7 @@ def fsl_glm(workflow_base, functional_scan_type, structural_scan_type=None, expe
 	structural_registration.plugin_args = {'qsub_args': '-pe orte 4', 'sbatch_args': '--mem=6G -c 4'}
 
 	structural_warp = pe.Node(ants.ApplyTransforms(),name='structural_warp')
-	structural_warp.inputs.reference_image = "/home/chymera/data/reference/QBI_atlas100.nii"
+	structural_warp.inputs.reference_image = "/home/chymera/NIdata/templates/QBI_atlas100RD.nii.gz"
 	structural_warp.inputs.input_image_type = 3
 	structural_warp.inputs.interpolation = 'Linear'
 	structural_warp.inputs.invert_transform_flags = [False]
@@ -76,7 +79,7 @@ def fsl_glm(workflow_base, functional_scan_type, structural_scan_type=None, expe
 	structural_warp.num_threads = 4
 
 	functional_registration = pe.Node(ants.Registration(), name='functional_registration')
-	functional_registration.inputs.fixed_image = "/home/chymera/data/reference/QBI_atlas100.nii"
+	functional_registration.inputs.fixed_image = "/home/chymera/NIdata/templates/QBI_atlas100RD.nii.gz"
 	functional_registration.inputs.output_transform_prefix = "output_"
 	functional_registration.inputs.transforms = ['Rigid', 'Affine', 'SyN']
 	functional_registration.inputs.transform_parameters = [(0.1,), (0.1,), (0.2, 3.0, 0.0)]
@@ -105,7 +108,7 @@ def fsl_glm(workflow_base, functional_scan_type, structural_scan_type=None, expe
 	functional_registration.plugin_args = {'qsub_args': '-pe orte 4', 'sbatch_args': '--mem=6G -c 4'}
 
 	functional_warp = pe.Node(ants.ApplyTransforms(),name='functional_warp')
-	functional_warp.inputs.reference_image = "/home/chymera/data/reference/QBI_atlas100.nii"
+	functional_warp.inputs.reference_image = "/home/chymera/NIdata/templates/QBI_atlas100RD.nii.gz"
 	functional_warp.inputs.input_image_type = 3
 	functional_warp.inputs.interpolation = 'Linear'
 	functional_warp.inputs.invert_transform_flags = [False]
@@ -123,19 +126,21 @@ def fsl_glm(workflow_base, functional_scan_type, structural_scan_type=None, expe
 	analysis_workflow = pe.Workflow(name="GLM")
 
 	analysis_workflow.connect([
-		(realigner, meaner, [('out_file', 'in_file')]),
-		(realigner, functional_masker, [('out_file', 'in_file')]),
-		(meaner, functional_BET, [('out_file', 'in_file')]),
-		(structural_BET, spatial_filtering_structural, [('out_file', 'in_files')]),
-		(functional_BET, functional_FAST, [('out_file', 'in_files')]),
-		(functional_BET, functional_masker, [('mask_file', 'mask_file')]),
-		(functional_FAST, functional_registration, [('restored_image', 'moving_image')]),
-		(spatial_filtering_structural, structural_registration, [('restored_image', 'moving_image')]),
-		(functional_masker, structural_warp, [('out_file', 'input_image')]),
-		(functional_registration, functional_warp, [('composite_transform', 'transforms')]),
+		(structural_FAST, structural_cutoff, [('restored_image', 'in_file')]),
+		(structural_cutoff, structural_BET, [('out_file', 'in_file')]),
+		(realigner, structural_warp, [('out_file', 'input_image')]),
+		(structural_BET, structural_registration, [('out_file', 'moving_image')]),
 		(structural_registration, structural_warp, [('composite_transform', 'transforms')]),
-		(functional_masker, functional_warp, [('out_file', 'input_image')]),
 		])
+		# (functional_masker, functional_warp, [('out_file', 'input_image')]),
+		# (functional_registration, functional_warp, [('composite_transform', 'transforms')]),
+		# (functional_masker, structural_warp, [('out_file', 'input_image')]),
+		# (functional_FAST, functional_registration, [('restored_image', 'moving_image')]),
+		# (functional_BET, functional_masker, [('mask_file', 'mask_file')]),
+		# (functional_BET, functional_FAST, [('out_file', 'in_files')]),
+		# (meaner, functional_BET, [('out_file', 'in_file')]),
+		# (realigner, functional_masker, [('out_file', 'in_file')]),
+		# (realigner, meaner, [('out_file', 'in_file')]),
 		# (warpall, melodic, [('output_image', 'in_files')]),
 		# (melodic, datasink, [('report_dir', 'MELODIC_reports')])
 
@@ -145,11 +150,11 @@ def fsl_glm(workflow_base, functional_scan_type, structural_scan_type=None, expe
 
 	pipeline.connect([
 		(bru2_preproc_workflow, analysis_workflow, [('bru2nii.nii_file','realign.in_file')]),
-		(bru2_preproc_workflow, analysis_workflow, [('bru2nii_structural.nii_file','structural_BET.in_file')])
+		(bru2_preproc_workflow, analysis_workflow, [('bru2nii_structural.nii_file','structural_FAST.in_files')])
 		])
 
 	pipeline.write_graph(graph2use="flat")
-	pipeline.run(plugin="MultiProc",  plugin_args={'n_procs' : 2})
+	pipeline.run(plugin="MultiProc",  plugin_args={'n_procs' : 4})
 
 if __name__ == "__main__":
-	fsl_glm(workflow_base="~/NIdata/ofM.dr/", functional_scan_type="7_EPI_CBV", structural_scan_type="T2_TurboRARE>", experiment_type="<ofM>", omit_ID=["20151026_135856_4006_1_1", "20151027_121613_4013_ofM_1_1"])
+	fsl_glm(workflow_base="~/NIdata/ofM.dr/", functional_scan_type="7_EPI_CBV", structural_scan_type="T2_TurboRARE>", experiment_type="<ofM>", omit_ID=["20151026_135856_4006_1_1", "20151027_121613_4013_ofM_1_1","20151102_131136_4004_1_2","20151102_151940_4005_1_1","20151103_115031_4007_1_1","20151103_144306_4008_1_1","20151103_163137_4009_1_1","20151103_231827_4002_1_1"])

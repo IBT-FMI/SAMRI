@@ -54,7 +54,7 @@ def dcm_preproc(workflow_base=".", force_convert=False, source_pattern="", IDs="
 	workflow.write_graph(graph2use="orig")
 	workflow.run(plugin="MultiProc")
 
-def bru2_preproc(workflow_base, functional_scan_type, experiment_type=None, structural_scan_type=None, resize=True, omit_ID=[]):
+def bru2_preproc(workflow_base, functional_scan_type, experiment_type=None, structural_scan_type=None, resize=True, omit_ID=[], tr=1):
 	IDs=[]
 	if experiment_type:
 		for sub_dir in listdir(workflow_base):
@@ -96,10 +96,16 @@ def bru2_preproc(workflow_base, functional_scan_type, experiment_type=None, stru
 
 	workflow = pe.Workflow(name="Preprocessing")
 
+	realigner = pe.Node(interface=SpaceTimeRealigner(), name="realign")
+	realigner.inputs.tr = tr
+	realigner.inputs.slice_info = 3 #3 for coronal slices (2 for horizontal, 1 for sagittal)
+	realigner.inputs.slice_times = "asc_alt_2"
+
 	workflow_connections = [
 		(infosource, datasource1, [('measurement_id', 'measurement_id')]),
 		(data_source, functional_scan_finder, [('measurement_path', 'scans_directory')]),
-		(functional_scan_finder, functional_bru2nii, [('positive_scan', 'input_dir')])
+		(functional_scan_finder, functional_bru2nii, [('positive_scan', 'input_dir')]),
+		(functional_bru2nii, realigner, [('nii_file', 'in_file')])
 		]
 
 	if structural_scan_type:

@@ -1,5 +1,6 @@
 import nipype.interfaces.utility as util		# utility
 import nipype.pipeline.engine as pe				# pypeline engine
+from nipype.interfaces.fsl import FAST
 from nipype.interfaces.nipy.preprocess import FmriRealign4d
 from nipype.interfaces.nipy import SpaceTimeRealigner
 from extra_interfaces import DcmToNii, MEICA, VoxelResize, Bru2, FindScan
@@ -89,6 +90,11 @@ def bru2_preproc(workflow_base, functional_scan_type, experiment_type=None, stru
 		structural_bru2nii.inputs.force_conversion=True
 		if resize == False:
 			structural_bru2nii.inputs.actual_size=True
+
+		structural_FAST = pe.Node(interface=FAST(), name="structural_FAST")
+		structural_FAST.inputs.segments = False
+		structural_FAST.inputs.output_biascorrected = True
+		structural_FAST.inputs.bias_iters = 8
 
 	functional_bru2nii = pe.Node(interface=Bru2(), name="functional_bru2nii")
 	if resize == False:

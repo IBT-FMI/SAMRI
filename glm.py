@@ -12,30 +12,11 @@ def fsl_glm(workflow_base, functional_scan_type, structural_scan_type=None, expe
 	workflow_base = path.expanduser(workflow_base)
 	bru2_preproc_workflow = bru2_preproc(workflow_base, functional_scan_type, structural_scan_type=structural_scan_type, experiment_type=experiment_type, omit_ID=omit_ID)
 
-	realigner = pe.Node(interface=SpaceTimeRealigner(), name="realign")
-	realigner.inputs.tr = 1
-	realigner.inputs.slice_info = 3 #3 for coronal slices (2 for horizontal, 1 for saggital)
-	realigner.inputs.slice_times = "asc_alt_2"
-
 	meaner = pe.Node(interface=MeanImage(), name="temporal_mean")
 	functional_masker = pe.Node(interface=ApplyMask(), name="functional_masker")
 
-	functional_FAST = pe.Node(interface=FAST(), name="functional_FAST")
-	functional_FAST.inputs.segments = False
-	functional_FAST.inputs.output_biascorrected = True
-	functional_FAST.inputs.bias_iters = 8
-
-	structural_FAST = pe.Node(interface=FAST(), name="structural_FAST")
-	structural_FAST.inputs.segments = False
-	structural_FAST.inputs.output_biascorrected = True
-	structural_FAST.inputs.bias_iters = 8
-
 	structural_cutoff = pe.Node(interface=ImageMaths(), name="structural_cutoff")
 	structural_cutoff.inputs.op_string = "-thrP 45"
-
-	functional_BET = pe.Node(interface=BET(), name="functional_BET")
-	functional_BET.inputs.mask = True
-	functional_BET.inputs.frac = 0.5
 
 	structural_BET = pe.Node(interface=BET(), name="structural_BET")
 	structural_BET.inputs.mask = True
@@ -115,6 +96,14 @@ def fsl_glm(workflow_base, functional_scan_type, structural_scan_type=None, expe
 	functional_warp.inputs.terminal_output = 'file'
 	functional_warp.num_threads = 4
 
+	functional_FAST = pe.Node(interface=FAST(), name="functional_FAST")
+	functional_FAST.inputs.segments = False
+	functional_FAST.inputs.output_biascorrected = True
+	functional_FAST.inputs.bias_iters = 8
+
+	functional_cutoff = pe.Node(interface=ImageMaths(), name="functional_cutoff")
+	functional_cutoff.inputs.op_string = "-thrP 45"
+
 	melodic = pe.Node(interface=MELODIC(), name="MELODIC")
 	melodic.inputs.report = True
 	melodic.inputs.dim = 8
@@ -126,19 +115,20 @@ def fsl_glm(workflow_base, functional_scan_type, structural_scan_type=None, expe
 	analysis_workflow = pe.Workflow(name="GLM")
 
 	analysis_workflow.connect([
-		(structural_FAST, structural_cutoff, [('restored_image', 'in_file')]),
 		(structural_cutoff, structural_BET, [('out_file', 'in_file')]),
 		(realigner, structural_warp, [('out_file', 'input_image')]),
 		(structural_BET, structural_registration, [('out_file', 'moving_image')]),
 		(structural_registration, structural_warp, [('composite_transform', 'transforms')]),
+		(meaner, functional_FAST, [('out_file', 'in_file')]),
+		(functional_FAST, functional_cutoff, [('restored_image', 'in_file')]),
+		(functional_cutoff, functional_BET, [('out_file', 'in_file')]),
+		(functional_BET, functional_registration, [('out_file', 'moving_image')]),
+		(functional_registration, functional_warp, [('composite_transform', 'transforms')]),
 		])
 		# (functional_masker, functional_warp, [('out_file', 'input_image')]),
 		# (functional_registration, functional_warp, [('composite_transform', 'transforms')]),
 		# (functional_masker, structural_warp, [('out_file', 'input_image')]),
-		# (functional_FAST, functional_registration, [('restored_image', 'moving_image')]),
 		# (functional_BET, functional_masker, [('mask_file', 'mask_file')]),
-		# (functional_BET, functional_FAST, [('out_file', 'in_files')]),
-		# (meaner, functional_BET, [('out_file', 'in_file')]),
 		# (realigner, functional_masker, [('out_file', 'in_file')]),
 		# (realigner, meaner, [('out_file', 'in_file')]),
 		# (warpall, melodic, [('output_image', 'in_files')]),
@@ -149,8 +139,10 @@ def fsl_glm(workflow_base, functional_scan_type, structural_scan_type=None, expe
 	pipeline.base_dir = workflow_base
 
 	pipeline.connect([
-		(bru2_preproc_workflow, analysis_workflow, [('bru2nii.nii_file','realign.in_file')]),
-		(bru2_preproc_workflow, analysis_workflow, [('bru2nii_structural.nii_file','structural_FAST.in_files')])
+		(bru2_preproc_workflow, analysis_workflow, [('realign.out_file','structural_warp.input_image')]),
+		(bru2_preproc_workflow, analysis_workflow, [('realign.out_file','functional_warp.input_image')]),
+		(bru2_preproc_workflow, analysis_workflow, [('realign.out_file','meaner.input_image')]),
+		(bru2_preproc_workflow, analysis_workflow, [('structural_FAST.restored_image','structural_cutoff.in_file')])
 		])
 
 	pipeline.write_graph(graph2use="flat")

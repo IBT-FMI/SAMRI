@@ -106,17 +106,11 @@ def bru2_preproc(workflow_base, functional_scan_type, experiment_type=None, stru
 	realigner.inputs.slice_info = 3 #3 for coronal slices (2 for horizontal, 1 for sagittal)
 	realigner.inputs.slice_times = "asc_alt_2"
 
-	functional_FAST = pe.Node(interface=FAST(), name="functional_FAST")
-	functional_FAST.inputs.segments = False
-	functional_FAST.inputs.output_biascorrected = True
-	functional_FAST.inputs.bias_iters = 8
-
 	workflow_connections = [
 		(infosource, datasource1, [('measurement_id', 'measurement_id')]),
 		(data_source, functional_scan_finder, [('measurement_path', 'scans_directory')]),
 		(functional_scan_finder, functional_bru2nii, [('positive_scan', 'input_dir')]),
 		(functional_bru2nii, realigner, [('nii_file', 'in_file')]),
-		(realigner, functional_FAST, [('out_file', 'in_files')])
 		]
 
 	if structural_scan_type:

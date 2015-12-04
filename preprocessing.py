@@ -1,7 +1,6 @@
 import nipype.interfaces.utility as util		# utility
 import nipype.pipeline.engine as pe				# pypeline engine
 from nipype.interfaces.fsl import FAST
-from nipype.interfaces.nipy.preprocess import FmriRealign4d
 from nipype.interfaces.nipy import SpaceTimeRealigner
 from extra_interfaces import DcmToNii, MEICA, VoxelResize, Bru2, FindScan
 from nipype.interfaces.dcmstack import DcmStack
@@ -117,7 +116,8 @@ def bru2_preproc(workflow_base, functional_scan_type, experiment_type=None, stru
 	if structural_scan_type:
 		workflow_connections.extend([
 			(data_source, structural_scan_finder, [('measurement_path', 'scans_directory')]),
-			(structural_scan_finder, structural_bru2nii, [('positive_scan', 'input_dir')])
+			(structural_scan_finder, structural_bru2nii, [('positive_scan', 'input_dir')]),
+			(structural_bru2nii, structural_FAST, [('nii_file', 'in_files')])
 			])
 
 	workflow.connect(workflow_connections)

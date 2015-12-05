@@ -152,4 +152,4 @@ def fsl_glm(workflow_base, functional_scan_type, structural_scan_type=None, expe
 	pipeline.run(plugin="MultiProc",  plugin_args={'n_procs' : 4})
 
 if __name__ == "__main__":
-	fsl_glm(workflow_base="~/NIdata/ofM.dr/", functional_scan_type="7_EPI_CBV", structural_scan_type="T2_TurboRARE>", experiment_type="<ofM>", omit_ID=["20151026_135856_4006_1_1", "20151027_121613_4013_ofM_1_1","20151102_131136_4004_1_2","20151102_151940_4005_1_1","20151103_115031_4007_1_1","20151103_144306_4008_1_1","20151103_163137_4009_1_1","20151103_231827_4002_1_1"])
+	fsl_glm(workflow_base="~/NIdata/ofM.dr/", functional_scan_type="7_EPI_CBV", structural_scan_type="T2_TurboRARE>", experiment_type="<ofM>", omit_ID=["20151026_135856_4006_1_1", "20151027_121613_4013_ofM_1_1","20151102_131136_4004_1_2","20151102_151940_4005_1_1","20151103_115031_4007_1_1","20151103_144306_4008_1_1","20151103_163137_4009_1_1","20151103_231827_4002_1_1","_measurement_id_20151027_170359_4012_ofM_1_1"])

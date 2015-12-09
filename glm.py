@@ -1,6 +1,7 @@
 import nipype.pipeline.engine as pe
 import nipype.interfaces.utility as util
 from nipype.interfaces.fsl import GLM, MELODIC, FAST, BET, MeanImage, FLIRT, ApplyMask, ImageMaths
+from nipype.interfaces.afni import Bandpass
 # from nipype.interfaces.fsl import GLM, MELODIC, FAST, BET
 import nipype.interfaces.io as nio
 from os import path
@@ -108,6 +109,14 @@ def fsl_glm(workflow_base, functional_scan_type, structural_scan_type=None, expe
 	functional_BET.inputs.mask = True
 	functional_BET.inputs.frac = 0.5
 
+	functional_bandpass = pe.Node(interface=Bandpass(), name="functional_bandpass")
+	functional_bandpass.inputs.highpass = 0
+	functional_bandpass.inputs.lowpass = 0.001
+
+	structural_bandpass = pe.Node(interface=Bandpass(), name="structural_bandpass")
+	structural_bandpass.inputs.highpass = 0
+	structural_bandpass.inputs.lowpass = 0.001
+
 	melodic = pe.Node(interface=MELODIC(), name="MELODIC")
 	melodic.inputs.report = True
 	melodic.inputs.dim = 8
@@ -127,6 +136,8 @@ def fsl_glm(workflow_base, functional_scan_type, structural_scan_type=None, expe
 		(functional_cutoff, functional_BET, [('out_file', 'in_file')]),
 		(functional_BET, functional_registration, [('out_file', 'moving_image')]),
 		(functional_registration, functional_warp, [('composite_transform', 'transforms')]),
+		(functional_warp, functional_bandpass, [('output_image', 'in_file')]),
+		(structural_warp, structural_bandpass, [('output_image', 'in_file')]),
 		])
 		# (functional_masker, functional_warp, [('out_file', 'input_image')]),
 		# (functional_registration, functional_warp, [('composite_transform', 'transforms')]),

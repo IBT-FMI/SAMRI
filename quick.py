@@ -6,14 +6,11 @@ from os import path, listdir
 from preprocessing import bru2_preproc
 import nipype.interfaces.io as nio
 
-def quick_melodic(workflow_base, functional_scan_type, experiment_type=None, workflow_denominator="QuickMELODIC", omit_ID=[]):
+def quick_melodic(workflow_base, functional_scan_type, experiment_type=None, workflow_denominator="QuickMELODIC", omit_ID=[], inclusion_filter=""):
 	workflow_base = path.expanduser(workflow_base)
-	bru2_preproc_workflow = bru2_preproc(workflow_base, functional_scan_type, experiment_type=None, omit_ID=omit_ID)
+	bru2_preproc_workflow = bru2_preproc(workflow_base, functional_scan_type, experiment_type=experiment_type, omit_ID=omit_ID, inclusion_filter=inclusion_filter)
 
-	skullstripping = pe.Node(interface=BET(), name="fslBET")
-	skullstripping.inputs.functional = True
-
-	melodic = pe.Node(interface=MELODIC(), name="MELODIC")
+	melodic = pe.Node(interface=MELODIC(), name="melodic")
 	melodic.inputs.report = True
 	melodic.inputs.dim = 8
 
@@ -24,7 +21,6 @@ def quick_melodic(workflow_base, functional_scan_type, experiment_type=None, wor
 	analysis_workflow = pe.Workflow(name="ICA")
 
 	analysis_workflow.connect([
-		(skullstripping, melodic, [('out_file', 'in_files')]),
 		(melodic, datasink, [('report_dir', 'MELODIC_reports')])
 		])
 
@@ -32,11 +28,12 @@ def quick_melodic(workflow_base, functional_scan_type, experiment_type=None, wor
 	pipeline = pe.Workflow(name=workflow_denominator+"_work")
 	pipeline.base_dir = workflow_base
 
-	pipeline.connect([(bru2_preproc_workflow, analysis_workflow, [('bru2_functional.nii_file','fslBET.in_file')])
+	pipeline.connect([(bru2_preproc_workflow, analysis_workflow, [('realigner.out_file','melodic.in_files')])
 		])
 
-	pipeline.write_graph(graph2use="orig")
+	pipeline.write_graph(graph2use="flat")
 	pipeline.run(plugin="MultiProc")
 
 if __name__ == "__main__":
-	quick_melodic(workflow_base="~/NIdata/ofM.dr/", functional_scan_type="7_EPI_CBV", experiment_type="<ofM>",omit_ID=["20151026_135856_4006_1_1"])
+	quick_melodic(workflow_base="~/NIdata/ofM.dr/", functional_scan_type="7_EPI_CBV", experiment_type="<DG_ofM>", inclusion_filter="")
+	# experiment type, e.g. "<ofM>"

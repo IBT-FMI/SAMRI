@@ -67,6 +67,7 @@ class FindScanInputSpec(BaseInterfaceInputSpec):
 
 class FindScanOutputSpec(TraitedSpec):
 	positive_scan = Directory(exists=True)
+	positive_scans = traits.List(Directory(exists=True))
 
 class FindScan(BaseInterface):
 
@@ -74,6 +75,7 @@ class FindScan(BaseInterface):
 	output_spec = FindScanOutputSpec
 
 	def _run_interface(self, runtime):
+		self.results = []
 		scans_directory = self.inputs.scans_directory
 		query = self.inputs.query
 		query_file = self.inputs.query_file
@@ -82,15 +84,15 @@ class FindScan(BaseInterface):
 			if os.path.isdir(scans_directory+"/"+sub_dir):
 				try:
 					if query in open(scans_directory+"/"+sub_dir+"/"+query_file).read():
-						self.result = scans_directory+"/"+sub_dir
-						break
+						self.results.append(scans_directory+"/"+sub_dir)
 				except IOError:
 					pass
 		return runtime
 
 	def _list_outputs(self):
 		outputs = self._outputs().get()
-		outputs["positive_scan"] = self.result
+		outputs["positive_scan"] = self.results[0]
+		outputs["positive_scans"] = self.results
 		return outputs
 
 class VoxelResizeInputSpec(BaseInterfaceInputSpec):

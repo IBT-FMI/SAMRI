@@ -54,20 +54,22 @@ def dcm_preproc(workflow_base=".", force_convert=False, source_pattern="", IDs="
 	workflow.write_graph(graph2use="orig")
 	workflow.run(plugin="MultiProc")
 
-def bru2_preproc(workflow_base, functional_scan_type, experiment_type=None, structural_scan_type=None, resize=True, omit_ID=[], tr=1):
+def bru2_preproc(workflow_base, functional_scan_type, experiment_type=None, structural_scan_type=None, resize=True, omit_ID=[], tr=1, inclusion_filter=""):
 	IDs=[]
 	if experiment_type:
 		for sub_dir in listdir(workflow_base):
-			if sub_dir not in omit_ID:
-				try:
-					if experiment_type in open(workflow_base+"/"+sub_dir+"/subject").read():
-						IDs.append(sub_dir)
-				except IOError:
-					pass
+			if inclusion_filter in sub_dir:
+				if sub_dir not in omit_ID:
+					try:
+						if experiment_type in open(workflow_base+"/"+sub_dir+"/subject").read():
+							IDs.append(sub_dir)
+					except IOError:
+						pass
 	else:
 		for sub_dir in listdir(workflow_base):
-			if sub_dir[:3] == "201" and sub_dir not in omit_ID:
-				IDs.append(sub_dir)
+			if inclusion_filter in sub_dir:
+				if sub_dir not in omit_ID:
+					IDs.append(sub_dir)
 
 	infosource = pe.Node(interface=util.IdentityInterface(fields=['measurement_id']), name="infosource")
 	infosource.iterables = ('measurement_id', IDs)
@@ -96,6 +98,7 @@ def bru2_preproc(workflow_base, functional_scan_type, experiment_type=None, stru
 		structural_FAST.inputs.bias_iters = 8
 
 	functional_bru2nii = pe.Node(interface=Bru2(), name="functional_bru2nii")
+	functional_bru2nii.iterables = ("input_dir")
 	if resize == False:
 		functional_bru2nii.inputs.actual_size=True
 
@@ -109,14 +112,14 @@ def bru2_preproc(workflow_base, functional_scan_type, experiment_type=None, stru
 	workflow_connections = [
 		(infosource, data_source, [('measurement_id', 'measurement_id')]),
 		(data_source, functional_scan_finder, [('measurement_path', 'scans_directory')]),
-		(functional_scan_finder, functional_bru2nii, [('positive_scan', 'input_dir')]),
+		(functional_scan_finder, functional_bru2nii, [('positive_scans', 'input_dir')]),
 		(functional_bru2nii, realigner, [('nii_file', 'in_file')]),
 		]
 
 	if structural_scan_type:
 		workflow_connections.extend([
 			(data_source, structural_scan_finder, [('measurement_path', 'scans_directory')]),
-			(structural_scan_finder, structural_bru2nii, [('positive_scan', 'input_dir')]),
+			(structural_scan_finder, structural_bru2nii, [('positive_scans', 'input_dir')]),
 			(structural_bru2nii, structural_FAST, [('nii_file', 'in_files')])
 			])
 

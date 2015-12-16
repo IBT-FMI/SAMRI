@@ -98,7 +98,6 @@ def bru2_preproc(workflow_base, functional_scan_type, experiment_type=None, stru
 		structural_FAST.inputs.bias_iters = 8
 
 	functional_bru2nii = pe.Node(interface=Bru2(), name="functional_bru2nii")
-	functional_bru2nii.iterables = ("input_dir")
 	if resize == False:
 		functional_bru2nii.inputs.actual_size=True
 
@@ -112,14 +111,14 @@ def bru2_preproc(workflow_base, functional_scan_type, experiment_type=None, stru
 	workflow_connections = [
 		(infosource, data_source, [('measurement_id', 'measurement_id')]),
 		(data_source, functional_scan_finder, [('measurement_path', 'scans_directory')]),
-		(functional_scan_finder, functional_bru2nii, [('positive_scans', 'input_dir')]),
+		(functional_scan_finder, functional_bru2nii, [('positive_scan', 'input_dir')]),
 		(functional_bru2nii, realigner, [('nii_file', 'in_file')]),
 		]
 
 	if structural_scan_type:
 		workflow_connections.extend([
 			(data_source, structural_scan_finder, [('measurement_path', 'scans_directory')]),
-			(structural_scan_finder, structural_bru2nii, [('positive_scans', 'input_dir')]),
+			(structural_scan_finder, structural_bru2nii, [('positive_scan', 'input_dir')]),
 			(structural_bru2nii, structural_FAST, [('nii_file', 'in_files')])
 			])
 

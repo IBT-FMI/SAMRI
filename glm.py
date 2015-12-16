@@ -110,12 +110,12 @@ def fsl_glm(workflow_base, functional_scan_type, structural_scan_type=None, expe
 	functional_BET.inputs.frac = 0.5
 
 	functional_bandpass = pe.Node(interface=Bandpass(), name="functional_bandpass")
-	functional_bandpass.inputs.highpass = 0
-	functional_bandpass.inputs.lowpass = 0.001
+	functional_bandpass.inputs.highpass = 0.001
+	functional_bandpass.inputs.lowpass = 9999
 
 	structural_bandpass = pe.Node(interface=Bandpass(), name="structural_bandpass")
-	structural_bandpass.inputs.highpass = 0
-	structural_bandpass.inputs.lowpass = 0.001
+	structural_bandpass.inputs.highpass = 0.001
+	structural_bandpass.inputs.lowpass = 9999
 
 	melodic = pe.Node(interface=MELODIC(), name="MELODIC")
 	melodic.inputs.report = True

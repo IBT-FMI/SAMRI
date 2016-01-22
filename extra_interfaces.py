@@ -106,11 +106,20 @@ class GetBrukerDelay(BaseInterface):
 	output_spec = GetBrukerDelayOutputSpec
 
 	def _run_interface(self, runtime):
-		import nibabel as nb
-		nii_files = self.inputs.nii_files
-		resize_factors = self.inputs.resize_factors
+		from datetime import datetime
+		file_path = self.inputs.scan_directory+"/AdjStatePerScan"
 
-		self.result = []
+		while True:
+			current_line = f.readline()
+			if "AdjScanStateTime" in current_line:
+				delay_datetime_line = f.readline()
+				break
+
+		trigger_time, scanstart_time = [datetime.utcnow().strptime(i.split("+")[0], "<%Y-%m-%dT%H:%M:%S,%f") for i in delay_datetime_line.split(" ")]
+		delay = scanstart_time-trigger_time
+		delay_seconds=delay.total_seconds()
+
+		self.result = delay_seconds
 		return runtime
 
 	def _list_outputs(self):

@@ -95,6 +95,53 @@ class FindScan(BaseInterface):
 		outputs["positive_scans"] = self.results
 		return outputs
 
+class GetBrukerDelayInputSpec(BaseInterfaceInputSpec):
+	scan_directory = Directory(exists=True, mandatory=True)
+
+class GetBrukerDelayOutputSpec(TraitedSpec):
+	delay = traits.Float()
+
+class GetBrukerDelay(BaseInterface):
+	input_spec = GetBrukerDelayInputSpec
+	output_spec = GetBrukerDelayOutputSpec
+
+	def _run_interface(self, runtime):
+		import nibabel as nb
+		nii_files = self.inputs.nii_files
+		resize_factors = self.inputs.resize_factors
+
+		self.result = []
+		return runtime
+
+	def _list_outputs(self):
+		outputs = self._outputs().get()
+		outputs["delay"] = self.result
+		return outputs
+
+class GetBrukerDummyScansInputSpec(BaseInterfaceInputSpec):
+	scan_directory = Directory(exists=True, mandatory=True)
+
+class GetBrukerDummyScansOutputSpec(TraitedSpec):
+	number = traits.Int()
+	duration = traits.Float()
+
+class GetBrukerDummyScans(BaseInterface):
+	input_spec = GetBrukerDelayInputSpec
+	output_spec = GetBrukerDelayOutputSpec
+
+	def _run_interface(self, runtime):
+		import nibabel as nb
+		nii_files = self.inputs.nii_files
+		resize_factors = self.inputs.resize_factors
+
+		self.result = []
+		return runtime
+
+	def _list_outputs(self):
+		outputs = self._outputs().get()
+		outputs["delay"] = self.result
+		return outputs
+
 class VoxelResizeInputSpec(BaseInterfaceInputSpec):
 	nii_files = traits.List(File(exists=True, mandatory=True))
 	resize_factors = traits.List(traits.Int([10,10,10], usedefault=True, desc="Factor by which to multiply the voxel size in the header"))

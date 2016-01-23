@@ -104,13 +104,15 @@ class GetBrukerTimingOutputSpec(TraitedSpec):
 	dummy_scans_ms = traits.Int()
 
 class GetBrukerTiming(BaseInterface):
-	input_spec = GetBrukerDelayInputSpec
-	output_spec = GetBrukerDelayOutputSpec
+	input_spec = GetBrukerTimingInputSpec
+	output_spec = GetBrukerTimingOutputSpec
 
 	def _run_interface(self, runtime):
 		from datetime import datetime
 		state_file_path = self.inputs.scan_directory+"/AdjStatePerScan"
 		state_file = open(state_file_path, "r")
+
+		delay_seconds = dummy_scans = dummy_scans_ms = 0
 
 		while True:
 			current_line = state_file.readline()
@@ -121,7 +123,6 @@ class GetBrukerTiming(BaseInterface):
 		trigger_time, scanstart_time = [datetime.utcnow().strptime(i.split("+")[0], "<%Y-%m-%dT%H:%M:%S,%f") for i in delay_datetime_line.split(" ")]
 		delay = scanstart_time-trigger_time
 		delay_seconds=delay.total_seconds()
-		self.result[0] = delay_seconds
 
 		method_file_path = self.inputs.scan_directory+"/method"
 		method_file = open(method_file_path, "r")
@@ -137,8 +138,8 @@ class GetBrukerTiming(BaseInterface):
 				read_variables +=1 #count variables
 			if read_variables == 2:
 				break #prevent loop from going on forever
-		self.result[1] = dummy_scans
-		self.result[2] = dummy_scans_ms
+
+		self.result = [delay_seconds, dummy_scans, dummy_scans_ms]
 
 		return runtime
 

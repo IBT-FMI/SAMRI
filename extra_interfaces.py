@@ -95,15 +95,15 @@ class FindScan(BaseInterface):
 		outputs["positive_scans"] = self.results
 		return outputs
 
-class GetBrukerDelayInputSpec(BaseInterfaceInputSpec):
+class GetBrukerTimingInputSpec(BaseInterfaceInputSpec):
 	scan_directory = Directory(exists=True, mandatory=True)
 
-class GetBrukerDelayOutputSpec(TraitedSpec):
+class GetBrukerTimingOutputSpec(TraitedSpec):
 	delay = traits.Float()
 	dummy_scans = traits.Int()
 	dummy_scans_ms = traits.Int()
 
-class GetBrukerDelay(BaseInterface):
+class GetBrukerTiming(BaseInterface):
 	input_spec = GetBrukerDelayInputSpec
 	output_spec = GetBrukerDelayOutputSpec
 

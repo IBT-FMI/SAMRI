@@ -2,7 +2,7 @@ import nipype.interfaces.utility as util		# utility
 import nipype.pipeline.engine as pe				# pypeline engine
 from nipype.interfaces.fsl import FAST
 from nipype.interfaces.nipy import SpaceTimeRealigner
-from extra_interfaces import DcmToNii, MEICA, VoxelResize, Bru2, FindScan
+from extra_interfaces import DcmToNii, MEICA, VoxelResize, Bru2, FindScan, GetBrukerTiming
 from nipype.interfaces.dcmstack import DcmStack
 import nipype.interfaces.io as nio
 from os import path, listdir
@@ -83,6 +83,8 @@ def bru2_preproc(workflow_base, functional_scan_type, experiment_type=None, stru
 	functional_scan_finder.inputs.query = functional_scan_type
 	functional_scan_finder.inputs.query_file = "visu_pars"
 
+	timing_metadata = pe.Node(interface=GetBrukerTiming(), name="timing_metadata")
+
 	if structural_scan_type:
 		structural_scan_finder = pe.Node(interface=FindScan(), name="structural_scan_finder")
 		structural_scan_finder.inputs.query = structural_scan_type
@@ -112,6 +114,7 @@ def bru2_preproc(workflow_base, functional_scan_type, experiment_type=None, stru
 		(infosource, data_source, [('measurement_id', 'measurement_id')]),
 		(data_source, functional_scan_finder, [('measurement_path', 'scans_directory')]),
 		(functional_scan_finder, functional_bru2nii, [('positive_scan', 'input_dir')]),
+		(functional_scan_finder, timing_metadata, [('positive_scan', 'scan_directory')]),
 		(functional_bru2nii, realigner, [('nii_file', 'in_file')]),
 		]
 

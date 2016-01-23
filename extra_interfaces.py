@@ -100,6 +100,8 @@ class GetBrukerDelayInputSpec(BaseInterfaceInputSpec):
 
 class GetBrukerDelayOutputSpec(TraitedSpec):
 	delay = traits.Float()
+	dummy_scans = traits.Int()
+	dummy_scans_ms = traits.Int()
 
 class GetBrukerDelay(BaseInterface):
 	input_spec = GetBrukerDelayInputSpec
@@ -107,48 +109,44 @@ class GetBrukerDelay(BaseInterface):
 
 	def _run_interface(self, runtime):
 		from datetime import datetime
-		file_path = self.inputs.scan_directory+"/AdjStatePerScan"
+		state_file_path = self.inputs.scan_directory+"/AdjStatePerScan"
+		state_file = open(state_file_path, "r")
 
 		while True:
-			current_line = f.readline()
+			current_line = state_file.readline()
 			if "AdjScanStateTime" in current_line:
-				delay_datetime_line = f.readline()
+				delay_datetime_line = state_file.readline()
 				break
 
 		trigger_time, scanstart_time = [datetime.utcnow().strptime(i.split("+")[0], "<%Y-%m-%dT%H:%M:%S,%f") for i in delay_datetime_line.split(" ")]
 		delay = scanstart_time-trigger_time
 		delay_seconds=delay.total_seconds()
+		self.result[0] = delay_seconds
 
-		self.result = delay_seconds
+		method_file_path = self.inputs.scan_directory+"/method"
+		method_file = open(method_file_path, "r")
+
+		read_variables=0 #count variables so that breaking takes place after both have been read
+		while True:
+			current_line = method_file.readline()
+			if "##$PVM_DummyScans=" in current_line:
+				dummy_scans = int(current_line.split("=")[1])
+				read_variables +=1 #count variables
+			if "##$PVM_DummyScansDur=" in current_line:
+				dummy_scans_ms = int(current_line.split("=")[1])
+				read_variables +=1 #count variables
+			if read_variables == 2:
+				break #prevent loop from going on forever
+		self.result[1] = dummy_scans
+		self.result[2] = dummy_scans_ms
+
 		return runtime
 
 	def _list_outputs(self):
 		outputs = self._outputs().get()
-		outputs["delay"] = self.result
-		return outputs
-
-class GetBrukerDummyScansInputSpec(BaseInterfaceInputSpec):
-	scan_directory = Directory(exists=True, mandatory=True)
-
-class GetBrukerDummyScansOutputSpec(TraitedSpec):
-	number = traits.Int()
-	duration = traits.Float()
-
-class GetBrukerDummyScans(BaseInterface):
-	input_spec = GetBrukerDelayInputSpec
-	output_spec = GetBrukerDelayOutputSpec
-
-	def _run_interface(self, runtime):
-		import nibabel as nb
-		nii_files = self.inputs.nii_files
-		resize_factors = self.inputs.resize_factors
-
-		self.result = []
-		return runtime
-
-	def _list_outputs(self):
-		outputs = self._outputs().get()
-		outputs["delay"] = self.result
+		outputs["delay"] = self.result[0]
+		outputs["dummy_scans"] = self.result[1]
+		outputs["dummy_scans_ms"] = self.result[2]
 		return outputs
 
 class VoxelResizeInputSpec(BaseInterfaceInputSpec):

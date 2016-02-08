@@ -1,11 +1,13 @@
 import nipype.interfaces.utility as util		# utility
 import nipype.pipeline.engine as pe				# pypeline engine
-from nipype.interfaces.fsl import FAST
+from nipype.interfaces.fsl import GLM, MELODIC, FAST, BET, MeanImage, FLIRT, ApplyMask, ImageMaths
 from nipype.interfaces.nipy import SpaceTimeRealigner
+from nipype.interfaces.afni import Bandpass
 from extra_interfaces import DcmToNii, MEICA, VoxelResize, Bru2, FindScan, GetBrukerTiming
 from nipype.interfaces.dcmstack import DcmStack
 import nipype.interfaces.io as nio
 from os import path, listdir
+import nipype.interfaces.ants as ants
 
 def dcm_preproc(workflow_base=".", force_convert=False, source_pattern="", IDs=""):
 	# make IDs strings
@@ -95,7 +97,8 @@ def bru2_preproc_lite(workflow_base, functional_scan_type, experiment_type=None,
 		(functional_bru2nii, realigner, [('nii_file', 'in_file')]),
 		]
 
-def bru2_preproc(workflow_base, functional_scan_type, experiment_type=None, structural_scan_type=None, resize=True, omit_ID=[], tr=1, inclusion_filter=""):
+def bru2_preproc(workflow_base, functional_scan_type, experiment_type=None, structural_scan_type=None, resize=True, omit_ID=[], tr=1, inclusion_filter="", workflow_denominator="PreprocessingGLM"):
+	workflow_base = path.expanduser(workflow_base)
 	IDs=[]
 	for sub_dir in listdir(workflow_base):
 		if inclusion_filter in sub_dir:
@@ -137,16 +140,129 @@ def bru2_preproc(workflow_base, functional_scan_type, experiment_type=None, stru
 		structural_FAST.inputs.output_biascorrected = True
 		structural_FAST.inputs.bias_iters = 8
 
+		structural_cutoff = pe.Node(interface=ImageMaths(), name="structural_cutoff")
+		structural_cutoff.inputs.op_string = "-thrP 45"
+
 	functional_bru2nii = pe.Node(interface=Bru2(), name="functional_bru2nii")
 	if resize == False:
 		functional_bru2nii.inputs.actual_size=True
 
 	realigner = pe.Node(interface=SpaceTimeRealigner(), name="realigner")
+	realigner.inputs.slice_times = "asc_alt_2"
 	realigner.inputs.tr = tr
 	realigner.inputs.slice_info = 3 #3 for coronal slices (2 for horizontal, 1 for sagittal)
-	realigner.inputs.slice_times = "asc_alt_2"
 
-	workflow = pe.Workflow(name="Preprocessing")
+	temporal_mean = pe.Node(interface=MeanImage(), name="temporal_mean")
+	functional_masker = pe.Node(interface=ApplyMask(), name="functional_masker")
+
+	structural_BET = pe.Node(interface=BET(), name="structural_BET")
+	structural_BET.inputs.mask = True
+	structural_BET.inputs.frac = 0.5
+
+	structural_registration = pe.Node(ants.Registration(), name='structural_registration')
+	structural_registration.inputs.fixed_image = "/home/chymera/NIdata/templates/QBI_atlas100RD.nii.gz"
+	structural_registration.inputs.output_transform_prefix = "output_"
+	structural_registration.inputs.transforms = ['Rigid', 'Affine', 'SyN']
+	structural_registration.inputs.transform_parameters = [(0.1,), (0.1,), (0.2, 3.0, 0.0)]
+	structural_registration.inputs.number_of_iterations = [[9000, 9990, 9990]] * 2 + [[100, 30, 20]]
+	structural_registration.inputs.dimension = 3
+	structural_registration.inputs.write_composite_transform = True
+	structural_registration.inputs.collapse_output_transforms = True
+	structural_registration.inputs.initial_moving_transform_com = True
+	structural_registration.inputs.metric = ['Mattes'] * 2 + [['Mattes', 'CC']]
+	structural_registration.inputs.metric_weight = [1] * 2 + [[0.5, 0.5]]
+	structural_registration.inputs.radius_or_number_of_bins = [32] * 2 + [[32, 4]]
+	structural_registration.inputs.sampling_strategy = ['Regular'] * 2 + [[None, None]]
+	structural_registration.inputs.sampling_percentage = [0.3] * 2 + [[None, None]]
+	structural_registration.inputs.convergence_threshold = [1.e-8] * 2 + [-0.01]
+	structural_registration.inputs.convergence_window_size = [20] * 2 + [5]
+	structural_registration.inputs.smoothing_sigmas = [[4, 2, 1]] * 2 + [[1, 0.5, 0]]
+	structural_registration.inputs.sigma_units = ['vox'] * 3
+	structural_registration.inputs.shrink_factors = [[3, 2, 1]]*2 + [[4, 2, 1]]
+	structural_registration.inputs.use_estimate_learning_rate_once = [True] * 3
+	structural_registration.inputs.use_histogram_matching = [False] * 2 + [True]
+	structural_registration.inputs.winsorize_lower_quantile = 0.005
+	structural_registration.inputs.winsorize_upper_quantile = 0.995
+	structural_registration.inputs.args = '--float'
+	structural_registration.inputs.output_warped_image = 'output_warped_image.nii.gz'
+	structural_registration.inputs.num_threads = 4
+	structural_registration.plugin_args = {'qsub_args': '-pe orte 4', 'sbatch_args': '--mem=6G -c 4'}
+
+	structural_warp = pe.Node(ants.ApplyTransforms(),name='structural_warp')
+	structural_warp.inputs.reference_image = "/home/chymera/NIdata/templates/QBI_atlas100RD.nii.gz"
+	structural_warp.inputs.input_image_type = 3
+	structural_warp.inputs.interpolation = 'Linear'
+	structural_warp.inputs.invert_transform_flags = [False]
+	structural_warp.inputs.terminal_output = 'file'
+	structural_warp.num_threads = 4
+
+	functional_registration = pe.Node(ants.Registration(), name='functional_registration')
+	functional_registration.inputs.fixed_image = "/home/chymera/NIdata/templates/QBI_atlas100RD.nii.gz"
+	functional_registration.inputs.output_transform_prefix = "output_"
+	functional_registration.inputs.transforms = ['Rigid', 'Affine', 'SyN']
+	functional_registration.inputs.transform_parameters = [(0.1,), (0.1,), (0.2, 3.0, 0.0)]
+	functional_registration.inputs.number_of_iterations = [[9000, 9990, 9990]] * 2 + [[100, 30, 20]]
+	functional_registration.inputs.dimension = 3
+	functional_registration.inputs.write_composite_transform = True
+	functional_registration.inputs.collapse_output_transforms = True
+	functional_registration.inputs.initial_moving_transform_com = True
+	functional_registration.inputs.metric = ['Mattes'] * 2 + [['Mattes', 'CC']]
+	functional_registration.inputs.metric_weight = [1] * 2 + [[0.5, 0.5]]
+	functional_registration.inputs.radius_or_number_of_bins = [32] * 2 + [[32, 4]]
+	functional_registration.inputs.sampling_strategy = ['Regular'] * 2 + [[None, None]]
+	functional_registration.inputs.sampling_percentage = [0.3] * 2 + [[None, None]]
+	functional_registration.inputs.convergence_threshold = [1.e-8] * 2 + [-0.01]
+	functional_registration.inputs.convergence_window_size = [20] * 2 + [5]
+	functional_registration.inputs.smoothing_sigmas = [[4, 2, 1]] * 2 + [[1, 0.5, 0]]
+	functional_registration.inputs.sigma_units = ['vox'] * 3
+	functional_registration.inputs.shrink_factors = [[3, 2, 1]]*2 + [[4, 2, 1]]
+	functional_registration.inputs.use_estimate_learning_rate_once = [True] * 3
+	functional_registration.inputs.use_histogram_matching = [False] * 2 + [True]
+	functional_registration.inputs.winsorize_lower_quantile = 0.005
+	functional_registration.inputs.winsorize_upper_quantile = 0.995
+	functional_registration.inputs.args = '--float'
+	functional_registration.inputs.output_warped_image = 'output_warped_image.nii.gz'
+	functional_registration.inputs.num_threads = 4
+	functional_registration.plugin_args = {'qsub_args': '-pe orte 4', 'sbatch_args': '--mem=6G -c 4'}
+
+	functional_warp = pe.Node(ants.ApplyTransforms(),name='functional_warp')
+	functional_warp.inputs.reference_image = "/home/chymera/NIdata/templates/QBI_atlas100RD.nii.gz"
+	functional_warp.inputs.input_image_type = 3
+	functional_warp.inputs.interpolation = 'Linear'
+	functional_warp.inputs.invert_transform_flags = [False]
+	functional_warp.inputs.terminal_output = 'file'
+	functional_warp.num_threads = 4
+
+	functional_FAST = pe.Node(interface=FAST(), name="functional_FAST")
+	functional_FAST.inputs.segments = False
+	functional_FAST.inputs.output_biascorrected = True
+	functional_FAST.inputs.bias_iters = 8
+
+	functional_cutoff = pe.Node(interface=ImageMaths(), name="functional_cutoff")
+	functional_cutoff.inputs.op_string = "-thrP 45"
+
+	functional_BET = pe.Node(interface=BET(), name="functional_BET")
+	functional_BET.inputs.mask = True
+	functional_BET.inputs.frac = 0.5
+
+	functional_bandpass = pe.Node(interface=Bandpass(), name="functional_bandpass")
+	functional_bandpass.inputs.highpass = 0.001
+	functional_bandpass.inputs.lowpass = 9999
+	functional_bandpass.inputs.outputtype = "NIFTI"
+
+	structural_bandpass = pe.Node(interface=Bandpass(), name="structural_bandpass")
+	structural_bandpass.inputs.highpass = 0.001
+	structural_bandpass.inputs.lowpass = 9999
+	structural_bandpass.inputs.outputtype = "NIFTI"
+
+	melodic = pe.Node(interface=MELODIC(), name="MELODIC")
+	melodic.inputs.report = True
+	melodic.inputs.dim = 8
+
+	datasink = pe.Node(nio.DataSink(), name='sinker')
+	datasink.inputs.base_directory = workflow_base+"/"+workflow_denominator+"_results"
+
+	workflow = pe.Workflow(name=workflow_denominator)
 
 	workflow_connections = [
 		(infosource, data_source, [('measurement_id', 'measurement_id')]),
@@ -154,20 +270,40 @@ def bru2_preproc(workflow_base, functional_scan_type, experiment_type=None, stru
 		(functional_scan_finder, functional_bru2nii, [('positive_scan', 'input_dir')]),
 		(functional_scan_finder, timing_metadata, [('positive_scan', 'scan_directory')]),
 		(functional_bru2nii, realigner, [('nii_file', 'in_file')]),
+		(realigner, temporal_mean, [('out_file', 'in_file')]),
+		(temporal_mean, functional_FAST, [('out_file', 'in_files')]),
+		(functional_FAST, functional_cutoff, [('restored_image', 'in_file')]),
+		(functional_cutoff, functional_BET, [('out_file', 'in_file')]),
+		(functional_BET, functional_registration, [('out_file', 'moving_image')]),
+		(functional_registration, functional_warp, [('composite_transform', 'transforms')]),
+		(realigner, functional_warp, [('out_file', 'input_image')]),
+		(functional_warp, functional_bandpass, [('output_image', 'in_file')]),
+		(functional_bandpass, datasink, [('out_file', 'normalized_by_functional')]),
+		(timing_metadata, datasink, [('delay_s', 'delay_s')]),
+		(timing_metadata, datasink, [('dummy_scans', 'dummy_scans')]),
+		(timing_metadata, datasink, [('dummy_scans_ms', 'dummy_scans_ms')]),
 		]
 
 	if structural_scan_type:
 		workflow_connections.extend([
 			(data_source, structural_scan_finder, [('measurement_path', 'scans_directory')]),
 			(structural_scan_finder, structural_bru2nii, [('positive_scan', 'input_dir')]),
-			(structural_bru2nii, structural_FAST, [('nii_file', 'in_files')])
+			(structural_bru2nii, structural_FAST, [('nii_file', 'in_files')]),
+			(structural_FAST, structural_cutoff, [('restored_image', 'in_file')]),
+			(structural_cutoff, structural_BET, [('out_file', 'in_file')]),
+			(structural_BET, structural_registration, [('out_file', 'moving_image')]),
+			(structural_registration, structural_warp, [('composite_transform', 'transforms')]),
+			(realigner, structural_warp, [('out_file', 'input_image')]),
+			(structural_warp, structural_bandpass, [('output_image', 'in_file')]),
+			(structural_bandpass, datasink, [('out_file', 'normalized_by_structural')]),
 			])
 
 	workflow.connect(workflow_connections)
-
-	return workflow
+	workflow.base_dir = workflow_base
+	workflow.run(plugin="MultiProc",  plugin_args={'n_procs' : 4})
 
 if __name__ == "__main__":
-	IDs=[4457,4459]
-	source_pattern="/mnt/data7/NIdata/export_ME/dicom/%s/1/%s/"
-	preproc_workflow(workflow_base="/home/chymera/NIdata/export_ME/", source_pattern=source_pattern, IDs=IDs)
+	# IDs=[4457,4459]
+	# source_pattern="/mnt/data7/NIdata/export_ME/dicom/%s/1/%s/"
+	# preproc_workflow(workflow_base="/home/chymera/NIdata/export_ME/", source_pattern=source_pattern, IDs=IDs)
+	bru2_preproc(workflow_base="~/NIdata/ofM.dr/", functional_scan_type="7_EPI_CBV", structural_scan_type="T2_TurboRARE>", experiment_type="<ofM>", omit_ID=["20151027_121613_4013_1_1"])

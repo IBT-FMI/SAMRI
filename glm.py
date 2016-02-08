@@ -159,7 +159,7 @@ def fsl_glm(workflow_base, functional_scan_type, structural_scan_type=None, expe
 		(bru2_preproc_workflow, analysis_workflow, [('structural_FAST.restored_image','structural_cutoff.in_file')])
 		])
 
-	pipeline.write_graph(graph2use="flat")
+	# pipeline.write_graph(graph2use="flat")
 	pipeline.run(plugin="MultiProc",  plugin_args={'n_procs' : 4})
 
 if __name__ == "__main__":

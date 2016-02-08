@@ -8,7 +8,7 @@ import nipype.interfaces.io as nio
 
 def quick_melodic(workflow_base, functional_scan_type, experiment_type=None, workflow_denominator="QuickMELODIC", omit_ID=[], inclusion_filter=""):
 	workflow_base = path.expanduser(workflow_base)
-	bru2_preproc_workflow = bru2_preproc(workflow_base, functional_scan_type, experiment_type=experiment_type, omit_ID=omit_ID, inclusion_filter=inclusion_filter)
+	bru2_preproc_workflow = bru2_preproc_lite(workflow_base, functional_scan_type, experiment_type=experiment_type, omit_ID=omit_ID, inclusion_filter=inclusion_filter)
 
 	melodic = pe.Node(interface=MELODIC(), name="melodic")
 	melodic.inputs.report = True
@@ -35,5 +35,5 @@ def quick_melodic(workflow_base, functional_scan_type, experiment_type=None, wor
 	pipeline.run(plugin="MultiProc")
 
 if __name__ == "__main__":
-	quick_melodic(workflow_base="~/NIdata/ofM.dr/", functional_scan_type="7_EPI_CBV", experiment_type="<DG_ofM>", inclusion_filter="")
+	quick_melodic(workflow_base="~/NIdata/ofM.erc/", functional_scan_type="7_EPI_CBV", experiment_type="<ERC_ofM>", inclusion_filter="")
 	# experiment type, e.g. "<ofM>"

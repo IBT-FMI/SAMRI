@@ -99,7 +99,7 @@ class GetBrukerTimingInputSpec(BaseInterfaceInputSpec):
 	scan_directory = Directory(exists=True, mandatory=True)
 
 class GetBrukerTimingOutputSpec(TraitedSpec):
-	delay = traits.Float()
+	delay_s = traits.Float()
 	dummy_scans = traits.Int()
 	dummy_scans_ms = traits.Int()
 
@@ -145,7 +145,7 @@ class GetBrukerTiming(BaseInterface):
 
 	def _list_outputs(self):
 		outputs = self._outputs().get()
-		outputs["delay"] = self.result[0]
+		outputs["delay_s"] = self.result[0]
 		outputs["dummy_scans"] = self.result[1]
 		outputs["dummy_scans_ms"] = self.result[2]
 		return outputs

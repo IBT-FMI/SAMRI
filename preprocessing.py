@@ -54,21 +54,59 @@ def dcm_preproc(workflow_base=".", force_convert=False, source_pattern="", IDs="
 	workflow.write_graph(graph2use="orig")
 	workflow.run(plugin="MultiProc")
 
-def bru2_preproc(workflow_base, functional_scan_type, experiment_type=None, structural_scan_type=None, resize=True, omit_ID=[], tr=1, inclusion_filter=""):
+def bru2_preproc_lite(workflow_base, functional_scan_type, experiment_type=None, structural_scan_type=None, omit_ID=[], tr=1, inclusion_filter=""):
 	IDs=[]
-	if experiment_type:
-		for sub_dir in listdir(workflow_base):
-			if inclusion_filter in sub_dir:
-				if sub_dir not in omit_ID:
+	for sub_dir in listdir(workflow_base):
+		if inclusion_filter in sub_dir:
+			if sub_dir not in omit_ID:
+				if experiment_type:
 					try:
 						if experiment_type in open(workflow_base+"/"+sub_dir+"/subject").read():
 							IDs.append(sub_dir)
 					except IOError:
 						pass
-	else:
-		for sub_dir in listdir(workflow_base):
-			if inclusion_filter in sub_dir:
-				if sub_dir not in omit_ID:
+				else:
+					IDs.append(sub_dir)
+	infosource = pe.Node(interface=util.IdentityInterface(fields=['measurement_id']), name="infosource")
+	infosource.iterables = ('measurement_id', IDs)
+
+	data_source = pe.Node(interface=nio.DataGrabber(infields=['measurement_id'], outfields=['measurement_path']), name='data_source')
+	data_source.inputs.template = workflow_base+"/%s"
+	data_source.inputs.template_args['measurement_path'] = [['measurement_id']]
+	data_source.inputs.sort_filelist = True
+
+	functional_scan_finder = pe.Node(interface=FindScan(), name="functional_scan_finder")
+	functional_scan_finder.inputs.query = functional_scan_type
+	functional_scan_finder.inputs.query_file = "visu_pars"
+
+	functional_bru2nii.inputs.actual_size=True
+
+	realigner = pe.Node(interface=SpaceTimeRealigner(), name="realigner")
+	realigner.inputs.tr = tr
+	realigner.inputs.slice_info = 3 #3 for coronal slices (2 for horizontal, 1 for sagittal)
+	realigner.inputs.slice_times = "asc_alt_2"
+
+	workflow = pe.Workflow(name="PreprocessingLite")
+
+	workflow_connections = [
+		(infosource, data_source, [('measurement_id', 'measurement_id')]),
+		(data_source, functional_scan_finder, [('measurement_path', 'scans_directory')]),
+		(functional_scan_finder, functional_bru2nii, [('positive_scan', 'input_dir')]),
+		(functional_bru2nii, realigner, [('nii_file', 'in_file')]),
+		]
+
+def bru2_preproc(workflow_base, functional_scan_type, experiment_type=None, structural_scan_type=None, resize=True, omit_ID=[], tr=1, inclusion_filter=""):
+	IDs=[]
+	for sub_dir in listdir(workflow_base):
+		if inclusion_filter in sub_dir:
+			if sub_dir not in omit_ID:
+				if experiment_type:
+					try:
+						if experiment_type in open(workflow_base+"/"+sub_dir+"/subject").read():
+							IDs.append(sub_dir)
+					except IOError:
+						pass
+				else:
 					IDs.append(sub_dir)
 
 	infosource = pe.Node(interface=util.IdentityInterface(fields=['measurement_id']), name="infosource")
@@ -103,12 +141,12 @@ def bru2_preproc(workflow_base, functional_scan_type, experiment_type=None, stru
 	if resize == False:
 		functional_bru2nii.inputs.actual_size=True
 
-	workflow = pe.Workflow(name="Preprocessing")
-
 	realigner = pe.Node(interface=SpaceTimeRealigner(), name="realigner")
 	realigner.inputs.tr = tr
 	realigner.inputs.slice_info = 3 #3 for coronal slices (2 for horizontal, 1 for sagittal)
 	realigner.inputs.slice_times = "asc_alt_2"
+
+	workflow = pe.Workflow(name="Preprocessing")
 
 	workflow_connections = [
 		(infosource, data_source, [('measurement_id', 'measurement_id')]),

@@ -3,10 +3,11 @@ import nipype.interfaces.utility as util
 from extra_interfaces import Bru2, FindScan
 from nipype.interfaces.fsl import MELODIC, BET
 from os import path, listdir
-from preprocessing import bru2_preproc
+from preprocessing import bru2_preproc_lite
 import nipype.interfaces.io as nio
+import shutil
 
-def quick_melodic(workflow_base, functional_scan_type, experiment_type=None, workflow_denominator="QuickMELODIC", omit_ID=[], inclusion_filter=""):
+def quick_melodic(workflow_base, functional_scan_type, experiment_type=None, workflow_denominator="QuickMELODIC", omit_ID=[], inclusion_filter="", debug_mode=False):
 	workflow_base = path.expanduser(workflow_base)
 	bru2_preproc_workflow = bru2_preproc_lite(workflow_base, functional_scan_type, experiment_type=experiment_type, omit_ID=omit_ID, inclusion_filter=inclusion_filter)
 
@@ -28,12 +29,16 @@ def quick_melodic(workflow_base, functional_scan_type, experiment_type=None, wor
 	pipeline = pe.Workflow(name=workflow_denominator+"_work")
 	pipeline.base_dir = workflow_base
 
-	pipeline.connect([(bru2_preproc_workflow, analysis_workflow, [('realigner.out_file','melodic.in_files')])
+	pipeline.connect([
+		(bru2_preproc_workflow, analysis_workflow, [('realigner.out_file','melodic.in_files')])
 		])
 
-	pipeline.write_graph(graph2use="flat")
+	# pipeline.write_graph(graph2use="flat")
 	pipeline.run(plugin="MultiProc")
 
+	# if not debug_mode:
+		# shutil.rmtree(workflow_base+"/"+workflow_denominator+"_work")
+
 if __name__ == "__main__":
-	quick_melodic(workflow_base="~/NIdata/ofM.erc/", functional_scan_type="7_EPI_CBV", experiment_type="<ERC_ofM>", inclusion_filter="")
+	quick_melodic(workflow_base="~/NIdata/ofM.dr/", functional_scan_type="7_EPI_CBV", experiment_type="", inclusion_filter="_1_", omit_ID=["20151026_135856_4006_1_1", "20151027_121613_4013_1_1"])
 	# experiment type, e.g. "<ofM>"

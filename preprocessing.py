@@ -69,6 +69,7 @@ def bru2_preproc_lite(workflow_base, functional_scan_type, experiment_type=None,
 						pass
 				else:
 					IDs.append(sub_dir)
+
 	infosource = pe.Node(interface=util.IdentityInterface(fields=['measurement_id']), name="infosource")
 	infosource.iterables = ('measurement_id', IDs)
 
@@ -81,12 +82,13 @@ def bru2_preproc_lite(workflow_base, functional_scan_type, experiment_type=None,
 	functional_scan_finder.inputs.query = functional_scan_type
 	functional_scan_finder.inputs.query_file = "visu_pars"
 
+	functional_bru2nii = pe.Node(interface=Bru2(), name="functional_bru2nii")
 	functional_bru2nii.inputs.actual_size=True
 
 	realigner = pe.Node(interface=SpaceTimeRealigner(), name="realigner")
+	realigner.inputs.slice_times = "asc_alt_2"
 	realigner.inputs.tr = tr
 	realigner.inputs.slice_info = 3 #3 for coronal slices (2 for horizontal, 1 for sagittal)
-	realigner.inputs.slice_times = "asc_alt_2"
 
 	workflow = pe.Workflow(name="PreprocessingLite")
 
@@ -97,7 +99,11 @@ def bru2_preproc_lite(workflow_base, functional_scan_type, experiment_type=None,
 		(functional_bru2nii, realigner, [('nii_file', 'in_file')]),
 		]
 
-def bru2_preproc(workflow_base, functional_scan_type, experiment_type=None, structural_scan_type=None, resize=True, omit_ID=[], tr=1, inclusion_filter="", workflow_denominator="PreprocessingGLM"):
+	workflow.connect(workflow_connections)
+	workflow.base_dir = workflow_base
+	return workflow
+
+def bru2_preproc(workflow_base, functional_scan_type, experiment_type=None, structural_scan_type=None, resize=True, omit_ID=[], tr=1, inclusion_filter="", workflow_denominator="PreprocessingGLM", template="ds_QBI_atlas100RD.nii"):
 	workflow_base = path.expanduser(workflow_base)
 	IDs=[]
 	for sub_dir in listdir(workflow_base):
@@ -160,7 +166,7 @@ def bru2_preproc(workflow_base, functional_scan_type, experiment_type=None, stru
 	structural_BET.inputs.frac = 0.5
 
 	structural_registration = pe.Node(ants.Registration(), name='structural_registration')
-	structural_registration.inputs.fixed_image = "/home/chymera/NIdata/templates/QBI_atlas100RD.nii.gz"
+	structural_registration.inputs.fixed_image = "/home/chymera/NIdata/templates/"+template
 	structural_registration.inputs.output_transform_prefix = "output_"
 	structural_registration.inputs.transforms = ['Rigid', 'Affine', 'SyN']
 	structural_registration.inputs.transform_parameters = [(0.1,), (0.1,), (0.2, 3.0, 0.0)]
@@ -189,7 +195,7 @@ def bru2_preproc(workflow_base, functional_scan_type, experiment_type=None, stru
 	structural_registration.plugin_args = {'qsub_args': '-pe orte 4', 'sbatch_args': '--mem=6G -c 4'}
 
 	structural_warp = pe.Node(ants.ApplyTransforms(),name='structural_warp')
-	structural_warp.inputs.reference_image = "/home/chymera/NIdata/templates/QBI_atlas100RD.nii.gz"
+	structural_warp.inputs.reference_image = "/home/chymera/NIdata/templates/"+template
 	structural_warp.inputs.input_image_type = 3
 	structural_warp.inputs.interpolation = 'Linear'
 	structural_warp.inputs.invert_transform_flags = [False]
@@ -197,7 +203,7 @@ def bru2_preproc(workflow_base, functional_scan_type, experiment_type=None, stru
 	structural_warp.num_threads = 4
 
 	functional_registration = pe.Node(ants.Registration(), name='functional_registration')
-	functional_registration.inputs.fixed_image = "/home/chymera/NIdata/templates/QBI_atlas100RD.nii.gz"
+	functional_registration.inputs.fixed_image = "/home/chymera/NIdata/templates/"+template
 	functional_registration.inputs.output_transform_prefix = "output_"
 	functional_registration.inputs.transforms = ['Rigid', 'Affine', 'SyN']
 	functional_registration.inputs.transform_parameters = [(0.1,), (0.1,), (0.2, 3.0, 0.0)]
@@ -226,7 +232,7 @@ def bru2_preproc(workflow_base, functional_scan_type, experiment_type=None, stru
 	functional_registration.plugin_args = {'qsub_args': '-pe orte 4', 'sbatch_args': '--mem=6G -c 4'}
 
 	functional_warp = pe.Node(ants.ApplyTransforms(),name='functional_warp')
-	functional_warp.inputs.reference_image = "/home/chymera/NIdata/templates/QBI_atlas100RD.nii.gz"
+	functional_warp.inputs.reference_image = "/home/chymera/NIdata/templates/"+template
 	functional_warp.inputs.input_image_type = 3
 	functional_warp.inputs.interpolation = 'Linear'
 	functional_warp.inputs.invert_transform_flags = [False]
@@ -259,9 +265,6 @@ def bru2_preproc(workflow_base, functional_scan_type, experiment_type=None, stru
 	melodic.inputs.report = True
 	melodic.inputs.dim = 8
 
-	datasink = pe.Node(nio.DataSink(), name='sinker')
-	datasink.inputs.base_directory = workflow_base+"/"+workflow_denominator+"_results"
-
 	workflow = pe.Workflow(name=workflow_denominator)
 
 	workflow_connections = [
@@ -278,10 +281,6 @@ def bru2_preproc(workflow_base, functional_scan_type, experiment_type=None, stru
 		(functional_registration, functional_warp, [('composite_transform', 'transforms')]),
 		(realigner, functional_warp, [('out_file', 'input_image')]),
 		(functional_warp, functional_bandpass, [('output_image', 'in_file')]),
-		(functional_bandpass, datasink, [('out_file', 'normalized_by_functional')]),
-		(timing_metadata, datasink, [('delay_s', 'delay_s')]),
-		(timing_metadata, datasink, [('dummy_scans', 'dummy_scans')]),
-		(timing_metadata, datasink, [('dummy_scans_ms', 'dummy_scans_ms')]),
 		]
 
 	if structural_scan_type:
@@ -295,7 +294,6 @@ def bru2_preproc(workflow_base, functional_scan_type, experiment_type=None, stru
 			(structural_registration, structural_warp, [('composite_transform', 'transforms')]),
 			(realigner, structural_warp, [('out_file', 'input_image')]),
 			(structural_warp, structural_bandpass, [('output_image', 'in_file')]),
-			(structural_bandpass, datasink, [('out_file', 'normalized_by_structural')]),
 			])
 
 	workflow.connect(workflow_connections)
@@ -306,4 +304,4 @@ if __name__ == "__main__":
 	# IDs=[4457,4459]
 	# source_pattern="/mnt/data7/NIdata/export_ME/dicom/%s/1/%s/"
 	# preproc_workflow(workflow_base="/home/chymera/NIdata/export_ME/", source_pattern=source_pattern, IDs=IDs)
-	bru2_preproc(workflow_base="~/NIdata/ofM.dr/", functional_scan_type="7_EPI_CBV", structural_scan_type="T2_TurboRARE>", experiment_type="<ofM>", omit_ID=["20151027_121613_4013_1_1"])
+	bru2_preproc(workflow_base="~/NIdata/ofM.dr/", functional_scan_type="7_EPI_CBV", structural_scan_type="T2_TurboRARE>", experiment_type="<ofM_aF>", omit_ID=["20151027_121613_4013_1_1"])

@@ -1,13 +1,18 @@
 import nipype.interfaces.utility as util		# utility
 import nipype.pipeline.engine as pe				# pypeline engine
-from nipype.interfaces.fsl import GLM, MELODIC, FAST, BET, MeanImage, FLIRT, ApplyMask, ImageMaths
+from nipype.interfaces.fsl import GLM, MELODIC, FAST, BET, MeanImage, FLIRT, ApplyMask, ImageMaths, FSLCommand
 from nipype.interfaces.nipy import SpaceTimeRealigner
 from nipype.interfaces.afni import Bandpass
+from nipype.interfaces.afni.base import AFNICommand
 from extra_interfaces import DcmToNii, MEICA, VoxelResize, Bru2, FindScan, GetBrukerTiming
 from nipype.interfaces.dcmstack import DcmStack
 import nipype.interfaces.io as nio
 from os import path, listdir
 import nipype.interfaces.ants as ants
+
+#set all outputs to compressed NIfTI
+AFNICommand.set_default_output_type('NIFTI_GZ')
+FSLCommand.set_default_output_type('NIFTI_GZ')
 
 def dcm_preproc(workflow_base=".", force_convert=False, source_pattern="", IDs=""):
 	# make IDs strings
@@ -254,12 +259,10 @@ def bru2_preproc(workflow_base, functional_scan_type, experiment_type=None, stru
 	functional_bandpass = pe.Node(interface=Bandpass(), name="functional_bandpass")
 	functional_bandpass.inputs.highpass = 0.001
 	functional_bandpass.inputs.lowpass = 9999
-	functional_bandpass.inputs.outputtype = "NIFTI"
 
 	structural_bandpass = pe.Node(interface=Bandpass(), name="structural_bandpass")
 	structural_bandpass.inputs.highpass = 0.001
 	structural_bandpass.inputs.lowpass = 9999
-	structural_bandpass.inputs.outputtype = "NIFTI"
 
 	melodic = pe.Node(interface=MELODIC(), name="MELODIC")
 	melodic.inputs.report = True

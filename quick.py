@@ -7,11 +7,12 @@ from preprocessing import bru2_preproc_lite
 import nipype.interfaces.io as nio
 import shutil
 
-def quick_melodic(workflow_base, functional_scan_type, experiment_type=None, workflow_denominator="QuickMELODIC", omit_ID=[], inclusion_filter="", debug_mode=False):
+def quick_melodic(workflow_base, functional_scan_type, experiment_type=None, workflow_denominator="QuickMELODIC", omit_ID=[], inclusion_filter="", debug_mode=False, tr=1):
 	workflow_base = path.expanduser(workflow_base)
 	bru2_preproc_workflow = bru2_preproc_lite(workflow_base, functional_scan_type, experiment_type=experiment_type, omit_ID=omit_ID, inclusion_filter=inclusion_filter)
 
 	melodic = pe.Node(interface=MELODIC(), name="melodic")
+	melodic.inputs.tr_sec = tr
 	melodic.inputs.report = True
 	melodic.inputs.dim = 8
 

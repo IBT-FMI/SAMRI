@@ -1,4 +1,4 @@
-from nipype.interfaces.base import BaseInterface, BaseInterfaceInputSpec, traits, File, TraitedSpec, Directory, CommandLineInputSpec, CommandLine, InputMultiPath, isdefined
+from nipype.interfaces.base import BaseInterface, BaseInterfaceInputSpec, traits, File, TraitedSpec, Directory, CommandLineInputSpec, CommandLine, InputMultiPath, isdefined, Bunch
 from nipype.utils.filemanip import split_filename
 
 import nibabel as nb
@@ -95,6 +95,33 @@ class FindScan(BaseInterface):
 		outputs["positive_scans"] = self.results
 		return outputs
 
+class MakeSubjectInfoInputSpec(BaseInterfaceInputSpec):
+	conditions = traits.List(traits.Str(exists=True))
+	measurement_delay = traits.Float(exists=True, mandatory=True)
+	durations = traits.List(traits.List(traits.float(exists=True)))
+	onsets = traits.List(traits.List(traits.float(exists=True)))
+
+class MakeSubjectInfoOutputSpec(TraitedSpec):
+	info = Bunch()
+
+class MakeSubjectInfo(BaseInterface):
+	input_spec = MakeSubjectInfoInputSpec
+	output_spec = MakeSubjectInfoOutputSpec
+
+	def _run_interface(self, runtime):
+		for idx_a, a in enumerate(onsets):
+			for idx_b, b in enumerate(a):
+				onsets[idx1][idx2] = b-measurement_delay
+
+		self.result = Bunch(conditions=conditions, onsets=onsets, durations=durations)
+
+		return runtime
+
+	def _list_outputs(self):
+		outputs = self._outputs().get()
+		outputs["info"] = self.result
+		return outputs
+
 class GetBrukerTimingInputSpec(BaseInterfaceInputSpec):
 	scan_directory = Directory(exists=True, mandatory=True)
 
@@ -141,7 +168,7 @@ class GetBrukerTiming(BaseInterface):
 				break #prevent loop from going on forever
 
 		total_delay_s = delay_seconds + dummy_scans_ms/1000
-		
+
 		self.result = [delay_seconds, dummy_scans, dummy_scans_ms, total_delay_s]
 
 		return runtime

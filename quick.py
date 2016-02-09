@@ -36,8 +36,9 @@ def quick_melodic(workflow_base, functional_scan_type, experiment_type=None, wor
 	# pipeline.write_graph(graph2use="flat")
 	pipeline.run(plugin="MultiProc")
 
-	# if not debug_mode:
-		# shutil.rmtree(workflow_base+"/"+workflow_denominator+"_work")
+	#delete all fles but final results
+	if not debug_mode:
+		shutil.rmtree(workflow_base+"/"+workflow_denominator+"_work")
 
 if __name__ == "__main__":
 	quick_melodic(workflow_base="~/NIdata/ofM.dr/", functional_scan_type="7_EPI_CBV", experiment_type="", inclusion_filter="_1_", omit_ID=["20151026_135856_4006_1_1", "20151027_121613_4013_1_1"])

@@ -102,6 +102,7 @@ class GetBrukerTimingOutputSpec(TraitedSpec):
 	delay_s = traits.Float()
 	dummy_scans = traits.Int()
 	dummy_scans_ms = traits.Int()
+	total_delay_s = traits.Float()
 
 class GetBrukerTiming(BaseInterface):
 	input_spec = GetBrukerTimingInputSpec
@@ -139,7 +140,9 @@ class GetBrukerTiming(BaseInterface):
 			if read_variables == 2:
 				break #prevent loop from going on forever
 
-		self.result = [delay_seconds, dummy_scans, dummy_scans_ms]
+		total_delay_s = delay_seconds + dummy_scans_ms/1000
+		
+		self.result = [delay_seconds, dummy_scans, dummy_scans_ms, total_delay_s]
 
 		return runtime
 
@@ -148,6 +151,7 @@ class GetBrukerTiming(BaseInterface):
 		outputs["delay_s"] = self.result[0]
 		outputs["dummy_scans"] = self.result[1]
 		outputs["dummy_scans_ms"] = self.result[2]
+		outputs["total_delay_s"] = self.result[3]
 		return outputs
 
 class VoxelResizeInputSpec(BaseInterfaceInputSpec):

@@ -101,7 +101,7 @@ class MakeSubjectInfoInputSpec(BaseInterfaceInputSpec):
 	onsets = traits.List(traits.List(traits.Float(exists=True)))
 
 class MakeSubjectInfoOutputSpec(TraitedSpec):
-	info = Bunch()
+	info = traits.List(exists=True)
 
 class MakeSubjectInfo(BaseInterface):
 	input_spec = MakeSubjectInfoInputSpec
@@ -116,7 +116,7 @@ class MakeSubjectInfo(BaseInterface):
 			for idx_b, b in enumerate(a):
 				onsets[idx_a][idx_b] = b-measurement_delay
 
-		self.result = Bunch(conditions=conditions, onsets=onsets, durations=durations)
+		self.result = [Bunch(conditions=conditions, onsets=onsets, durations=durations)]
 
 		return runtime
 

@@ -96,8 +96,8 @@ class FindScan(BaseInterface):
 
 class MakeSubjectInfoInputSpec(BaseInterfaceInputSpec):
 	conditions = traits.List(traits.Str(exists=True))
-	measurement_delay = traits.Float(exists=True, mandatory=True)
 	durations = traits.List(traits.List(traits.Float(exists=True)))
+	measurement_delay = traits.Float(exists=True, mandatory=True)
 	onsets = traits.List(traits.List(traits.Float(exists=True)))
 
 class MakeSubjectInfoOutputSpec(TraitedSpec):
@@ -108,7 +108,10 @@ class MakeSubjectInfo(BaseInterface):
 	output_spec = MakeSubjectInfoOutputSpec
 
 	def _run_interface(self, runtime):
+		conditions = self.inputs.conditions
+		durations = self.inputs.durations
 		measurement_delay = self.inputs.measurement_delay
+		onsets = self.inputs.onsets
 		for idx_a, a in enumerate(onsets):
 			for idx_b, b in enumerate(a):
 				onsets[idx1][idx2] = b-measurement_delay

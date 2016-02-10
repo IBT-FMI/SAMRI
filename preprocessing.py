@@ -108,7 +108,7 @@ def bru2_preproc_lite(workflow_base, functional_scan_type, experiment_type=None,
 	workflow.base_dir = workflow_base
 	return workflow
 
-def bru2_preproc(workflow_base, functional_scan_type, experiment_type=None, structural_scan_type=None, resize=True, omit_ID=[], tr=1, inclusion_filter="", workflow_denominator="PreprocessingGLM", template="ds_QBI_atlas100RD.nii"):
+def bru2_preproc(workflow_base, functional_scan_type, experiment_type=None, structural_scan_type=None, resize=True, omit_ID=[], tr=1, inclusion_filter="", workflow_denominator="PreprocessingGLM", template="ds_QBI_atlas100RD.nii", standalone_execute=False):
 	workflow_base = path.expanduser(workflow_base)
 	IDs=[]
 	for sub_dir in listdir(workflow_base):
@@ -300,12 +300,13 @@ def bru2_preproc(workflow_base, functional_scan_type, experiment_type=None, stru
 			])
 
 	workflow.connect(workflow_connections)
-	workflow.base_dir = workflow_base
-	workflow.run(plugin="MultiProc",  plugin_args={'n_procs' : 4})
+	if standalone_execute:
+		workflow.base_dir = workflow_base
+		workflow.run(plugin="MultiProc",  plugin_args={'n_procs' : 4})
 	return workflow
 
 if __name__ == "__main__":
 	# IDs=[4457,4459]
 	# source_pattern="/mnt/data7/NIdata/export_ME/dicom/%s/1/%s/"
 	# preproc_workflow(workflow_base="/home/chymera/NIdata/export_ME/", source_pattern=source_pattern, IDs=IDs)
-	bru2_preproc(workflow_base="~/NIdata/ofM.dr/", functional_scan_type="7_EPI_CBV", structural_scan_type="T2_TurboRARE>", experiment_type="<ofM_aF>", omit_ID=["20151027_121613_4013_1_1"])
+	bru2_preproc(workflow_base="~/NIdata/ofM.dr/", functional_scan_type="7_EPI_CBV", structural_scan_type="T2_TurboRARE>", experiment_type="<ofM_aF>", omit_ID=["20151027_121613_4013_1_1"], standalone_execute=True)

@@ -114,7 +114,7 @@ class MakeSubjectInfo(BaseInterface):
 		onsets = self.inputs.onsets
 		for idx_a, a in enumerate(onsets):
 			for idx_b, b in enumerate(a):
-				onsets[idx1][idx2] = b-measurement_delay
+				onsets[idx_a][idx_b] = b-measurement_delay
 
 		self.result = Bunch(conditions=conditions, onsets=onsets, durations=durations)
 

@@ -32,7 +32,6 @@ class Bru2(CommandLine):
 	def _gen_filename(self, name):
 		if name == 'output_filename':
 			outfile = os.getcwd()+"/"+os.path.basename(os.path.normpath(self.inputs.input_dir))
-			print outfile
 			return outfile
 
 class DcmToNiiInputSpec(BaseInterfaceInputSpec):
@@ -98,8 +97,8 @@ class FindScan(BaseInterface):
 class MakeSubjectInfoInputSpec(BaseInterfaceInputSpec):
 	conditions = traits.List(traits.Str(exists=True))
 	measurement_delay = traits.Float(exists=True, mandatory=True)
-	durations = traits.List(traits.List(traits.float(exists=True)))
-	onsets = traits.List(traits.List(traits.float(exists=True)))
+	durations = traits.List(traits.List(traits.Float(exists=True)))
+	onsets = traits.List(traits.List(traits.Float(exists=True)))
 
 class MakeSubjectInfoOutputSpec(TraitedSpec):
 	info = Bunch()
@@ -109,6 +108,7 @@ class MakeSubjectInfo(BaseInterface):
 	output_spec = MakeSubjectInfoOutputSpec
 
 	def _run_interface(self, runtime):
+		measurement_delay = self.inputs.measurement_delay
 		for idx_a, a in enumerate(onsets):
 			for idx_b, b in enumerate(a):
 				onsets[idx1][idx2] = b-measurement_delay

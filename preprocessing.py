@@ -88,7 +88,7 @@ def bru2_preproc_lite(workflow_base, functional_scan_type, experiment_type=None,
 	functional_scan_finder.inputs.query_file = "visu_pars"
 
 	functional_bru2nii = pe.Node(interface=Bru2(), name="functional_bru2nii")
-	functional_bru2nii.inputs.actual_size=True
+	# functional_bru2nii.inputs.actual_size=True
 
 	realigner = pe.Node(interface=SpaceTimeRealigner(), name="realigner")
 	realigner.inputs.slice_times = "asc_alt_2"
@@ -302,6 +302,7 @@ def bru2_preproc(workflow_base, functional_scan_type, experiment_type=None, stru
 	workflow.connect(workflow_connections)
 	workflow.base_dir = workflow_base
 	workflow.run(plugin="MultiProc",  plugin_args={'n_procs' : 4})
+	return workflow
 
 if __name__ == "__main__":
 	# IDs=[4457,4459]

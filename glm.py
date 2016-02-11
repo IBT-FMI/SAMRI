@@ -1,13 +1,65 @@
 import nipype.pipeline.engine as pe
 import nipype.interfaces.utility as util
-from nipype.interfaces.fsl import GLM, MELODIC, FAST, BET, MeanImage, FLIRT, ApplyMask, ImageMaths
+from nipype.interfaces.fsl import GLM, MELODIC, FAST, BET, MeanImage, FLIRT, ApplyMask, ImageMaths, Level1Design, FEATModel
 from nipype.interfaces.afni import Bandpass
-# from nipype.interfaces.fsl import GLM, MELODIC, FAST, BET
+from extra_interfaces import MakeSubjectInfo
+from nipype.algorithms.modelgen import SpecifyModel
 import nipype.interfaces.io as nio
 from os import path
 from preprocessing import bru2_preproc
 from nipype.interfaces.nipy import SpaceTimeRealigner
 import nipype.interfaces.ants as ants
+
+def level1(workflow_base, functional_scan_type, experiment_type=None, structural_scan_type=None, resize=True, omit_ID=[], tr=1, inclusion_filter="", pipeline_denominator="FSL_GLM", template="ds_QBI_atlas100RD.nii"):
+	workflow_base = path.expanduser(workflow_base)
+	preprocessing = bru2_preproc(workflow_base, functional_scan_type, experiment_type=experiment_type, resize=resize, structural_scan_type=structural_scan_type, omit_ID=omit_ID, tr=tr, inclusion_filter=inclusion_filter, workflow_denominator="Preprocessing", template=template)
+
+	onsets=[]
+	for i in range(6):
+		onsets.append([range(222,222+180*6,180)[i]])
+
+	subject_information = pe.Node(interface=MakeSubjectInfo(), name="subject_information")
+	subject_information.inputs.conditions = ["s1","s2","s3","s4","s5","s6"]
+	subject_information.inputs.onsets = onsets
+	subject_information.inputs.durations = [[20],[20],[20],[20],[20],[20]]
+
+	specify_model = pe.Node(interface=SpecifyModel(), name="specify_model")
+	specify_model.inputs.input_units = 'secs'
+	specify_model.inputs.time_repetition = tr
+	specify_model.inputs.high_pass_filter_cutoff = 128
+
+	level1design = pe.Node(interface=Level1Design(), name="level1design")
+	level1design.inputs.interscan_interval = tr
+	level1design.inputs.bases = {'dgamma': {'derivs':True}}
+	level1design.inputs.model_serial_correlations = True
+	level1design.inputs.contrasts = [['allStim','T', ["s1","s2","s3","s4","s5","s6"],[1,1,1,1,1,1]]]
+
+	modelgen = pe.MapNode(interface=FEATModel(), name='modelgen', iterfield = 'fsf_file')
+
+	glm = pe.Node(interface=GLM(), name='glm')
+
+	first_level = pe.Workflow(name="first_level")
+
+	first_level.connect([
+		(subject_information, specify_model, [('info', 'subject_info')]),
+		(specify_model, level1design, [('session_info', 'session_info')]),
+		(level1design, modelgen, [('ev_files', 'ev_files')]),
+		(level1design, modelgen, [('fsf_files', 'fsf_file')]),
+		(modelgen, glm, [('design_file', 'design')]),
+		])
+
+	pipeline = pe.Workflow(name=pipeline_denominator+"_work")
+	pipeline.base_dir = workflow_base
+
+	pipeline.connect([
+		(preprocessing, first_level, [('structural_bandpass.out_file','specify_model.functional_runs')]),
+		(preprocessing, first_level, [('structural_bandpass.out_file','glm.in_file')]),
+		(preprocessing, first_level, [('timing_metadata.total_delay_s','subject_information.measurement_delay')]),
+		])
+
+	# pipeline.write_graph(graph2use="flat")
+	pipeline.run(plugin="MultiProc",  plugin_args={'n_procs' : 4})
+
 
 def fsl_glm(workflow_base, functional_scan_type, structural_scan_type=None, experiment_type=None, workflow_denominator="FSL_GLM", omit_ID=[]):
 	workflow_base = path.expanduser(workflow_base)
@@ -163,4 +215,4 @@ def fsl_glm(workflow_base, functional_scan_type, structural_scan_type=None, expe
 	pipeline.run(plugin="MultiProc",  plugin_args={'n_procs' : 4})
 
 if __name__ == "__main__":
-	fsl_glm(workflow_base="~/NIdata/ofM.dr/", functional_scan_type="7_EPI_CBV", structural_scan_type="T2_TurboRARE>", experiment_type="<ofM>", omit_ID=["20151027_121613_4013_1_1"])
+	level1(workflow_base="~/NIdata/ofM.dr/", functional_scan_type="7_EPI_CBV", structural_scan_type="T2_TurboRARE>", experiment_type="<ofM_aF>", omit_ID=["20151027_121613_4013_1_1"])

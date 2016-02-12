@@ -15,6 +15,25 @@ def level1(workflow_base, functional_scan_type, experiment_type=None, structural
 	workflow_base = path.expanduser(workflow_base)
 	preprocessing = bru2_preproc(workflow_base, functional_scan_type, experiment_type=experiment_type, resize=resize, structural_scan_type=structural_scan_type, omit_ID=omit_ID, tr=tr, inclusion_filter=inclusion_filter, workflow_denominator="Preprocessing", template=template)
 
+
+	def subjectinfo(subject_delay):
+		from nipype.interfaces.base import Bunch
+		from copy import deepcopy
+		onsets=[]
+		for i in range(6):
+			onsets.append([range(222,222+180*6,180)[i]])
+		output = []
+		names = ['s1', 's2', 's3', 's4', 's5', 's6']
+		for idx_a, a in enumerate(onsets):
+			for idx_b, b in enumerate(a):
+				onsets[idx_a][idx_b] = b-subject_delay
+		output.append(Bunch(conditions=names,
+						onsets=deepcopy(onsets),
+						durations=[[20.0], [20.0], [20.0], [20.0], [20.0], [20.0]],
+						))
+		return output
+
+
 	onsets=[]
 	for i in range(6):
 		onsets.append([range(222,222+180*6,180)[i]])
@@ -39,12 +58,12 @@ def level1(workflow_base, functional_scan_type, experiment_type=None, structural
 
 	modelgen = pe.MapNode(interface=FEATModel(), name='modelgen', iterfield = 'fsf_file')
 
-	glm = pe.Node(interface=GLM(), name='glm')
+	glm = pe.MapNode(interface=GLM(), name='glm', iterfield='design')
 
 	first_level = pe.Workflow(name="first_level")
 
+		# (subject_information, specify_model, [('information', 'subject_info')]),
 	first_level.connect([
-		(subject_information, specify_model, [('information', 'subject_info')]),
 		(specify_model, level1design, [('session_info', 'session_info')]),
 		(level1design, modelgen, [('ev_files', 'ev_files')]),
 		(level1design, modelgen, [('fsf_files', 'fsf_file')]),
@@ -54,8 +73,9 @@ def level1(workflow_base, functional_scan_type, experiment_type=None, structural
 	pipeline = pe.Workflow(name=pipeline_denominator+"_work")
 	pipeline.base_dir = workflow_base
 
+		# (preprocessing, first_level, [('timing_metadata.total_delay_s','subject_information.measurement_delay')]),
 	pipeline.connect([
-		(preprocessing, first_level, [('timing_metadata.total_delay_s','subject_information.measurement_delay')]),
+		(preprocessing, first_level, [(('timing_metadata.total_delay_s',subjectinfo),'specify_model.subject_info')]),
 		(preprocessing, first_level, [('structural_bandpass.out_file','specify_model.functional_runs')]),
 		(preprocessing, first_level, [('structural_bandpass.out_file','glm.in_file')]),
 		])

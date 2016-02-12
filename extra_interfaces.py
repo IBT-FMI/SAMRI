@@ -94,18 +94,18 @@ class FindScan(BaseInterface):
 		outputs["positive_scans"] = self.results
 		return outputs
 
-class MakeSubjectInfoInputSpec(BaseInterfaceInputSpec):
+class SubjectInfoInputSpec(BaseInterfaceInputSpec):
 	conditions = traits.List(traits.Str(exists=True))
 	durations = traits.List(traits.List(traits.Float(exists=True)))
 	measurement_delay = traits.Float(exists=True, mandatory=True)
 	onsets = traits.List(traits.List(traits.Float(exists=True)))
 
-class MakeSubjectInfoOutputSpec(TraitedSpec):
-	info = traits.List()
+class SubjectInfoOutputSpec(TraitedSpec):
+	information = traits.List()
 
-class MakeSubjectInfo(BaseInterface):
-	input_spec = MakeSubjectInfoInputSpec
-	output_spec = MakeSubjectInfoOutputSpec
+class SubjectInfo(BaseInterface):
+	input_spec = SubjectInfoInputSpec
+	output_spec = SubjectInfoOutputSpec
 
 	def _run_interface(self, runtime):
 		conditions = self.inputs.conditions
@@ -122,7 +122,7 @@ class MakeSubjectInfo(BaseInterface):
 
 	def _list_outputs(self):
 		outputs = self._outputs().get()
-		outputs["info"] = self.results
+		outputs["information"] = self.results
 		return outputs
 
 class GetBrukerTimingInputSpec(BaseInterfaceInputSpec):

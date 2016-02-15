@@ -40,22 +40,6 @@ def dcm_to_nii(dcm_dir, group_by="EchoTime", node=False):
 
 	return results, echo_time_set
 
-def print_tags(nii_file):
-	nii_img = nb.load(nii_file)
-	print nii_img.header
-
-def edit_tags(nii_files):
-	for nii_file in nii_files:
-		nii_img = nb.load(nii_file)
-		nii_img.header["pixdim"][1:4] = nii_img.header["pixdim"][1:4]*10
-		nii_img.header["pixdim"][4] = 1
-		nii_img.header["pixdim"][4] = 1.5
-		nii_img.header["xyzt_units"] = 0
-		nii_img.header["xyzt_units"] = 10
-		nii_img.header["dim_info"] = 0
-		print nii_img.header
-
-
 if __name__ == "__main__":
 	for nr in [4460]:
 		convert_dcm_to_nifti("/home/chymera/data/dc.rs/export_ME/dicom/"+str(nr)+"/1/EPI/")

@@ -101,7 +101,7 @@ class SubjectInfoInputSpec(BaseInterfaceInputSpec):
 	onsets = traits.List(traits.List(traits.Float(exists=True)))
 
 class SubjectInfoOutputSpec(TraitedSpec):
-	information = traits.List()
+	information = traits.List(Bunch())
 
 class SubjectInfo(BaseInterface):
 	input_spec = SubjectInfoInputSpec
@@ -116,13 +116,13 @@ class SubjectInfo(BaseInterface):
 			for idx_b, b in enumerate(a):
 				onsets[idx_a][idx_b] = b-measurement_delay
 
-		self.results = [Bunch(conditions=conditions, onsets=onsets, durations=durations)]
+		self.results = Bunch(conditions=conditions, onsets=onsets, durations=durations)
 
 		return runtime
 
 	def _list_outputs(self):
 		outputs = self._outputs().get()
-		outputs["information"] = self.results
+		outputs["information"] = [self.results]
 		return outputs
 
 class GetBrukerTimingInputSpec(BaseInterfaceInputSpec):

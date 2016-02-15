@@ -3,7 +3,6 @@ import nipype.interfaces.utility as util
 from nipype.interfaces.base import Bunch
 from nipype.interfaces.fsl import GLM, MELODIC, FAST, BET, MeanImage, FLIRT, ApplyMask, ImageMaths, Level1Design, FEATModel
 from nipype.interfaces.afni import Bandpass
-from extra_interfaces import SubjectInfo
 from nipype.algorithms.modelgen import SpecifyModel
 import nipype.interfaces.io as nio
 from os import path

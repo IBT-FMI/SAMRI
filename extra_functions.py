@@ -3,6 +3,8 @@ import nibabel as nb
 from dcmstack.extract import minimal_extractor
 from dicom import read_file
 from os import listdir, path, makedirs, getcwd
+import pandas as pd
+import re
 
 def dcm_to_nii(dcm_dir, group_by="EchoTime", node=False):
 	if node:
@@ -39,6 +41,52 @@ def dcm_to_nii(dcm_dir, group_by="EchoTime", node=False):
 		results += [result.outputs.out_file]
 
 	return results, echo_time_set
+
+def get_data_selection(workflow_base, conditions, subjects_include, subjects_exclude, measurements_exclude):
+
+	measurements=[]
+	#populate a list of lists with acceptable subject names, conditions, and sub_dir's
+	for sub_dir in listdir(workflow_base):
+		if sub_dir not in measurements_exclude:
+			try:
+				state_file = open(workflow_base+"/"+sub_dir+"/subject", "r")
+				measurement = []
+				read_variables=0 #count variables so that breaking takes place after both have been read
+				while True:
+					current_line = state_file.readline()
+					if "##$SUBJECT_name_string=" in current_line:
+						entry=re.sub("[<>\n]", "", state_file.readline())
+						if entry not in subjects_exclude:
+							if len(subjects_include) > 0 and entry not in subjects_include:
+								break
+							else:
+								measurement.append(entry)
+						else:
+							break
+						read_variables +=1 #count recorded variables
+					if "##$SUBJECT_study_name=" in current_line:
+						entry=re.sub("[<>\n]", "", state_file.readline())
+						if entry in conditions or len(conditions) == 0:
+							measurement.append(entry)
+						else:
+							break
+						read_variables +=1 #count recorded variables
+					if read_variables == 2:
+						measurement.append(sub_dir)
+						measurements.append(measurement)
+						break #prevent loop from going on forever
+			except IOError:
+				pass
+
+	data_selection = pd.DataFrame(measurements, columns=["subject", "condition", "measurement"])
+
+	#drop subjects which do not have measurements for all conditions
+	if len(conditions) > 1:
+		for subject in set(data_selection["subject"]):
+			if len(data_selection[(data_selection["subject"] == subject)]) < len(conditions):
+				data_selection = data_selection[(data_selection["subject"] != subject)]
+
+	return data_selection
 
 if __name__ == "__main__":
 	for nr in [4460]:

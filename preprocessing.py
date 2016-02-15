@@ -5,6 +5,7 @@ from nipype.interfaces.nipy import SpaceTimeRealigner
 from nipype.interfaces.afni import Bandpass
 from nipype.interfaces.afni.base import AFNICommand
 from extra_interfaces import DcmToNii, MEICA, VoxelResize, Bru2, FindScan, GetBrukerTiming
+from extra_functions import get_data_selection
 from nipype.interfaces.dcmstack import DcmStack
 import nipype.interfaces.io as nio
 from os import path, listdir
@@ -61,26 +62,15 @@ def dcm_preproc(workflow_base=".", force_convert=False, source_pattern="", IDs="
 	workflow.write_graph(graph2use="orig")
 	workflow.run(plugin="MultiProc")
 
-def bru2_preproc_lite(workflow_base, functional_scan_type, experiment_type=None, structural_scan_type=None, omit_ID=[], tr=1, inclusion_filter=""):
-	IDs=[]
-	for sub_dir in listdir(workflow_base):
-		if inclusion_filter in sub_dir:
-			if sub_dir not in omit_ID:
-				if experiment_type:
-					try:
-						if experiment_type in open(workflow_base+"/"+sub_dir+"/subject").read():
-							IDs.append(sub_dir)
-					except IOError:
-						pass
-				else:
-					IDs.append(sub_dir)
+def bru_preproc_lite(workflow_base, functional_scan_type, tr=1, conditions=[], subjects_include=[], subjects_exclude=[], measurements_exclude=[]):
+	data_selection=get_data_selection(workflow_base, conditions, subjects_include=subjects_include, subjects_exclude=subjects_exclude, measurements_exclude=measurements_exclude)
 
-	infosource = pe.Node(interface=util.IdentityInterface(fields=['measurement_id']), name="infosource")
-	infosource.iterables = ('measurement_id', IDs)
+	infosource = pe.Node(interface=util.IdentityInterface(fields=['measurement']), name="infosource")
+	infosource.iterables = ('measurement', list(data_selection["measurement"]))
 
-	data_source = pe.Node(interface=nio.DataGrabber(infields=['measurement_id'], outfields=['measurement_path']), name='data_source')
+	data_source = pe.Node(interface=nio.DataGrabber(infields=['measurement'], outfields=['measurement_path']), name='data_source')
 	data_source.inputs.template = workflow_base+"/%s"
-	data_source.inputs.template_args['measurement_path'] = [['measurement_id']]
+	data_source.inputs.template_args['measurement_path'] = [['measurement']]
 	data_source.inputs.sort_filelist = True
 
 	functional_scan_finder = pe.Node(interface=FindScan(), name="functional_scan_finder")
@@ -98,7 +88,7 @@ def bru2_preproc_lite(workflow_base, functional_scan_type, experiment_type=None,
 	workflow = pe.Workflow(name="PreprocessingLite")
 
 	workflow_connections = [
-		(infosource, data_source, [('measurement_id', 'measurement_id')]),
+		(infosource, data_source, [('measurement', 'measurement')]),
 		(data_source, functional_scan_finder, [('measurement_path', 'scans_directory')]),
 		(functional_scan_finder, functional_bru2nii, [('positive_scan', 'input_dir')]),
 		(functional_bru2nii, realigner, [('nii_file', 'in_file')]),
@@ -306,7 +296,5 @@ def bru2_preproc(workflow_base, functional_scan_type, experiment_type=None, stru
 	return workflow
 
 if __name__ == "__main__":
-	# IDs=[4457,4459]
-	# source_pattern="/mnt/data7/NIdata/export_ME/dicom/%s/1/%s/"
-	# preproc_workflow(workflow_base="/home/chymera/NIdata/export_ME/", source_pattern=source_pattern, IDs=IDs)
+	bru2_preproc_lite(workflow_base="~/NIdata/ofM.dr/", functional_scan_type="7_EPI_CBV", conditions=["ofM"], subjects_include=[], subjects_exclude=[], measurements_exclude=["20151027_121613_4013_1_1"])
 	bru2_preproc(workflow_base="~/NIdata/ofM.dr/", functional_scan_type="7_EPI_CBV", structural_scan_type="T2_TurboRARE>", experiment_type="<ofM_aF>", omit_ID=["20151027_121613_4013_1_1"], standalone_execute=True)

@@ -38,14 +38,7 @@ def level1(workflow_base, functional_scan_type, experiment_type=None, structural
 	for i in range(6):
 		onsets.append([range(222,222+180*6,180)[i]])
 
-	subject_information = pe.Node(interface=SubjectInfo(), name="subject_information")
-	subject_information.inputs.conditions = ["s1","s2","s3","s4","s5","s6"]
-	subject_information.inputs.onsets = onsets
-	subject_information.inputs.durations = [[20],[20],[20],[20],[20],[20]]
-
 	specify_model = pe.Node(interface=SpecifyModel(), name="specify_model")
-	# specify_model.inputs.functional_runs = ['/mnt/data9/NIdata/ofM.dr/FSL_GLM_work/Preprocessing/_measurement_id_20151110_210648_4001_1_2/structural_bandpass/corr_8_trans_bp.nii.gz']
-	# specify_model.inputs.subject_info = [Bunch(conditions=['s1', 's2', 's3', 's4', 's5', 's6'], durations=[[20.0], [20.0], [20.0], [20.0], [20.0], [20.0]], onsets=[[172.565], [352.565], [532.565], [712.565], [892.565], [1072.565]])]
 	specify_model.inputs.input_units = 'secs'
 	specify_model.inputs.time_repetition = tr
 	specify_model.inputs.high_pass_filter_cutoff = 128
@@ -62,7 +55,6 @@ def level1(workflow_base, functional_scan_type, experiment_type=None, structural
 
 	first_level = pe.Workflow(name="first_level")
 
-		# (subject_information, specify_model, [('information', 'subject_info')]),
 	first_level.connect([
 		(specify_model, level1design, [('session_info', 'session_info')]),
 		(level1design, modelgen, [('ev_files', 'ev_files')]),
@@ -73,7 +65,6 @@ def level1(workflow_base, functional_scan_type, experiment_type=None, structural
 	pipeline = pe.Workflow(name=pipeline_denominator+"_work")
 	pipeline.base_dir = workflow_base
 
-		# (preprocessing, first_level, [('timing_metadata.total_delay_s','subject_information.measurement_delay')]),
 	pipeline.connect([
 		(preprocessing, first_level, [(('timing_metadata.total_delay_s',subjectinfo),'specify_model.subject_info')]),
 		(preprocessing, first_level, [('structural_bandpass.out_file','specify_model.functional_runs')]),

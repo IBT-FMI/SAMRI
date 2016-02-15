@@ -73,6 +73,9 @@ def level1(workflow_base, functional_scan_type, experiment_type=None, structural
 	# pipeline.write_graph(graph2use="flat")
 	pipeline.run(plugin="MultiProc",  plugin_args={'n_procs' : 4})
 
+def level2(workflow_base, functional_scan_type, experiment_type=None, structural_scan_type=None, resize=True, omit_ID=[], tr=1, inclusion_filter="", pipeline_denominator="FSL_GLM", template="ds_QBI_atlas100RD.nii"):
+
+
 
 def fsl_glm(workflow_base, functional_scan_type, structural_scan_type=None, experiment_type=None, workflow_denominator="FSL_GLM", omit_ID=[]):
 	workflow_base = path.expanduser(workflow_base)
@@ -229,3 +232,4 @@ def fsl_glm(workflow_base, functional_scan_type, structural_scan_type=None, expe
 
 if __name__ == "__main__":
 	level1(workflow_base="~/NIdata/ofM.dr/", functional_scan_type="7_EPI_CBV", structural_scan_type="T2_TurboRARE>", experiment_type="<ofM_aF>", omit_ID=["20151027_121613_4013_1_1"])
+	level2(workflow_base="~/NIdata/ofM.dr/", functional_scan_type="7_EPI_CBV", structural_scan_type="T2_TurboRARE>", experiment_type="<ofM_aF>", omit_ID=["20151027_121613_4013_1_1"])

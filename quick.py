@@ -9,7 +9,7 @@ import shutil
 
 def quick_melodic(workflow_base, functional_scan_type, tr=1, conditions=[], workflow_denominator="QuickMELODIC", subjects_include=[], subjects_exclude=[], measurements_exclude=[]):
 	workflow_base = path.expanduser(workflow_base)
-	bru_preproc_workflow = bru2_preproc_lite(workflow_base, functional_scan_type, tr=1, conditions=conditions, subjects_include=[], subjects_exclude=[], measurements_exclude=[])
+	bru_preproc_workflow = bru_preproc_lite(workflow_base, functional_scan_type, tr=tr, conditions=conditions, subjects_include=subjects_include, subjects_exclude=subjects_exclude, measurements_exclude=measurements_exclude)
 
 	melodic = pe.Node(interface=MELODIC(), name="melodic")
 	melodic.inputs.tr_sec = tr
@@ -31,10 +31,10 @@ def quick_melodic(workflow_base, functional_scan_type, tr=1, conditions=[], work
 	pipeline.base_dir = workflow_base
 
 	pipeline.connect([
-		(bru2_preproc_workflow, analysis_workflow, [('realigner.out_file','melodic.in_files')])
+		(bru_preproc_workflow, analysis_workflow, [('realigner.out_file','melodic.in_files')])
 		])
 
-	pipeline.write_graph(graph2use="flat")
+	# pipeline.write_graph(graph2use="flat")
 	pipeline.run(plugin="MultiProc")
 
 	#delete all fles but final results

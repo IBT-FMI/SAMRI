@@ -62,15 +62,19 @@ def dcm_preproc(workflow_base=".", force_convert=False, source_pattern="", IDs="
 	workflow.write_graph(graph2use="orig")
 	workflow.run(plugin="MultiProc")
 
-def bru_preproc_lite(workflow_base, functional_scan_type, tr=1, conditions=[], subjects_include=[], subjects_exclude=[], measurements_exclude=[]):
-	data_selection=get_data_selection(workflow_base, conditions, subjects_include=subjects_include, subjects_exclude=subjects_exclude, measurements_exclude=measurements_exclude)
+def bru_preproc_lite(measurements_base, functional_scan_type, tr=1, conditions=[], include_subjects=[], exclude_subjects=[], include_measurements=[], exclude_measurements=[]):
 
+	# define measurement directories to be processed, and populate the list either with the given include_measurements, or with an intelligent selection
 	infosource = pe.Node(interface=util.IdentityInterface(fields=['measurement']), name="infosource")
-	infosource.iterables = ('measurement', list(data_selection["measurement"]))
+	if include_measurements:
+		infosource.iterables = ('measurement', include_measurements)
+	else:
+		data_selection=get_data_selection(measurements_base, conditions, include_subjects=include_subjects, exclude_subjects=exclude_subjects, exclude_measurements=exclude_measurements)
+		infosource.iterables = ('measurement', list(data_selection["measurement"]))
 
-	data_source = pe.Node(interface=nio.DataGrabber(infields=['measurement'], outfields=['measurement_path']), name='data_source')
-	data_source.inputs.template = workflow_base+"/%s"
-	data_source.inputs.template_args['measurement_path'] = [['measurement']]
+	data_source = pe.Node(interface=nio.DataGrabber(infields=['id'], outfields=['measurement_path']), name='data_source')
+	data_source.inputs.template = measurements_base+"/%s"
+	data_source.inputs.template_args['measurement_path'] = [['id']]
 	data_source.inputs.sort_filelist = True
 
 	functional_scan_finder = pe.Node(interface=FindScan(), name="functional_scan_finder")
@@ -88,14 +92,13 @@ def bru_preproc_lite(workflow_base, functional_scan_type, tr=1, conditions=[], s
 	workflow = pe.Workflow(name="PreprocessingLite")
 
 	workflow_connections = [
-		(infosource, data_source, [('measurement', 'measurement')]),
+		(infosource, data_source, [('measurement', 'id')]),
 		(data_source, functional_scan_finder, [('measurement_path', 'scans_directory')]),
 		(functional_scan_finder, functional_bru2nii, [('positive_scan', 'input_dir')]),
 		(functional_bru2nii, realigner, [('nii_file', 'in_file')]),
 		]
 
 	workflow.connect(workflow_connections)
-	workflow.base_dir = workflow_base
 	return workflow
 
 def bru2_preproc(workflow_base, functional_scan_type, experiment_type=None, structural_scan_type=None, resize=True, omit_ID=[], tr=1, inclusion_filter="", workflow_denominator="PreprocessingGLM", template="ds_QBI_atlas100RD.nii", standalone_execute=False):

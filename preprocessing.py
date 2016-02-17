@@ -62,7 +62,7 @@ def dcm_preproc(workflow_base=".", force_convert=False, source_pattern="", IDs="
 	workflow.write_graph(graph2use="orig")
 	workflow.run(plugin="MultiProc")
 
-def bru_preproc_lite(measurements_base, functional_scan_type, tr=1, conditions=[], include_subjects=[], exclude_subjects=[], include_measurements=[], exclude_measurements=[], no_resize=True):
+def bru_preproc_lite(measurements_base, functional_scan_type, tr=1, conditions=[], include_subjects=[], exclude_subjects=[], include_measurements=[], exclude_measurements=[], actual_size=False):
 
 	# define measurement directories to be processed, and populate the list either with the given include_measurements, or with an intelligent selection
 	infosource = pe.Node(interface=util.IdentityInterface(fields=['measurement']), name="infosource")
@@ -82,7 +82,7 @@ def bru_preproc_lite(measurements_base, functional_scan_type, tr=1, conditions=[
 	functional_scan_finder.inputs.query_file = "visu_pars"
 
 	functional_bru2nii = pe.Node(interface=Bru2(), name="functional_bru2nii")
-	functional_bru2nii.inputs.actual_size=no_resize
+	functional_bru2nii.inputs.actual_size=actual_size
 
 	realigner = pe.Node(interface=SpaceTimeRealigner(), name="realigner")
 	realigner.inputs.slice_times = "asc_alt_2"
@@ -101,7 +101,7 @@ def bru_preproc_lite(measurements_base, functional_scan_type, tr=1, conditions=[
 	workflow.connect(workflow_connections)
 	return workflow
 
-def bru2_preproc(measurements_base, functional_scan_type, structural_scan_type=None, tr=1, conditions=[], include_subjects=[], exclude_subjects=[], include_measurements=[], exclude_measurements=[], no_resize=False, workflow_denominator="PreprocessingGLM", template="ds_QBI_atlas100RD.nii"):
+def bru2_preproc(measurements_base, functional_scan_type, structural_scan_type=None, tr=1, conditions=[], include_subjects=[], exclude_subjects=[], include_measurements=[], exclude_measurements=[], actual_size=False, workflow_denominator="PreprocessingGLM", template="ds_QBI_atlas100RD.nii"):
 	workflow_base = path.expanduser(workflow_base)
 	data_selection=get_data_selection(measurements_base, conditions, include_subjects=include_subjects, exclude_subjects=exclude_subjects, exclude_measurements=exclude_measurements)
 
@@ -125,7 +125,7 @@ def bru2_preproc(measurements_base, functional_scan_type, structural_scan_type=N
 		structural_scan_finder.inputs.query_file = "visu_pars"
 		structural_bru2nii = pe.Node(interface=Bru2(), name="structural_bru2nii")
 		structural_bru2nii.inputs.force_conversion=True
-		structural_bru2nii.inputs.actual_size=no_resize
+		structural_bru2nii.inputs.actual_size=actual_size
 
 		structural_FAST = pe.Node(interface=FAST(), name="structural_FAST")
 		structural_FAST.inputs.segments = False
@@ -136,7 +136,7 @@ def bru2_preproc(measurements_base, functional_scan_type, structural_scan_type=N
 		structural_cutoff.inputs.op_string = "-thrP 45"
 
 	functional_bru2nii = pe.Node(interface=Bru2(), name="functional_bru2nii")
-	functional_bru2nii.inputs.actual_size=no_resize
+	functional_bru2nii.inputs.actual_size=actual_size
 
 	realigner = pe.Node(interface=SpaceTimeRealigner(), name="realigner")
 	realigner.inputs.slice_times = "asc_alt_2"

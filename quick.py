@@ -10,7 +10,7 @@ import shutil
 # set of files by which to identify a  Bruker measurement directory
 bruker_files = {"AdjStatePerStudy", "ResultState", "subject"}
 
-def quick_melodic(measurements_base, functional_scan_type, workflow_base=False, tr=1, conditions=[], workflow_denominator="QuickMELODIC", include_subjects=[], exclude_subjects=[], exclude_measurements=[], include_measurements=[], debug_mode=False):
+def quick_melodic(measurements_base, functional_scan_type, workflow_base=False, tr=1, conditions=[], workflow_denominator="QuickMELODIC", include_subjects=[], exclude_subjects=[], exclude_measurements=[], include_measurements=[], debug_mode=False, actual_size=False):
 
 	#make measurements_base absolute (this has to be here to allow the check below)
 	measurements_base = path.expanduser(measurements_base)
@@ -26,7 +26,7 @@ def quick_melodic(measurements_base, functional_scan_type, workflow_base=False, 
 	else:
 		workflow_base = measurements_base
 
-	bru_preproc_workflow = bru_preproc_lite(measurements_base, functional_scan_type, tr=tr, conditions=conditions, include_subjects=include_subjects, exclude_subjects=exclude_subjects, exclude_measurements=exclude_measurements, include_measurements=include_measurements)
+	bru_preproc_workflow = bru_preproc_lite(measurements_base, functional_scan_type, tr=tr, conditions=conditions, include_subjects=include_subjects, exclude_subjects=exclude_subjects, exclude_measurements=exclude_measurements, include_measurements=include_measurements, actual_size=actual_size)
 
 	melodic = pe.Node(interface=MELODIC(), name="melodic")
 	melodic.inputs.tr_sec = tr
@@ -59,4 +59,4 @@ def quick_melodic(measurements_base, functional_scan_type, workflow_base=False, 
 		shutil.rmtree(workflow_base+"/"+workflow_denominator+"_work")
 
 if __name__ == "__main__":
-	quick_melodic("~/NIdata/ofM.dr/20151027_141609_4011_1_1", "7_EPI_CBV", conditions=[], include_subjects=[], exclude_subjects=[], exclude_measurements=["20151026_135856_4006_1_1", "20151027_121613_4013_1_1"], debug_mode=True)
+	quick_melodic("~/NIdata/ofM.dr/", "7_EPI_CBV", conditions=[], include_subjects=[], exclude_subjects=[], exclude_measurements=["20151026_135856_4006_1_1", "20151027_121613_4013_1_1"], debug_mode=True)

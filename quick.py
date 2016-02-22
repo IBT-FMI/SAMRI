@@ -59,4 +59,4 @@ def quick_melodic(measurements_base, functional_scan_type, workflow_base=False, 
 		shutil.rmtree(workflow_base+"/"+workflow_denominator+"_work")
 
 if __name__ == "__main__":
-	quick_melodic("~/NIdata/ofM.dr/", "7_EPI_CBV", conditions=[], include_subjects=[], exclude_subjects=[], exclude_measurements=["20151026_135856_4006_1_1", "20151027_121613_4013_1_1"], debug_mode=True)
+	quick_melodic("~/NIdata/ofM.dr/20151103_115031_4007_1_1", "7_EPI_CBV", conditions=[], include_subjects=[], exclude_subjects=[], exclude_measurements=["20151026_135856_4006_1_1", "20151027_121613_4013_1_1"], debug_mode=True)

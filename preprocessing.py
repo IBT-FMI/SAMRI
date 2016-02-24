@@ -105,18 +105,38 @@ def bru_preproc_lite(measurements_base, functional_scan_type, tr=1, conditions=[
 	workflow.connect(workflow_connections)
 	return workflow
 
-def bru2_preproc2(measurements_base, functional_scan_type, structural_scan_type=None, tr=1, conditions=[], include_subjects=[], exclude_subjects=[], include_measurements=[], exclude_measurements=[], actual_size=False, workflow_denominator="PreprocessingGLM", template="ds_QBI_atlas100RD.nii"):
-	workflow_base = path.expanduser(workflow_base)
+def bru2_preproc2(measurements_base, functional_scan_type, structural_scan_type=None, tr=1, conditions=[], include_subjects=[], exclude_subjects=[], include_measurements=[], exclude_measurements=[], actual_size=False, workflow_denominator="Preprocessing", template="ds_QBI_atlas100RD.nii", standalone_execute=False):
+	measurements_base = path.expanduser(measurements_base)
 	data_selection=get_data_selection(measurements_base, conditions, include_subjects=include_subjects, exclude_subjects=exclude_subjects, exclude_measurements=exclude_measurements)
 
-	infosource = pe.Node(interface=util.IdentityInterface(fields=['measurement_id']), name="infosource")
-	infosource.iterables = ('measurement', list(data_selection["measurement"]))
+	# infosource = pe.Node(interface=util.IdentityInterface(fields=["condition","subject"]), name="infosource")
+	infosource = pe.Node(interface=util.IdentityInterface(fields=["measurements"]), name="infosource")
+	infosource.iterables = ('measurements', list(set(data_selection["measurement"])))
+	# infosource.iterables = [('condition', list(set(data_selection["condition"]))), ('subject', list(set(data_selection["subject"])))]
 
-	data_source = pe.Node(interface=nio.DataGrabber(infields=['measurement_id'], outfields=['measurement_path']), name='data_source')
-	data_source.inputs.base_directory = workflow_base
-	data_source.inputs.template = "/%s"
-	data_source.inputs.template_args['measurement_path'] = [['measurement_id']]
-	data_source.inputs.sort_filelist = True
+	# data_source = pe.Node(interface=nio.DataGrabber(infields=["condition_id","subject_id"], outfields=['measurement_path']), name='data_source')
+	# data_source.inputs.base_directory = measurements_base
+	# data_source.inputs.template = "/%s"
+	# data_source.inputs.template_args['measurement_path'] = [[data_selection[(data_selection["condition"] == "condition_id")&(data_selection["subject"] == "subject_id")]]]
+	# data_source.inputs.sort_filelist = True
+
+	# def get_measurement(condition_id, subject_id, data_selection, measurements_base):
+	# 	measurement_path = data_selection[(data_selection["condition"] == condition_id)&(data_selection["subject"] == subject_id)]["measurement"]
+	# 	measurement_path = measurements_base + "/" + measurement_path
+	# 	return measurement_path
+	#
+	# getmeasurement = pe.Node(name='getmeasurement', interface=util.Function(function=get_measurement, input_names=['condition_id',"subject_id","data_selection","measurements_base"], output_names=['measurement_path']))
+	# getmeasurement.inputs.data_selection = data_selection
+	# getmeasurement.inputs.measurements_base = measurements_base
+
+	def get_measurement(measurement_id, measurements_base):
+		# measurement_path = data_selection[(data_selection["condition"] == condition_id)&(data_selection["subject"] == subject_id)]["measurement"]
+		measurement_path = measurements_base + "/" + measurement_id
+		return measurement_path
+
+	getmeasurement = pe.Node(name='getmeasurement', interface=util.Function(function=get_measurement, input_names=["measurement_id","measurements_base"], output_names=['measurement_path']))
+	# getmeasurement.inputs.data_selection = data_selection
+	getmeasurement.inputs.measurements_base = measurements_base
 
 	functional_scan_finder = pe.Node(interface=FindScan(), name="functional_scan_finder")
 	functional_scan_finder.inputs.query = functional_scan_type
@@ -184,9 +204,10 @@ def bru2_preproc2(measurements_base, functional_scan_type, structural_scan_type=
 
 	workflow = pe.Workflow(name=workflow_denominator)
 
+	# (infosource, getmeasurement, [('condition', 'condition_id'), ('subject', 'subject_id')]),
 	workflow_connections = [
-		(infosource, data_source, [('measurement_id', 'measurement_id')]),
-		(data_source, functional_scan_finder, [('measurement_path', 'scans_directory')]),
+		(infosource, getmeasurement, [('measurements', 'measurement_id')]),
+		(getmeasurement, functional_scan_finder, [('measurement_path', 'scans_directory')]),
 		(functional_scan_finder, functional_bru2nii, [('positive_scan', 'input_dir')]),
 		(functional_scan_finder, timing_metadata, [('positive_scan', 'scan_directory')]),
 		(functional_bru2nii, realigner, [('nii_file', 'in_file')]),
@@ -200,9 +221,10 @@ def bru2_preproc2(measurements_base, functional_scan_type, structural_scan_type=
 		(functional_warp, functional_bandpass, [('output_image', 'in_file')]),
 		]
 
+		# (getmeasurement, structural_scan_finder, [('measurement_path', 'scans_directory')]),
 	if structural_scan_type:
 		workflow_connections.extend([
-			(data_source, structural_scan_finder, [('measurement_path', 'scans_directory')]),
+			(getmeasurement, structural_scan_finder, [('measurement_path', 'scans_directory')]),
 			(structural_scan_finder, structural_bru2nii, [('positive_scan', 'input_dir')]),
 			(structural_bru2nii, structural_FAST, [('nii_file', 'in_files')]),
 			(structural_FAST, structural_cutoff, [('restored_image', 'in_file')]),
@@ -214,7 +236,12 @@ def bru2_preproc2(measurements_base, functional_scan_type, structural_scan_type=
 			])
 
 	workflow.connect(workflow_connections)
-	return workflow
+
+	if standalone_execute:
+		workflow.base_dir = measurements_base
+		workflow.run(plugin="MultiProc",  plugin_args={'n_procs' : 4})
+	else:
+		return workflow
 
 def bru2_preproc(measurements_base, functional_scan_type, structural_scan_type=None, tr=1, conditions=[], include_subjects=[], exclude_subjects=[], include_measurements=[], exclude_measurements=[], actual_size=False, workflow_denominator="PreprocessingGLM", template="ds_QBI_atlas100RD.nii"):
 	workflow_base = path.expanduser(workflow_base)
@@ -327,5 +354,5 @@ def bru2_preproc(measurements_base, functional_scan_type, structural_scan_type=N
 	return workflow
 
 if __name__ == "__main__":
-	bru2_preproc_lite(workflow_base="~/NIdata/ofM.dr/", functional_scan_type="7_EPI_CBV", conditions=["ofM"], subjects_include=[], subjects_exclude=[], measurements_exclude=["20151027_121613_4013_1_1"])
-	bru2_preproc(workflow_base="~/NIdata/ofM.dr/", functional_scan_type="7_EPI_CBV", structural_scan_type="T2_TurboRARE>", experiment_type="<ofM_aF>", omit_ID=["20151027_121613_4013_1_1"], standalone_execute=True)
+	# bru2_preproc_lite(workflow_base="~/NIdata/ofM.dr/", functional_scan_type="7_EPI_CBV", conditions=["ofM"], subjects_include=[], subjects_exclude=[], measurements_exclude=["20151027_121613_4013_1_1"])
+	bru2_preproc2("~/NIdata/ofM.dr/", "7_EPI_CBV", structural_scan_type="T2_TurboRARE>", conditions=["<ofM>","<ofM_aF>"], exclude_measurements=["20151027_121613_4013_1_1"], standalone_execute=True)

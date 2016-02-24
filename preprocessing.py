@@ -109,10 +109,8 @@ def bru2_preproc2(measurements_base, functional_scan_type, structural_scan_type=
 	measurements_base = path.expanduser(measurements_base)
 	data_selection=get_data_selection(measurements_base, conditions, include_subjects=include_subjects, exclude_subjects=exclude_subjects, exclude_measurements=exclude_measurements)
 
-	# infosource = pe.Node(interface=util.IdentityInterface(fields=["condition","subject"]), name="infosource")
-	infosource = pe.Node(interface=util.IdentityInterface(fields=["measurements"]), name="infosource")
-	infosource.iterables = ('measurements', list(set(data_selection["measurement"])))
-	# infosource.iterables = [('condition', list(set(data_selection["condition"]))), ('subject', list(set(data_selection["subject"])))]
+	infosource = pe.Node(interface=util.IdentityInterface(fields=["condition","subject"]), name="infosource")
+	infosource.iterables = [('condition', list(set(data_selection["condition"]))), ('subject', list(set(data_selection["subject"])))]
 
 	# data_source = pe.Node(interface=nio.DataGrabber(infields=["condition_id","subject_id"], outfields=['measurement_path']), name='data_source')
 	# data_source.inputs.base_directory = measurements_base
@@ -129,13 +127,13 @@ def bru2_preproc2(measurements_base, functional_scan_type, structural_scan_type=
 	# getmeasurement.inputs.data_selection = data_selection
 	# getmeasurement.inputs.measurements_base = measurements_base
 
-	def get_measurement(measurement_id, measurements_base):
-		# measurement_path = data_selection[(data_selection["condition"] == condition_id)&(data_selection["subject"] == subject_id)]["measurement"]
+	def get_measurement(condition_id, subject_id, measurements_base, data_selection):
+		measurement_path = data_selection[(data_selection["condition"] == condition_id)&(data_selection["subject"] == subject_id)]["measurement"]
 		measurement_path = measurements_base + "/" + measurement_id
 		return measurement_path
 
-	getmeasurement = pe.Node(name='getmeasurement', interface=util.Function(function=get_measurement, input_names=["measurement_id","measurements_base"], output_names=['measurement_path']))
-	# getmeasurement.inputs.data_selection = data_selection
+	getmeasurement = pe.Node(name='getmeasurement', interface=util.Function(function=get_measurement, input_names=["condition_id","subject_id","measurements_base","data_selection"], output_names=['measurement_path']))
+	getmeasurement.inputs.data_selection = data_selection
 	getmeasurement.inputs.measurements_base = measurements_base
 
 	functional_scan_finder = pe.Node(interface=FindScan(), name="functional_scan_finder")
@@ -204,9 +202,8 @@ def bru2_preproc2(measurements_base, functional_scan_type, structural_scan_type=
 
 	workflow = pe.Workflow(name=workflow_denominator)
 
-	# (infosource, getmeasurement, [('condition', 'condition_id'), ('subject', 'subject_id')]),
 	workflow_connections = [
-		(infosource, getmeasurement, [('measurements', 'measurement_id')]),
+		(infosource, getmeasurement, [('condition', 'condition_id'), ('subject', 'subject_id')]),
 		(getmeasurement, functional_scan_finder, [('measurement_path', 'scans_directory')]),
 		(functional_scan_finder, functional_bru2nii, [('positive_scan', 'input_dir')]),
 		(functional_scan_finder, timing_metadata, [('positive_scan', 'scan_directory')]),
@@ -221,7 +218,6 @@ def bru2_preproc2(measurements_base, functional_scan_type, structural_scan_type=
 		(functional_warp, functional_bandpass, [('output_image', 'in_file')]),
 		]
 
-		# (getmeasurement, structural_scan_finder, [('measurement_path', 'scans_directory')]),
 	if structural_scan_type:
 		workflow_connections.extend([
 			(getmeasurement, structural_scan_finder, [('measurement_path', 'scans_directory')]),

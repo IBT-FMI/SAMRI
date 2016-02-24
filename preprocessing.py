@@ -63,7 +63,7 @@ def dcm_preproc(workflow_base=".", force_convert=False, source_pattern="", IDs="
 	workflow.write_graph(graph2use="orig")
 	workflow.run(plugin="MultiProc")
 
-def bru_preproc_lite(measurements_base, functional_scan_type, tr=1, conditions=[], include_subjects=[], exclude_subjects=[], include_measurements=[], exclude_measurements=[], actual_size=False):
+def bru_preproc_lite(measurements_base, functional_scan_type, tr=1, conditions=[], include_subjects=[], exclude_subjects=[], include_measurements=[], exclude_measurements=[], actual_size=False, realign=False):
 
 	# define measurement directories to be processed, and populate the list either with the given include_measurements, or with an intelligent selection
 	infosource = pe.Node(interface=util.IdentityInterface(fields=['measurement']), name="infosource")
@@ -86,7 +86,7 @@ def bru_preproc_lite(measurements_base, functional_scan_type, tr=1, conditions=[
 	functional_bru2nii.inputs.actual_size=actual_size
 
 	realigner = pe.Node(interface=SpaceTimeRealigner(), name="realigner")
-	realigner.inputs.slice_times = "desc_alt_2"
+	realigner.inputs.slice_times = "asc_alt_2"
 	realigner.inputs.tr = tr
 	realigner.inputs.slice_info = 3 #3 for coronal slices (2 for horizontal, 1 for sagittal)
 
@@ -96,8 +96,11 @@ def bru_preproc_lite(measurements_base, functional_scan_type, tr=1, conditions=[
 		(infosource, data_source, [('measurement', 'id')]),
 		(data_source, functional_scan_finder, [('measurement_path', 'scans_directory')]),
 		(functional_scan_finder, functional_bru2nii, [('positive_scan', 'input_dir')]),
-		(functional_bru2nii, realigner, [('nii_file', 'in_file')]),
 		]
+	if realign:
+		workflow_connections.extend([
+			(functional_bru2nii, realigner, [('nii_file', 'in_file')]),
+			])
 
 	workflow.connect(workflow_connections)
 	return workflow

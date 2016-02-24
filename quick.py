@@ -10,7 +10,7 @@ import shutil
 # set of files by which to identify a  Bruker measurement directory
 bruker_files = {"AdjStatePerStudy", "ResultState", "subject"}
 
-def quick_melodic(measurements_base, functional_scan_type, workflow_base=False, tr=1, conditions=[], workflow_denominator="QuickMELODIC", include_subjects=[], exclude_subjects=[], exclude_measurements=[], include_measurements=[], debug_mode=False, actual_size=False):
+def quick_melodic(measurements_base, functional_scan_type, workflow_base=False, tr=1, conditions=[], workflow_denominator="QuickMELODIC", include_subjects=[], exclude_subjects=[], exclude_measurements=[], include_measurements=[], debug_mode=False, actual_size=False, realign=False):
 
 	#make measurements_base absolute (this has to be here to allow the check below)
 	measurements_base = path.expanduser(measurements_base)
@@ -47,8 +47,13 @@ def quick_melodic(measurements_base, functional_scan_type, workflow_base=False, 
 	pipeline = pe.Workflow(name=workflow_denominator+"_work")
 	pipeline.base_dir = workflow_base
 
-	pipeline.connect([
-		(bru_preproc_workflow, analysis_workflow, [('realigner.out_file','melodic.in_files')])
+	if realign:
+		pipeline.connect([
+			(bru_preproc_workflow, analysis_workflow, [('realigner.out_file','melodic.in_files')])
+			])
+	else:
+		pipeline.connect([
+		(bru_preproc_workflow, analysis_workflow, [('functional_bru2nii.nii_file','melodic.in_files')])
 		])
 
 	# pipeline.write_graph(graph2use="flat")
@@ -59,4 +64,4 @@ def quick_melodic(measurements_base, functional_scan_type, workflow_base=False, 
 		shutil.rmtree(workflow_base+"/"+workflow_denominator+"_work")
 
 if __name__ == "__main__":
-	quick_melodic("~/NIdata/ofM.dr/20151103_115031_4007_1_1", "7_EPI_CBV", conditions=[], include_subjects=[], exclude_subjects=[], exclude_measurements=["20151026_135856_4006_1_1", "20151027_121613_4013_1_1"], debug_mode=True)
+	quick_melodic("~/NIdata/ofM.dr/", "7_EPI_CBV", conditions=[], include_subjects=[], exclude_subjects=[], exclude_measurements=["20151026_135856_4006_1_1", "20151027_121613_4013_1_1"], debug_mode=True)

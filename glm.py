@@ -76,9 +76,9 @@ def level1(workflow_base, functional_scan_type, experiment_type=None, structural
 	else:
 		return pipeline
 
-def level2(workflow_base, functional_scan_type, experiment_type=None, structural_scan_type=None, resize=True, omit_ID=[], tr=1, inclusion_filter="", pipeline_denominator="FSL_GLM", template="ds_QBI_atlas100RD.nii", standalone_execute=False):
-	workflow_base = path.expanduser(workflow_base)
-	preprocessing = bru2_preproc2(workflow_base, functional_scan_type, experiment_type=experiment_type, resize=resize, structural_scan_type=structural_scan_type, omit_ID=omit_ID, tr=tr, inclusion_filter=inclusion_filter, workflow_denominator="Preprocessing", template=template)
+def level2(measurements_base, functional_scan_type, structural_scan_type=None, tr=1, conditions=[], include_subjects=[], exclude_subjects=[], exclude_measurements=[], include_measurements=[], actual_size=False, pipeline_denominator="FSL_GLM2", template="ds_QBI_atlas100RD.nii", standalone_execute=True, compare_experiment_types=[]):
+	measurements_base = path.expanduser(measurements_base)
+	preprocessing = bru2_preproc2(measurements_base, functional_scan_type, structural_scan_type=structural_scan_type, tr=tr, conditions=conditions, include_subjects=include_subjects, exclude_subjects=exclude_subjects, exclude_measurements=exclude_measurements, include_measurements=include_measurements, actual_size=actual_size)
 
 
 	def subjectinfo(subject_delay):
@@ -137,7 +137,7 @@ def level2(workflow_base, functional_scan_type, experiment_type=None, structural
 
 	# pipeline.write_graph(graph2use="flat")
 	if standalone_execute:
-		pipeline.base_dir = workflow_base
+		pipeline.base_dir = measurements_base
 		pipeline.run(plugin="MultiProc",  plugin_args={'n_procs' : 4})
 	else:
 		return pipeline
@@ -172,4 +172,4 @@ def level2(workflow_base, functional_scan_type, experiment_type=None, structural
 # 	pipeline.run(plugin="MultiProc",  plugin_args={'n_procs' : 4})
 
 if __name__ == "__main__":
-	level2(workflow_base="~/NIdata/ofM.dr/", functional_scan_type="7_EPI_CBV", structural_scan_type="T2_TurboRARE>", compare_experiment_types=["<ofM>","<ofM_aF>"], omit_ID=["20151027_121613_4013_1_1"])
+	level2("~/NIdata/ofM.dr/", "7_EPI_CBV", structural_scan_type="T2_TurboRARE>", conditions=["ofM","ofM_aF"], exclude_measurements=["20151027_121613_4013_1_1"])

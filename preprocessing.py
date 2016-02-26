@@ -105,11 +105,9 @@ def bru_preproc_lite(measurements_base, functional_scan_type, tr=1, conditions=[
 	workflow.connect(workflow_connections)
 	return workflow
 
-def bru2_preproc2(measurements_base, functional_scan_type, structural_scan_type=None, tr=1, conditions=[], include_subjects=[], exclude_subjects=[], include_measurements=[], exclude_measurements=[], actual_size=False, workflow_denominator="Preprocessing", template="ds_QBI_atlas100RD.nii", standalone_execute=False):
+def bru2_preproc2(measurements_base, functional_scan_type, structural_scan_type=None, tr=1, conditions=[], include_subjects=[], exclude_subjects=[], include_measurements=[], exclude_measurements=[], actual_size=False, workflow_denominator="Preprocessing", template="/home/chymera/NIdata/templates/ds_QBI_atlas100RD.nii", standalone_execute=False):
 	measurements_base = path.expanduser(measurements_base)
 	data_selection=get_data_selection(measurements_base, conditions, include_subjects=include_subjects, exclude_subjects=exclude_subjects, exclude_measurements=exclude_measurements)
-
-	print data_selection
 
 	infosource = pe.Node(interface=util.IdentityInterface(fields=["condition","subject"]), name="infosource")
 	infosource.iterables = [('condition', set(list(data_selection["condition"]))), ('subject', set(list(data_selection["subject"])))]
@@ -145,6 +143,7 @@ def bru2_preproc2(measurements_base, functional_scan_type, structural_scan_type=
 
 		structural_cutoff = pe.Node(interface=ImageMaths(), name="structural_cutoff")
 		structural_cutoff.inputs.op_string = "-thrP 45"
+		structural_registration, structural_warp = ants_standard_registration_warp(template, "structural_registration", "structural_warp")
 
 	functional_bru2nii = pe.Node(interface=Bru2(), name="functional_bru2nii")
 	functional_bru2nii.inputs.actual_size=actual_size
@@ -161,7 +160,6 @@ def bru2_preproc2(measurements_base, functional_scan_type, structural_scan_type=
 	structural_BET.inputs.mask = True
 	structural_BET.inputs.frac = 0.5
 
-	structural_registration, structural_warp = ants_standard_registration_warp(template, "structural_registration", "structural_warp")
 	functional_registration, functional_warp = ants_standard_registration_warp(template, "functional_registration", "functional_warp")
 
 	functional_FAST = pe.Node(interface=FAST(), name="functional_FAST")

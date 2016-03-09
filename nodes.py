@@ -3,7 +3,7 @@ import nipype.interfaces.ants as ants
 
 def ants_standard_registration_warp(template, registration_name="registration", warp_name="warp"):
 	registration = pe.Node(ants.Registration(), name=registration_name)
-	registration.inputs.fixed_image = "/home/chymera/NIdata/templates/"+template
+	registration.inputs.fixed_image = template
 	registration.inputs.output_transform_prefix = "output_"
 	registration.inputs.transforms = ['Rigid', 'Affine', 'SyN']
 	registration.inputs.transform_parameters = [(0.1,), (0.1,), (0.2, 3.0, 0.0)]
@@ -32,7 +32,7 @@ def ants_standard_registration_warp(template, registration_name="registration", 
 	registration.plugin_args = {'qsub_args': '-pe orte 4', 'sbatch_args': '--mem=6G -c 4'}
 
 	warp = pe.Node(ants.ApplyTransforms(), name=warp_name)
-	warp.inputs.reference_image = "/home/chymera/NIdata/templates/"+template
+	warp.inputs.reference_image = template
 	warp.inputs.input_image_type = 3
 	warp.inputs.interpolation = 'Linear'
 	warp.inputs.invert_transform_flags = [False]

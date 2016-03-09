@@ -80,12 +80,14 @@ class FindScan(BaseInterface):
 		query_file = self.inputs.query_file
 
 		if query_file == "ScanProgram.scanProgram":
-			scan_program_file = open(scans_directory+"ScanProgram.scanProgram", "r")
+			scan_program_file = open(scans_directory+"/ScanProgram.scanProgram", "r")
+			# redefine query, so that overlapping queries remain unambiguous (otherwise `7_EPI_CBV_jin60` would be detected also as `7_EPI_CBV_jin6`)
+			query = query+" "
 			while True:
 				current_line = scan_program_file.readline()
 				if query in current_line:
-					scan_number = current_line.split(query)[1].strip(" (E")[0]
-					self.results.append(scan_number)
+					scan_number = current_line.split(query)[1].strip("(E").strip(")</displayName>\n")
+					self.results.append(scans_directory+"/"+scan_number)
 					break
 		else:
 			for sub_dir in os.listdir(scans_directory):

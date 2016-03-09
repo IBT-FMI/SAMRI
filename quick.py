@@ -48,7 +48,7 @@ def diagnostic(measurements_base, structural_scan_type, functional_scan_types, w
 	pipeline.base_dir = workflow_base
 
 	pipeline_connections = [
-		(bru_preproc_workflow, analysis_workflow, [('structural_bru2nii.nii_file','datasink.structural')])
+		(bru_preproc_workflow, datasink, [('structural_bru2nii.nii_file','structural')])
 		]
 
 	if realign:

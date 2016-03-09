@@ -62,7 +62,7 @@ class DcmToNii(BaseInterface):
 class FindScanInputSpec(BaseInterfaceInputSpec):
 	scans_directory = Directory(exists=True, mandatory=True)
 	query = traits.Str(desc='what query to look for', mandatory=True)
-	query_file = traits.Str(desc='what fie to look in to', mandatory=True)
+	query_file = traits.Str(desc='what fie from under each scan directory to look into (specifying ScanProgram.scanProgram will take the file directly from under the measurement directory - this is slower, does not work with multiple identically-named scan protocols)', mandatory=True)
 
 class FindScanOutputSpec(TraitedSpec):
 	positive_scan = Directory(exists=True)
@@ -79,13 +79,22 @@ class FindScan(BaseInterface):
 		query = self.inputs.query
 		query_file = self.inputs.query_file
 
-		for sub_dir in os.listdir(scans_directory):
-			if os.path.isdir(scans_directory+"/"+sub_dir):
-				try:
-					if query in open(scans_directory+"/"+sub_dir+"/"+query_file).read():
-						self.results.append(scans_directory+"/"+sub_dir)
-				except IOError:
-					pass
+		if query_file == "ScanProgram.scanProgram":
+			scan_program_file = open(scans_directory+"ScanProgram.scanProgram", "r")
+			while True:
+				current_line = scan_program_file.readline()
+				if query in current_line:
+					scan_number = current_line.split(query)[1].strip(" (E")[0]
+					self.results.append(scan_number)
+					break
+		else:
+			for sub_dir in os.listdir(scans_directory):
+				if os.path.isdir(scans_directory+"/"+sub_dir):
+					try:
+						if query in open(scans_directory+"/"+sub_dir+"/"+query_file).read():
+							self.results.append(scans_directory+"/"+sub_dir)
+					except IOError:
+						pass
 		return runtime
 
 	def _list_outputs(self):

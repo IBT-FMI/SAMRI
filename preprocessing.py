@@ -89,7 +89,7 @@ def bru_preproc_lite(measurements_base, functional_scan_types=[], structural_sca
 
 	functional_scan_finder = pe.Node(interface=FindScan(), name="functional_scan_finder")
 	functional_scan_finder.iterables = ("query", functional_scan_types)
-	functional_scan_finder.inputs.scan_program = True
+	functional_scan_finder.inputs.query_file = "ScanProgram.scanProgram"
 
 	functional_bru2nii = pe.Node(interface=Bru2(), name="functional_bru2nii")
 	functional_bru2nii.inputs.actual_size=actual_size

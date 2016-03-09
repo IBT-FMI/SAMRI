@@ -63,7 +63,7 @@ def dcm_preproc(workflow_base=".", force_convert=False, source_pattern="", IDs="
 	workflow.write_graph(graph2use="orig")
 	workflow.run(plugin="MultiProc")
 
-def bru_preproc_lite(measurements_base, functional_scan_type, tr=1, conditions=[], include_subjects=[], exclude_subjects=[], include_measurements=[], exclude_measurements=[], actual_size=False, realign=False):
+def bru_preproc_lite(measurements_base, functional_scan_types=[], structural_scan_type="", tr=1, conditions=[], include_subjects=[], exclude_subjects=[], include_measurements=[], exclude_measurements=[], actual_size=False, realign=False):
 
 	# define measurement directories to be processed, and populate the list either with the given include_measurements, or with an intelligent selection
 	infosource = pe.Node(interface=util.IdentityInterface(fields=['measurement']), name="infosource")
@@ -78,9 +78,18 @@ def bru_preproc_lite(measurements_base, functional_scan_type, tr=1, conditions=[
 	data_source.inputs.template_args['measurement_path'] = [['id']]
 	data_source.inputs.sort_filelist = True
 
+	if structural_scan_type:
+		structural_scan_finder = pe.Node(interface=FindScan(), name="structural_scan_finder")
+		structural_scan_finder.inputs.query = structural_scan_type
+		structural_scan_finder.inputs.query_file = "visu_pars"
+
+		structural_bru2nii = pe.Node(interface=Bru2(), name="structural_bru2nii")
+		structural_bru2nii.inputs.force_conversion=True
+		structural_bru2nii.inputs.actual_size=actual_size
+
 	functional_scan_finder = pe.Node(interface=FindScan(), name="functional_scan_finder")
-	functional_scan_finder.inputs.query = functional_scan_type
-	functional_scan_finder.inputs.query_file = "visu_pars"
+	functional_scan_finder.iterables = ("query", functional_scan_types)
+	functional_scan_finder.inputs.scan_program = True
 
 	functional_bru2nii = pe.Node(interface=Bru2(), name="functional_bru2nii")
 	functional_bru2nii.inputs.actual_size=actual_size
@@ -99,7 +108,12 @@ def bru_preproc_lite(measurements_base, functional_scan_type, tr=1, conditions=[
 		]
 	if realign:
 		workflow_connections.extend([
-			(functional_bru2nii, realigner, [('nii_file', 'in_file')]),
+			(functional_bru2nii, realigner, [('nii_file', 'anatomical_measurement')]),
+			])
+	if structural_scan_type:
+		workflow_connections.extend([
+			(data_source, structural_scan_finder, [('measurement_path', 'scans_directory')]),
+			(structural_scan_finder, structural_bru2nii, [('positive_scan', 'input_dir')]),
 			])
 
 	workflow.connect(workflow_connections)
@@ -337,4 +351,4 @@ def bru2_preproc(measurements_base, functional_scan_type, structural_scan_type=N
 
 if __name__ == "__main__":
 	# bru2_preproc_lite(workflow_base="~/NIdata/ofM.dr/", functional_scan_type="7_EPI_CBV", conditions=["ofM"], subjects_include=[], subjects_exclude=[], measurements_exclude=["20151027_121613_4013_1_1"])
-	bru2_preproc2("~/NIdata/ofM.dr/", "7_EPI_CBV", structural_scan_type="T2_TurboRARE>", conditions=["ofM","ofM_aF"], exclude_measurements=["20151027_121613_4013_1_1"], standalone_execute=True)
+	bru2_preproc2("~/NIdata/ofM.dr/", "7_EPI_CBV", structural_scan_type="T2_TurboRARE", conditions=["ofM","ofM_aF"], exclude_measurements=["20151027_121613_4013_1_1"], standalone_execute=True)

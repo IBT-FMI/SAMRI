@@ -42,15 +42,15 @@ def dcm_to_nii(dcm_dir, group_by="EchoTime", node=False):
 
 	return results, echo_time_set
 
-def get_data_selection(workflow_base, conditions, include_subjects, exclude_subjects, exclude_measurements):
+def get_data_selection(workflow_base, conditions, scan_types, include_subjects, exclude_subjects, exclude_measurements):
 
 	measurements=[]
 	#populate a list of lists with acceptable subject names, conditions, and sub_dir's
 	for sub_dir in listdir(workflow_base):
 		if sub_dir not in exclude_measurements:
+			measurement = []
 			try:
 				state_file = open(workflow_base+"/"+sub_dir+"/subject", "r")
-				measurement = []
 				read_variables=0 #count variables so that breaking takes place after both have been read
 				while True:
 					current_line = state_file.readline()
@@ -73,12 +73,37 @@ def get_data_selection(workflow_base, conditions, include_subjects, exclude_subj
 						read_variables +=1 #count recorded variables
 					if read_variables == 2:
 						measurement.append(sub_dir)
-						measurements.append(measurement)
+						#if the directory passed both the subject and conditions tests, append a line for it
+						if not scan_types:
+							#add two empty entries to fill columns otherwise dedicated to the scan program
+							measurement.extend(["",""])
+							measurements.append(measurement)
+						#if various scan types are selected extend and copy lines to accommodate:
+						else:
+							for scan_type in scan_types:
+								#make a shallow copy of the list:
+								measurement_copy = measurement[:]
+								try:
+									scan_program_file = open(workflow_base+"/"+sub_dir+"/ScanProgram.scanProgram", "r")
+									syntax_adjusted_scan_type = scan_type+" "
+									while True:
+										current_line = scan_program_file.readline()
+										if syntax_adjusted_scan_type in current_line:
+											scan_number = current_line.split(syntax_adjusted_scan_type)[1].strip("(E").strip(")</displayName>\n")
+											measurement_copy.extend([scan_type, scan_number])
+											measurements.append(measurement_copy)
+											break
+										#avoid infinite while loop:
+										if current_line == "</de.bruker.mri.entities.scanprogram.StudyScanProgramEntity>":
+											break
+								except IOError:
+									pass
 						break #prevent loop from going on forever
 			except IOError:
 				pass
 
-	data_selection = pd.DataFrame(measurements, columns=["subject", "condition", "measurement"])
+
+	data_selection = pd.DataFrame(measurements, columns=["subject", "condition", "measurement", "scan_type", "scan"])
 
 	#drop subjects which do not have measurements for all conditions
 	if len(conditions) > 1:

@@ -89,6 +89,9 @@ class FindScan(BaseInterface):
 					scan_number = current_line.split(query)[1].strip("(E").strip(")</displayName>\n")
 					self.results.append(scans_directory+"/"+scan_number)
 					break
+				#avoid infinite while loop:
+				if current_line == "</de.bruker.mri.entities.scanprogram.StudyScanProgramEntity>":
+					break
 		else:
 			for sub_dir in os.listdir(scans_directory):
 				if os.path.isdir(scans_directory+"/"+sub_dir):

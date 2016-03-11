@@ -11,6 +11,7 @@ import nipype.interfaces.ants as ants
 from extra_interfaces import DcmToNii, MEICA, VoxelResize, Bru2, FindScan, GetBrukerTiming
 from extra_functions import get_data_selection
 from nodes import ants_standard_registration_warp
+from itertools import product
 
 #set all outputs to compressed NIfTI
 AFNICommand.set_default_output_type('NIFTI_GZ')
@@ -66,33 +67,66 @@ def dcm_preproc(workflow_base=".", force_convert=False, source_pattern="", IDs="
 def bru_preproc_lite(measurements_base, functional_scan_types=[], structural_scan_type="", tr=1, conditions=[], include_subjects=[], exclude_subjects=[], include_measurements=[], exclude_measurements=[], actual_size=False, realign=False):
 
 	# define measurement directories to be processed, and populate the list either with the given include_measurements, or with an intelligent selection
-	infosource = pe.Node(interface=util.IdentityInterface(fields=['measurement']), name="infosource")
+	infosource = pe.Node(interface=util.IdentityInterface(fields=['metadata']), name="infosource")
 	if include_measurements:
 		infosource.iterables = ('measurement', include_measurements)
+		pass
 	else:
-		data_selection=get_data_selection(measurements_base, conditions, include_subjects=include_subjects, exclude_subjects=exclude_subjects, exclude_measurements=exclude_measurements)
-		infosource.iterables = ('measurement', list(data_selection["measurement"]))
+		scan_types = functional_scan_types[:]
+		scan_types.append(structural_scan_type)
+		data_selection=get_data_selection(measurements_base, conditions, scan_types=scan_types, include_subjects=include_subjects, exclude_subjects=exclude_subjects, exclude_measurements=exclude_measurements)
+		# print data_selection
+		metadata=[]
+		for metadata_combination in product(conditions,include_subjects,functional_scan_types):
+			if not data_selection[(data_selection["condition"] == metadata_combination[0])&(data_selection["subject"] == metadata_combination[1])&(data_selection["scan_type"] == metadata_combination[2])].empty:
+				metadata.append(metadata_combination)
+		print metadata
+		infosource.iterables = [('metadata',metadata)]
 
-	data_source = pe.Node(interface=nio.DataGrabber(infields=['id'], outfields=['measurement_path']), name='data_source')
-	data_source.inputs.template = measurements_base+"/%s"
+	def get_measurement(measurements_base, data_selection, metadata):
+		paths = data_selection[(data_selection["condition"] == metadata[0])&(data_selection["subject"] == metadata[1])&(data_selection["scan_type"] == metadata[2])]
+		measurement_path = paths["measurement"].tolist()[0]
+		scan_path = paths["scan"].tolist()[0]
+		measurement_path = measurements_base + "/" + measurement_path + "/" + scan_path
+		print measurement_path
+		return measurement_path
+
+	getmeasurement = pe.Node(name='getmeasurement', interface=util.Function(function=get_measurement,input_names=["measurements_base","data_selection","metadata"], output_names=['measurement_path']))
+	getmeasurement.inputs.data_selection = data_selection
+	getmeasurement.inputs.measurements_base = measurements_base
+
+	functional_bru2nii = pe.Node(interface=Bru2(), name="functional_bru2nii")
+	functional_bru2nii.inputs.actual_size=actual_size
+
+	workflow = pe.Workflow(name="PreprocessingLite")
+
+	workflow_connections = [
+		(infosource, getmeasurement, [('metadata', 'metadata')]),
+		(getmeasurement, functional_bru2nii, [('measurement_path', 'input_dir')]),
+		]
+	workflow.connect(workflow_connections)
+	workflow.run(plugin="MultiProc")
+
+	return
+	data_source = pe.Node(interface=nio.DataGrabber(infields=['id'], outfields=['functional_scan_path','structural_scan_path']), name='data_source')
+	data_source.inputs.template = measurements_base+"/%s/%s"
 	data_source.inputs.template_args['measurement_path'] = [['id']]
 	data_source.inputs.sort_filelist = True
 
+
+
 	if structural_scan_type:
-		structural_scan_finder = pe.Node(interface=FindScan(), name="structural_scan_finder")
-		structural_scan_finder.inputs.query = structural_scan_type
-		structural_scan_finder.inputs.query_file = "visu_pars"
+		# structural_scan_finder = pe.Node(interface=FindScan(), name="structural_scan_finder")
+		# structural_scan_finder.inputs.query = structural_scan_type
+		# structural_scan_finder.inputs.query_file = "visu_pars"
 
 		structural_bru2nii = pe.Node(interface=Bru2(), name="structural_bru2nii")
 		structural_bru2nii.inputs.force_conversion=True
 		structural_bru2nii.inputs.actual_size=actual_size
 
-	functional_scan_finder = pe.Node(interface=FindScan(), name="functional_scan_finder")
-	functional_scan_finder.iterables = ("query", functional_scan_types)
-	functional_scan_finder.inputs.query_file = "ScanProgram.scanProgram"
-
-	functional_bru2nii = pe.Node(interface=Bru2(), name="functional_bru2nii")
-	functional_bru2nii.inputs.actual_size=actual_size
+	# functional_scan_finder = pe.Node(interface=FindScan(), name="functional_scan_finder")
+	# functional_scan_finder.iterables = ("query", functional_scan_types)
+	# functional_scan_finder.inputs.query_file = "ScanProgram.scanProgram"
 
 	realigner = pe.Node(interface=SpaceTimeRealigner(), name="realigner")
 	realigner.inputs.slice_times = "asc_alt_2"
@@ -350,5 +384,6 @@ def bru2_preproc(measurements_base, functional_scan_type, structural_scan_type=N
 	return workflow
 
 if __name__ == "__main__":
-	# bru2_preproc_lite(workflow_base="~/NIdata/ofM.dr/", functional_scan_type="7_EPI_CBV", conditions=["ofM"], subjects_include=[], subjects_exclude=[], measurements_exclude=["20151027_121613_4013_1_1"])
-	bru2_preproc2("~/NIdata/ofM.dr/", "7_EPI_CBV", structural_scan_type="T2_TurboRARE", conditions=["ofM","ofM_aF"], exclude_measurements=["20151027_121613_4013_1_1"], standalone_execute=True)
+	bru_preproc_lite(measurements_base="/mnt/data/NIdata/ofM.erc/", functional_scan_types=["EPI_CBV_alej","EPI_CBV_jin6","EPI_CBV_jin10","EPI_CBV_jin20","EPI_CBV_jin40","EPI_CBV_jin60"], structural_scan_type="T2_TurboRARE", conditions=["ERC_ofM"], include_subjects=["5502","5503"])
+	# bru2_preproc2("~/NIdata/ofM.dr/", "7_EPI_CBV", structural_scan_type="T2_TurboRARE", conditions=["ofM","ofM_aF"], exclude_measurements=["20151027_121613_4013_1_1"], standalone_execute=True)
+	# testme("~/NIdata/ofM.erc/", ["EPI_CBV_alej","EPI_CBV_jin6","EPI_CBV_jin10","EPI_CBV_jin20","EPI_CBV_jin40","EPI_CBV_jin60","T2_TurboRARE"], conditions=["ERC_ofM"], include_subjects=["5503","5502"])

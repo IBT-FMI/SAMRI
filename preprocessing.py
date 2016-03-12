@@ -12,6 +12,7 @@ from extra_interfaces import DcmToNii, MEICA, VoxelResize, Bru2, FindScan, GetBr
 from extra_functions import get_data_selection
 from nodes import ants_standard_registration_warp
 from itertools import product
+from copy import deepcopy
 
 #set all outputs to compressed NIfTI
 AFNICommand.set_default_output_type('NIFTI_GZ')
@@ -66,22 +67,12 @@ def dcm_preproc(workflow_base=".", force_convert=False, source_pattern="", IDs="
 
 def bru_preproc_lite(measurements_base, functional_scan_types=[], structural_scan_type="", tr=1, conditions=[], include_subjects=[], exclude_subjects=[], include_measurements=[], exclude_measurements=[], actual_size=False, realign=False):
 
-	# define measurement directories to be processed, and populate the list either with the given include_measurements, or with an intelligent selection
-	infosource = pe.Node(interface=util.IdentityInterface(fields=['metadata']), name="infosource")
-	if include_measurements:
-		infosource.iterables = ('measurement', include_measurements)
-		pass
-	else:
-		scan_types = functional_scan_types[:]
-		scan_types.append(structural_scan_type)
-		data_selection=get_data_selection(measurements_base, conditions, scan_types=scan_types, include_subjects=include_subjects, exclude_subjects=exclude_subjects, exclude_measurements=exclude_measurements)
-		# print data_selection
+	def get_metadata(data_selection,scan_types):
 		metadata=[]
-		for metadata_combination in product(conditions,include_subjects,functional_scan_types):
+		for metadata_combination in product(conditions,include_subjects,scan_types):
 			if not data_selection[(data_selection["condition"] == metadata_combination[0])&(data_selection["subject"] == metadata_combination[1])&(data_selection["scan_type"] == metadata_combination[2])].empty:
 				metadata.append(metadata_combination)
-		print metadata
-		infosource.iterables = [('metadata',metadata)]
+		return metadata
 
 	def get_measurement(measurements_base, data_selection, metadata):
 		paths = data_selection[(data_selection["condition"] == metadata[0])&(data_selection["subject"] == metadata[1])&(data_selection["scan_type"] == metadata[2])]
@@ -91,6 +82,20 @@ def bru_preproc_lite(measurements_base, functional_scan_types=[], structural_sca
 		print measurement_path
 		return measurement_path
 
+	# define measurement directories to be processed, and populate the list either with the given include_measurements, or with an intelligent selection
+	infosource = pe.Node(interface=util.IdentityInterface(fields=['functional_metadata','structural_metadata']), name="infosource")
+	if include_measurements:
+		infosource.iterables = ('measurement', include_measurements)
+		pass
+	else:
+		scan_types = functional_scan_types[:]
+		scan_types.append(structural_scan_type)
+		data_selection=get_data_selection(measurements_base, conditions, scan_types=scan_types, include_subjects=include_subjects, exclude_subjects=exclude_subjects, exclude_measurements=exclude_measurements)
+
+		functional_metadata = get_metadata(data_selection,functional_scan_types)
+		structural_metadata = get_metadata(data_selection,[structural_scan_type])
+		infosource.iterables = [('functional_metadata',functional_metadata),('structural_metadata',structural_metadata)]
+
 	getmeasurement = pe.Node(name='getmeasurement', interface=util.Function(function=get_measurement,input_names=["measurements_base","data_selection","metadata"], output_names=['measurement_path']))
 	getmeasurement.inputs.data_selection = data_selection
 	getmeasurement.inputs.measurements_base = measurements_base
@@ -98,35 +103,14 @@ def bru_preproc_lite(measurements_base, functional_scan_types=[], structural_sca
 	functional_bru2nii = pe.Node(interface=Bru2(), name="functional_bru2nii")
 	functional_bru2nii.inputs.actual_size=actual_size
 
-	workflow = pe.Workflow(name="PreprocessingLite")
-
-	workflow_connections = [
-		(infosource, getmeasurement, [('metadata', 'metadata')]),
-		(getmeasurement, functional_bru2nii, [('measurement_path', 'input_dir')]),
-		]
-	workflow.connect(workflow_connections)
-	workflow.run(plugin="MultiProc")
-
-	return
-	data_source = pe.Node(interface=nio.DataGrabber(infields=['id'], outfields=['functional_scan_path','structural_scan_path']), name='data_source')
-	data_source.inputs.template = measurements_base+"/%s/%s"
-	data_source.inputs.template_args['measurement_path'] = [['id']]
-	data_source.inputs.sort_filelist = True
-
-
-
 	if structural_scan_type:
-		# structural_scan_finder = pe.Node(interface=FindScan(), name="structural_scan_finder")
-		# structural_scan_finder.inputs.query = structural_scan_type
-		# structural_scan_finder.inputs.query_file = "visu_pars"
+		getmeasurement_structural = pe.Node(name='getmeasurement_structural', interface=util.Function(function=get_measurement,input_names=["measurements_base","data_selection","metadata"], output_names=['measurement_path']))
+		getmeasurement_structural.inputs.data_selection = data_selection
+		getmeasurement_structural.inputs.measurements_base = measurements_base
 
 		structural_bru2nii = pe.Node(interface=Bru2(), name="structural_bru2nii")
 		structural_bru2nii.inputs.force_conversion=True
 		structural_bru2nii.inputs.actual_size=actual_size
-
-	# functional_scan_finder = pe.Node(interface=FindScan(), name="functional_scan_finder")
-	# functional_scan_finder.iterables = ("query", functional_scan_types)
-	# functional_scan_finder.inputs.query_file = "ScanProgram.scanProgram"
 
 	realigner = pe.Node(interface=SpaceTimeRealigner(), name="realigner")
 	realigner.inputs.slice_times = "asc_alt_2"
@@ -136,9 +120,8 @@ def bru_preproc_lite(measurements_base, functional_scan_types=[], structural_sca
 	workflow = pe.Workflow(name="PreprocessingLite")
 
 	workflow_connections = [
-		(infosource, data_source, [('measurement', 'id')]),
-		(data_source, functional_scan_finder, [('measurement_path', 'scans_directory')]),
-		(functional_scan_finder, functional_bru2nii, [('positive_scan', 'input_dir')]),
+		(infosource, getmeasurement, [('functional_metadata', 'metadata')]),
+		(getmeasurement, functional_bru2nii, [('measurement_path', 'input_dir')]),
 		]
 	if realign:
 		workflow_connections.extend([
@@ -146,12 +129,13 @@ def bru_preproc_lite(measurements_base, functional_scan_types=[], structural_sca
 			])
 	if structural_scan_type:
 		workflow_connections.extend([
-			(data_source, structural_scan_finder, [('measurement_path', 'scans_directory')]),
-			(structural_scan_finder, structural_bru2nii, [('positive_scan', 'input_dir')]),
+			(infosource, getmeasurement_structural, [('structural_metadata', 'metadata')]),
+			(getmeasurement_structural, structural_bru2nii, [('measurement_path', 'input_dir')]),
 			])
 
 	workflow.connect(workflow_connections)
-	return workflow
+	workflow.run(plugin="MultiProc")
+	# return workflow
 
 def bru2_preproc2(measurements_base, functional_scan_type, structural_scan_type=None, tr=1, conditions=[], include_subjects=[], exclude_subjects=[], include_measurements=[], exclude_measurements=[], actual_size=False, workflow_denominator="Preprocessing", template="/home/chymera/NIdata/templates/ds_QBI_atlas100RD.nii", standalone_execute=False):
 	measurements_base = path.expanduser(measurements_base)

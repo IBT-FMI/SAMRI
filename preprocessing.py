@@ -74,13 +74,12 @@ def bru_preproc_lite(measurements_base, functional_scan_types=[], structural_sca
 				metadata.append(metadata_combination)
 		return metadata
 
-	def get_measurement(measurements_base, data_selection, metadata):
+	def get_scan(measurements_base, data_selection, metadata):
 		paths = data_selection[(data_selection["condition"] == metadata[0])&(data_selection["subject"] == metadata[1])&(data_selection["scan_type"] == metadata[2])]
 		measurement_path = paths["measurement"].tolist()[0]
-		scan_path = paths["scan"].tolist()[0]
-		measurement_path = measurements_base + "/" + measurement_path + "/" + scan_path
-		print measurement_path
-		return measurement_path
+		scan_subdir = paths["scan"].tolist()[0]
+		scan_path = measurements_base + "/" + measurement_path + "/" + scan_subdir
+		return scan_path
 
 	# define measurement directories to be processed, and populate the list either with the given include_measurements, or with an intelligent selection
 	infosource = pe.Node(interface=util.IdentityInterface(fields=['functional_metadata','structural_metadata']), name="infosource")
@@ -96,7 +95,7 @@ def bru_preproc_lite(measurements_base, functional_scan_types=[], structural_sca
 		structural_metadata = get_metadata(data_selection,[structural_scan_type])
 		infosource.iterables = [('functional_metadata',functional_metadata),('structural_metadata',structural_metadata)]
 
-	getmeasurement = pe.Node(name='getmeasurement', interface=util.Function(function=get_measurement,input_names=["measurements_base","data_selection","metadata"], output_names=['measurement_path']))
+	getmeasurement = pe.Node(name='getmeasurement', interface=util.Function(function=get_scan,input_names=["measurements_base","data_selection","metadata"], output_names=['scan_path']))
 	getmeasurement.inputs.data_selection = data_selection
 	getmeasurement.inputs.measurements_base = measurements_base
 
@@ -104,7 +103,7 @@ def bru_preproc_lite(measurements_base, functional_scan_types=[], structural_sca
 	functional_bru2nii.inputs.actual_size=actual_size
 
 	if structural_scan_type:
-		getmeasurement_structural = pe.Node(name='getmeasurement_structural', interface=util.Function(function=get_measurement,input_names=["measurements_base","data_selection","metadata"], output_names=['measurement_path']))
+		getmeasurement_structural = pe.Node(name='getmeasurement_structural', interface=util.Function(function=get_scan,input_names=["measurements_base","data_selection","metadata"], output_names=['scan_path']))
 		getmeasurement_structural.inputs.data_selection = data_selection
 		getmeasurement_structural.inputs.measurements_base = measurements_base
 
@@ -121,7 +120,7 @@ def bru_preproc_lite(measurements_base, functional_scan_types=[], structural_sca
 
 	workflow_connections = [
 		(infosource, getmeasurement, [('functional_metadata', 'metadata')]),
-		(getmeasurement, functional_bru2nii, [('measurement_path', 'input_dir')]),
+		(getmeasurement, functional_bru2nii, [('scan_path', 'input_dir')]),
 		]
 	if realign:
 		workflow_connections.extend([
@@ -130,7 +129,7 @@ def bru_preproc_lite(measurements_base, functional_scan_types=[], structural_sca
 	if structural_scan_type:
 		workflow_connections.extend([
 			(infosource, getmeasurement_structural, [('structural_metadata', 'metadata')]),
-			(getmeasurement_structural, structural_bru2nii, [('measurement_path', 'input_dir')]),
+			(getmeasurement_structural, structural_bru2nii, [('scan_path', 'input_dir')]),
 			])
 
 	workflow.connect(workflow_connections)

@@ -65,49 +65,58 @@ def dcm_preproc(workflow_base=".", force_convert=False, source_pattern="", IDs="
 	workflow.write_graph(graph2use="orig")
 	workflow.run(plugin="MultiProc")
 
-def bru_preproc_lite(measurements_base, functional_scan_types=[], structural_scan_type="", tr=1, conditions=[], include_subjects=[], exclude_subjects=[], include_measurements=[], exclude_measurements=[], actual_size=False, realign=False):
+def bru_preproc_lite(measurements_base, functional_scan_types=[], structural_scan_types=[], tr=1, conditions=[], include_subjects=[], exclude_subjects=[], include_measurements=[], exclude_measurements=[], actual_size=False, realign=False):
 
-	def get_metadata(data_selection,scan_types):
-		metadata=[]
-		for metadata_combination in product(conditions,include_subjects,scan_types):
-			if not data_selection[(data_selection["condition"] == metadata_combination[0])&(data_selection["subject"] == metadata_combination[1])&(data_selection["scan_type"] == metadata_combination[2])].empty:
-				metadata.append(metadata_combination)
-		return metadata
+	def get_iterdata(data_selection,conditions,include_subjects):
+		iterdata=[]
+		for condition_subject in product(set(list(data_selection["condition"])),set(list(data_selection["subject"]))):
+			if not data_selection[(data_selection["condition"] == condition_subject[0])&(data_selection["subject"] == condition_subject[1])].empty:
+				iterdata.append(condition_subject)
 
-	def get_scan(measurements_base, data_selection, metadata):
-		paths = data_selection[(data_selection["condition"] == metadata[0])&(data_selection["subject"] == metadata[1])&(data_selection["scan_type"] == metadata[2])]
-		measurement_path = paths["measurement"].tolist()[0]
-		scan_subdir = paths["scan"].tolist()[0]
-		scan_path = measurements_base + "/" + measurement_path + "/" + scan_subdir
-		return scan_path
+		return iterdata
+
+	def get_scans(measurements_base, data_selection, condition_subject, scan_types):
+		scan_paths = []
+		filtered_measurement = data_selection[(data_selection["condition"] == condition_subject[0])&(data_selection["subject"] == condition_subject[1])]
+		measurement_path = filtered_measurement["measurement"].tolist()[0]
+
+		for scan_type in scan_types:
+			filtered_scan = data_selection[(data_selection["scan_type"] == scan_type)]
+			scan_subdir = filtered_scan["scan"].tolist()[0]
+			scan_path = measurements_base + "/" + measurement_path + "/" + scan_subdir
+			scan_paths.append(scan_path)
+		return scan_paths
+
+
 
 	# define measurement directories to be processed, and populate the list either with the given include_measurements, or with an intelligent selection
-	infosource = pe.Node(interface=util.IdentityInterface(fields=['functional_metadata','structural_metadata']), name="infosource")
+	infosource = pe.Node(interface=util.IdentityInterface(fields=['condition_subject']), name="infosource")
 	if include_measurements:
 		infosource.iterables = ('measurement', include_measurements)
 		pass
 	else:
 		scan_types = functional_scan_types[:]
-		scan_types.append(structural_scan_type)
+		scan_types.extend(structural_scan_types)
 		data_selection=get_data_selection(measurements_base, conditions, scan_types=scan_types, include_subjects=include_subjects, exclude_subjects=exclude_subjects, exclude_measurements=exclude_measurements)
 
-		functional_metadata = get_metadata(data_selection,functional_scan_types)
-		structural_metadata = get_metadata(data_selection,[structural_scan_type])
-		infosource.iterables = [('functional_metadata',functional_metadata),('structural_metadata',structural_metadata)]
+		iterdata=get_iterdata(data_selection,conditions,include_subjects)
+		infosource.iterables = [('condition_subject',iterdata)]
 
-	getmeasurement = pe.Node(name='getmeasurement', interface=util.Function(function=get_scan,input_names=["measurements_base","data_selection","metadata"], output_names=['scan_path']))
-	getmeasurement.inputs.data_selection = data_selection
-	getmeasurement.inputs.measurements_base = measurements_base
+	get_functional_scans = pe.Node(name='get_functional_scans', interface=util.Function(function=get_scans,input_names=["measurements_base","data_selection","condition_subject","scan_types"], output_names=['scan_paths']))
+	get_functional_scans.inputs.data_selection = data_selection
+	get_functional_scans.inputs.measurements_base = measurements_base
+	get_functional_scans.inputs.scan_types = functional_scan_types
 
-	functional_bru2nii = pe.Node(interface=Bru2(), name="functional_bru2nii")
+	functional_bru2nii = pe.MapNode(interface=Bru2(), name="functional_bru2nii", iterfield=["input_dir"])
 	functional_bru2nii.inputs.actual_size=actual_size
 
-	if structural_scan_type:
-		getmeasurement_structural = pe.Node(name='getmeasurement_structural', interface=util.Function(function=get_scan,input_names=["measurements_base","data_selection","metadata"], output_names=['scan_path']))
-		getmeasurement_structural.inputs.data_selection = data_selection
-		getmeasurement_structural.inputs.measurements_base = measurements_base
+	if structural_scan_types:
+		get_structural_scans = pe.Node(name='get_structural_scans', interface=util.Function(function=get_scans,input_names=["measurements_base","data_selection","condition_subject","scan_types"], output_names=['scan_paths']))
+		get_structural_scans.inputs.data_selection = data_selection
+		get_structural_scans.inputs.measurements_base = measurements_base
+		get_structural_scans.inputs.scan_types = structural_scan_types
 
-		structural_bru2nii = pe.Node(interface=Bru2(), name="structural_bru2nii")
+		structural_bru2nii = pe.MapNode(interface=Bru2(), name="structural_bru2nii", iterfield=["input_dir"])
 		structural_bru2nii.inputs.force_conversion=True
 		structural_bru2nii.inputs.actual_size=actual_size
 
@@ -119,22 +128,22 @@ def bru_preproc_lite(measurements_base, functional_scan_types=[], structural_sca
 	workflow = pe.Workflow(name="PreprocessingLite")
 
 	workflow_connections = [
-		(infosource, getmeasurement, [('functional_metadata', 'metadata')]),
-		(getmeasurement, functional_bru2nii, [('scan_path', 'input_dir')]),
+		(infosource, get_functional_scans, [('condition_subject', 'condition_subject')]),
+		(get_functional_scans, functional_bru2nii, [('scan_paths', 'input_dir')]),
 		]
 	if realign:
 		workflow_connections.extend([
 			(functional_bru2nii, realigner, [('nii_file', 'anatomical_measurement')]),
 			])
-	if structural_scan_type:
+	if structural_scan_types:
 		workflow_connections.extend([
-			(infosource, getmeasurement_structural, [('structural_metadata', 'metadata')]),
-			(getmeasurement_structural, structural_bru2nii, [('scan_path', 'input_dir')]),
+			(infosource, get_structural_scans, [('condition_subject', 'condition_subject')]),
+			(get_structural_scans, structural_bru2nii, [('scan_paths','input_dir')]),
 			])
 
 	workflow.connect(workflow_connections)
-	workflow.run(plugin="MultiProc")
-	# return workflow
+	# workflow.run(plugin="MultiProc")
+	return workflow
 
 def bru2_preproc2(measurements_base, functional_scan_type, structural_scan_type=None, tr=1, conditions=[], include_subjects=[], exclude_subjects=[], include_measurements=[], exclude_measurements=[], actual_size=False, workflow_denominator="Preprocessing", template="/home/chymera/NIdata/templates/ds_QBI_atlas100RD.nii", standalone_execute=False):
 	measurements_base = path.expanduser(measurements_base)

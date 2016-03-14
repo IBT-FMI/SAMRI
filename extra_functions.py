@@ -47,7 +47,7 @@ def dcm_to_nii(dcm_dir, group_by="EchoTime", node=False):
 def get_data_selection(workflow_base, conditions=[], scan_types=[], subjects=[], exclude_subjects=[], include_measurements=[], exclude_measurements=[]):
 
 	if include_measurements:
-		measurement_path_list = [workflow_base+"/"+i for i in include_measurements]
+		measurement_path_list = [path.join(workflow_base,i) for i in include_measurements]
 	else:
 		measurement_path_list = listdir(workflow_base)
 
@@ -57,7 +57,7 @@ def get_data_selection(workflow_base, conditions=[], scan_types=[], subjects=[],
 		if sub_dir not in exclude_measurements:
 			measurement = []
 			try:
-				state_file = open(workflow_base+"/"+sub_dir+"/subject", "r")
+				state_file = open(path.join(workflow_base,sub_dir,"subject"), "r")
 				read_variables=0 #count variables so that breaking takes place after both have been read
 				while True:
 					current_line = state_file.readline()
@@ -91,7 +91,7 @@ def get_data_selection(workflow_base, conditions=[], scan_types=[], subjects=[],
 								#make a shallow copy of the list:
 								measurement_copy = measurement[:]
 								try:
-									scan_program_file = open(workflow_base+"/"+sub_dir+"/ScanProgram.scanProgram", "r")
+									scan_program_file = open(path.join(workflow_base,sub_dir,"ScanProgram.scanProgram"), "r")
 									syntax_adjusted_scan_type = scan_type+" "
 									while True:
 										current_line = scan_program_file.readline()

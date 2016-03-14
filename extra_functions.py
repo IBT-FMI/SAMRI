@@ -42,11 +42,18 @@ def dcm_to_nii(dcm_dir, group_by="EchoTime", node=False):
 
 	return results, echo_time_set
 
-def get_data_selection(workflow_base, conditions, scan_types, include_subjects, exclude_subjects, exclude_measurements):
+
+
+def get_data_selection(workflow_base, conditions=[], scan_types=[], subjects=[], exclude_subjects=[], include_measurements=[], exclude_measurements=[]):
+
+	if include_measurements:
+		measurement_path_list = [workflow_base+"/"+i for i in include_measurements]
+	else:
+		measurement_path_list = listdir(workflow_base)
 
 	measurements=[]
 	#populate a list of lists with acceptable subject names, conditions, and sub_dir's
-	for sub_dir in listdir(workflow_base):
+	for sub_dir in measurement_path_list:
 		if sub_dir not in exclude_measurements:
 			measurement = []
 			try:
@@ -57,7 +64,7 @@ def get_data_selection(workflow_base, conditions, scan_types, include_subjects, 
 					if "##$SUBJECT_name_string=" in current_line:
 						entry=re.sub("[<>\n]", "", state_file.readline())
 						if entry not in exclude_subjects:
-							if len(include_subjects) > 0 and entry not in include_subjects:
+							if len(subjects) > 0 and entry not in subjects:
 								break
 							else:
 								measurement.append(entry)

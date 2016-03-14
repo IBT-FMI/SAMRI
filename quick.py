@@ -2,15 +2,16 @@ import nipype.pipeline.engine as pe
 import nipype.interfaces.utility as util
 from extra_interfaces import Bru2, FindScan
 from nipype.interfaces.fsl import MELODIC, BET
-from os import path, listdir
+from os import path, listdir, remove, getcwd
 from preprocessing import bru_preproc_lite
 import nipype.interfaces.io as nio
 import shutil
+import re
 
 # set of files by which to identify a  Bruker measurement directory
 bruker_files = {"AdjStatePerStudy", "ResultState", "subject"}
 
-def diagnostic(measurements_base, structural_scan_type, functional_scan_types, workflow_base=False, tr=1, conditions=[], workflow_denominator="DIAGNOSTIC", include_subjects=[], exclude_subjects=[], exclude_measurements=[], include_measurements=[], debug_mode=False, actual_size=False, realign=False):
+def diagnostic(measurements_base, structural_scan_types, functional_scan_types, workflow_base=False, tr=1, conditions=[], workflow_denominator="DIAGNOSTIC", subjects=[], exclude_subjects=[], exclude_measurements=[], include_measurements=[], debug_mode=False, actual_size=False, realign=False, suppress_missing_scans=True):
 
 	#make measurements_base absolute (this has to be here to allow the check below)
 	measurements_base = path.expanduser(measurements_base)
@@ -26,7 +27,7 @@ def diagnostic(measurements_base, structural_scan_type, functional_scan_types, w
 	else:
 		workflow_base = measurements_base
 
-	bru_preproc_workflow = bru_preproc_lite(measurements_base, functional_scan_types, structural_scan_type=structural_scan_type, tr=tr, conditions=conditions, include_subjects=include_subjects, exclude_subjects=exclude_subjects, exclude_measurements=exclude_measurements, include_measurements=include_measurements, actual_size=actual_size)
+	bru_preproc_workflow = bru_preproc_lite(measurements_base, functional_scan_types, structural_scan_types=structural_scan_types, tr=tr, conditions=conditions, subjects=subjects, exclude_subjects=exclude_subjects, exclude_measurements=exclude_measurements, include_measurements=include_measurements, actual_size=actual_size)
 
 	melodic = pe.Node(interface=MELODIC(), name="melodic")
 	melodic.inputs.tr_sec = tr
@@ -61,10 +62,17 @@ def diagnostic(measurements_base, structural_scan_type, functional_scan_types, w
 		])
 
 	pipeline.connect(pipeline_connections)
+	pipeline.write_graph(graph2use="flat")
 
-	# pipeline.write_graph(graph2use="flat")
-	pipeline.run(plugin="MultiProc")
-
+	if suppress_missing_scans:
+		try:
+			pipeline.run(plugin="MultiProc")
+		except RuntimeError:
+			print "WARNING: Some expected scans have not been found (or another RuntimeError has occured)."
+		for f in listdir(getcwd()):
+			if re.search("crash.*?get_structural_scan|get_functional_scan.*", f):
+				remove(path.join(getcwd(), f))
+#
 	#delete all fles but final results
 	if not debug_mode:
 		shutil.rmtree(workflow_base+"/"+workflow_denominator+"_work")
@@ -124,4 +132,4 @@ def quick_melodic(measurements_base, functional_scan_type, workflow_base=False, 
 
 if __name__ == "__main__":
 	# quick_melodic("~/NIdata/ofM.dr/", "7_EPI_CBV", conditions=[], include_subjects=[], exclude_subjects=[], exclude_measurements=["20151026_135856_4006_1_1", "20151027_121613_4013_1_1"], debug_mode=True)
-	diagnostic("/mnt/data/incoming", "T2_TurboRARE", ["7_EPI_CBV_alej","7_EPI_CBV_jin6","7_EPI_CBV_jin10","7_EPI_CBV_jin20","7_EPI_CBV_jin40","7_EPI_CBV_jin60"], conditions=["ERC_ofM"], include_subjects=[], exclude_subjects=[], exclude_measurements=[], debug_mode=True)
+	diagnostic("/mnt/data/NIdata/ofM.erc", ["T2_TurboRARE"], ["7_EPI_CBV_alej","7_EPI_CBV_jin6","7_EPI_CBV_jin10","7_EPI_CBV_jin20","7_EPI_CBV_jin40","7_EPI_CBV_jin60"], conditions=["ERC_ofM"], subjects=["5503","5502"], exclude_subjects=[], exclude_measurements=[], debug_mode=True)

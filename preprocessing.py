@@ -6,17 +6,25 @@ from nipype.interfaces.afni import Bandpass
 from nipype.interfaces.afni.base import AFNICommand
 from nipype.interfaces.dcmstack import DcmStack
 import nipype.interfaces.io as nio
-from os import path, listdir
+from os import path
 import nipype.interfaces.ants as ants
 from extra_interfaces import DcmToNii, MEICA, VoxelResize, Bru2, FindScan, GetBrukerTiming
 from extra_functions import get_data_selection
 from nodes import ants_standard_registration_warp
 from itertools import product
-from copy import deepcopy
 
 #set all outputs to compressed NIfTI
 AFNICommand.set_default_output_type('NIFTI_GZ')
 FSLCommand.set_default_output_type('NIFTI_GZ')
+
+def get_scan(measurements_base, data_selection, condition, subject, scan_type):
+	from os import path #for some reason the import outside the function fails
+	scan_paths = []
+	filtered_data = data_selection[(data_selection["condition"] == condition)&(data_selection["subject"] == subject)&(data_selection["scan_type"] == scan_type)]
+	measurement_path = filtered_data["measurement"].tolist()[0]
+	scan_subdir = filtered_data["scan"].tolist()[0]
+	scan_path = path.join(measurements_base,measurement_path,scan_subdir)
+	return scan_path
 
 def dcm_preproc(workflow_base=".", force_convert=False, source_pattern="", IDs=""):
 	# make IDs strings
@@ -65,58 +73,35 @@ def dcm_preproc(workflow_base=".", force_convert=False, source_pattern="", IDs="
 	workflow.write_graph(graph2use="orig")
 	workflow.run(plugin="MultiProc")
 
-def bru_preproc_lite(measurements_base, functional_scan_types=[], structural_scan_types=[], tr=1, conditions=[], include_subjects=[], exclude_subjects=[], include_measurements=[], exclude_measurements=[], actual_size=False, realign=False):
-
-	def get_iterdata(data_selection,conditions,include_subjects):
-		iterdata=[]
-		for condition_subject in product(set(list(data_selection["condition"])),set(list(data_selection["subject"]))):
-			if not data_selection[(data_selection["condition"] == condition_subject[0])&(data_selection["subject"] == condition_subject[1])].empty:
-				iterdata.append(condition_subject)
-
-		return iterdata
-
-	def get_scans(measurements_base, data_selection, condition_subject, scan_types):
-		scan_paths = []
-		filtered_measurement = data_selection[(data_selection["condition"] == condition_subject[0])&(data_selection["subject"] == condition_subject[1])]
-		measurement_path = filtered_measurement["measurement"].tolist()[0]
-
-		for scan_type in scan_types:
-			filtered_scan = data_selection[(data_selection["scan_type"] == scan_type)]
-			scan_subdir = filtered_scan["scan"].tolist()[0]
-			scan_path = measurements_base + "/" + measurement_path + "/" + scan_subdir
-			scan_paths.append(scan_path)
-		return scan_paths
-
-
+def bru_preproc_lite(measurements_base, functional_scan_types=[], structural_scan_types=[], tr=1, conditions=[], subjects=[], exclude_subjects=[], include_measurements=[], exclude_measurements=[], actual_size=False, realign=False):
 
 	# define measurement directories to be processed, and populate the list either with the given include_measurements, or with an intelligent selection
-	infosource = pe.Node(interface=util.IdentityInterface(fields=['condition_subject']), name="infosource")
-	if include_measurements:
-		infosource.iterables = ('measurement', include_measurements)
-		pass
-	else:
-		scan_types = functional_scan_types[:]
-		scan_types.extend(structural_scan_types)
-		data_selection=get_data_selection(measurements_base, conditions, scan_types=scan_types, include_subjects=include_subjects, exclude_subjects=exclude_subjects, exclude_measurements=exclude_measurements)
+	scan_types = functional_scan_types[:]
+	scan_types.extend(structural_scan_types)
+	data_selection=get_data_selection(measurements_base, conditions, scan_types=scan_types, subjects=subjects, exclude_subjects=exclude_subjects, include_measurements=include_measurements, exclude_measurements=exclude_measurements)
+	if not subjects:
+		subjects = set(list(data_selection["subject"]))
+	if not conditions:
+		conditions = set(list(data_selection["condition"]))
 
-		iterdata=get_iterdata(data_selection,conditions,include_subjects)
-		infosource.iterables = [('condition_subject',iterdata)]
+	infosource = pe.Node(interface=util.IdentityInterface(fields=['condition','subject']), name="infosource")
+	infosource.iterables = [('condition',conditions), ('subject',subjects)]
 
-	get_functional_scans = pe.Node(name='get_functional_scans', interface=util.Function(function=get_scans,input_names=["measurements_base","data_selection","condition_subject","scan_types"], output_names=['scan_paths']))
-	get_functional_scans.inputs.data_selection = data_selection
-	get_functional_scans.inputs.measurements_base = measurements_base
-	get_functional_scans.inputs.scan_types = functional_scan_types
+	get_functional_scan = pe.Node(name='get_functional_scan', interface=util.Function(function=get_scan,input_names=["measurements_base","data_selection","condition","subject","scan_type"], output_names=['scan_path']))
+	get_functional_scan.inputs.data_selection = data_selection
+	get_functional_scan.inputs.measurements_base = measurements_base
+	get_functional_scan.iterables = ("scan_type", functional_scan_types)
 
-	functional_bru2nii = pe.MapNode(interface=Bru2(), name="functional_bru2nii", iterfield=["input_dir"])
+	functional_bru2nii = pe.Node(interface=Bru2(), name="functional_bru2nii")
 	functional_bru2nii.inputs.actual_size=actual_size
 
 	if structural_scan_types:
-		get_structural_scans = pe.Node(name='get_structural_scans', interface=util.Function(function=get_scans,input_names=["measurements_base","data_selection","condition_subject","scan_types"], output_names=['scan_paths']))
-		get_structural_scans.inputs.data_selection = data_selection
-		get_structural_scans.inputs.measurements_base = measurements_base
-		get_structural_scans.inputs.scan_types = structural_scan_types
+		get_structural_scan = pe.Node(name='get_structural_scan', interface=util.Function(function=get_scan,input_names=["measurements_base","data_selection","condition","subject","scan_type"], output_names=['scan_path']))
+		get_structural_scan.inputs.data_selection = data_selection
+		get_structural_scan.inputs.measurements_base = measurements_base
+		get_structural_scan.iterables = ("scan_type", structural_scan_types)
 
-		structural_bru2nii = pe.MapNode(interface=Bru2(), name="structural_bru2nii", iterfield=["input_dir"])
+		structural_bru2nii = pe.Node(interface=Bru2(), name="structural_bru2nii")
 		structural_bru2nii.inputs.force_conversion=True
 		structural_bru2nii.inputs.actual_size=actual_size
 
@@ -128,8 +113,8 @@ def bru_preproc_lite(measurements_base, functional_scan_types=[], structural_sca
 	workflow = pe.Workflow(name="PreprocessingLite")
 
 	workflow_connections = [
-		(infosource, get_functional_scans, [('condition_subject', 'condition_subject')]),
-		(get_functional_scans, functional_bru2nii, [('scan_paths', 'input_dir')]),
+		(infosource, get_functional_scan, [('condition', 'condition'),('subject', 'subject')]),
+		(get_functional_scan, functional_bru2nii, [('scan_path', 'input_dir')]),
 		]
 	if realign:
 		workflow_connections.extend([
@@ -137,8 +122,8 @@ def bru_preproc_lite(measurements_base, functional_scan_types=[], structural_sca
 			])
 	if structural_scan_types:
 		workflow_connections.extend([
-			(infosource, get_structural_scans, [('condition_subject', 'condition_subject')]),
-			(get_structural_scans, structural_bru2nii, [('scan_paths','input_dir')]),
+			(infosource, get_structural_scan, [('condition', 'condition'),('subject', 'subject')]),
+			(get_structural_scan, structural_bru2nii, [('scan_path','input_dir')]),
 			])
 
 	workflow.connect(workflow_connections)
@@ -275,6 +260,7 @@ def bru2_preproc(measurements_base, functional_scan_type, structural_scan_type=N
 	data_source = pe.Node(interface=nio.DataGrabber(infields=['measurement_id'], outfields=['measurement_path']), name='data_source')
 	data_source.inputs.template = workflow_base+"/%s"
 	data_source.inputs.template_args['measurement_path'] = [['measurement_id']]
+
 	data_source.inputs.sort_filelist = True
 
 	functional_scan_finder = pe.Node(interface=FindScan(), name="functional_scan_finder")

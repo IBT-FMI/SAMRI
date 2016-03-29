@@ -118,7 +118,7 @@ def bru_preproc_lite(measurements_base, functional_scan_types=[], structural_sca
 		]
 	if realign:
 		workflow_connections.extend([
-			(functional_bru2nii, realigner, [('nii_file', 'anatomical_measurement')]),
+			(functional_bru2nii, realigner, [('nii_file', 'in_file')]),
 			])
 	if structural_scan_types:
 		workflow_connections.extend([

@@ -1,9 +1,93 @@
 from nipype.interfaces.base import BaseInterface, BaseInterfaceInputSpec, traits, File, TraitedSpec, Directory, CommandLineInputSpec, CommandLine, InputMultiPath, isdefined, Bunch
 from nipype.utils.filemanip import split_filename
+from itertools import product
 
 import nibabel as nb
 import numpy as np
 import os
+
+class GenL2ModelInputSpec(BaseInterfaceInputSpec):
+	num_copes = traits.Range(low=1, mandatory=True, desc='number of copes to be combined')
+	conditions = traits.List(mandatory=True)
+	subjects = traits.List(mandatory=True)
+	# contrasts = traits.List(traits.Str(), default=["group mean"])
+
+class GenL2ModelOutputSpec(TraitedSpec):
+	design_mat = File(exists=True, desc='design matrix file')
+	design_con = File(exists=True, desc='design contrast file')
+	design_grp = File(exists=True, desc='design group file')
+
+class GenL2Model(BaseInterface):
+	"""Generate subject specific second level model
+
+	Examples
+	--------
+
+	>>> from nipype.interfaces.fsl import L2Model
+	>>> model = L2Model(num_copes=3) # 3 sessions
+
+	"""
+
+	input_spec = GenL2ModelInputSpec
+	output_spec = GenL2ModelOutputSpec
+
+	def _run_interface(self, runtime):
+		cwd = os.getcwd()
+		num_conditions=len(self.inputs.conditions)
+		num_subjects=len(self.inputs.subjects)
+		num_copes = int(num_conditions * num_subjects)
+		num_waves = int(num_conditions + num_subjects)
+		mat_txt = ['/NumWaves	{}'.format(num_waves),
+					'/NumPoints	{}'.format(num_copes),
+					'/PPheights	{}'.format(1),
+					'',
+					'/Matrix']
+		for condition, subject in product(range(num_conditions),range(num_subjects)):
+			new_line = [0] * num_waves
+			new_line[condition] = 1
+			new_line[num_conditions+subject] = 1
+			new_line = [str(i) for i in new_line]
+			new_line = " ".join(new_line)
+			mat_txt += [new_line]
+		mat_txt = '\n'.join(mat_txt)
+
+		con_txt = ['/ContrastName1   post > pre',
+					'/ContrastName2   pre > post',
+					'/NumWaves	   {}'.format(num_waves),
+					'/NumContrasts   {}'.format(num_conditions),
+					'/PPheights		  {}'.format(1),
+					'',
+					'/Matrix']
+		con_txt += ["-1 1 0 0 0 0 0 0 0"]
+		con_txt += ["1 -1 0 0 0 0 0 0 0"]
+		con_txt = '\n'.join(con_txt)
+
+		grp_txt = ['/NumWaves	1',
+					'/NumPoints	{}'.format(num_copes),
+					'',
+					'/Matrix']
+		for i in range(num_conditions):
+			for subject in range(num_subjects):
+				grp_txt += [str(subject+1)]
+		grp_txt = '\n'.join(grp_txt)
+
+		txt = {'design.mat': mat_txt,
+				'design.con': con_txt,
+				'design.grp': grp_txt}
+
+		# write design files
+		for i, name in enumerate(['design.mat', 'design.con', 'design.grp']):
+			f = open(os.path.join(cwd, name), 'wt')
+			f.write(txt[name])
+			f.close()
+
+		return runtime
+
+	def _list_outputs(self):
+		outputs = self._outputs().get()
+		for field in list(outputs.keys()):
+			outputs[field] = os.path.join(os.getcwd(),field.replace('_', '.'))
+		return outputs
 
 class Bru2InputSpec(CommandLineInputSpec):
 	input_dir = Directory(desc = "Input Directory", exists=True, mandatory=True, position=-1, argstr="%s")

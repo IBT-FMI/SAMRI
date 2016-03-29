@@ -66,7 +66,7 @@ def level2_(level1_directory, categories=["ofM","ofM_aF"], participants=["4001",
 
 	flameo = pe.MapNode(interface=FLAMEO(run_mode='fe'), name="flameo", iterfield=['cope_file','var_cope_file'])
 	flameo.inputs.mask_file="/home/chymera/NIdata/templates/ds_QBI_chr_bin.nii.gz"
-	flameo.inputs.run_mode="flame12"
+	flameo.inputs.run_mode="ols"
 
 	second_level = pe.Workflow(name="level2")
 

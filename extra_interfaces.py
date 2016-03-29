@@ -68,7 +68,7 @@ class GenL2Model(BaseInterface):
 					'/Matrix']
 		for i in range(num_conditions):
 			for subject in range(num_subjects):
-				grp_txt += [str(subject+1)]
+				grp_txt += [str(1)]
 		grp_txt = '\n'.join(grp_txt)
 
 		txt = {'design.mat': mat_txt,

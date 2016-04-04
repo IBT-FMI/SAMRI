@@ -11,7 +11,25 @@ import re
 # set of files by which to identify a  Bruker measurement directory
 bruker_files = {"AdjStatePerStudy", "ResultState", "subject"}
 
-def diagnostic(measurements_base, structural_scan_types, functional_scan_types, workflow_base=False, tr=1, conditions=[], workflow_denominator="DIAGNOSTIC", subjects=[], exclude_subjects=[], exclude_measurements=[], include_measurements=[], debug_mode=False, actual_size=False, realign=False, suppress_missing_scans=True):
+def diagnostic(measurements_base, structural_scan_types=None, functional_scan_types=None, workflow_base=False, tr=1, conditions=[], workflow_denominator="DIAGNOSTIC", subjects=[], exclude_subjects=[], exclude_measurements=[], include_measurements=[], debug_mode=False, actual_size=False, realign=False, suppress_missing_scans=True):
+	"""Runs a diagnostic analysis, returning MELODIC (ICA) and optionally structural scnas.
+
+	Mandatory Arguments:
+	measurements_base -- path in which to look for data to be processed
+
+	Keyword Arguments:
+	structural_scan_types -- structural scan identifiers for which to perform the diafnostic (default: all structural scan type values from the scan_type_classifications.csv file)
+	functional_scan_types -- functional scan identifiers for which to perform the diafnostic (default: all structural scan type values from the scan_type_classifications.csv file)
+	workflow_base -- path in which to place the workflow and results
+	tr -- repetition time (default: 1)
+	conditions -- condition (e.g. operation, substance administration) identifiers for which to perform the diafnostic (default: all conditions are selected)
+	workflow_denominator -- name of main workflow directory (default "DIAGNOSTIC")
+	subjects -- subject identifiers for which to perform the diagnostic (default: all subjects are selected)
+	exclude_subjects -- subject identifiers for which not to perform diagnostic (default None)
+	include_measurements -- measurement directory names on which to selectively perform diagnostic (default: all measurement directories in measurements_base are seected)
+	eclude_measurements -- measurement directory for which not to perform diagnostic (default None)
+	"""
+
 
 	#make measurements_base absolute (this has to be here to allow the check below)
 	measurements_base = path.expanduser(measurements_base)

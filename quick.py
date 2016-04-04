@@ -18,8 +18,8 @@ def diagnostic(measurements_base, structural_scan_types=None, functional_scan_ty
 	measurements_base -- path in which to look for data to be processed
 
 	Keyword Arguments:
-	structural_scan_types -- structural scan identifiers for which to perform the diafnostic (default: all structural scan type values from the scan_type_classifications.csv file)
-	functional_scan_types -- functional scan identifiers for which to perform the diafnostic (default: all structural scan type values from the scan_type_classifications.csv file)
+	structural_scan_types -- structural scan identifiers for which to perform the diafnostic (default: all structural scan type values from the scan_type_classification.csv file)
+	functional_scan_types -- functional scan identifiers for which to perform the diafnostic (default: all structural scan type values from the scan_type_classification.csv file)
 	workflow_base -- path in which to place the workflow and results
 	tr -- repetition time (default: 1)
 	conditions -- condition (e.g. operation, substance administration) identifiers for which to perform the diafnostic (default: all conditions are selected)

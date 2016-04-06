@@ -11,7 +11,7 @@ import re
 # set of files by which to identify a  Bruker measurement directory
 bruker_files = {"AdjStatePerStudy", "ResultState", "subject"}
 
-def diagnostic(measurements_base, structural_scan_types=None, functional_scan_types=None, workflow_base=False, tr=1, conditions=[], workflow_denominator="DIAGNOSTIC", subjects=[], exclude_subjects=[], exclude_measurements=[], include_measurements=[], debug_mode=False, actual_size=False, realign=False, suppress_missing_scans=True):
+def diagnostic(measurements_base, structural_scan_types=[], functional_scan_types=[], workflow_base=False, tr=1, conditions=[], workflow_denominator="DIAGNOSTIC", subjects=[], exclude_subjects=[], exclude_measurements=[], include_measurements=[], debug_mode=False, actual_size=False, realign=False, suppress_missing_scans=True):
 	"""Runs a diagnostic analysis, returning MELODIC (ICA) and optionally structural scnas.
 
 	Mandatory Arguments:
@@ -45,7 +45,7 @@ def diagnostic(measurements_base, structural_scan_types=None, functional_scan_ty
 	else:
 		workflow_base = measurements_base
 
-	bru_preproc_workflow = bru_preproc_lite(measurements_base, functional_scan_types, structural_scan_types=structural_scan_types, tr=tr, conditions=conditions, subjects=subjects, exclude_subjects=exclude_subjects, exclude_measurements=exclude_measurements, include_measurements=include_measurements, actual_size=actual_size)
+	bru_preproc_workflow = bru_preproc_lite(measurements_base, functional_scan_types=functional_scan_types, structural_scan_types=structural_scan_types, tr=tr, conditions=conditions, subjects=subjects, exclude_subjects=exclude_subjects, exclude_measurements=exclude_measurements, include_measurements=include_measurements, actual_size=actual_size)
 
 	melodic = pe.Node(interface=MELODIC(), name="melodic")
 	melodic.inputs.tr_sec = tr
@@ -150,4 +150,4 @@ def quick_melodic(measurements_base, functional_scan_type, workflow_base=False, 
 
 if __name__ == "__main__":
 	# quick_melodic("~/NIdata/ofM.dr/", "7_EPI_CBV", conditions=[], include_subjects=[], exclude_subjects=[], exclude_measurements=["20151026_135856_4006_1_1", "20151027_121613_4013_1_1"], debug_mode=True)
-	diagnostic("/mnt/data/NIdata/ofM.erc", ["T2_TurboRARE"], ["7_EPI_CBV_alej","7_EPI_CBV_jin6","7_EPI_CBV_jin10","7_EPI_CBV_jin20","7_EPI_CBV_jin40","7_EPI_CBV_jin60"], conditions=["ERC_ofM"], subjects=["5503","5502"], exclude_subjects=[], exclude_measurements=[], debug_mode=True)
+	diagnostic("/mnt/data/NIdata/ofM.dr", [], [], conditions=["ofM"], subjects=[], exclude_subjects=[], exclude_measurements=[], debug_mode=True)

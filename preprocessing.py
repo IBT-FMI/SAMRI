@@ -12,10 +12,15 @@ from extra_interfaces import DcmToNii, MEICA, VoxelResize, Bru2, FindScan, GetBr
 from extra_functions import get_data_selection
 from nodes import ants_standard_registration_warp
 from itertools import product
+import pandas as pd
 
 #set all outputs to compressed NIfTI
 AFNICommand.set_default_output_type('NIFTI_GZ')
 FSLCommand.set_default_output_type('NIFTI_GZ')
+
+#relative paths
+thisscriptspath = path.dirname(path.realpath(__file__))
+scan_classification_file_path = path.join(thisscriptspath,"scan_type_classification.csv")
 
 def get_scan(measurements_base, data_selection, condition, subject, scan_type):
 	from os import path #for some reason the import outside the function fails
@@ -74,6 +79,14 @@ def dcm_preproc(workflow_base=".", force_convert=False, source_pattern="", IDs="
 	workflow.run(plugin="MultiProc")
 
 def bru_preproc_lite(measurements_base, functional_scan_types=[], structural_scan_types=[], tr=1, conditions=[], subjects=[], exclude_subjects=[], include_measurements=[], exclude_measurements=[], actual_size=False, realign=False):
+
+	#select all functional/sturctural scan types unless specified
+	if not functional_scan_types or not structural_scan_types:
+		 scan_classification = pd.read_csv(scan_classification_file_path)
+		 if not functional_scan_types:
+			 functional_scan_types = list(scan_classification[(scan_classification["categories"] == "functional")]["scan_type"])
+		 if not structural_scan_types:
+			 structural_scan_types = list(scan_classification[(scan_classification["categories"] == "structural")]["scan_type"])
 
 	# define measurement directories to be processed, and populate the list either with the given include_measurements, or with an intelligent selection
 	scan_types = functional_scan_types[:]

@@ -64,7 +64,7 @@ def level2_(level1_directory, categories=["ofM","ofM_aF"], participants=["4001",
 	level2model.inputs.conditions=categories
 	level2model.inputs.subjects=participants
 
-	flameo = pe.MapNode(interface=FLAMEO(run_mode='fe'), name="flameo", iterfield=['cope_file','var_cope_file'])
+	flameo = pe.MapNode(interface=FLAMEO(), name="flameo", iterfield=['cope_file','var_cope_file'])
 	flameo.inputs.mask_file="/home/chymera/NIdata/templates/ds_QBI_chr_bin.nii.gz"
 	flameo.inputs.run_mode="ols"
 

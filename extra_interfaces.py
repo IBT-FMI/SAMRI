@@ -58,8 +58,8 @@ class GenL2Model(BaseInterface):
 					'/PPheights		  {}'.format(1),
 					'',
 					'/Matrix']
-		con_txt += ["-1 1 0 0 0 0 0 0 0"]
-		con_txt += ["1 -1 0 0 0 0 0 0 0"]
+		con_txt += ["-1 1" + "".join(" 0"*num_subjects)]
+		con_txt += ["1 -1" + "".join(" 0"*num_subjects)]
 		con_txt = '\n'.join(con_txt)
 
 		grp_txt = ['/NumWaves	1',
@@ -68,7 +68,8 @@ class GenL2Model(BaseInterface):
 					'/Matrix']
 		for i in range(num_conditions):
 			for subject in range(num_subjects):
-				grp_txt += [str(1)]
+				#write in the innermoste parantheses subject to have per-subject variance structure, or 1 for glob variance
+				grp_txt += [str(subject)]
 		grp_txt = '\n'.join(grp_txt)
 
 		txt = {'design.mat': mat_txt,

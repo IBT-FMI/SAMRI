@@ -78,7 +78,7 @@ def dcm_preproc(workflow_base=".", force_convert=False, source_pattern="", IDs="
 	workflow.write_graph(graph2use="orig")
 	workflow.run(plugin="MultiProc")
 
-def bru_preproc_lite(measurements_base, functional_scan_types=[], structural_scan_types=[], tr=1, conditions=[], subjects=[], exclude_subjects=[], include_measurements=[], exclude_measurements=[], actual_size=False, realign=False):
+def bru_preproc_lite(measurements_base, functional_scan_types=[], structural_scan_types=[], tr=1, conditions=[], subjects=[], exclude_subjects=[], measurements=[], exclude_measurements=[], actual_size=False, realign=False):
 
 	#select all functional/sturctural scan types unless specified
 	if not functional_scan_types or not structural_scan_types:
@@ -91,7 +91,7 @@ def bru_preproc_lite(measurements_base, functional_scan_types=[], structural_sca
 	# define measurement directories to be processed, and populate the list either with the given include_measurements, or with an intelligent selection
 	scan_types = functional_scan_types[:]
 	scan_types.extend(structural_scan_types)
-	data_selection=get_data_selection(measurements_base, conditions, scan_types=scan_types, subjects=subjects, exclude_subjects=exclude_subjects, include_measurements=include_measurements, exclude_measurements=exclude_measurements)
+	data_selection=get_data_selection(measurements_base, conditions, scan_types=scan_types, subjects=subjects, exclude_subjects=exclude_subjects, measurements=measurements, exclude_measurements=exclude_measurements)
 	if not subjects:
 		subjects = set(list(data_selection["subject"]))
 	if not conditions:

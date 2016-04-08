@@ -36,7 +36,7 @@ class GenL2Model(BaseInterface):
 		num_conditions=len(self.inputs.conditions)
 		num_subjects=len(self.inputs.subjects)
 		num_copes = int(num_conditions * num_subjects)
-		num_waves = int(num_conditions + num_subjects)
+		num_waves = int(1 + num_subjects)
 		mat_txt = ['/NumWaves	{}'.format(num_waves),
 					'/NumPoints	{}'.format(num_copes),
 					'/PPheights	{}'.format(1),
@@ -44,22 +44,23 @@ class GenL2Model(BaseInterface):
 					'/Matrix']
 		for condition, subject in product(range(num_conditions),range(num_subjects)):
 			new_line = [0] * num_waves
-			new_line[condition] = 1
-			new_line[num_conditions+subject] = 1
+			if condition == 0:
+				new_line[0] = -1
+			if condition == 1:
+				new_line[0] = 1
+			new_line[1+subject] = 1
 			new_line = [str(i) for i in new_line]
 			new_line = " ".join(new_line)
 			mat_txt += [new_line]
 		mat_txt = '\n'.join(mat_txt)
 
 		con_txt = ['/ContrastName1   post > pre',
-					'/ContrastName2   pre > post',
 					'/NumWaves	   {}'.format(num_waves),
-					'/NumContrasts   {}'.format(num_conditions),
+					'/NumContrasts   {}'.format(num_conditions-1),
 					'/PPheights		  {}'.format(1),
 					'',
 					'/Matrix']
-		con_txt += ["-1 1" + "".join(" 0"*num_subjects)]
-		con_txt += ["1 -1" + "".join(" 0"*num_subjects)]
+		con_txt += ["1" + "".join(" 0"*num_subjects)]
 		con_txt = '\n'.join(con_txt)
 
 		grp_txt = ['/NumWaves	1',
@@ -68,8 +69,8 @@ class GenL2Model(BaseInterface):
 					'/Matrix']
 		for i in range(num_conditions):
 			for subject in range(num_subjects):
-				#write in the innermoste parantheses subject to have per-subject variance structure, or 1 for glob variance
-				grp_txt += [str(subject)]
+				#write subject+1 in the innermost parantheses to have per-subject variance structure, or 1 for glob variance, the numbering has to start at 1, not 0
+				grp_txt += [str(1)]
 		grp_txt = '\n'.join(grp_txt)
 
 		txt = {'design.mat': mat_txt,

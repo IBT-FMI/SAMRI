@@ -44,18 +44,18 @@ def dcm_to_nii(dcm_dir, group_by="EchoTime", node=False):
 
 
 
-def get_data_selection(workflow_base, conditions=[], scan_types=[], subjects=[], exclude_subjects=[], include_measurements=[], exclude_measurements=[]):
+def get_data_selection(workflow_base, conditions=[], scan_types=[], subjects=[], exclude_subjects=[], measurements=[], exclude_measurements=[]):
 
-	if include_measurements:
-		measurement_path_list = [path.join(workflow_base,i) for i in include_measurements]
+	if measurements:
+		measurement_path_list = [path.join(workflow_base,i) for i in measurements]
 	else:
 		measurement_path_list = listdir(workflow_base)
 
-	measurements=[]
+	selected_measurements=[]
 	#populate a list of lists with acceptable subject names, conditions, and sub_dir's
 	for sub_dir in measurement_path_list:
 		if sub_dir not in exclude_measurements:
-			measurement = []
+			selected_measurement = []
 			try:
 				state_file = open(path.join(workflow_base,sub_dir,"subject"), "r")
 				read_variables=0 #count variables so that breaking takes place after both have been read
@@ -67,29 +67,29 @@ def get_data_selection(workflow_base, conditions=[], scan_types=[], subjects=[],
 							if len(subjects) > 0 and entry not in subjects:
 								break
 							else:
-								measurement.append(entry)
+								selected_measurement.append(entry)
 						else:
 							break
 						read_variables +=1 #count recorded variables
 					if "##$SUBJECT_study_name=" in current_line:
 						entry=re.sub("[<>\n]", "", state_file.readline())
 						if entry in conditions or len(conditions) == 0:
-							measurement.append(entry)
+							selected_measurement.append(entry)
 						else:
 							break
 						read_variables +=1 #count recorded variables
 					if read_variables == 2:
-						measurement.append(sub_dir)
+						selected_measurement.append(sub_dir)
 						#if the directory passed both the subject and conditions tests, append a line for it
 						if not scan_types:
 							#add two empty entries to fill columns otherwise dedicated to the scan program
-							measurement.extend(["",""])
-							measurements.append(measurement)
+							selected_measurement.extend(["",""])
+							selected_measurements.append(selected_measurement)
 						#if various scan types are selected extend and copy lines to accommodate:
 						else:
 							for scan_type in scan_types:
 								#make a shallow copy of the list:
-								measurement_copy = measurement[:]
+								measurement_copy = selected_measurement[:]
 								try:
 									scan_program_file = open(path.join(workflow_base,sub_dir,"ScanProgram.scanProgram"), "r")
 									syntax_adjusted_scan_type = scan_type+" "
@@ -98,7 +98,7 @@ def get_data_selection(workflow_base, conditions=[], scan_types=[], subjects=[],
 										if syntax_adjusted_scan_type in current_line:
 											scan_number = current_line.split(syntax_adjusted_scan_type)[1].strip("(E").strip(")</displayName>\n")
 											measurement_copy.extend([scan_type, scan_number])
-											measurements.append(measurement_copy)
+											selected_measurements.append(measurement_copy)
 											break
 										#avoid infinite while loop:
 										if current_line == "</de.bruker.mri.entities.scanprogram.StudyScanProgramEntity>":
@@ -110,7 +110,7 @@ def get_data_selection(workflow_base, conditions=[], scan_types=[], subjects=[],
 				pass
 
 
-	data_selection = pd.DataFrame(measurements, columns=["subject", "condition", "measurement", "scan_type", "scan"])
+	data_selection = pd.DataFrame(selected_measurements, columns=["subject", "condition", "measurement", "scan_type", "scan"])
 
 	#drop subjects which do not have measurements for all conditions
 	if len(conditions) > 1:

@@ -12,7 +12,7 @@ from nipype.interfaces.nipy import SpaceTimeRealigner
 import nipype.interfaces.ants as ants
 from itertools import product
 
-def level2(level1_directory, categories=["ofM_aF","ofM"], participants=["4001","4005","4007","4008","4009","4011","4012"]):
+def level2_common_effect(level1_directory, categories=["ofM"], participants=["4005","4007","4011","4012"]):
 	level1_directory = path.expanduser(level1_directory)
 	copemergeroot = level1_directory+"/results/cope/"
 	varcbmergeroot = level1_directory+"/results/varcb/"
@@ -30,7 +30,9 @@ def level2(level1_directory, categories=["ofM_aF","ofM"], participants=["4001","
 	level2model = pe.Node(interface=L2Model(),name='level2model')
 	level2model.inputs.num_copes=len(copes)
 
-	flameo = pe.MapNode(interface=FLAMEO(run_mode='fe'), name="flameo", iterfield=['cope_file','var_cope_file'])
+	flameo = pe.MapNode(interface=FLAMEO(), name="flameo", iterfield=['cope_file','var_cope_file'])
+	flameo.inputs.mask_file="/home/chymera/NIdata/templates/ds_QBI_chr_bin.nii.gz"
+	flameo.inputs.run_mode="ols"
 
 	second_level = pe.Workflow(name="level2")
 
@@ -38,13 +40,15 @@ def level2(level1_directory, categories=["ofM_aF","ofM"], participants=["4001","
 		(copemerge,flameo,[('merged_file','cope_file')]),
 		(varcopemerge,flameo,[('merged_file','var_cope_file')]),
 		(level2model,flameo, [('design_mat','design_file')]),
+		(level2model,flameo, [('design_grp','cov_split_file')]),
+		(level2model,flameo, [('design_con','t_con_file')]),
 		])
 
 	second_level.write_graph(graph2use="flat")
 	second_level.base_dir = level1_directory+"/.."
 	second_level.run(plugin="MultiProc",  plugin_args={'n_procs' : 6})
 
-def level2_(level1_directory, categories=["ofM","ofM_aF"], participants=["4001","4005","4007","4008","4009","4011","4012"]):
+def level2(level1_directory, categories=["ofM","ofM_aF"], participants=["4005","4007","4011","4012"]):
 	level1_directory = path.expanduser(level1_directory)
 	copemergeroot = level1_directory+"/results/cope/"
 	varcbmergeroot = level1_directory+"/results/varcb/"
@@ -261,4 +265,4 @@ def level2_contiguous(measurements_base, functional_scan_type, structural_scan_t
 
 if __name__ == "__main__":
 	# level1("~/NIdata/ofM.dr/", "7_EPI_CBV", structural_scan_type="T2_TurboRARE>", conditions=["ofM","ofM_aF"], exclude_measurements=["20151027_121613_4013_1_1"])
-	level2_("~/NIdata/ofM.dr/level1")
+	level2_common_effect("~/NIdata/ofM.dr/level1")

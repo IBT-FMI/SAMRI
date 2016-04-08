@@ -90,6 +90,7 @@ def get_data_selection(workflow_base, conditions=[], scan_types=[], subjects=[],
 							for scan_type in scan_types:
 								#make a shallow copy of the list:
 								measurement_copy = selected_measurement[:]
+								scan_number=None
 								try:
 									scan_program_file = open(path.join(workflow_base,sub_dir,"ScanProgram.scanProgram"), "r")
 									syntax_adjusted_scan_type = scan_type+" "
@@ -105,10 +106,20 @@ def get_data_selection(workflow_base, conditions=[], scan_types=[], subjects=[],
 											break
 								except IOError:
 									pass
+								#sometimes the ScanProgram.scanProgram file can be incomplete. We also chack the individual scan acquisition parameters
+								if not scan_number:
+									for sub_sub_dir in listdir(path.join(workflow_base,sub_dir)):
+										try:
+											acqp_file = path.join(workflow_base,sub_dir,sub_sub_dir,"acqp")
+											if scan_type in open(acqp_file).read():
+												scan_number = sub_sub_dir
+												measurement_copy.extend([scan_type, scan_number])
+												selected_measurements.append(measurement_copy)
+										except IOError:
+											pass
 						break #prevent loop from going on forever
 			except IOError:
 				pass
-
 
 	data_selection = pd.DataFrame(selected_measurements, columns=["subject", "condition", "measurement", "scan_type", "scan"])
 

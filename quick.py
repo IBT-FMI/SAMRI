@@ -1,3 +1,5 @@
+#!/usr/bin/python
+
 import nipype.pipeline.engine as pe
 import nipype.interfaces.utility as util
 from extra_interfaces import Bru2, FindScan
@@ -7,12 +9,20 @@ from preprocessing import bru_preproc_lite
 import nipype.interfaces.io as nio
 import shutil
 import re
+import argh
 
 # set of files by which to identify a  Bruker measurement directory
 bruker_files = {"AdjStatePerStudy", "ResultState", "subject"}
 
-def diagnostic(measurements_base, structural_scan_types=[], functional_scan_types=[], workflow_base=False, tr=1, conditions=[], workflow_denominator="DIAGNOSTIC", subjects=[], exclude_subjects=[], exclude_measurements=[], include_measurements=[], debug_mode=False, actual_size=False, realign=False, suppress_missing_scans=True):
-	"""Runs a diagnostic analysis, returning MELODIC (ICA) and optionally structural scnas.
+@argh.arg('-f', '--functional_scan_types', nargs='+', type=str)
+@argh.arg('--structural_scan_types', nargs='+', type=str)
+@argh.arg('-c', '--conditions', nargs='+', type=str)
+@argh.arg('--subjects', nargs='+', type=str)
+@argh.arg('--exclude-subjects', nargs='+', type=str)
+@argh.arg('--measurements', nargs='+', type=str)
+@argh.arg('--exclude_measurements', nargs='+', type=str)
+def diagnostic(measurements_base, structural_scan_types=[], functional_scan_types=[], workflow_base=False, tr=1, conditions=[], workflow_denominator="DIAGNOSTIC", subjects=[], exclude_subjects=[], measurements=[], exclude_measurements=[], debug_mode=False, actual_size=False, realign=False, quiet=True):
+	"""Runs a diagnostic analysis, returning MELODIC (ICA) results and structural scans.
 
 	Mandatory Arguments:
 	measurements_base -- path in which to look for data to be processed
@@ -26,10 +36,10 @@ def diagnostic(measurements_base, structural_scan_types=[], functional_scan_type
 	workflow_denominator -- name of main workflow directory (default "DIAGNOSTIC")
 	subjects -- subject identifiers for which to perform the diagnostic (default: all subjects are selected)
 	exclude_subjects -- subject identifiers for which not to perform diagnostic (default None)
-	include_measurements -- measurement directory names on which to selectively perform diagnostic (default: all measurement directories in measurements_base are seected)
-	eclude_measurements -- measurement directory for which not to perform diagnostic (default None)
+	measurements -- measurement directory names on which to selectively perform diagnostic (default: all measurement directories in measurements_base are seected)
+	exclude_measurements -- measurement directory for which not to perform diagnostic (default None)
+	quiet -- does not report missing scan errors, and deletes their corresponding crash files (default True)
 	"""
-
 
 	#make measurements_base absolute (this has to be here to allow the check below)
 	measurements_base = path.expanduser(measurements_base)
@@ -45,7 +55,7 @@ def diagnostic(measurements_base, structural_scan_types=[], functional_scan_type
 	else:
 		workflow_base = measurements_base
 
-	bru_preproc_workflow = bru_preproc_lite(measurements_base, functional_scan_types=functional_scan_types, structural_scan_types=structural_scan_types, tr=tr, conditions=conditions, subjects=subjects, exclude_subjects=exclude_subjects, exclude_measurements=exclude_measurements, include_measurements=include_measurements, actual_size=actual_size)
+	bru_preproc_workflow = bru_preproc_lite(measurements_base, functional_scan_types=functional_scan_types, structural_scan_types=structural_scan_types, tr=tr, conditions=conditions, subjects=subjects, exclude_subjects=exclude_subjects, exclude_measurements=exclude_measurements, measurements=measurements, actual_size=actual_size)
 
 	melodic = pe.Node(interface=MELODIC(), name="melodic")
 	melodic.inputs.tr_sec = tr
@@ -67,7 +77,8 @@ def diagnostic(measurements_base, structural_scan_types=[], functional_scan_type
 	pipeline.base_dir = workflow_base
 
 	pipeline_connections = [
-		(bru_preproc_workflow, datasink, [('structural_bru2nii.nii_file','structural')])
+		(bru_preproc_workflow, datasink, [('infosource.condition','container')]),
+		(bru_preproc_workflow, datasink, [('structural_bru2nii.nii_file','structural')]),
 		]
 
 	if realign:
@@ -82,7 +93,7 @@ def diagnostic(measurements_base, structural_scan_types=[], functional_scan_type
 	pipeline.connect(pipeline_connections)
 	pipeline.write_graph(graph2use="flat")
 
-	if suppress_missing_scans:
+	if quiet:
 		try:
 			pipeline.run(plugin="MultiProc")
 		except RuntimeError:
@@ -148,6 +159,8 @@ def quick_melodic(measurements_base, functional_scan_type, workflow_base=False, 
 	if not debug_mode:
 		shutil.rmtree(workflow_base+"/"+workflow_denominator+"_work")
 
-if __name__ == "__main__":
+# if __name__ == "__main__":
 	# quick_melodic("~/NIdata/ofM.dr/", "7_EPI_CBV", conditions=[], include_subjects=[], exclude_subjects=[], exclude_measurements=["20151026_135856_4006_1_1", "20151027_121613_4013_1_1"], debug_mode=True)
-	diagnostic("/mnt/data/NIdata/ofM.dr", [], [], conditions=["ofM"], subjects=[], exclude_subjects=[], exclude_measurements=[], debug_mode=True)
+	# diagnostic("/mnt/data/NIdata/ofM.dr", [], [], conditions=["ofM"], subjects=[], exclude_subjects=[], exclude_measurements=[], debug_mode=True)
+
+argh.dispatch_commands([diagnostic])

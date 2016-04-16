@@ -3,6 +3,7 @@ import nibabel as nb
 from dcmstack.extract import minimal_extractor
 from dicom import read_file
 from os import listdir, path, makedirs, getcwd
+import os
 import pandas as pd
 import re
 
@@ -92,7 +93,8 @@ def get_data_selection(workflow_base, conditions=[], scan_types=[], subjects=[],
 								measurement_copy = selected_measurement[:]
 								scan_number=None
 								try:
-									scan_program_file = open(path.join(workflow_base,sub_dir,"ScanProgram.scanProgram"), "r")
+									scan_program_file_path = path.join(workflow_base,sub_dir,"ScanProgram.scanProgram")
+									scan_program_file = open(scan_program_file_path, "r")
 									syntax_adjusted_scan_type = scan_type+" "
 									while True:
 										current_line = scan_program_file.readline()
@@ -107,7 +109,7 @@ def get_data_selection(workflow_base, conditions=[], scan_types=[], subjects=[],
 								except IOError:
 									pass
 								#sometimes the ScanProgram.scanProgram file can be incomplete. We also chack the individual scan acquisition parameters
-								if not scan_number:
+								if os.stat(scan_program_file_path).st_size <= 700 and not scan_number:
 									for sub_sub_dir in listdir(path.join(workflow_base,sub_dir)):
 										try:
 											acqp_file = path.join(workflow_base,sub_dir,sub_sub_dir,"acqp")
@@ -121,6 +123,8 @@ def get_data_selection(workflow_base, conditions=[], scan_types=[], subjects=[],
 			except IOError:
 				pass
 
+	for i, a in enumerate(selected_measurements):
+		print(str(len(a))+" "+", ".join(a))
 	data_selection = pd.DataFrame(selected_measurements, columns=["subject", "condition", "measurement", "scan_type", "scan"])
 
 	#drop subjects which do not have measurements for all conditions

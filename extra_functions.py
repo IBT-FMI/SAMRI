@@ -108,7 +108,10 @@ def get_data_selection(workflow_base, conditions=[], scan_types=[], subjects=[],
 											break
 								except IOError:
 									pass
-								#sometimes the ScanProgram.scanProgram file can be incomplete. We also chack the individual scan acquisition parameters
+								#If the ScanProgram.scanProgram file is small in size and thescan_type could not be matched, that may be because ParaVision failed
+								#to write all the information into the file. This happens occasionally.
+								#Thus we scan the individuual acquisition protocols as well. These are a suboptimal and second choice, because acqp scans **also**
+								#keep the original names the sequences had on import (ans may thus be misdetected, if the name was changed by the user after import).
 								if os.stat(scan_program_file_path).st_size <= 700 and not scan_number:
 									for sub_sub_dir in listdir(path.join(workflow_base,sub_dir)):
 										try:

@@ -38,7 +38,7 @@ def test_model(base_dir, plot=False, workflow_name="test_model_wf"):
 
 	level1design = pe.Node(interface=Level1Design(), name="level1design")
 	level1design.inputs.interscan_interval = 1
-	level1design.inputs.bases = {'dgamma': {'derivs': False}}
+	level1design.inputs.bases = {'gamma': {'derivs': False}}
 	level1design.inputs.model_serial_correlations = True
 	level1design.inputs.contrasts = [('allStim','T', ["s1","s2","s3","s4","s5","s6"],[1,1,1,1,1,1])]
 

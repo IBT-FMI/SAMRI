@@ -10,6 +10,15 @@ import matplotlib
 matplotlib.style.use('ggplot')
 
 
+def plotmodel(matfile):
+	with open(matfile, 'r') as f:
+		first_line = f.readline()
+	length = first_line.split("\t")[1]
+	column_names = range(int(length))
+	df = pd.read_csv(matfile, skiprows=5, sep="\t", header=None, names=column_names, index_col=False)
+	df.plot()
+	plt.show()
+
 def subjectinfo(subject_delay):
 	from nipype.interfaces.base import Bunch
 	from copy import deepcopy
@@ -33,7 +42,7 @@ def test_model(base_dir, plot=False, workflow_name="test_model_wf"):
 	specify_model.inputs.input_units = 'secs'
 	specify_model.inputs.functional_runs = ["/home/chymera/NIdata/ofM.dr/level1/Preprocessing/_condition_ofM_subject_4011/functional_bandpass/corr_16_trans_bp.nii.gz"]
 	specify_model.inputs.time_repetition = 1
-	specify_model.inputs.high_pass_filter_cutoff = 128 #switch to 240
+	specify_model.inputs.high_pass_filter_cutoff = 0 #switch to 240
 	specify_model.inputs.subject_info = subjectinfo(49.55)
 
 	level1design = pe.Node(interface=Level1Design(), name="level1design")
@@ -55,16 +64,13 @@ def test_model(base_dir, plot=False, workflow_name="test_model_wf"):
 
 	# test_model_wf.run(plugin="MultiProc",  plugin_args={'n_procs' : 4})
 	test_model_wf.run()
+	test_model_wf.write_graph(dotfilename="graph.dot", graph2use="hierarchical", format="png")
 
 	if plot:
 		matfile = path.join(base_dir,workflow_name,"modelgen/run0.mat")
-		with open(matfile, 'r') as f:
-			first_line = f.readline()
-		length = first_line.split("\t")[1]
-		column_names = range(int(length))
-		df = pd.read_csv(matfile, skiprows=5, sep="\t", header=None, names=column_names, index_col=False)
-		df.plot()
-		plt.show()
+		plotmodel(matfile)
+
 
 if __name__ == '__main__':
+	# plotmodel("/home/chymera/src/chyMRI/tests/test_model_wf/level1design/run0.mat")
 	test_model("/home/chymera/src/chyMRI/tests", plot=True)

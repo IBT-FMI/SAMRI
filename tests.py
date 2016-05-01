@@ -40,7 +40,7 @@ def test_model(base_dir, plot=False, workflow_name="test_model_wf"):
 
 	specify_model = pe.Node(interface=SpecifyModel(), name="specify_model")
 	specify_model.inputs.input_units = 'secs'
-	specify_model.inputs.functional_runs = ["/home/chymera/NIdata/ofM.dr/level1/Preprocessing/_condition_ofM_subject_4011/functional_bandpass/corr_16_trans_bp.nii.gz"]
+	specify_model.inputs.functional_runs = ["/home/chymera/NIdata/ofM.dr/level1/Preprocessing/_condition_ofM_subject_4011/functional_bandpass/corr_16_trans_filt.nii.gz"]
 	specify_model.inputs.time_repetition = 1
 	specify_model.inputs.high_pass_filter_cutoff = 0 #switch to 240
 	specify_model.inputs.subject_info = subjectinfo(49.55)
@@ -73,4 +73,4 @@ def test_model(base_dir, plot=False, workflow_name="test_model_wf"):
 
 if __name__ == '__main__':
 	# plotmodel("/home/chymera/src/chyMRI/tests/test_model_wf/level1design/run0.mat")
-	test_model("/home/chymera/src/chyMRI/tests", plot=True)
+	test_model("/home/chymera/src/chyMRI/tests", plot=False)

@@ -1,7 +1,7 @@
 import nipype.pipeline.engine as pe
 import nipype.interfaces.utility as util
 from nipype.interfaces.base import Bunch
-from nipype.interfaces.fsl import GLM, MELODIC, FAST, BET, MeanImage, FLIRT, ApplyMask, ImageMaths, Level1Design, FEATModel, Merge, L2Model, FLAMEO
+from nipype.interfaces.fsl import GLM, MELODIC, FAST, BET, MeanImage, FLIRT, ApplyMask, ImageMaths, Level1Design, FEATModel, Merge, L2Model, FLAMEO, Cluster
 from nipype.interfaces.afni import Bandpass
 from nipype.algorithms.modelgen import SpecifyModel
 import nipype.interfaces.io as nio
@@ -12,7 +12,7 @@ from nipype.interfaces.nipy import SpaceTimeRealigner
 import nipype.interfaces.ants as ants
 from itertools import product
 
-def level2_common_effect(level1_directory, categories=["ofM"], participants=["4005","4007","4011","4012"]):
+def level2_common_effect(level1_directory, categories=["ofM"], participants=["4008","4007","4011","4012"]):
 	level1_directory = path.expanduser(level1_directory)
 	copemergeroot = level1_directory+"/results/cope/"
 	varcbmergeroot = level1_directory+"/results/varcb/"
@@ -48,7 +48,7 @@ def level2_common_effect(level1_directory, categories=["ofM"], participants=["40
 	second_level.base_dir = level1_directory+"/.."
 	second_level.run(plugin="MultiProc",  plugin_args={'n_procs' : 6})
 
-def level2(level1_directory, categories=["ofM","ofM_aF"], participants=["4005","4007","4011","4012"]):
+def level2(level1_directory, categories=["ofM","ofM_aF"], participants=["4008","4007","4011","4012"]):
 	level1_directory = path.expanduser(level1_directory)
 	copemergeroot = level1_directory+"/results/cope/"
 	varcbmergeroot = level1_directory+"/results/varcb/"
@@ -116,7 +116,7 @@ def level1(measurements_base, functional_scan_type, structural_scan_type=None, t
 	specify_model = pe.Node(interface=SpecifyModel(), name="specify_model")
 	specify_model.inputs.input_units = 'secs'
 	specify_model.inputs.time_repetition = tr
-	specify_model.inputs.high_pass_filter_cutoff = 128
+	specify_model.inputs.high_pass_filter_cutoff = 180
 
 	level1design = pe.Node(interface=Level1Design(), name="level1design")
 	level1design.inputs.interscan_interval = tr
@@ -132,6 +132,15 @@ def level1(measurements_base, functional_scan_type, structural_scan_type=None, t
 	glm.inputs.out_varcb_name="varcb.nii.gz"
 	#not setting a betas output file might lead to beta export in lieu of COPEs
 	glm.inputs.out_file="betas.nii.gz"
+	glm.inputs.out_t_name="t_stat.nii.gz"
+	glm.inputs.out_p_name="p_stat.nii.gz"
+
+	Cluster._cmd = "fsl_cluster" #on NeuroGentoo this file is renamed to avoid a collision with one of FSL's deps
+	cluster = pe.Node(interface=Cluster(), name="cluster")
+	cluster.inputs.threshold = 0.95
+	cluster.inputs.out_max_file = "out_max_file"
+	cluster.inputs.out_mean_file = "out_mean_file"
+	cluster.inputs.out_size_file = "out_size_file"
 
 	datasink = pe.Node(nio.DataSink(), name='datasink')
 	datasink.inputs.base_directory = measurements_base+'/'+pipeline_denominator+"/results"
@@ -148,6 +157,14 @@ def level1(measurements_base, functional_scan_type, structural_scan_type=None, t
 		(modelgen, glm, [('con_file', 'contrasts')]),
 		(glm, datasink, [('out_cope', 'cope')]),
 		(glm, datasink, [('out_varcb', 'varcb')]),
+		(cluster, datasink, [('localmax_vol_file', 'localmax_vol_file')]),
+		(cluster, datasink, [('max_file', 'max_file')]),
+		(cluster, datasink, [('mean_file', 'mean_file')]),
+		(cluster, datasink, [('pval_file', 'pval_file')]),
+		(cluster, datasink, [('size_file', 'size_file')]),
+		(cluster, datasink, [('threshold_file', 'threshold_file')]),
+		(glm, cluster, [('out_t', 'in_file')]),
+		(glm, cluster, [('out_cope', 'cope_file')]),
 		])
 
 	pipeline = pe.Workflow(name=pipeline_denominator)
@@ -158,7 +175,7 @@ def level1(measurements_base, functional_scan_type, structural_scan_type=None, t
 		(preprocessing, first_level, [('structural_bandpass.out_file','glm.in_file')]),
 		])
 
-	pipeline.write_graph(graph2use="flat")
+	pipeline.write_graph(dotfilename="graph.dot", graph2use="hierarchical", format="png")
 	if standalone_execute:
 		pipeline.base_dir = measurements_base
 		pipeline.run(plugin="MultiProc",  plugin_args={'n_procs' : 4})
@@ -264,5 +281,6 @@ def level2_contiguous(measurements_base, functional_scan_type, structural_scan_t
 		return pipeline
 
 if __name__ == "__main__":
-	# level1("~/NIdata/ofM.dr/", "7_EPI_CBV", structural_scan_type="T2_TurboRARE>", conditions=["ofM","ofM_aF"], exclude_measurements=["20151027_121613_4013_1_1"])
-	level2_common_effect("~/NIdata/ofM.dr/level1")
+	level1("~/NIdata/ofM.erc/", "7_EPI_CBV", structural_scan_type="T2_TurboRARE>", conditions=["ofM","ofM_aF"], exclude_measurements=["20151027_121613_4013_1_1"])
+	# level2_common_effect("~/NIdata/ofM.dr/level1", categories=["ofM"])
+	# level2("~/NIdata/ofM.dr/level1")

@@ -1,6 +1,7 @@
 import nipype.interfaces.utility as util		# utility
 import nipype.pipeline.engine as pe				# pypeline engine
 from nipype.interfaces.fsl import GLM, MELODIC, FAST, BET, MeanImage, FLIRT, ApplyMask, ImageMaths, FSLCommand
+from nipype.interfaces.fsl.maths import TemporalFilter
 from nipype.interfaces.nipy import SpaceTimeRealigner
 from nipype.interfaces.afni import Bandpass
 from nipype.interfaces.afni.base import AFNICommand
@@ -145,7 +146,7 @@ def bru_preproc_lite(measurements_base, functional_scan_types=[], structural_sca
 
 def bru2_preproc2(measurements_base, functional_scan_type, structural_scan_type=None, tr=1, conditions=[], include_subjects=[], exclude_subjects=[], include_measurements=[], exclude_measurements=[], actual_size=False, workflow_denominator="Preprocessing", template="/home/chymera/NIdata/templates/ds_QBI_atlas100RD.nii", standalone_execute=False):
 	measurements_base = path.expanduser(measurements_base)
-	data_selection=get_data_selection(measurements_base, conditions, include_subjects=include_subjects, exclude_subjects=exclude_subjects, exclude_measurements=exclude_measurements)
+	data_selection=get_data_selection(measurements_base, conditions, subjects=include_subjects, exclude_subjects=exclude_subjects, exclude_measurements=exclude_measurements)
 
 	infosource = pe.Node(interface=util.IdentityInterface(fields=["condition","subject"]), name="infosource")
 	infosource.iterables = [('condition', set(list(data_selection["condition"]))), ('subject', set(list(data_selection["subject"])))]
@@ -212,13 +213,13 @@ def bru2_preproc2(measurements_base, functional_scan_type, structural_scan_type=
 	functional_BET.inputs.mask = True
 	functional_BET.inputs.frac = 0.5
 
-	functional_bandpass = pe.Node(interface=Bandpass(), name="functional_bandpass")
-	functional_bandpass.inputs.highpass = 0.001
-	functional_bandpass.inputs.lowpass = 9999
+	functional_bandpass = pe.Node(interface=TemporalFilter(), name="functional_bandpass")
+	functional_bandpass.inputs.highpass_sigma = 180
+	functional_bandpass.inputs.lowpass_sigma = 1
 
-	structural_bandpass = pe.Node(interface=Bandpass(), name="structural_bandpass")
-	structural_bandpass.inputs.highpass = 0.001
-	structural_bandpass.inputs.lowpass = 9999
+	structural_bandpass = pe.Node(interface=TemporalFilter(), name="structural_bandpass")
+	structural_bandpass.inputs.highpass_sigma = 180
+	structural_bandpass.inputs.lowpass_sigma = 1
 
 	melodic = pe.Node(interface=MELODIC(), name="MELODIC")
 	melodic.inputs.report = True
@@ -256,6 +257,7 @@ def bru2_preproc2(measurements_base, functional_scan_type, structural_scan_type=
 			])
 
 	workflow.connect(workflow_connections)
+	workflow.write_graph(dotfilename="graph.dot", graph2use="hierarchical", format="png")
 
 	if standalone_execute:
 		workflow.base_dir = measurements_base
@@ -263,29 +265,39 @@ def bru2_preproc2(measurements_base, functional_scan_type, structural_scan_type=
 	else:
 		return workflow
 
-def bru2_preproc(measurements_base, functional_scan_type, structural_scan_type=None, tr=1, conditions=[], include_subjects=[], exclude_subjects=[], include_measurements=[], exclude_measurements=[], actual_size=False, workflow_denominator="PreprocessingGLM", template="ds_QBI_atlas100RD.nii"):
-	workflow_base = path.expanduser(workflow_base)
-	data_selection=get_data_selection(measurements_base, conditions, include_subjects=include_subjects, exclude_subjects=exclude_subjects, exclude_measurements=exclude_measurements)
+def bru_preproc(measurements_base, functional_scan_types, structural_scan_types=[], tr=1, conditions=[], subjects=[], exclude_subjects=[], measurements=[], exclude_measurements=[], actual_size=False, template="/home/chymera/NIdata/templates/ds_QBI_chr.nii.gz", standalone_execute=False):
 
-	infosource = pe.Node(interface=util.IdentityInterface(fields=['measurement_id']), name="infosource")
-	infosource.iterables = ('measurement', IDs)
+	#select all functional/sturctural scan types unless specified
+	if not functional_scan_types or not structural_scan_types:
+		 scan_classification = pd.read_csv(scan_classification_file_path)
+		 if not functional_scan_types:
+			 functional_scan_types = list(scan_classification[(scan_classification["categories"] == "functional")]["scan_type"])
+		 if not structural_scan_types:
+			 structural_scan_types = list(scan_classification[(scan_classification["categories"] == "structural")]["scan_type"])
 
-	data_source = pe.Node(interface=nio.DataGrabber(infields=['measurement_id'], outfields=['measurement_path']), name='data_source')
-	data_source.inputs.template = workflow_base+"/%s"
-	data_source.inputs.template_args['measurement_path'] = [['measurement_id']]
+	# define measurement directories to be processed, and populate the list either with the given include_measurements, or with an intelligent selection
+	scan_types = functional_scan_types[:]
+	scan_types.extend(structural_scan_types)
+	data_selection=get_data_selection(measurements_base, conditions, scan_types=scan_types, subjects=subjects, exclude_subjects=exclude_subjects, measurements=measurements, exclude_measurements=exclude_measurements)
+	if not subjects:
+		subjects = set(list(data_selection["subject"]))
+	if not conditions:
+		conditions = set(list(data_selection["condition"]))
 
-	data_source.inputs.sort_filelist = True
+	infosource = pe.Node(interface=util.IdentityInterface(fields=['condition','subject']), name="infosource")
+	infosource.iterables = [('condition',conditions), ('subject',subjects)]
 
-	functional_scan_finder = pe.Node(interface=FindScan(), name="functional_scan_finder")
-	functional_scan_finder.inputs.query = functional_scan_type
-	functional_scan_finder.inputs.query_file = "visu_pars"
+	get_functional_scan = pe.Node(name='get_functional_scan', interface=util.Function(function=get_scan,input_names=["measurements_base","data_selection","condition","subject","scan_type"], output_names=['scan_path']))
+	get_functional_scan.inputs.data_selection = data_selection
+	get_functional_scan.inputs.measurements_base = measurements_base
+	get_functional_scan.iterables = ("scan_type", functional_scan_types)
 
-	timing_metadata = pe.Node(interface=GetBrukerTiming(), name="timing_metadata")
+	if structural_scan_types:
+		get_structural_scan = pe.Node(name='get_structural_scan', interface=util.Function(function=get_scan,input_names=["measurements_base","data_selection","condition","subject","scan_type"], output_names=['scan_path']))
+		get_structural_scan.inputs.data_selection = data_selection
+		get_structural_scan.inputs.measurements_base = measurements_base
+		get_structural_scan.iterables = ("scan_type", structural_scan_types)
 
-	if structural_scan_type:
-		structural_scan_finder = pe.Node(interface=FindScan(), name="structural_scan_finder")
-		structural_scan_finder.inputs.query = structural_scan_type
-		structural_scan_finder.inputs.query_file = "visu_pars"
 		structural_bru2nii = pe.Node(interface=Bru2(), name="structural_bru2nii")
 		structural_bru2nii.inputs.force_conversion=True
 		structural_bru2nii.inputs.actual_size=actual_size
@@ -297,9 +309,17 @@ def bru2_preproc(measurements_base, functional_scan_type, structural_scan_type=N
 
 		structural_cutoff = pe.Node(interface=ImageMaths(), name="structural_cutoff")
 		structural_cutoff.inputs.op_string = "-thrP 45"
+		structural_registration, structural_warp = ants_standard_registration_warp(template, "structural_registration", "structural_warp")
 
 	functional_bru2nii = pe.Node(interface=Bru2(), name="functional_bru2nii")
 	functional_bru2nii.inputs.actual_size=actual_size
+
+	timing_metadata = pe.Node(interface=GetBrukerTiming(), name="timing_metadata")
+
+	realigner = pe.Node(interface=SpaceTimeRealigner(), name="realigner")
+	realigner.inputs.slice_times = "asc_alt_2"
+	realigner.inputs.tr = tr
+	realigner.inputs.slice_info = 3 #3 for coronal slices (2 for horizontal, 1 for sagittal)
 
 	realigner = pe.Node(interface=SpaceTimeRealigner(), name="realigner")
 	realigner.inputs.slice_times = "asc_alt_2"
@@ -313,7 +333,6 @@ def bru2_preproc(measurements_base, functional_scan_type, structural_scan_type=N
 	structural_BET.inputs.mask = True
 	structural_BET.inputs.frac = 0.5
 
-	structural_registration, structural_warp = ants_standard_registration_warp(template, "structural_registration", "structural_warp")
 	functional_registration, functional_warp = ants_standard_registration_warp(template, "functional_registration", "functional_warp")
 
 	functional_FAST = pe.Node(interface=FAST(), name="functional_FAST")
@@ -328,25 +347,24 @@ def bru2_preproc(measurements_base, functional_scan_type, structural_scan_type=N
 	functional_BET.inputs.mask = True
 	functional_BET.inputs.frac = 0.5
 
-	functional_bandpass = pe.Node(interface=Bandpass(), name="functional_bandpass")
-	functional_bandpass.inputs.highpass = 0.001
-	functional_bandpass.inputs.lowpass = 9999
+	functional_bandpass = pe.Node(interface=TemporalFilter(), name="functional_bandpass")
+	functional_bandpass.inputs.highpass_sigma = 180
+	functional_bandpass.inputs.lowpass_sigma = 1
 
-	structural_bandpass = pe.Node(interface=Bandpass(), name="structural_bandpass")
-	structural_bandpass.inputs.highpass = 0.001
-	structural_bandpass.inputs.lowpass = 9999
+	structural_bandpass = pe.Node(interface=TemporalFilter(), name="structural_bandpass")
+	structural_bandpass.inputs.highpass_sigma = 180
+	structural_bandpass.inputs.lowpass_sigma = 1
 
 	melodic = pe.Node(interface=MELODIC(), name="MELODIC")
 	melodic.inputs.report = True
 	melodic.inputs.dim = 8
 
-	workflow = pe.Workflow(name=workflow_denominator)
+	workflow = pe.Workflow(name="bruker_preprocessing")
 
 	workflow_connections = [
-		(infosource, data_source, [('measurement_id', 'measurement_id')]),
-		(data_source, functional_scan_finder, [('measurement_path', 'scans_directory')]),
-		(functional_scan_finder, functional_bru2nii, [('positive_scan', 'input_dir')]),
-		(functional_scan_finder, timing_metadata, [('positive_scan', 'scan_directory')]),
+		(infosource, get_functional_scan, [('condition', 'condition'),('subject', 'subject')]),
+		(get_functional_scan, functional_bru2nii, [('scan_path', 'input_dir')]),
+		(get_functional_scan, timing_metadata, [('scan_path', 'scan_directory')]),
 		(functional_bru2nii, realigner, [('nii_file', 'in_file')]),
 		(realigner, temporal_mean, [('out_file', 'in_file')]),
 		(temporal_mean, functional_FAST, [('out_file', 'in_files')]),
@@ -358,10 +376,10 @@ def bru2_preproc(measurements_base, functional_scan_type, structural_scan_type=N
 		(functional_warp, functional_bandpass, [('output_image', 'in_file')]),
 		]
 
-	if structural_scan_type:
+	if structural_scan_types:
 		workflow_connections.extend([
-			(data_source, structural_scan_finder, [('measurement_path', 'scans_directory')]),
-			(structural_scan_finder, structural_bru2nii, [('positive_scan', 'input_dir')]),
+			(infosource, get_structural_scan, [('condition', 'condition'),('subject', 'subject')]),
+			(get_structural_scan, structural_bru2nii, [('scan_path','input_dir')]),
 			(structural_bru2nii, structural_FAST, [('nii_file', 'in_files')]),
 			(structural_FAST, structural_cutoff, [('restored_image', 'in_file')]),
 			(structural_cutoff, structural_BET, [('out_file', 'in_file')]),
@@ -372,9 +390,15 @@ def bru2_preproc(measurements_base, functional_scan_type, structural_scan_type=N
 			])
 
 	workflow.connect(workflow_connections)
-	return workflow
+	workflow.write_graph(dotfilename="graph.dot", graph2use="hierarchical", format="png")
+
+	if standalone_execute:
+		workflow.base_dir = measurements_base
+		workflow.run(plugin="MultiProc",  plugin_args={'n_procs' : 4})
+	else:
+		return workflow
 
 if __name__ == "__main__":
-	bru_preproc_lite(measurements_base="/mnt/data/NIdata/ofM.erc/", functional_scan_types=["EPI_CBV_alej","EPI_CBV_jin6","EPI_CBV_jin10","EPI_CBV_jin20","EPI_CBV_jin40","EPI_CBV_jin60"], structural_scan_type="T2_TurboRARE", conditions=["ERC_ofM"], include_subjects=["5502","5503"])
-	# bru2_preproc2("~/NIdata/ofM.dr/", "7_EPI_CBV", structural_scan_type="T2_TurboRARE", conditions=["ofM","ofM_aF"], exclude_measurements=["20151027_121613_4013_1_1"], standalone_execute=True)
+	# bru_preproc_lite(measurements_base="/mnt/data/NIdata/ofM.erc/", functional_scan_types=["EPI_CBV_alej","EPI_CBV_jin6","EPI_CBV_jin10","EPI_CBV_jin20","EPI_CBV_jin40","EPI_CBV_jin60"], structural_scan_type="T2_TurboRARE", conditions=["ERC_ofM"], include_subjects=["5502","5503"])
+	bru_preproc("/home/chymera/NIdata/ofM.erc/", ["EPI_CBV_jin10","EPI_CBV_jin60"], structural_scan_types=["T2_TurboRARE"], standalone_execute=True)
 	# testme("~/NIdata/ofM.erc/", ["EPI_CBV_alej","EPI_CBV_jin6","EPI_CBV_jin10","EPI_CBV_jin20","EPI_CBV_jin40","EPI_CBV_jin60","T2_TurboRARE"], conditions=["ERC_ofM"], include_subjects=["5503","5502"])

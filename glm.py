@@ -86,10 +86,19 @@ def level2(level1_directory, categories=["ofM","ofM_aF"], participants=["4008","
 	second_level.base_dir = level1_directory+"/.."
 	second_level.run(plugin="MultiProc",  plugin_args={'n_procs' : 6})
 
-def level1(measurements_base, functional_scan_type, structural_scan_type=None, tr=1, conditions=[], include_subjects=[], exclude_subjects=[], exclude_measurements=[], include_measurements=[], actual_size=False, pipeline_denominator="level1", template="/home/chymera/NIdata/templates/ds_QBI_chr.nii.gz", standalone_execute=True, compare_experiment_types=[]):
-	measurements_base = path.expanduser(measurements_base)
-	preprocessing = bru2_preproc2(measurements_base, functional_scan_type, structural_scan_type=structural_scan_type, tr=tr, conditions=conditions, include_subjects=include_subjects, exclude_subjects=exclude_subjects, exclude_measurements=exclude_measurements, include_measurements=include_measurements, actual_size=actual_size, template=template)
+def level1(measurements_base, functional_scan_types, stimulus_types=[], structural_scan_types=[], tr=1, conditions=[], subjects=[], exclude_subjects=[], measurements=[], include_measurements=[], actual_size=False, pipeline_denominator="level1", template="/home/chymera/NIdata/templates/ds_QBI_chr.nii.gz", standalone_execute=True, compare_experiment_types=[]):
+	"""Runs a first-level analysis while calling the bru_preproc workflow for preprocessing
 
+	Mandatory Arguments:
+	measurements_base -- path in which to look for data to be processed
+	functional_scan_types -- identifiers for the functional scan types to be selected
+
+	Keyword Arguments:
+	functional_scan_types -- codes of the stimulation protocols (as seen in meta.db) in use on each functional scan type (list must have same length as functional_scan_types)
+	"""
+
+	measurements_base = path.expanduser(measurements_base)
+	preprocessing = bru_preproc(measurements_base, functional_scan_types, structural_scan_types=structural_scan_types, tr=tr, conditions=conditions, subjects=subjects, exclude_subjects=exclude_subjects, include_measurements=measurements, exclude_measurements=exclude_measurements, actual_size=actual_size, template=template)
 
 	def subjectinfo(subject_delay):
 		from nipype.interfaces.base import Bunch
@@ -107,7 +116,6 @@ def level1(measurements_base, functional_scan_type, structural_scan_type=None, t
 						durations=[[20.0], [20.0], [20.0], [20.0], [20.0], [20.0]],
 						))
 		return output
-
 
 	onsets=[]
 	for i in range(6):

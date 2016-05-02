@@ -7,10 +7,48 @@ from nipype.algorithms.modelgen import SpecifyModel
 import nipype.interfaces.io as nio
 from os import path
 from extra_interfaces import GenL2Model
-from preprocessing import bru2_preproc, bru2_preproc2
+from preprocessing import bru_preproc, bru2_preproc2
 from nipype.interfaces.nipy import SpaceTimeRealigner
 import nipype.interfaces.ants as ants
 from itertools import product
+from nipype.interfaces.base import Bunch
+from copy import deepcopy
+import sys
+sys.path.append('/home/chymera/src/LabbookDB/db/')
+from query import loadSession
+from common_classes import *
+
+def get_subjectinfo(subject_delay, scan_type, scan_types):
+	import pandas as pd
+	import sys
+	sys.path.append('/home/chymera/src/LabbookDB/db/')
+	from query import loadSession
+	from common_classes import LaserStimulationProtocol
+	db_path="~meta.db"
+
+	session, engine = loadSession(db_path)
+
+	sql_query=session.query(LaserStimulationProtocol).filter(getattr(LaserStimulationProtocol, "code")==scan_types[scan_type])
+	mystring = sql_query.statement
+	mydf = pd.read_sql_query(mystring,engine)
+	delay = mydf["stimulation_onset"][0]
+	inter_stimulus_duration = mydf["inter_stimulus_duration"][0]
+	stimulus_duration = mydf["stimulus_duration"][0]
+	stimulus_repetitions = mydf["stimulus_repetitions"][0]
+
+	onsets=[]
+	for i in range(6):
+		onsets.append([range(delay,delay+(inter_stimulus_duration+stimulus_duration)*stimulus_repetitions,(inter_stimulus_duration+stimulus_duration))[i]])
+	output = []
+	names = ['s1', 's2', 's3', 's4', 's5', 's6']
+	for idx_a, a in enumerate(onsets):
+		for idx_b, b in enumerate(a):
+			onsets[idx_a][idx_b] = b-subject_delay
+	output.append(Bunch(conditions=names,
+					onsets=deepcopy(onsets),
+					durations=[[stimulus_duration]]*stimulus_repetitions
+					))
+	return output
 
 def level2_common_effect(level1_directory, categories=["ofM"], participants=["4008","4007","4011","4012"]):
 	level1_directory = path.expanduser(level1_directory)
@@ -86,19 +124,23 @@ def level2(level1_directory, categories=["ofM","ofM_aF"], participants=["4008","
 	second_level.base_dir = level1_directory+"/.."
 	second_level.run(plugin="MultiProc",  plugin_args={'n_procs' : 6})
 
-def level1(measurements_base, functional_scan_types, stimulus_types=[], structural_scan_types=[], tr=1, conditions=[], subjects=[], exclude_subjects=[], measurements=[], include_measurements=[], actual_size=False, pipeline_denominator="level1", template="/home/chymera/NIdata/templates/ds_QBI_chr.nii.gz", standalone_execute=True, compare_experiment_types=[]):
+def level1(measurements_base, functional_scan_types, structural_scan_types=[], tr=1, conditions=[], subjects=[], exclude_subjects=[], measurements=[], exclude_measurements=[], actual_size=False, pipeline_denominator="level1", template="/home/chymera/NIdata/templates/ds_QBI_chr.nii.gz", standalone_execute=True, compare_experiment_types=[]):
 	"""Runs a first-level analysis while calling the bru_preproc workflow for preprocessing
 
 	Mandatory Arguments:
 	measurements_base -- path in which to look for data to be processed
-	functional_scan_types -- identifiers for the functional scan types to be selected
+	functional_scan_types -- a list of identifiers for the functional scan types to be selected OR a dictionary with keys whch are identifiers for the functional scan types to be selected and values which are corresponding codes of the stimulation protocols (as seen in meta.db) in use on each functional scan type
 
 	Keyword Arguments:
-	functional_scan_types -- codes of the stimulation protocols (as seen in meta.db) in use on each functional scan type (list must have same length as functional_scan_types)
 	"""
 
+	if isinstance(functional_scan_types, dict):
+		functional_scan_types_list = functional_scan_types.keys()
+	else:
+		functional_scan_types_list = functional_scan_types
+
 	measurements_base = path.expanduser(measurements_base)
-	preprocessing = bru_preproc(measurements_base, functional_scan_types, structural_scan_types=structural_scan_types, tr=tr, conditions=conditions, subjects=subjects, exclude_subjects=exclude_subjects, include_measurements=measurements, exclude_measurements=exclude_measurements, actual_size=actual_size, template=template)
+	preprocessing = bru_preproc(measurements_base, functional_scan_types_list, structural_scan_types=structural_scan_types, tr=tr, conditions=conditions, subjects=subjects, exclude_subjects=exclude_subjects, measurements=measurements, exclude_measurements=exclude_measurements, actual_size=actual_size, template=template)
 
 	def subjectinfo(subject_delay):
 		from nipype.interfaces.base import Bunch
@@ -117,9 +159,12 @@ def level1(measurements_base, functional_scan_types, stimulus_types=[], structur
 						))
 		return output
 
-	onsets=[]
-	for i in range(6):
-		onsets.append([range(222,222+180*6,180)[i]])
+	# onsets=[]
+	# for i in range(6):
+	# 	onsets.append([range(222,222+180*6,180)[i]])
+
+	get_subject_info = pe.Node(name='get_subject_info', interface=util.Function(function=get_subjectinfo,input_names=["subject_delay","scan_type","scan_types"], output_names=['output']))
+	get_subject_info.inputs.scan_types = functional_scan_types
 
 	specify_model = pe.Node(interface=SpecifyModel(), name="specify_model")
 	specify_model.inputs.input_units = 'secs'
@@ -158,6 +203,7 @@ def level1(measurements_base, functional_scan_types, stimulus_types=[], structur
 	first_level = pe.Workflow(name="first_level")
 
 	first_level.connect([
+		(get_subject_info, specify_model, [('output', 'subject_info')]),
 		(specify_model, level1design, [('session_info', 'session_info')]),
 		(level1design, modelgen, [('ev_files', 'ev_files')]),
 		(level1design, modelgen, [('fsf_files', 'fsf_file')]),
@@ -178,7 +224,8 @@ def level1(measurements_base, functional_scan_types, stimulus_types=[], structur
 	pipeline = pe.Workflow(name=pipeline_denominator)
 
 	pipeline.connect([
-		(preprocessing, first_level, [(('timing_metadata.total_delay_s',subjectinfo),'specify_model.subject_info')]),
+		(preprocessing, first_level, [('timing_metadata.total_delay_s','get_subject_info.subject_delay')]),
+		(preprocessing, first_level, [('get_functional_scan.scan_type','get_subject_info.scan_type')]),
 		(preprocessing, first_level, [('structural_bandpass.out_file','specify_model.functional_runs')]),
 		(preprocessing, first_level, [('structural_bandpass.out_file','glm.in_file')]),
 		])
@@ -289,6 +336,6 @@ def level2_contiguous(measurements_base, functional_scan_type, structural_scan_t
 		return pipeline
 
 if __name__ == "__main__":
-	level1("~/NIdata/ofM.erc/", "7_EPI_CBV", structural_scan_type="T2_TurboRARE>", conditions=["ofM","ofM_aF"], exclude_measurements=["20151027_121613_4013_1_1"])
+	level1("~/NIdata/ofM.erc/", {"EPI_CBV_jin10":"jin10","EPI_CBV_jin60":"jin60"}, structural_scan_types=["T2_TurboRARE"])
 	# level2_common_effect("~/NIdata/ofM.dr/level1", categories=["ofM"])
 	# level2("~/NIdata/ofM.dr/level1")

@@ -7,6 +7,18 @@ import os
 import pandas as pd
 import re
 
+def get_level2_inputs(input_root, categories=[], participants=[], scan_types=[]):
+	l2_inputs = []
+	for dirName, subdirList, fileList in os.walk(input_root, topdown=False):
+		if subdirList == []:
+			for my_file in fileList:
+				candidate_l2_input = os.path.join(dirName,my_file)
+				#the following string additions are performed to not accidentally match longer identifiers which include the shorter identifiers actually queried for. The path formatting is taken from the glm.py level1() datasync node, and will not work if that is modified.
+				if (any("/"+c+"." in candidate_l2_input for c in categories) or not categories) and (any("."+p+"/" in candidate_l2_input for p in participants) or not participants) and (any("_"+s+"/" in candidate_l2_input for s in scan_types) or not scan_types):
+					l2_inputs.append(candidate_l2_input)
+
+	return l2_inputs
+
 def get_scan(measurements_base, data_selection, condition, subject, scan_type):
 	from os import path #for some reason the import outside the function fails
 	scan_paths = []

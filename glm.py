@@ -6,6 +6,7 @@ from nipype.algorithms.modelgen import SpecifyModel
 import nipype.interfaces.io as nio
 from os import path, listdir, remove, getcwd
 from extra_interfaces import GenL2Model
+from extra_functions import get_level2_inputs
 from preprocessing import bru_preproc, bru2_preproc2
 from nipype.interfaces.nipy import SpaceTimeRealigner
 import nipype.interfaces.ants as ants
@@ -57,20 +58,19 @@ def get_subjectinfo(subject_delay, scan_type, scan_types):
 					))
 	return output
 
-def level2_common_effect(level1_directory, categories=["ofM"], participants=["4008","4007","4011","4012"]):
+def level2_common_effect(level1_directory, categories=["ofM"], participants=["4008","4007","4011","4012"], scan_types=[]):
 	level1_directory = path.expanduser(level1_directory)
 	copemergeroot = level1_directory+"/results/cope/"
 	varcbmergeroot = level1_directory+"/results/varcb/"
 
-	subirs_list = [category+"."+participant for category, participant in product(categories,participants)]
-
-	copes = [copemergeroot+sub_dir+"/cope.nii.gz" for sub_dir in subirs_list]
+	copes = get_level2_inputs(copemergeroot, categories=categories, participants=participants, scan_types=scan_types)
+	varcbs = get_level2_inputs(varcbmergeroot, categories=categories, participants=participants, scan_types=scan_types)
 
 	copemerge = pe.Node(interface=Merge(dimension='t'),name="copemerge")
 	copemerge.inputs.in_files=copes
 
 	varcopemerge = pe.Node(interface=Merge(dimension='t'),name="varcopemerge")
-	varcopemerge.inputs.in_files=[varcbmergeroot+sub_dir+"/varcb.nii.gz" for sub_dir in subirs_list]
+	varcopemerge.inputs.in_files=varcbs
 
 	level2model = pe.Node(interface=L2Model(),name='level2model')
 	level2model.inputs.num_copes=len(copes)
@@ -329,6 +329,7 @@ def level2_contiguous(measurements_base, functional_scan_type, structural_scan_t
 		return pipeline
 
 if __name__ == "__main__":
-	level1("~/NIdata/ofM.erc/", {"EPI_CBV_jin10":"jin10","EPI_CBV_jin60":"jin60"}, structural_scan_types=["T2_TurboRARE"])
+	# level1("~/NIdata/ofM.erc/", {"EPI_CBV_jin10":"jin10","EPI_CBV_jin60":"jin60"}, structural_scan_types=["T2_TurboRARE"])
 	# level2_common_effect("~/NIdata/ofM.dr/level1", categories=["ofM"])
 	# level2("~/NIdata/ofM.dr/level1")
+	level2_common_effect("~/NIdata/ofM.erc/level1", categories=[], scan_types=["EPI_CBV_jin60"], participants=["5502","5503"])

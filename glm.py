@@ -12,36 +12,69 @@ import nipype.interfaces.ants as ants
 from itertools import product
 import re
 
-def level2_common_effect(level1_directory, categories=["ofM"], participants=["4008","4007","4011","4012"], scan_types=[]):
+def getlen(a):
+	the_len = len(a)
+	return the_len
+
+def level2_common_effect(level1_directory, categories=[], participants=[], scan_types=[]):
 	level1_directory = path.expanduser(level1_directory)
 	copemergeroot = level1_directory+"/results/cope/"
 	varcbmergeroot = level1_directory+"/results/varcb/"
 
-	copes = get_level2_inputs(copemergeroot, categories=categories, participants=participants, scan_types=scan_types)
-	varcbs = get_level2_inputs(varcbmergeroot, categories=categories, participants=participants, scan_types=scan_types)
-
 	copemerge = pe.Node(interface=Merge(dimension='t'),name="copemerge")
-	copemerge.inputs.in_files=copes
-
 	varcopemerge = pe.Node(interface=Merge(dimension='t'),name="varcopemerge")
-	varcopemerge.inputs.in_files=varcbs
 
 	level2model = pe.Node(interface=L2Model(),name='level2model')
-	level2model.inputs.num_copes=len(copes)
 
 	flameo = pe.MapNode(interface=FLAMEO(), name="flameo", iterfield=['cope_file','var_cope_file'])
 	flameo.inputs.mask_file="/home/chymera/NIdata/templates/ds_QBI_chr_bin.nii.gz"
 	flameo.inputs.run_mode="ols"
 
-	second_level = pe.Workflow(name="level2")
-
-	second_level.connect([
+	workflow_connections = [
 		(copemerge,flameo,[('merged_file','cope_file')]),
 		(varcopemerge,flameo,[('merged_file','var_cope_file')]),
 		(level2model,flameo, [('design_mat','design_file')]),
 		(level2model,flameo, [('design_grp','cov_split_file')]),
 		(level2model,flameo, [('design_con','t_con_file')]),
-		])
+		]
+
+	if isinstance(scan_types[0],list):
+		print "MUIEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE"
+		infosource = pe.Node(interface=util.IdentityInterface(fields=['scan_subtypes']), name="infosource")
+		infosource.iterables = [('scan_subtypes',scan_types)]
+
+		get_copes = pe.Node(name='get_copes', interface=util.Function(function=get_level2_inputs,input_names=["input_root","categories","participants","scan_types"], output_names=['scan_paths']))
+		get_copes.inputs.input_root=copemergeroot
+		get_copes.inputs.categories=categories
+		get_copes.inputs.participants=participants
+		get_varcbs = pe.Node(name='get_varcbs', interface=util.Function(function=get_level2_inputs,input_names=["input_root","categories","participants","scan_types"], output_names=['scan_paths']))
+		get_varcbs.inputs.input_root=varcbmergeroot
+		get_varcbs.inputs.categories=categories
+		get_varcbs.inputs.participants=participants
+		# level2model.inputs.num_copes=len(copes)
+
+		workflow_connections.extend([
+			(infosource, get_copes, [('scan_subtypes', 'scan_types')]),
+			(infosource, get_varcbs, [('scan_subtypes', 'scan_types')]),
+			(get_copes, copemerge, [('scan_paths', 'in_files')]),
+			(get_varcbs, varcopemerge, [('scan_paths', 'in_files')]),
+			(get_copes, level2model, [(('scan_paths',getlen), 'num_copes')]),
+			])
+	else:
+		print "FUTEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE"
+		copes = get_level2_inputs(copemergeroot, categories=categories, participants=participants, scan_types=scan_types)
+		varcbs = get_level2_inputs(varcbmergeroot, categories=categories, participants=participants, scan_types=scan_types)
+
+		print copes
+		print varcbs
+
+		copemerge.inputs.in_files=copes
+		varcopemerge.inputs.in_files=varcbs
+
+		level2model.inputs.num_copes=len(copes)
+
+	second_level = pe.Workflow(name="level2")
+	second_level.connect(workflow_connections)
 
 	second_level.write_graph(graph2use="flat")
 	second_level.base_dir = level1_directory+"/.."
@@ -284,6 +317,6 @@ def level2_contiguous(measurements_base, functional_scan_type, structural_scan_t
 
 if __name__ == "__main__":
 	# level1("~/NIdata/ofM.erc/", {"EPI_CBV_jin10":"jin10","EPI_CBV_jin60":"jin60"}, structural_scan_types=["T2_TurboRARE"])
-	# level2_common_effect("~/NIdata/ofM.dr/level1", categories=["ofM"])
+	# level2_common_effect("~/NIdata/ofM.dr/level1", categories=["ofM"], participants=["4008","4007","4011","4012"])
 	# level2("~/NIdata/ofM.dr/level1")
-	level2_common_effect("~/NIdata/ofM.erc/level1", categories=[], scan_types=["EPI_CBV_jin60"], participants=["5502","5503"])
+	level2_common_effect("~/NIdata/ofM.erc/level1", categories=[], scan_types=[["EPI_CBV_jin10"],["EPI_CBV_jin60"]], participants=["5502","5503"])

@@ -3,7 +3,6 @@ import nibabel as nb
 from dcmstack.extract import minimal_extractor
 from dicom import read_file
 from os import listdir, path, makedirs, getcwd
-import os
 import pandas as pd
 import re
 
@@ -47,6 +46,7 @@ def get_subjectinfo(subject_delay, scan_type, scan_types):
 	return output
 
 def get_level2_inputs(input_root, categories=[], participants=[], scan_types=[]):
+	import os
 	l2_inputs = []
 	for dirName, subdirList, fileList in os.walk(input_root, topdown=False):
 		if subdirList == []:

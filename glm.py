@@ -71,8 +71,8 @@ def level2_common_effect(level1_directory, categories=[], participants=[], scan_
 	second_level = pe.Workflow(name="level2")
 	second_level.connect(workflow_connections)
 
-	second_level.write_graph(graph2use="flat")
 	second_level.base_dir = level1_directory+"/.."
+	second_level.write_graph(dotfilename=second_level.base_dir+"/level2/graph.dot",graph2use="flat")
 	second_level.run(plugin="MultiProc",  plugin_args={'n_procs' : 6})
 
 def level2(level1_directory, categories=["ofM","ofM_aF"], participants=["4008","4007","4011","4012"]):
@@ -156,12 +156,12 @@ def level1(measurements_base, functional_scan_types, structural_scan_types=[], t
 	glm.inputs.out_t_name="t_stat.nii.gz"
 	glm.inputs.out_p_name="p_stat.nii.gz"
 
-	Cluster._cmd = "fsl_cluster" #on NeuroGentoo this file is renamed to avoid a collision with one of FSL's deps
-	cluster = pe.Node(interface=Cluster(), name="cluster")
-	cluster.inputs.threshold = 0.95
-	cluster.inputs.out_max_file = "out_max_file"
-	cluster.inputs.out_mean_file = "out_mean_file"
-	cluster.inputs.out_size_file = "out_size_file"
+	# Cluster._cmd = "fsl_cluster" #on NeuroGentoo this file is renamed to avoid a collision with one of FSL's deps
+	# cluster = pe.Node(interface=Cluster(), name="cluster")
+	# cluster.inputs.threshold = 0.95
+	# cluster.inputs.out_max_file = "out_max_file"
+	# cluster.inputs.out_mean_file = "out_mean_file"
+	# cluster.inputs.out_size_file = "out_size_file"
 
 	datasink = pe.Node(nio.DataSink(), name='datasink')
 	datasink.inputs.base_directory = measurements_base+'/'+pipeline_denominator+"/results"
@@ -179,15 +179,15 @@ def level1(measurements_base, functional_scan_types, structural_scan_types=[], t
 		(modelgen, glm, [('con_file', 'contrasts')]),
 		(glm, datasink, [('out_cope', 'cope')]),
 		(glm, datasink, [('out_varcb', 'varcb')]),
-		(cluster, datasink, [('localmax_vol_file', 'localmax_vol_file')]),
-		(cluster, datasink, [('max_file', 'max_file')]),
-		(cluster, datasink, [('mean_file', 'mean_file')]),
-		(cluster, datasink, [('pval_file', 'pval_file')]),
-		(cluster, datasink, [('size_file', 'size_file')]),
-		(cluster, datasink, [('threshold_file', 'threshold_file')]),
-		(glm, cluster, [('out_t', 'in_file')]),
-		(glm, cluster, [('out_cope', 'cope_file')]),
 		])
+		# (cluster, datasink, [('localmax_vol_file', 'localmax_vol_file')]),
+		# (cluster, datasink, [('max_file', 'max_file')]),
+		# (cluster, datasink, [('mean_file', 'mean_file')]),
+		# (cluster, datasink, [('pval_file', 'pval_file')]),
+		# (cluster, datasink, [('size_file', 'size_file')]),
+		# (cluster, datasink, [('threshold_file', 'threshold_file')]),
+		# (glm, cluster, [('out_t', 'in_file')]),
+		# (glm, cluster, [('out_cope', 'cope_file')]),
 
 	pipeline = pe.Workflow(name=pipeline_denominator)
 
@@ -311,7 +311,8 @@ def level2_contiguous(measurements_base, functional_scan_type, structural_scan_t
 		return pipeline
 
 if __name__ == "__main__":
-	# level1("~/NIdata/ofM.erc/", {"EPI_CBV_jin10":"jin10","EPI_CBV_jin60":"jin60"}, structural_scan_types=["T2_TurboRARE"])
+	level1("~/NIdata/ofM.erc/", {"EPI_CBV_jin10":"jin6","EPI_CBV_jin10":"jin10","EPI_CBV_jin10":"jin20","EPI_CBV_jin10":"jin40","EPI_CBV_jin60":"jin60","EPI_CBV_alej":"alej",}, structural_scan_types=["T2_TurboRARE"])
 	# level2_common_effect("~/NIdata/ofM.dr/level1", categories=["ofM"], participants=["4008","4007","4011","4012"])
 	# level2("~/NIdata/ofM.dr/level1")
-	level2_common_effect("~/NIdata/ofM.erc/level1", categories=[], scan_types=[["EPI_CBV_jin10"],["EPI_CBV_jin60"]], participants=["5502","5503"])
+	# level2_common_effect("~/NIdata/ofM.erc/level1", categories=[], scan_types=[["EPI_CBV_jin10"],["EPI_CBV_jin60"]], participants=["5502","5503"])
+	# level2_common_effect("~/NIdata/ofM.erc/.level1", categories=[], scan_types=["EPI_CBV_jin10"], participants=["5502","5503"])

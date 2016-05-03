@@ -7,6 +7,45 @@ import os
 import pandas as pd
 import re
 
+def get_subjectinfo(subject_delay, scan_type, scan_types):
+	from nipype.interfaces.base import Bunch
+	import pandas as pd
+	import numpy as np
+	from copy import deepcopy
+	import sys
+	sys.path.append('/home/chymera/src/LabbookDB/db/')
+	from query import loadSession
+	from common_classes import LaserStimulationProtocol
+	db_path="~/meta.db"
+
+	session, engine = loadSession(db_path)
+
+	print(scan_types[scan_type])
+
+	sql_query=session.query(LaserStimulationProtocol).filter(LaserStimulationProtocol.code==scan_types[scan_type])
+	mystring = sql_query.statement
+	mydf = pd.read_sql_query(mystring,engine)
+	delay = int(mydf["stimulation_onset"][0])
+	inter_stimulus_duration = int(mydf["inter_stimulus_duration"][0])
+	stimulus_duration = mydf["stimulus_duration"][0]
+	stimulus_repetitions = mydf["stimulus_repetitions"][0]
+
+	onsets=[]
+	names=[]
+	for i in range(stimulus_repetitions):
+		onset = delay+(inter_stimulus_duration+stimulus_duration)*i
+		onsets.append([onset])
+		names.append("s"+str(i+1))
+	output = []
+	for idx_a, a in enumerate(onsets):
+		for idx_b, b in enumerate(a):
+			onsets[idx_a][idx_b] = round(b-subject_delay, 2) #floating point values don't add up nicely, so we have to round (https://docs.python.org/2/tutorial/floatingpoint.html)
+	output.append(Bunch(conditions=names,
+					onsets=deepcopy(onsets),
+					durations=[[stimulus_duration]]*stimulus_repetitions
+					))
+	return output
+
 def get_level2_inputs(input_root, categories=[], participants=[], scan_types=[]):
 	l2_inputs = []
 	for dirName, subdirList, fileList in os.walk(input_root, topdown=False):

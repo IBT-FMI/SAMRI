@@ -5,51 +5,12 @@ from nipype.algorithms.modelgen import SpecifyModel
 import nipype.interfaces.io as nio
 from os import path, listdir, remove, getcwd
 from extra_interfaces import GenL2Model
-from extra_functions import get_level2_inputs
+from extra_functions import get_level2_inputs, get_subjectinfo
 from preprocessing import bru_preproc, bru2_preproc2
 from nipype.interfaces.nipy import SpaceTimeRealigner
 import nipype.interfaces.ants as ants
 from itertools import product
 import re
-
-def get_subjectinfo(subject_delay, scan_type, scan_types):
-	from nipype.interfaces.base import Bunch
-	import pandas as pd
-	import numpy as np
-	from copy import deepcopy
-	import sys
-	sys.path.append('/home/chymera/src/LabbookDB/db/')
-	from query import loadSession
-	from common_classes import LaserStimulationProtocol
-	db_path="~/meta.db"
-
-	session, engine = loadSession(db_path)
-
-	print(scan_types[scan_type])
-
-	sql_query=session.query(LaserStimulationProtocol).filter(LaserStimulationProtocol.code==scan_types[scan_type])
-	mystring = sql_query.statement
-	mydf = pd.read_sql_query(mystring,engine)
-	delay = int(mydf["stimulation_onset"][0])
-	inter_stimulus_duration = int(mydf["inter_stimulus_duration"][0])
-	stimulus_duration = mydf["stimulus_duration"][0]
-	stimulus_repetitions = mydf["stimulus_repetitions"][0]
-
-	onsets=[]
-	names=[]
-	for i in range(stimulus_repetitions):
-		onset = delay+(inter_stimulus_duration+stimulus_duration)*i
-		onsets.append([onset])
-		names.append("s"+str(i+1))
-	output = []
-	for idx_a, a in enumerate(onsets):
-		for idx_b, b in enumerate(a):
-			onsets[idx_a][idx_b] = round(b-subject_delay, 2) #floating point values don't add up nicely, so we have to round (https://docs.python.org/2/tutorial/floatingpoint.html)
-	output.append(Bunch(conditions=names,
-					onsets=deepcopy(onsets),
-					durations=[[stimulus_duration]]*stimulus_repetitions
-					))
-	return output
 
 def level2_common_effect(level1_directory, categories=["ofM"], participants=["4008","4007","4011","4012"], scan_types=[]):
 	level1_directory = path.expanduser(level1_directory)

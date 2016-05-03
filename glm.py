@@ -1,7 +1,6 @@
 import nipype.pipeline.engine as pe
 import nipype.interfaces.utility as util
 from nipype.interfaces.fsl import GLM, MELODIC, FAST, BET, MeanImage, FLIRT, ApplyMask, ImageMaths, Level1Design, FEATModel, Merge, L2Model, FLAMEO, Cluster
-from nipype.interfaces.afni import Bandpass
 from nipype.algorithms.modelgen import SpecifyModel
 import nipype.interfaces.io as nio
 from os import path, listdir, remove, getcwd
@@ -11,13 +10,7 @@ from preprocessing import bru_preproc, bru2_preproc2
 from nipype.interfaces.nipy import SpaceTimeRealigner
 import nipype.interfaces.ants as ants
 from itertools import product
-from nipype.interfaces.base import Bunch
-from copy import deepcopy
-import sys
 import re
-sys.path.append('/home/chymera/src/LabbookDB/db/')
-from query import loadSession
-from common_classes import *
 
 def get_subjectinfo(subject_delay, scan_type, scan_types):
 	from nipype.interfaces.base import Bunch

@@ -10,7 +10,7 @@ import nipype.interfaces.io as nio
 from os import path
 import nipype.interfaces.ants as ants
 from extra_interfaces import DcmToNii, MEICA, VoxelResize, Bru2, FindScan, GetBrukerTiming
-from extra_functions import get_data_selection
+from extra_functions import get_data_selection, get_scan
 from nodes import ants_standard_registration_warp
 from itertools import product
 import pandas as pd
@@ -22,15 +22,6 @@ FSLCommand.set_default_output_type('NIFTI_GZ')
 #relative paths
 thisscriptspath = path.dirname(path.realpath(__file__))
 scan_classification_file_path = path.join(thisscriptspath,"scan_type_classification.csv")
-
-def get_scan(measurements_base, data_selection, condition, subject, scan_type):
-	from os import path #for some reason the import outside the function fails
-	scan_paths = []
-	filtered_data = data_selection[(data_selection["condition"] == condition)&(data_selection["subject"] == subject)&(data_selection["scan_type"] == scan_type)]
-	measurement_path = filtered_data["measurement"].tolist()[0]
-	scan_subdir = filtered_data["scan"].tolist()[0]
-	scan_path = path.join(measurements_base,measurement_path,scan_subdir)
-	return scan_path
 
 def dcm_preproc(workflow_base=".", force_convert=False, source_pattern="", IDs=""):
 	# make IDs strings
@@ -287,7 +278,7 @@ def bru_preproc(measurements_base, functional_scan_types, structural_scan_types=
 	infosource = pe.Node(interface=util.IdentityInterface(fields=['condition','subject']), name="infosource")
 	infosource.iterables = [('condition',conditions), ('subject',subjects)]
 
-	get_functional_scan = pe.Node(name='get_functional_scan', interface=util.Function(function=get_scan,input_names=["measurements_base","data_selection","condition","subject","scan_type"], output_names=['scan_path']))
+	get_functional_scan = pe.Node(name='get_functional_scan', interface=util.Function(function=get_scan,input_names=["measurements_base","data_selection","condition","subject","scan_type"], output_names=['scan_path','scan_type']))
 	get_functional_scan.inputs.data_selection = data_selection
 	get_functional_scan.inputs.measurements_base = measurements_base
 	get_functional_scan.iterables = ("scan_type", functional_scan_types)
@@ -400,5 +391,5 @@ def bru_preproc(measurements_base, functional_scan_types, structural_scan_types=
 
 if __name__ == "__main__":
 	# bru_preproc_lite(measurements_base="/mnt/data/NIdata/ofM.erc/", functional_scan_types=["EPI_CBV_alej","EPI_CBV_jin6","EPI_CBV_jin10","EPI_CBV_jin20","EPI_CBV_jin40","EPI_CBV_jin60"], structural_scan_type="T2_TurboRARE", conditions=["ERC_ofM"], include_subjects=["5502","5503"])
-	bru_preproc("/home/chymera/NIdata/ofM.erc/", ["EPI_CBV_jin10","EPI_CBV_jin60"], structural_scan_types=["T2_TurboRARE"], standalone_execute=True)
+	bru_preproc("/home/chymera/NIdata/ofM.erc/", ["EPI_CBV_jin10","EPI_CBV_jin60"], conditions=["ERC_ofM","ERC_ofM_r1","ERC_ofM_r2"], structural_scan_types=["T2_TurboRARE"], standalone_execute=True)
 	# testme("~/NIdata/ofM.erc/", ["EPI_CBV_alej","EPI_CBV_jin6","EPI_CBV_jin10","EPI_CBV_jin20","EPI_CBV_jin40","EPI_CBV_jin60","T2_TurboRARE"], conditions=["ERC_ofM"], include_subjects=["5503","5502"])

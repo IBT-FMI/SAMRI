@@ -7,6 +7,15 @@ import os
 import pandas as pd
 import re
 
+def get_scan(measurements_base, data_selection, condition, subject, scan_type):
+	from os import path #for some reason the import outside the function fails
+	scan_paths = []
+	filtered_data = data_selection[(data_selection["condition"] == condition)&(data_selection["subject"] == subject)&(data_selection["scan_type"] == scan_type)]
+	measurement_path = filtered_data["measurement"].tolist()[0]
+	scan_subdir = filtered_data["scan"].tolist()[0]
+	scan_path = path.join(measurements_base,measurement_path,scan_subdir)
+	return scan_path, scan_type
+
 def dcm_to_nii(dcm_dir, group_by="EchoTime", node=False):
 	if node:
 		nii_dir = getcwd()

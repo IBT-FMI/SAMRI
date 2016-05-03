@@ -1,11 +1,10 @@
 import nipype.pipeline.engine as pe
 import nipype.interfaces.utility as util
-from nipype.interfaces.base import Bunch
 from nipype.interfaces.fsl import GLM, MELODIC, FAST, BET, MeanImage, FLIRT, ApplyMask, ImageMaths, Level1Design, FEATModel, Merge, L2Model, FLAMEO, Cluster
 from nipype.interfaces.afni import Bandpass
 from nipype.algorithms.modelgen import SpecifyModel
 import nipype.interfaces.io as nio
-from os import path
+from os import path, listdir, remove, getcwd
 from extra_interfaces import GenL2Model
 from preprocessing import bru_preproc, bru2_preproc2
 from nipype.interfaces.nipy import SpaceTimeRealigner
@@ -14,36 +13,44 @@ from itertools import product
 from nipype.interfaces.base import Bunch
 from copy import deepcopy
 import sys
+import re
 sys.path.append('/home/chymera/src/LabbookDB/db/')
 from query import loadSession
 from common_classes import *
 
 def get_subjectinfo(subject_delay, scan_type, scan_types):
+	from nipype.interfaces.base import Bunch
 	import pandas as pd
+	import numpy as np
+	from copy import deepcopy
 	import sys
 	sys.path.append('/home/chymera/src/LabbookDB/db/')
 	from query import loadSession
 	from common_classes import LaserStimulationProtocol
-	db_path="~meta.db"
+	db_path="~/meta.db"
 
 	session, engine = loadSession(db_path)
 
-	sql_query=session.query(LaserStimulationProtocol).filter(getattr(LaserStimulationProtocol, "code")==scan_types[scan_type])
+	print(scan_types[scan_type])
+
+	sql_query=session.query(LaserStimulationProtocol).filter(LaserStimulationProtocol.code==scan_types[scan_type])
 	mystring = sql_query.statement
 	mydf = pd.read_sql_query(mystring,engine)
-	delay = mydf["stimulation_onset"][0]
-	inter_stimulus_duration = mydf["inter_stimulus_duration"][0]
+	delay = int(mydf["stimulation_onset"][0])
+	inter_stimulus_duration = int(mydf["inter_stimulus_duration"][0])
 	stimulus_duration = mydf["stimulus_duration"][0]
 	stimulus_repetitions = mydf["stimulus_repetitions"][0]
 
 	onsets=[]
-	for i in range(6):
-		onsets.append([range(delay,delay+(inter_stimulus_duration+stimulus_duration)*stimulus_repetitions,(inter_stimulus_duration+stimulus_duration))[i]])
+	names=[]
+	for i in range(stimulus_repetitions):
+		onset = delay+(inter_stimulus_duration+stimulus_duration)*i
+		onsets.append([onset])
+		names.append("s"+str(i+1))
 	output = []
-	names = ['s1', 's2', 's3', 's4', 's5', 's6']
 	for idx_a, a in enumerate(onsets):
 		for idx_b, b in enumerate(a):
-			onsets[idx_a][idx_b] = b-subject_delay
+			onsets[idx_a][idx_b] = round(b-subject_delay, 2) #floating point values don't add up nicely, so we have to round (https://docs.python.org/2/tutorial/floatingpoint.html)
 	output.append(Bunch(conditions=names,
 					onsets=deepcopy(onsets),
 					durations=[[stimulus_duration]]*stimulus_repetitions
@@ -124,7 +131,7 @@ def level2(level1_directory, categories=["ofM","ofM_aF"], participants=["4008","
 	second_level.base_dir = level1_directory+"/.."
 	second_level.run(plugin="MultiProc",  plugin_args={'n_procs' : 6})
 
-def level1(measurements_base, functional_scan_types, structural_scan_types=[], tr=1, conditions=[], subjects=[], exclude_subjects=[], measurements=[], exclude_measurements=[], actual_size=False, pipeline_denominator="level1", template="/home/chymera/NIdata/templates/ds_QBI_chr.nii.gz", standalone_execute=True, compare_experiment_types=[]):
+def level1(measurements_base, functional_scan_types, structural_scan_types=[], tr=1, conditions=[], subjects=[], exclude_subjects=[], measurements=[], exclude_measurements=[], actual_size=False, pipeline_denominator="level1", template="/home/chymera/NIdata/templates/ds_QBI_chr.nii.gz", standalone_execute=True, compare_experiment_types=[], quiet=True):
 	"""Runs a first-level analysis while calling the bru_preproc workflow for preprocessing
 
 	Mandatory Arguments:
@@ -141,27 +148,6 @@ def level1(measurements_base, functional_scan_types, structural_scan_types=[], t
 
 	measurements_base = path.expanduser(measurements_base)
 	preprocessing = bru_preproc(measurements_base, functional_scan_types_list, structural_scan_types=structural_scan_types, tr=tr, conditions=conditions, subjects=subjects, exclude_subjects=exclude_subjects, measurements=measurements, exclude_measurements=exclude_measurements, actual_size=actual_size, template=template)
-
-	def subjectinfo(subject_delay):
-		from nipype.interfaces.base import Bunch
-		from copy import deepcopy
-		onsets=[]
-		for i in range(6):
-			onsets.append([range(222,222+180*6,180)[i]])
-		output = []
-		names = ['s1', 's2', 's3', 's4', 's5', 's6']
-		for idx_a, a in enumerate(onsets):
-			for idx_b, b in enumerate(a):
-				onsets[idx_a][idx_b] = b-subject_delay
-		output.append(Bunch(conditions=names,
-						onsets=deepcopy(onsets),
-						durations=[[20.0], [20.0], [20.0], [20.0], [20.0], [20.0]],
-						))
-		return output
-
-	# onsets=[]
-	# for i in range(6):
-	# 	onsets.append([range(222,222+180*6,180)[i]])
 
 	get_subject_info = pe.Node(name='get_subject_info', interface=util.Function(function=get_subjectinfo,input_names=["subject_delay","scan_type","scan_types"], output_names=['output']))
 	get_subject_info.inputs.scan_types = functional_scan_types
@@ -233,7 +219,14 @@ def level1(measurements_base, functional_scan_types, structural_scan_types=[], t
 	pipeline.write_graph(dotfilename="graph.dot", graph2use="hierarchical", format="png")
 	if standalone_execute:
 		pipeline.base_dir = measurements_base
-		pipeline.run(plugin="MultiProc",  plugin_args={'n_procs' : 4})
+		if quiet:
+			try:
+				pipeline.run(plugin="MultiProc",  plugin_args={'n_procs' : 4})
+			except RuntimeError:
+				print "WARNING: Some expected scans have not been found (or another RuntimeError has occured)."
+			for f in listdir(getcwd()):
+				if re.search("crash.*?get_structural_scan|get_functional_scan.*", f):
+					remove(path.join(getcwd(), f))
 	else:
 		return pipeline
 

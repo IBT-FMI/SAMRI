@@ -39,7 +39,6 @@ def level2_common_effect(level1_directory, categories=[], participants=[], scan_
 		]
 
 	if isinstance(scan_types[0],list):
-		print "MUIEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE"
 		infosource = pe.Node(interface=util.IdentityInterface(fields=['scan_subtypes']), name="infosource")
 		infosource.iterables = [('scan_subtypes',scan_types)]
 
@@ -61,12 +60,8 @@ def level2_common_effect(level1_directory, categories=[], participants=[], scan_
 			(get_copes, level2model, [(('scan_paths',getlen), 'num_copes')]),
 			])
 	else:
-		print "FUTEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE"
 		copes = get_level2_inputs(copemergeroot, categories=categories, participants=participants, scan_types=scan_types)
 		varcbs = get_level2_inputs(varcbmergeroot, categories=categories, participants=participants, scan_types=scan_types)
-
-		print copes
-		print varcbs
 
 		copemerge.inputs.in_files=copes
 		varcopemerge.inputs.in_files=varcbs

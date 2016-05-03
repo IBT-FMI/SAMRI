@@ -147,7 +147,6 @@ def level1(measurements_base, functional_scan_types, structural_scan_types=[], t
 
 	modelgen = pe.Node(interface=FEATModel(), name='modelgen')
 
-	# glm = pe.JoinNode(interface=GLM(), name='glm', joinfield='designs', joinsource="modelgen")
 	glm = pe.Node(interface=GLM(), name='glm', iterfield='design')
 	glm.inputs.out_cope="cope.nii.gz"
 	glm.inputs.out_varcb_name="varcb.nii.gz"

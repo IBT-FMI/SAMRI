@@ -284,7 +284,7 @@ def bru_preproc(measurements_base, functional_scan_types, structural_scan_types=
 	get_functional_scan.iterables = ("scan_type", functional_scan_types)
 
 	if structural_scan_types:
-		get_structural_scan = pe.Node(name='get_structural_scan', interface=util.Function(function=get_scan,input_names=["measurements_base","data_selection","condition","subject","scan_type"], output_names=['scan_path']))
+		get_structural_scan = pe.Node(name='get_structural_scan', interface=util.Function(function=get_scan,input_names=["measurements_base","data_selection","condition","subject","scan_type"], output_names=['scan_path','scan_type']))
 		get_structural_scan.inputs.data_selection = data_selection
 		get_structural_scan.inputs.measurements_base = measurements_base
 		get_structural_scan.iterables = ("scan_type", structural_scan_types)

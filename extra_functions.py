@@ -106,6 +106,7 @@ def dcm_to_nii(dcm_dir, group_by="EchoTime", node=False):
 
 
 def get_data_selection(workflow_base, conditions=[], scan_types=[], subjects=[], exclude_subjects=[], measurements=[], exclude_measurements=[]):
+	import os
 
 	if measurements:
 		measurement_path_list = [path.join(workflow_base,i) for i in measurements]

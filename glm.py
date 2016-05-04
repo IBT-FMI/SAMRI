@@ -18,8 +18,9 @@ def getlen(a):
 
 def level2_common_effect(level1_directory, categories=[], participants=[], scan_types=[]):
 	level1_directory = path.expanduser(level1_directory)
-	copemergeroot = level1_directory+"/results/cope/"
-	varcbmergeroot = level1_directory+"/results/varcb/"
+	#edit the following lines to choose different outputs (e.g. from functional coregistration)
+	copemergeroot = level1_directory+"/results/struc_cope/"
+	varcbmergeroot = level1_directory+"/results/struc_varcb/"
 
 	copemerge = pe.Node(interface=Merge(dimension='t'),name="copemerge")
 	varcopemerge = pe.Node(interface=Merge(dimension='t'),name="varcopemerge")
@@ -118,7 +119,7 @@ def level1(measurements_base, functional_scan_types, structural_scan_types=[], t
 
 	Mandatory Arguments:
 	measurements_base -- path in which to look for data to be processed
-	functional_scan_types -- a list of identifiers for the functional scan types to be selected OR a dictionary with keys whch are identifiers for the functional scan types to be selected and values which are corresponding codes of the stimulation protocols (as seen in meta.db) in use on each functional scan type
+	functional_scan_types -- a list of identifiers for the functional scan types to be selected OR a dictionary with keys whch are identifiers for the functional scan types to be selected and values which are corresponding codes of the stimulation protocols (as seen in ~/data/meta.db) in use on each functional scan type
 
 	Keyword Arguments:
 	"""
@@ -323,8 +324,8 @@ def level2_contiguous(measurements_base, functional_scan_type, structural_scan_t
 		return pipeline
 
 if __name__ == "__main__":
-	level1("~/NIdata/ofM.erc/", {"EPI_CBV_jin6":"jin6","EPI_CBV_jin10":"jin10","EPI_CBV_jin20":"jin20","EPI_CBV_jin40":"jin40","EPI_CBV_jin60":"jin60","EPI_CBV_alej":"alej",}, structural_scan_types=["T2_TurboRARE"])
+	# level1("~/NIdata/ofM.erc/", {"EPI_CBV_jin6":"jin6","EPI_CBV_jin10":"jin10","EPI_CBV_jin20":"jin20","EPI_CBV_jin40":"jin40","EPI_CBV_jin60":"jin60","EPI_CBV_alej":"alej",}, structural_scan_types=["T2_TurboRARE"])
 	# level2_common_effect("~/NIdata/ofM.dr/level1", categories=["ofM"], participants=["4008","4007","4011","4012"])
 	# level2("~/NIdata/ofM.dr/level1")
-	# level2_common_effect("~/NIdata/ofM.erc/level1", categories=[], scan_types=[["EPI_CBV_jin6"],["EPI_CBV_jin10"],["EPI_CBV_jin20"],["EPI_CBV_jin60"]], participants=["5502","5503"])
+	level2_common_effect("~/NIdata/ofM.erc/level1", categories=[], scan_types=[["EPI_CBV_jin6"],["EPI_CBV_jin10"],["EPI_CBV_jin20"],["EPI_CBV_jin40"],["EPI_CBV_jin60"],["EPI_CBV_alej"]], participants=["5502","5503"])
 	# level2_common_effect("~/NIdata/ofM.erc/.level1", categories=[], scan_types=["EPI_CBV_jin10"], participants=["5502","5503"])

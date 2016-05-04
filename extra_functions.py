@@ -15,7 +15,7 @@ def get_subjectinfo(subject_delay, scan_type, scan_types):
 	sys.path.append('/home/chymera/src/LabbookDB/db/')
 	from query import loadSession
 	from common_classes import LaserStimulationProtocol
-	db_path="~/meta.db"
+	db_path="~/data/meta.db"
 
 	session, engine = loadSession(db_path)
 

@@ -147,13 +147,21 @@ def level1(measurements_base, functional_scan_types, structural_scan_types=[], t
 
 	modelgen = pe.Node(interface=FEATModel(), name='modelgen')
 
-	glm = pe.Node(interface=GLM(), name='glm', iterfield='design')
-	glm.inputs.out_cope="cope.nii.gz"
-	glm.inputs.out_varcb_name="varcb.nii.gz"
+	func_glm = pe.Node(interface=GLM(), name='func_glm', iterfield='design')
+	func_glm.inputs.out_cope="cope.nii.gz"
+	func_glm.inputs.out_varcb_name="varcb.nii.gz"
 	#not setting a betas output file might lead to beta export in lieu of COPEs
-	glm.inputs.out_file="betas.nii.gz"
-	glm.inputs.out_t_name="t_stat.nii.gz"
-	glm.inputs.out_p_name="p_stat.nii.gz"
+	func_glm.inputs.out_file="betas.nii.gz"
+	func_glm.inputs.out_t_name="t_stat.nii.gz"
+	func_glm.inputs.out_p_name="p_stat.nii.gz"
+
+	struc_glm = pe.Node(interface=GLM(), name='struc_glm', iterfield='design')
+	struc_glm.inputs.out_cope="cope.nii.gz"
+	struc_glm.inputs.out_varcb_name="varcb.nii.gz"
+	#not setting a betas output file might lead to beta export in lieu of COPEs
+	struc_glm.inputs.out_file="betas.nii.gz"
+	struc_glm.inputs.out_t_name="t_stat.nii.gz"
+	struc_glm.inputs.out_p_name="p_stat.nii.gz"
 
 	# Cluster._cmd = "fsl_cluster" #on NeuroGentoo this file is renamed to avoid a collision with one of FSL's deps
 	# cluster = pe.Node(interface=Cluster(), name="cluster")
@@ -174,10 +182,14 @@ def level1(measurements_base, functional_scan_types, structural_scan_types=[], t
 		(specify_model, level1design, [('session_info', 'session_info')]),
 		(level1design, modelgen, [('ev_files', 'ev_files')]),
 		(level1design, modelgen, [('fsf_files', 'fsf_file')]),
-		(modelgen, glm, [('design_file', 'design')]),
-		(modelgen, glm, [('con_file', 'contrasts')]),
-		(glm, datasink, [('out_cope', 'cope')]),
-		(glm, datasink, [('out_varcb', 'varcb')]),
+		(modelgen, func_glm, [('design_file', 'design')]),
+		(modelgen, func_glm, [('con_file', 'contrasts')]),
+		(func_glm, datasink, [('out_cope', 'func_cope')]),
+		(func_glm, datasink, [('out_varcb', 'func_varcb')]),
+		(modelgen, struc_glm, [('design_file', 'design')]),
+		(modelgen, struc_glm, [('con_file', 'contrasts')]),
+		(struc_glm, datasink, [('out_cope', 'struc_cope')]),
+		(struc_glm, datasink, [('out_varcb', 'struc_varcb')]),
 		])
 		# (cluster, datasink, [('localmax_vol_file', 'localmax_vol_file')]),
 		# (cluster, datasink, [('max_file', 'max_file')]),
@@ -194,10 +206,11 @@ def level1(measurements_base, functional_scan_types, structural_scan_types=[], t
 		(preprocessing, first_level, [('timing_metadata.total_delay_s','get_subject_info.subject_delay')]),
 		(preprocessing, first_level, [('get_functional_scan.scan_type','get_subject_info.scan_type')]),
 		(preprocessing, first_level, [('structural_bandpass.out_file','specify_model.functional_runs')]),
-		(preprocessing, first_level, [('structural_bandpass.out_file','glm.in_file')]),
+		(preprocessing, first_level, [('functional_bandpass.out_file','func_glm.in_file')]),
+		(preprocessing, first_level, [('structural_bandpass.out_file','struc_glm.in_file')]),
 		])
 
-	pipeline.write_graph(dotfilename="graph.dot", graph2use="hierarchical", format="png")
+	pipeline.write_graph(dotfilename=path.join(measurements_base,pipeline_denominator,"graph.dot"), graph2use="flat", format="png")
 	if standalone_execute:
 		pipeline.base_dir = measurements_base
 		if quiet:
@@ -310,8 +323,8 @@ def level2_contiguous(measurements_base, functional_scan_type, structural_scan_t
 		return pipeline
 
 if __name__ == "__main__":
-	level1("~/NIdata/ofM.erc/", {"EPI_CBV_jin10":"jin6","EPI_CBV_jin10":"jin10","EPI_CBV_jin10":"jin20","EPI_CBV_jin10":"jin40","EPI_CBV_jin60":"jin60","EPI_CBV_alej":"alej",}, structural_scan_types=["T2_TurboRARE"])
+	level1("~/NIdata/ofM.erc/", {"EPI_CBV_jin6":"jin6","EPI_CBV_jin10":"jin10","EPI_CBV_jin20":"jin20","EPI_CBV_jin40":"jin40","EPI_CBV_jin60":"jin60","EPI_CBV_alej":"alej",}, structural_scan_types=["T2_TurboRARE"])
 	# level2_common_effect("~/NIdata/ofM.dr/level1", categories=["ofM"], participants=["4008","4007","4011","4012"])
 	# level2("~/NIdata/ofM.dr/level1")
-	# level2_common_effect("~/NIdata/ofM.erc/level1", categories=[], scan_types=[["EPI_CBV_jin10"],["EPI_CBV_jin60"]], participants=["5502","5503"])
+	# level2_common_effect("~/NIdata/ofM.erc/level1", categories=[], scan_types=[["EPI_CBV_jin6"],["EPI_CBV_jin10"],["EPI_CBV_jin20"],["EPI_CBV_jin60"]], participants=["5502","5503"])
 	# level2_common_effect("~/NIdata/ofM.erc/.level1", categories=[], scan_types=["EPI_CBV_jin10"], participants=["5502","5503"])

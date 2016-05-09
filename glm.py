@@ -119,7 +119,7 @@ def level1(measurements_base, functional_scan_types, structural_scan_types=[], t
 
 	Mandatory Arguments:
 	measurements_base -- path in which to look for data to be processed
-	functional_scan_types -- a list of identifiers for the functional scan types to be selected OR a dictionary with keys whch are identifiers for the functional scan types to be selected and values which are corresponding codes of the stimulation protocols (as seen in ~/data/meta.db) in use on each functional scan type
+	functional_scan_types -- a list of identifiers for the functional scan types to be selected OR a dictionary with keys whch are identifiers for the functional scan types to be selected and values which are corresponding codes of the stimulation protocols (as seen in ~/syncdata/meta.db) in use on each functional scan type
 
 	Keyword Arguments:
 	"""

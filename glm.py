@@ -325,7 +325,9 @@ def level2_contiguous(measurements_base, functional_scan_type, structural_scan_t
 
 if __name__ == "__main__":
 	# level1("~/NIdata/ofM.erc/", {"EPI_CBV_jin6":"jin6","EPI_CBV_jin10":"jin10","EPI_CBV_jin20":"jin20","EPI_CBV_jin40":"jin40","EPI_CBV_jin60":"jin60","EPI_CBV_alej":"alej",}, structural_scan_types=["T2_TurboRARE"])
+	level1("~/NIdata/ofM.dr/", ["7_EPI_CBV"], structural_scan_types=["T2_TurboRARE"], conditions=["ofM","ofM_aF","ofM_cF1","ofM_cF2","ofM_pF"], exclude_measurements=["20151027_121613_4013_1_1"])
+	# level1("~/NIdata/ofM.erc/", {"EPI_CBV_jin6":"jin6","EPI_CBV_jin10":"jin10","EPI_CBV_jin20":"jin20","EPI_CBV_jin40":"jin40","EPI_CBV_jin60":"jin60","EPI_CBV_alej":"alej",}, structural_scan_types=["T2_TurboRARE"])
 	# level2_common_effect("~/NIdata/ofM.dr/level1", categories=["ofM"], participants=["4008","4007","4011","4012"])
 	# level2("~/NIdata/ofM.dr/level1")
-	level2_common_effect("~/NIdata/ofM.erc/level1", categories=[], scan_types=[["EPI_CBV_jin6"],["EPI_CBV_jin10"],["EPI_CBV_jin20"],["EPI_CBV_jin40"],["EPI_CBV_jin60"],["EPI_CBV_alej"]], participants=["5502","5503"])
+	# level2_common_effect("~/NIdata/ofM.erc/level1", categories=[], scan_types=[["EPI_CBV_jin6"],["EPI_CBV_jin10"],["EPI_CBV_jin20"],["EPI_CBV_jin40"],["EPI_CBV_jin60"],["EPI_CBV_alej"]], participants=["5502","5503"])
 	# level2_common_effect("~/NIdata/ofM.erc/.level1", categories=[], scan_types=["EPI_CBV_jin10"], participants=["5502","5503"])

@@ -11,6 +11,41 @@ import matplotlib
 matplotlib.style.use('ggplot')
 
 
+def get_subjectinfo(subject_delay, scan_type, scan_types):
+	import pandas as pd
+	from copy import deepcopy
+	import sys
+	sys.path.append('/home/chymera/src/LabbookDB/db/')
+	from query import loadSession
+	from common_classes import LaserStimulationProtocol
+	db_path="~/meta.db"
+
+	session, engine = loadSession(db_path)
+
+	sql_query=session.query(LaserStimulationProtocol).filter(LaserStimulationProtocol.code==scan_types[scan_type])
+	mystring = sql_query.statement
+	mydf = pd.read_sql_query(mystring,engine)
+	delay = int(mydf["stimulation_onset"][0])
+	inter_stimulus_duration = int(mydf["inter_stimulus_duration"][0])
+	stimulus_duration = mydf["stimulus_duration"][0]
+	stimulus_repetitions = mydf["stimulus_repetitions"][0]
+
+	onsets=[]
+	names=[]
+	for i in range(stimulus_repetitions):
+		onset = delay+(inter_stimulus_duration+stimulus_duration)*i
+		onsets.append([onset])
+		names.append("s"+str(i+1))
+	output = []
+	for idx_a, a in enumerate(onsets):
+		for idx_b, b in enumerate(a):
+			onsets[idx_a][idx_b] = round(b-subject_delay, 2) #floating point values don't add up nicely, so we have to round (https://docs.python.org/2/tutorial/floatingpoint.html)
+	output.append(Bunch(conditions=names,
+					onsets=deepcopy(onsets),
+					durations=[[stimulus_duration]]*stimulus_repetitions
+					))
+	return output
+
 def plotmodel(matfile):
 	with open(matfile, 'r') as f:
 		first_line = f.readline()
@@ -74,12 +109,43 @@ def test_model(base_dir, plot=False, workflow_name="test_model_wf"):
 def get_scan(c,s,d):
 	result = str(c)+str(s)+str(d)
 	return result, d
+def firstfunction(c,s,d):
+	result = str(c)+str(s)+str(d)
+	return result
+def secondfunction(e,f):
+	result = str(e)+"|"+str(f)
+	return result
 def bru2nii(input_dir,f):
 	result = str(input_dir)+str(f)
 	return result
 def final_function(inp):
 	result = "final"+str(inp)
 	return result
+
+def test_multiconnection():
+	infosource = pe.Node(interface=util.IdentityInterface(fields=['condition','subject']), name="infosource")
+	infosource.iterables = [('condition',["a","b","c"]), ('subject',[1,2,3])]
+
+	firstfunctionA = pe.Node(name='firstfunctionA', interface=util.Function(function=firstfunction,input_names=["c","s","d"], output_names=['result']))
+	firstfunctionA.iterables = ("d", ["x","y","z"])
+	firstfunctionB = pe.Node(name='firstfunctionB', interface=util.Function(function=firstfunction,input_names=["c","s","d"], output_names=['result']))
+	firstfunctionB.iterables = ("d", ["X","Y","Z"])
+
+	secondfunctionX = pe.Node(name='secondfunctionX', interface=util.Function(function=secondfunction,input_names=["e","f"], output_names=['myresult']))
+
+	workflow = pe.Workflow(name="test_connections")
+
+	workflow_connections = [
+		(infosource, firstfunctionA, [('condition', 'c'),('subject', 's')]),
+		(infosource, firstfunctionB, [('condition', 'c'),('subject', 's')]),
+		(firstfunctionA, secondfunctionX, [('result', 'e')]),
+		(firstfunctionB, secondfunctionX, [('result', 'f')]),
+		]
+	workflow.connect(workflow_connections)
+	workflow.write_graph(dotfilename="graph.dot", graph2use="flat", format="png")
+
+	workflow.base_dir = "/home/chymera/test"
+	workflow.run(plugin="MultiProc",  plugin_args={'n_procs' : 4})
 
 def test_connections():
 	infosource = pe.Node(interface=util.IdentityInterface(fields=['condition','subject']), name="infosource")
@@ -116,4 +182,8 @@ def test_connections():
 if __name__ == '__main__':
 	# plotmodel("/home/chymera/src/chyMRI/tests/test_model_wf/level1design/run0.mat")
 	# test_model("/home/chymera/src/chyMRI/tests", plot=True)
-	test_connections()
+	test_multiconnection()
+	# scan_type = "EPI_CBV_jin10"
+	# scan_types = {'EPI_CBV_jin10': 'jin10', 'EPI_CBV_jin60': 'jin60'}
+	# subject_delay = 49.35
+	# print get_subjectinfo(subject_delay, scan_type, scan_types)

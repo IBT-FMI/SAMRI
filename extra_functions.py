@@ -7,6 +7,51 @@ import os
 import pandas as pd
 import re
 
+def get_subjectinfo(subject_delay, scan_type, scan_types):
+	import pandas as pd
+	import sys
+	sys.path.append('/home/chymera/src/LabbookDB/db/')
+	from query import loadSession
+	from common_classes import LaserStimulationProtocol
+	db_path="~meta.db"
+
+	session, engine = loadSession(db_path)
+
+	sql_query=session.query(LaserStimulationProtocol).filter(getattr(LaserStimulationProtocol, "code")==scan_types[scan_type])
+	mystring = sql_query.statement
+	mydf = pd.read_sql_query(mystring,engine)
+	delay = mydf["stimulation_onset"][0]
+	inter_stimulus_duration = mydf["inter_stimulus_duration"][0]
+	stimulus_duration = mydf["stimulus_duration"][0]
+	stimulus_repetitions = mydf["stimulus_repetitions"][0]
+
+	onsets=[]
+	for i in range(6):
+		onsets.append([range(delay,delay+(inter_stimulus_duration+stimulus_duration)*stimulus_repetitions,(inter_stimulus_duration+stimulus_duration))[i]])
+	output = []
+	names = ['s1', 's2', 's3', 's4', 's5', 's6']
+	for idx_a, a in enumerate(onsets):
+		for idx_b, b in enumerate(a):
+			onsets[idx_a][idx_b] = b-subject_delay
+	output.append(Bunch(conditions=names,
+					onsets=deepcopy(onsets),
+					durations=[[stimulus_duration]]*stimulus_repetitions
+					))
+	return output
+
+
+def get_level2_inputs(input_root, categories=[], participants=[], scan_types=[]):
+	l2_inputs = []
+	for dirName, subdirList, fileList in os.walk(input_root, topdown=False):
+		if subdirList == []:
+			for my_file in fileList:
+				candidate_l2_input = os.path.join(dirName,my_file)
+				#the following string additions are performed to not accidentally match longer identifiers which include the shorter identifiers actually queried for. The path formatting is taken from the glm.py level1() datasync node, and will not work if that is modified.
+				if (any("/"+c+"." in candidate_l2_input for c in categories) or not categories) and (any("."+p+"/" in candidate_l2_input for p in participants) or not participants) and (any("_"+s+"/" in candidate_l2_input for s in scan_types) or not scan_types):
+					l2_inputs.append(candidate_l2_input)
+
+	return l2_inputs
+
 def dcm_to_nii(dcm_dir, group_by="EchoTime", node=False):
 	if node:
 		nii_dir = getcwd()

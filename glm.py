@@ -6,7 +6,9 @@ from nipype.interfaces.afni import Bandpass
 from nipype.algorithms.modelgen import SpecifyModel
 import nipype.interfaces.io as nio
 from os import path
+import os
 from extra_interfaces import GenL2Model
+from extra_functions import get_level2_inputs, get_subjectinfo
 from preprocessing import bru_preproc, bru2_preproc2
 from nipype.interfaces.nipy import SpaceTimeRealigner
 import nipype.interfaces.ants as ants
@@ -16,54 +18,20 @@ from copy import deepcopy
 import sys
 sys.path.append('/home/chymera/src/LabbookDB/db/')
 from query import loadSession
-from common_classes import *
 
-def get_subjectinfo(subject_delay, scan_type, scan_types):
-	import pandas as pd
-	import sys
-	sys.path.append('/home/chymera/src/LabbookDB/db/')
-	from query import loadSession
-	from common_classes import LaserStimulationProtocol
-	db_path="~meta.db"
-
-	session, engine = loadSession(db_path)
-
-	sql_query=session.query(LaserStimulationProtocol).filter(getattr(LaserStimulationProtocol, "code")==scan_types[scan_type])
-	mystring = sql_query.statement
-	mydf = pd.read_sql_query(mystring,engine)
-	delay = mydf["stimulation_onset"][0]
-	inter_stimulus_duration = mydf["inter_stimulus_duration"][0]
-	stimulus_duration = mydf["stimulus_duration"][0]
-	stimulus_repetitions = mydf["stimulus_repetitions"][0]
-
-	onsets=[]
-	for i in range(6):
-		onsets.append([range(delay,delay+(inter_stimulus_duration+stimulus_duration)*stimulus_repetitions,(inter_stimulus_duration+stimulus_duration))[i]])
-	output = []
-	names = ['s1', 's2', 's3', 's4', 's5', 's6']
-	for idx_a, a in enumerate(onsets):
-		for idx_b, b in enumerate(a):
-			onsets[idx_a][idx_b] = b-subject_delay
-	output.append(Bunch(conditions=names,
-					onsets=deepcopy(onsets),
-					durations=[[stimulus_duration]]*stimulus_repetitions
-					))
-	return output
-
-def level2_common_effect(level1_directory, categories=["ofM"], participants=["4008","4007","4011","4012"]):
+def level2_common_effect(level1_directory, categories=["ofM"], participants=["4008","4007","4011","4012"], scan_types=[]):
 	level1_directory = path.expanduser(level1_directory)
 	copemergeroot = level1_directory+"/results/cope/"
 	varcbmergeroot = level1_directory+"/results/varcb/"
 
-	subirs_list = [category+"."+participant for category, participant in product(categories,participants)]
-
-	copes = [copemergeroot+sub_dir+"/cope.nii.gz" for sub_dir in subirs_list]
+	copes = get_level2_inputs(copemergeroot, categories=categories, participants=participants, scan_types=scan_types)
+	varcbs = get_level2_inputs(varcbmergeroot, categories=categories, participants=participants, scan_types=scan_types)
 
 	copemerge = pe.Node(interface=Merge(dimension='t'),name="copemerge")
 	copemerge.inputs.in_files=copes
 
 	varcopemerge = pe.Node(interface=Merge(dimension='t'),name="varcopemerge")
-	varcopemerge.inputs.in_files=[varcbmergeroot+sub_dir+"/varcb.nii.gz" for sub_dir in subirs_list]
+	varcopemerge.inputs.in_files=varcbs
 
 	level2model = pe.Node(interface=L2Model(),name='level2model')
 	level2model.inputs.num_copes=len(copes)
@@ -336,6 +304,6 @@ def level2_contiguous(measurements_base, functional_scan_type, structural_scan_t
 		return pipeline
 
 if __name__ == "__main__":
-	level1("~/NIdata/ofM.erc/", {"EPI_CBV_jin10":"jin10","EPI_CBV_jin60":"jin60"}, structural_scan_types=["T2_TurboRARE"])
-	# level2_common_effect("~/NIdata/ofM.dr/level1", categories=["ofM"])
+	# level1("~/NIdata/ofM.erc/", {"EPI_CBV_jin10":"jin10","EPI_CBV_jin60":"jin60"}, structural_scan_types=["T2_TurboRARE"])
+	level2_common_effect("~/NIdata/ofM.erc/level1", categories=[], scan_types=["EPI_CBV_jin60"], participants=["5502","5503"])
 	# level2("~/NIdata/ofM.dr/level1")

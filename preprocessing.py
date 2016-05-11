@@ -350,7 +350,13 @@ def bru_preproc(measurements_base, functional_scan_types, structural_scan_types=
 	melodic.inputs.report = True
 	melodic.inputs.dim = 8
 
+	datasink = pe.Node(nio.DataSink(), name='datasink')
+	datasink.inputs.base_directory = measurements_base+'/bruker_preprocessing'+"/results"
+	#remove iterfield names
+	datasink.inputs.substitutions = [('_condition_', ''),('_subject_', '.')]
+
 	workflow = pe.Workflow(name="bruker_preprocessing")
+	workflow.base_dir = measurements_base
 
 	workflow_connections = [
 		(infosource, get_functional_scan, [('condition', 'condition'),('subject', 'subject')]),
@@ -378,18 +384,18 @@ def bru_preproc(measurements_base, functional_scan_types, structural_scan_types=
 			(structural_registration, structural_warp, [('composite_transform', 'transforms')]),
 			(realigner, structural_warp, [('out_file', 'input_image')]),
 			(structural_warp, structural_bandpass, [('output_image', 'in_file')]),
+			(structural_bandpass, datasink, [('out_file', 'structural_bandpass')]),
 			])
 
 	workflow.connect(workflow_connections)
 	workflow.write_graph(dotfilename="graph.dot", graph2use="hierarchical", format="png")
 
 	if standalone_execute:
-		workflow.base_dir = measurements_base
 		workflow.run(plugin="MultiProc",  plugin_args={'n_procs' : 4})
 	else:
 		return workflow
 
 if __name__ == "__main__":
 	# bru_preproc_lite(measurements_base="/mnt/data/NIdata/ofM.erc/", functional_scan_types=["EPI_CBV_alej","EPI_CBV_jin6","EPI_CBV_jin10","EPI_CBV_jin20","EPI_CBV_jin40","EPI_CBV_jin60"], structural_scan_type="T2_TurboRARE", conditions=["ERC_ofM"], include_subjects=["5502","5503"])
-	bru_preproc("/home/chymera/NIdata/ofM.erc/", ["EPI_CBV_jin10","EPI_CBV_jin60"], conditions=["ERC_ofM","ERC_ofM_r1","ERC_ofM_r2"], structural_scan_types=["T2_TurboRARE"], standalone_execute=True)
+	bru_preproc("/home/chymera/NIdata/ofM.erc/", ["EPI_CBV_jin10","EPI_CBV_jin60"], conditions=["ERC_ofM","ERC_ofM_r1"], structural_scan_types=["T2_TurboRARE"], standalone_execute=True)
 	# testme("~/NIdata/ofM.erc/", ["EPI_CBV_alej","EPI_CBV_jin6","EPI_CBV_jin10","EPI_CBV_jin20","EPI_CBV_jin40","EPI_CBV_jin60","T2_TurboRARE"], conditions=["ERC_ofM"], include_subjects=["5503","5502"])

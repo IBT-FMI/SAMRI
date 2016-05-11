@@ -6,7 +6,7 @@ import nipype.interfaces.io as nio
 from os import path, listdir, remove, getcwd
 from extra_interfaces import GenL2Model
 from extra_functions import get_level2_inputs, get_subjectinfo
-from preprocessing import bru_preproc, bru2_preproc2
+from preprocessing import bru_preproc
 from nipype.interfaces.nipy import SpaceTimeRealigner
 import nipype.interfaces.ants as ants
 from itertools import product
@@ -227,7 +227,7 @@ def level1(measurements_base, functional_scan_types, structural_scan_types=[], t
 
 def level2_contiguous(measurements_base, functional_scan_type, structural_scan_type=None, tr=1, conditions=[], include_subjects=[], exclude_subjects=[], exclude_measurements=[], include_measurements=[], actual_size=False, pipeline_denominator="FSL_GLM2", template="/home/chymera/NIdata/templates/ds_QBI_chr.nii.gz", standalone_execute=True, compare_experiment_types=[]):
 	measurements_base = path.expanduser(measurements_base)
-	preprocessing = bru2_preproc2(measurements_base, functional_scan_type, structural_scan_type=structural_scan_type, tr=tr, conditions=conditions, include_subjects=include_subjects, exclude_subjects=exclude_subjects, exclude_measurements=exclude_measurements, include_measurements=include_measurements, actual_size=actual_size, template=template)
+	preprocessing = bruker_preproc(measurements_base, functional_scan_type, structural_scan_type=structural_scan_type, tr=tr, conditions=conditions, include_subjects=include_subjects, exclude_subjects=exclude_subjects, exclude_measurements=exclude_measurements, include_measurements=include_measurements, actual_size=actual_size, template=template)
 
 
 	def subjectinfo(subject_delay):

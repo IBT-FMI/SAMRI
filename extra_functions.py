@@ -20,8 +20,6 @@ def get_subjectinfo(subject_delay, scan_type, scan_types):
 
 	session, engine = loadSession(db_path)
 
-	print(scan_types[scan_type])
-
 	sql_query=session.query(LaserStimulationProtocol).filter(LaserStimulationProtocol.code==scan_types[scan_type])
 	mystring = sql_query.statement
 	mydf = pd.read_sql_query(mystring,engine)
@@ -188,8 +186,6 @@ def get_data_selection(workflow_base, conditions=[], scan_types=[], subjects=[],
 			except IOError:
 				pass
 
-	for i, a in enumerate(selected_measurements):
-		print(str(len(a))+" "+", ".join(a))
 	data_selection = pd.DataFrame(selected_measurements, columns=["subject", "condition", "measurement", "scan_type", "scan"])
 
 	#drop subjects which do not have measurements for all conditions

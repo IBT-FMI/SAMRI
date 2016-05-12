@@ -5,8 +5,8 @@ def ants_standard_registration_warp(template, registration_name="registration", 
 	registration = pe.Node(ants.Registration(), name=registration_name)
 	registration.inputs.fixed_image = template
 	registration.inputs.output_transform_prefix = "output_"
-	registration.inputs.transforms = ['Rigid', 'Affine', 'SyN']
-	registration.inputs.transform_parameters = [ (0.1,), (3.0, 3.0, 5.0)]
+	registration.inputs.transforms = ['Affine', 'SyN']
+	registration.inputs.transform_parameters = [(0.1,), (3.0, 3.0, 5.0)]
 	registration.inputs.number_of_iterations = [[10000, 10000, 10000], [100, 100, 100]]
 	registration.inputs.dimension = 3
 	registration.inputs.write_composite_transform = True

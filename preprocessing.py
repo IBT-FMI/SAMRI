@@ -181,6 +181,10 @@ def bru_preproc(measurements_base, functional_scan_types, structural_scan_types=
 		structural_cutoff.inputs.op_string = "-thrP 45"
 		structural_registration, structural_warp = ants_standard_registration_warp(template, "structural_registration", "structural_warp")
 
+		structural_BET = pe.Node(interface=BET(), name="structural_BET")
+		structural_BET.inputs.mask = True
+		structural_BET.inputs.frac = 0.5
+
 	functional_bru2nii = pe.Node(interface=Bru2(), name="functional_bru2nii")
 	functional_bru2nii.inputs.actual_size=actual_size
 
@@ -197,10 +201,6 @@ def bru_preproc(measurements_base, functional_scan_types, structural_scan_types=
 	realigner.inputs.slice_info = 3 #3 for coronal slices (2 for horizontal, 1 for sagittal)
 
 	temporal_mean = pe.Node(interface=MeanImage(), name="temporal_mean")
-
-	structural_BET = pe.Node(interface=BET(), name="structural_BET")
-	structural_BET.inputs.mask = True
-	structural_BET.inputs.frac = 0.5
 
 	functional_registration, functional_warp = ants_standard_registration_warp(template, "functional_registration", "functional_warp")
 

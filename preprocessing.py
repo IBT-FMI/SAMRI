@@ -1,6 +1,6 @@
 import nipype.interfaces.utility as util		# utility
 import nipype.pipeline.engine as pe				# pypeline engine
-from nipype.interfaces.fsl import GLM, MELODIC, FAST, BET, MeanImage, FLIRT, ApplyMask, ImageMaths, FSLCommand
+from nipype.interfaces.fsl import GLM, MELODIC, FAST, BET, MeanImage, FLIRT, ImageMaths, FSLCommand
 from nipype.interfaces.fsl.maths import TemporalFilter
 from nipype.interfaces.nipy import SpaceTimeRealigner
 from nipype.interfaces.afni import Bandpass
@@ -197,7 +197,6 @@ def bru_preproc(measurements_base, functional_scan_types, structural_scan_types=
 	realigner.inputs.slice_info = 3 #3 for coronal slices (2 for horizontal, 1 for sagittal)
 
 	temporal_mean = pe.Node(interface=MeanImage(), name="temporal_mean")
-	functional_masker = pe.Node(interface=ApplyMask(), name="functional_masker")
 
 	structural_BET = pe.Node(interface=BET(), name="structural_BET")
 	structural_BET.inputs.mask = True

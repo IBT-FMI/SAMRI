@@ -187,10 +187,6 @@ def level1(measurements_base, functional_scan_types, structural_scan_types=[], t
 		(modelgen, func_glm, [('con_file', 'contrasts')]),
 		(func_glm, datasink, [('out_cope', 'func_cope')]),
 		(func_glm, datasink, [('out_varcb', 'func_varcb')]),
-		(modelgen, struc_glm, [('design_file', 'design')]),
-		(modelgen, struc_glm, [('con_file', 'contrasts')]),
-		(struc_glm, datasink, [('out_cope', 'struc_cope')]),
-		(struc_glm, datasink, [('out_varcb', 'struc_varcb')]),
 		])
 		# (cluster, datasink, [('localmax_vol_file', 'localmax_vol_file')]),
 		# (cluster, datasink, [('max_file', 'max_file')]),
@@ -206,9 +202,8 @@ def level1(measurements_base, functional_scan_types, structural_scan_types=[], t
 	pipeline.connect([
 		(preprocessing, first_level, [('timing_metadata.total_delay_s','get_subject_info.subject_delay')]),
 		(preprocessing, first_level, [('get_functional_scan.scan_type','get_subject_info.scan_type')]),
-		(preprocessing, first_level, [('structural_bandpass.out_file','specify_model.functional_runs')]),
+		(preprocessing, first_level, [('functional_bandpass.out_file','specify_model.functional_runs')]),
 		(preprocessing, first_level, [('functional_bandpass.out_file','func_glm.in_file')]),
-		(preprocessing, first_level, [('structural_bandpass.out_file','struc_glm.in_file')]),
 		])
 
 	pipeline.write_graph(dotfilename=path.join(measurements_base,pipeline_denominator,"graph.dot"), graph2use="flat", format="png")
@@ -325,7 +320,7 @@ def level2_contiguous(measurements_base, functional_scan_type, structural_scan_t
 
 if __name__ == "__main__":
 	# level1("~/NIdata/ofM.dr/", ["7_EPI_CBV"], structural_scan_types=["T2_TurboRARE"], conditions=["ofM","ofM_aF","ofM_cF1","ofM_cF2","ofM_pF"], exclude_measurements=["20151027_121613_4013_1_1"])
-	# level1("~/NIdata/ofM.erc/", {"EPI_CBV_jin6":"jin6","EPI_CBV_jin10":"jin10","EPI_CBV_jin20":"jin20","EPI_CBV_jin40":"jin40","EPI_CBV_jin60":"jin60","EPI_CBV_alej":"alej",}, structural_scan_types=["T2_TurboRARE"])
+	# level1("~/NIdata/ofM.erc/", {"EPI_CBV_jin6":"jin6","EPI_CBV_jin10":"jin10","EPI_CBV_jin20":"jin20","EPI_CBV_jin40":"jin40","EPI_CBV_jin60":"jin60","EPI_CBV_alej":"alej",}, structural_scan_types=-1)
 	# level1("~/NIdata/ofM.erc/", {"EPI_CBV_jin6":"jin6","EPI_CBV_jin10":"jin10"}, structural_scan_types=["T2_TurboRARE"])
 	# level2_common_effect("~/NIdata/ofM.dr/level1", categories=["ofM"], participants=["4008","4007","4011","4012"])
 	# level2("~/NIdata/ofM.dr/level1")

@@ -1,6 +1,6 @@
 import nipype.interfaces.utility as util		# utility
 import nipype.pipeline.engine as pe				# pypeline engine
-from nipype.interfaces.fsl import GLM, MELODIC, FAST, BET, MeanImage, FLIRT, ApplyMask, ImageMaths, FSLCommand
+from nipype.interfaces.fsl import GLM, MELODIC, FAST, BET, MeanImage, FLIRT, ImageMaths, FSLCommand
 from nipype.interfaces.fsl.maths import TemporalFilter
 from nipype.interfaces.nipy import SpaceTimeRealigner
 from nipype.interfaces.afni import Bandpass
@@ -135,7 +135,7 @@ def bru_preproc_lite(measurements_base, functional_scan_types=[], structural_sca
 	# workflow.run(plugin="MultiProc")
 	return workflow
 
-def bru_preproc(measurements_base, functional_scan_types, structural_scan_types=[], tr=1, conditions=[], subjects=[], exclude_subjects=[], measurements=[], exclude_measurements=[], actual_size=False, template="/home/chymera/NIdata/templates/ds_QBI_chr.nii.gz", standalone_execute=False):
+def bru_preproc(measurements_base, functional_scan_types, structural_scan_types=[], tr=1, conditions=[], subjects=[], exclude_subjects=[], measurements=[], exclude_measurements=[], actual_size=False, template="/home/chymera/NIdata/templates/ds_QBI_chr.nii.gz", probability_mask="/home/chymera/NIdata/templates/ds_QBI_chr_bin.nii.gz", standalone_execute=False):
 
 	#select all functional/sturctural scan types unless specified
 	if not functional_scan_types or not structural_scan_types:
@@ -144,6 +144,10 @@ def bru_preproc(measurements_base, functional_scan_types, structural_scan_types=
 			 functional_scan_types = list(scan_classification[(scan_classification["categories"] == "functional")]["scan_type"])
 		 if not structural_scan_types:
 			 structural_scan_types = list(scan_classification[(scan_classification["categories"] == "structural")]["scan_type"])
+
+	#hack to allow structural scan type disaling:
+	if structural_scan_types == -1:
+		structural_scan_types = []
 
 	# define measurement directories to be processed, and populate the list either with the given include_measurements, or with an intelligent selection
 	scan_types = functional_scan_types[:]
@@ -181,6 +185,10 @@ def bru_preproc(measurements_base, functional_scan_types, structural_scan_types=
 		structural_cutoff.inputs.op_string = "-thrP 45"
 		structural_registration, structural_warp = ants_standard_registration_warp(template, "structural_registration", "structural_warp")
 
+		structural_BET = pe.Node(interface=BET(), name="structural_BET")
+		structural_BET.inputs.mask = True
+		structural_BET.inputs.frac = 0.5
+
 	functional_bru2nii = pe.Node(interface=Bru2(), name="functional_bru2nii")
 	functional_bru2nii.inputs.actual_size=actual_size
 
@@ -197,11 +205,6 @@ def bru_preproc(measurements_base, functional_scan_types, structural_scan_types=
 	realigner.inputs.slice_info = 3 #3 for coronal slices (2 for horizontal, 1 for sagittal)
 
 	temporal_mean = pe.Node(interface=MeanImage(), name="temporal_mean")
-	functional_masker = pe.Node(interface=ApplyMask(), name="functional_masker")
-
-	structural_BET = pe.Node(interface=BET(), name="structural_BET")
-	structural_BET.inputs.mask = True
-	structural_BET.inputs.frac = 0.5
 
 	functional_registration, functional_warp = ants_standard_registration_warp(template, "functional_registration", "functional_warp")
 
@@ -210,12 +213,10 @@ def bru_preproc(measurements_base, functional_scan_types, structural_scan_types=
 	functional_FAST.inputs.output_biascorrected = True
 	functional_FAST.inputs.bias_iters = 8
 
-	functional_cutoff = pe.Node(interface=ImageMaths(), name="functional_cutoff")
-	functional_cutoff.inputs.op_string = "-thrP 45"
-
-	functional_BET = pe.Node(interface=BET(), name="functional_BET")
-	functional_BET.inputs.mask = True
-	functional_BET.inputs.frac = 0.5
+	functional_skullstrip = pe.Node(interface=ants.segmentation.BrainExtraction(), name="functional_skullstrip")
+	functional_skullstrip.inputs.dimension = 3
+	functional_skullstrip.inputs.brain_template = template
+	functional_skullstrip.inputs.brain_probability_mask = probability_mask
 
 	functional_bandpass = pe.Node(interface=TemporalFilter(), name="functional_bandpass")
 	functional_bandpass.inputs.highpass_sigma = 180
@@ -238,9 +239,8 @@ def bru_preproc(measurements_base, functional_scan_types, structural_scan_types=
 		(functional_bru2nii, realigner, [('nii_file', 'in_file')]),
 		(realigner, temporal_mean, [('out_file', 'in_file')]),
 		(temporal_mean, functional_FAST, [('out_file', 'in_files')]),
-		(functional_FAST, functional_cutoff, [('restored_image', 'in_file')]),
-		(functional_cutoff, functional_BET, [('out_file', 'in_file')]),
-		(functional_BET, functional_registration, [('out_file', 'moving_image')]),
+		(functional_FAST, functional_skullstrip, [('restored_image', 'anatomical_image')]),
+		(functional_skullstrip, functional_registration, [('BrainExtractionBrain', 'moving_image')]),
 		(functional_registration, functional_warp, [('composite_transform', 'transforms')]),
 		(realigner, functional_warp, [('out_file', 'input_image')]),
 		(functional_warp, functional_bandpass, [('output_image', 'in_file')]),

@@ -7,6 +7,7 @@ from nilearn.input_data import NiftiLabelsMasker
 import nipype.interfaces.io as nio
 
 import matplotlib.pyplot as plt
+import matplotlib.colors as mcolors
 plt.style.use('ggplot')
 # plt.rcParams['font.size']=14
 plt.rcParams['xtick.labelsize']="x-large"
@@ -45,6 +46,17 @@ def plot_timecourses(parcellation="/home/chymera/NIdata/templates/roi/QBI_vze_ch
 	# time_series = masker.fit_transform("/home/chymera/level1/bruker_preprocessing/_condition_ERC_ofM_subject_5503/_scan_type_T2_TurboRARE/_scan_type_EPI_CBV_alej/structural_bandpass/corr_10_trans_filt.nii.gz")
 	# plt.plot([time_serie[16] for time_serie in time_series])
 
+def plot_stat_map(stat_map="/home/chymera/erc_level2/_scan_subtypes_EPI_CBV_alej/flameo/mapflow/_flameo0/stats/tstat1.nii.gz" ,template="/home/chymera/NIdata/templates/hires_QBI_chr.nii.gz"):
+	colors_plus = plt.cm.autumn(np.linspace(0., 1, 128))
+	colors_minus = plt.cm.winter(np.linspace(0, 1, 128))[::-1]
+
+	colors = np.vstack((colors_plus, colors_minus))
+	mymap = mcolors.LinearSegmentedColormap.from_list('my_colormap', colors)
+
+	plotting.plot_stat_map(stat_map, bg_img=template,threshold=3, title="plot_stat_map", black_bg=True, vmax=30, cmap=mymap)
+
+def plot_myanat(anat="/home/chymera/NIdata/templates/hires_QBI_chr.nii.gz"):
+	plotting.plot_anat(anat, cut_coords=[0, 0, 0],title='Anatomy image')
 
 def plot_nii(file_path, slices):
 	plotting.plot_anat(file_path, cut_coords=slices, display_mode="y", annotate=False, draw_cross=False)
@@ -74,5 +86,7 @@ if __name__ == '__main__':
 	# plot_fsl_design("/home/chymera/NIdata/ofM.dr/level1/first_level/_condition_ofM_subject_4001/modelgen/run0.mat")
 	# stim = {"durations":[[20.0], [20.0], [20.0], [20.0], [20.0], [20.0]], "onsets":[[172.44299999999998], [352.443], [532.443], [712.443], [892.443], [1072.443]]}
 	# plot_stim_design("/home/chymera/level1/first_level/_condition_ERC_ofM_subject_5503/_scan_type_T2_TurboRARE/_scan_type_EPI_CBV_alej/modelgen/run0.mat",stim)
-	plot_timecourses()
-	# plt.show()
+	plot_stat_map()
+	# plot_myanat()
+	# plot_timecourses()
+	plt.show()

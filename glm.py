@@ -19,8 +19,8 @@ def getlen(a):
 def level2_common_effect(level1_directory, categories=[], participants=[], scan_types=[]):
 	level1_directory = path.expanduser(level1_directory)
 	#edit the following lines to choose different outputs (e.g. from functional coregistration)
-	copemergeroot = level1_directory+"/results/struc_cope/"
-	varcbmergeroot = level1_directory+"/results/struc_varcb/"
+	copemergeroot = level1_directory+"/results/func_cope/"
+	varcbmergeroot = level1_directory+"/results/func_varcb/"
 
 	copemerge = pe.Node(interface=Merge(dimension='t'),name="copemerge")
 	varcopemerge = pe.Node(interface=Merge(dimension='t'),name="varcopemerge")

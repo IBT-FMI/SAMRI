@@ -40,7 +40,6 @@ def level2_common_effect(level1_directory, categories=[], participants=[], scan_
 		]
 
 	if isinstance(scan_types[0],list) or isinstance(categories[0],list):
-		infosource = pe.Node(interface=util.IdentityInterface(fields=['scan_subtypes']), name="infosource")
 
 		get_copes = pe.Node(name='get_copes', interface=util.Function(function=get_level2_inputs,input_names=["input_root","categories","participants","scan_types"], output_names=['scan_paths']))
 		get_copes.inputs.input_root=copemergeroot
@@ -50,13 +49,26 @@ def level2_common_effect(level1_directory, categories=[], participants=[], scan_
 		get_varcbs.inputs.participants=participants
 
 		if isinstance(scan_types[0],list) and not isinstance(categories[0],list):
-			infosource.iterables = [('scan_subtypes',scan_types)]
+			infosource = pe.Node(interface=util.IdentityInterface(fields=['scan_type_multi']), name="infosource")
+			infosource.iterables = [('scan_type_multi',scan_types)]
 			get_copes.inputs.categories=categories
 			get_varcbs.inputs.categories=categories
+			workflow_connections.extend([
+				(infosource, get_copes, [('scan_type_multi', 'scan_types')]),
+				(infosource, get_varcbs, [('scan_type_multi', 'scan_types')]),
+				])
+
+		if isinstance(categories[0],list) and not isinstance(category[0],list):
+			infosource = pe.Node(interface=util.IdentityInterface(fields=['category_multi']), name="infosource")
+			infosource.iterables = [('category_multi',categories)]
+			get_copes.inputs.categories=categories
+			get_varcbs.inputs.categories=categories
+			workflow_connections.extend([
+				(infosource, get_copes, [('category_multi', 'scan_types')]),
+				(infosource, get_varcbs, [('category_multi', 'scan_types')]),
+				])
 
 		workflow_connections.extend([
-			(infosource, get_copes, [('scan_subtypes', 'scan_types')]),
-			(infosource, get_varcbs, [('scan_subtypes', 'scan_types')]),
 			(get_copes, copemerge, [('scan_paths', 'in_files')]),
 			(get_varcbs, varcopemerge, [('scan_paths', 'in_files')]),
 			(get_copes, level2model, [(('scan_paths',getlen), 'num_copes')]),
@@ -323,7 +335,7 @@ if __name__ == "__main__":
 	# level1("~/NIdata/ofM.dr/", {"5_EPI_BOLD":"6_20_jb"}, structural_scan_types=-1, conditions=["ofM","ofM_aF","ofM_cF1","ofM_cF2","ofM_pF"], exclude_measurements=["20151027_121613_4013_1_1"])
 	# level1("~/NIdata/ofM.erc/", {"EPI_CBV_jin6":"jin6","EPI_CBV_jin10":"jin10","EPI_CBV_jin20":"jin20","EPI_CBV_jin40":"jin40","EPI_CBV_jin60":"jin60","EPI_CBV_alej":"alej",}, structural_scan_types=-1, actual_size=True)
 	# level1("~/NIdata/ofM.erc/", {"EPI_CBV_jin6":"jin6","EPI_CBV_jin10":"jin10"}, structural_scan_types=["T2_TurboRARE"])
-	level2_common_effect("~/NIdata/ofM.dr/level1_CBV", categories=["ofM_cF1"], participants=["4008","4007","4011","4012"], scan_types=["7_EPI_CBV"])
+	level2_common_effect("~/NIdata/ofM.dr/level1_CBV", categories=["ofM_cF2"], participants=["4008","4007","4011","4012"], scan_types=["7_EPI_CBV"])
 	# level2_common_effect("~/NIdata/ofM.dr/level1_CBV", categories=[["ofM"],["ofM_aF"],["ofM_cF1"],["ofM_cF2"],["ofM_pF"]], participants=["4008","4007","4011","4012"], scan_types=["7_EPI_CBV"])
 	# level2("~/NIdata/ofM.dr/level1")
 	# level2_common_effect("~/NIdata/ofM.erc/level1", categories=[], scan_types=[["EPI_CBV_jin6"],["EPI_CBV_jin10"],["EPI_CBV_jin20"],["EPI_CBV_jin40"],["EPI_CBV_jin60"],["EPI_CBV_alej"]], participants=["5502","5503"])

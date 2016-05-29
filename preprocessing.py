@@ -208,9 +208,8 @@ def bru_preproc(measurements_base, functional_scan_types, structural_scan_types=
 	functional_FAST.inputs.output_biascorrected = True
 	functional_FAST.inputs.bias_iters = 8
 
-	functional_registration = pe.Node(interface=ImageMaths(), name="functional_registration")
-	functional_registration.inputs.op_string = "-thrP 30"
-	functional_registration, structural_warp = ants_standard_registration_warp(template, "structural_registration", "structural_warp")
+	functional_cutoff = pe.Node(interface=ImageMaths(), name="functional_cutoff")
+	functional_cutoff.inputs.op_string = "-thrP 30"
 
 	functional_BET = pe.Node(interface=BET(), name="functional_BET")
 	functional_BET.inputs.mask = True

@@ -199,11 +199,6 @@ def bru_preproc(measurements_base, functional_scan_types, structural_scan_types=
 	realigner.inputs.tr = tr
 	realigner.inputs.slice_info = 3 #3 for coronal slices (2 for horizontal, 1 for sagittal)
 
-	realigner = pe.Node(interface=SpaceTimeRealigner(), name="realigner")
-	realigner.inputs.slice_times = "asc_alt_2"
-	realigner.inputs.tr = tr
-	realigner.inputs.slice_info = 3 #3 for coronal slices (2 for horizontal, 1 for sagittal)
-
 	temporal_mean = pe.Node(interface=MeanImage(), name="temporal_mean")
 
 	functional_registration, functional_warp = ants_standard_registration_warp(template, "functional_registration", "functional_warp")

@@ -213,10 +213,13 @@ def bru_preproc(measurements_base, functional_scan_types, structural_scan_types=
 	functional_FAST.inputs.output_biascorrected = True
 	functional_FAST.inputs.bias_iters = 8
 
-	functional_skullstrip = pe.Node(interface=ants.segmentation.BrainExtraction(), name="functional_skullstrip")
-	functional_skullstrip.inputs.dimension = 3
-	functional_skullstrip.inputs.brain_template = template
-	functional_skullstrip.inputs.brain_probability_mask = probability_mask
+	functional_registration = pe.Node(interface=ImageMaths(), name="functional_registration")
+	functional_registration.inputs.op_string = "-thrP 30"
+	functional_registration, structural_warp = ants_standard_registration_warp(template, "structural_registration", "structural_warp")
+
+	functional_BET = pe.Node(interface=BET(), name="functional_BET")
+	functional_BET.inputs.mask = True
+	functional_BET.inputs.frac = 0.5
 
 	functional_bandpass = pe.Node(interface=TemporalFilter(), name="functional_bandpass")
 	functional_bandpass.inputs.highpass_sigma = 180
@@ -239,8 +242,9 @@ def bru_preproc(measurements_base, functional_scan_types, structural_scan_types=
 		(functional_bru2nii, realigner, [('nii_file', 'in_file')]),
 		(realigner, temporal_mean, [('out_file', 'in_file')]),
 		(temporal_mean, functional_FAST, [('out_file', 'in_files')]),
-		(functional_FAST, functional_skullstrip, [('restored_image', 'anatomical_image')]),
-		(functional_skullstrip, functional_registration, [('BrainExtractionBrain', 'moving_image')]),
+		(functional_FAST, functional_cutoff, [('restored_image', 'in_file')]),
+		(functional_cutoff, functional_BET, [('out_file', 'in_file')]),
+		(functional_BET, functional_registration, [('out_file', 'moving_image')]),
 		(functional_registration, functional_warp, [('composite_transform', 'transforms')]),
 		(realigner, functional_warp, [('out_file', 'input_image')]),
 		(functional_warp, functional_bandpass, [('output_image', 'in_file')]),

@@ -52,7 +52,7 @@ def get_level2_inputs(input_root, categories=[], participants=[], scan_types=[])
 			for my_file in fileList:
 				candidate_l2_input = os.path.join(dirName,my_file)
 				#the following string additions are performed to not accidentally match longer identifiers which include the shorter identifiers actually queried for. The path formatting is taken from the glm.py level1() datasync node, and will not work if that is modified.
-				if (any("/"+c+"." in candidate_l2_input for c in categories) or not categories) and (any("."+p+"/" in candidate_l2_input for p in participants) or not participants) and (any("_"+s+"/" in candidate_l2_input for s in scan_types) or not scan_types):
+				if (any(os.path.join(input_root,c)+"." in candidate_l2_input for c in categories) or not categories) and (any("."+p+"/" in candidate_l2_input for p in participants) or not participants) and (any("scan_type_"+s+"/" in candidate_l2_input for s in scan_types) or not scan_types):
 					l2_inputs.append(candidate_l2_input)
 
 	return l2_inputs

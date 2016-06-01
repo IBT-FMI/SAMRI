@@ -61,7 +61,8 @@ def plot_stat_map(stat_map="/home/chymera/NIdata/ofM.dr/level2_3s/_category_mult
 		colors = np.vstack((colors_minus, colors_plus[::-1]))
 	mymap = mcolors.LinearSegmentedColormap.from_list('my_colormap', colors)
 
-	plotting.plot_stat_map(stat_map, bg_img=template,threshold=threshold, black_bg=black_bg, vmax=40, cmap=mymap, cut_coords=cut_coords, annotate=annotate, title=title)
+	display = plotting.plot_stat_map(stat_map, bg_img=template,threshold=threshold, black_bg=black_bg, vmax=40, cmap=mymap, cut_coords=cut_coords, annotate=annotate, title=title)
+	return display
 
 def plot_myanat(anat="/home/chymera/NIdata/templates/hires_QBI_chr.nii.gz"):
 	plotting.plot_anat(anat, cut_coords=[0, 0, 0],title='Anatomy image')

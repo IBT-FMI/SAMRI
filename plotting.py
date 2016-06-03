@@ -9,9 +9,6 @@ import nipype.interfaces.io as nio
 import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
 plt.style.use('ggplot')
-# plt.rcParams['font.size']=14
-plt.rcParams['xtick.labelsize']="x-large"
-plt.rcParams['ytick.labelsize']="x-large"
 
 def plot_timecourses(parcellation="/home/chymera/NIdata/templates/roi/ds_QBI_vze_chr.nii.gz", condition=["ERC_ofM"], subject=["5502"], scan_type=["EPI_CBV_alej"]):
 	datasource = nio.DataGrabber(infields=["condition","subject","scan_type"], outfields=["nii_data", "delay_file", "stimulation_file"], sort_filelist = True)
@@ -51,7 +48,12 @@ def plot_timecourses(parcellation="/home/chymera/NIdata/templates/roi/ds_QBI_vze
 		plt.plot(time_series[i], label=region_assignments.get_value(i, "acronym"))
 	plt.legend()
 
-def plot_stat_map(stat_map="/home/chymera/NIdata/ofM.dr/level2_3s/_category_multi_ofM_cF2/flameo/mapflow/_flameo0/stats/tstat1.nii.gz" ,template="/home/chymera/NIdata/templates/ds_QBI_chr.nii.gz", cbv=True, cut_coords=None, black_bg=True, annotate=True, title=None, threshold=2.5):
+def plot_stat_map(stat_map="/home/chymera/NIdata/ofM.dr/level2_3s/_category_multi_ofM_cF2/flameo/mapflow/_flameo0/stats/tstat1.nii.gz" ,template="/home/chymera/NIdata/templates/ds_QBI_chr.nii.gz", cbv=True, cut_coords=None, black_bg=False, annotate=True, title=None, threshold=2.5, scale=1, draw_cross=True):
+	"""Wrapper for the nilearn.plotting.plot_stat_map, provides better control over element scaling and uses a prettier default style
+
+	Keyword Arguments:
+	scale -- allows intelligent scaling of annotation, crosshairs, and title
+	"""
 	colors_plus = plt.cm.autumn(np.linspace(0., 1, 128))
 	colors_minus = plt.cm.winter(np.linspace(0, 1, 128))
 
@@ -61,7 +63,15 @@ def plot_stat_map(stat_map="/home/chymera/NIdata/ofM.dr/level2_3s/_category_mult
 		colors = np.vstack((colors_minus, colors_plus[::-1]))
 	mymap = mcolors.LinearSegmentedColormap.from_list('my_colormap', colors)
 
-	display = plotting.plot_stat_map(stat_map, bg_img=template,threshold=threshold, black_bg=black_bg, vmax=40, cmap=mymap, cut_coords=cut_coords, annotate=annotate, title=title)
+	fig = plt.figure(figsize=(14,5), facecolor='#eeeeee')
+
+	display = plotting.plot_stat_map(stat_map, bg_img=template,threshold=threshold, figure=fig, black_bg=black_bg, vmax=40, cmap=mymap, cut_coords=cut_coords, annotate=False, title=None, draw_cross=False, interpolation="hermite")
+	if draw_cross:
+		display.draw_cross(linewidth=scale*1.6, alpha=0.4)
+	if annotate:
+		display.annotate(size=2+scale*18)
+	if title:
+		display.title(title, size=2+scale*26)
 	return display
 
 def plot_myanat(anat="/home/chymera/NIdata/templates/hires_QBI_chr.nii.gz"):
@@ -97,7 +107,7 @@ if __name__ == '__main__':
 	# plot_stim_design("/home/chymera/level1/first_level/_condition_ERC_ofM_subject_5503/_scan_type_T2_TurboRARE/_scan_type_EPI_CBV_alej/modelgen/run0.mat",stim)
 	# plot_stat_map(stat_map="/home/chymera/cluster/othresh.nii.gz")
 	# plot_stat_map(stat_map="/home/chymera/NIdata/ofM.dr/level2_3s/_category_multi_ofM/flameo/mapflow/_flameo0/stats/tstat1.nii.gz", cbv=True, cut_coords=(-50,8,45))
-	# plot_stat_map()
+	plot_stat_map(template="/home/chymera/NIdata/templates/QBI_chr.nii.gz",cut_coords=(-50,8,45))
 	# plot_myanat()
-	plot_timecourses()
+	# plot_timecourses()
 	plt.show()

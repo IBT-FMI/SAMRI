@@ -185,7 +185,7 @@ def level1(measurements_base, functional_scan_types, structural_scan_types=[], t
 	# cluster.inputs.out_size_file = "out_size_file"
 
 	datasink = pe.Node(nio.DataSink(), name='datasink')
-	datasink.inputs.base_directory = measurements_base+'/'+pipeline_denominator+"/results"
+	datasink.inputs.base_directory = path.join(measurements_base,"GLM",pipeline_denominator+"results")
 	#remove iterfield names
 	datasink.inputs.substitutions = [('_condition_', ''),('_subject_', '.')]
 
@@ -219,9 +219,9 @@ def level1(measurements_base, functional_scan_types, structural_scan_types=[], t
 		(preprocessing, first_level, [('functional_bandpass.out_file','func_glm.in_file')]),
 		])
 
-	pipeline.write_graph(dotfilename=path.join(measurements_base,pipeline_denominator,"graph.dot"), graph2use="flat", format="png")
+	pipeline.write_graph(dotfilename=path.join(measurements_base,"GLM",pipeline_denominator,"graph.dot"), graph2use="flat", format="png")
 	if standalone_execute:
-		pipeline.base_dir = measurements_base
+		pipeline.base_dir = path.join(measurements_base,"GLM")
 		if quiet:
 			try:
 				pipeline.run(plugin="MultiProc",  plugin_args={'n_procs' : 4})
@@ -230,6 +230,8 @@ def level1(measurements_base, functional_scan_types, structural_scan_types=[], t
 			for f in listdir(getcwd()):
 				if re.search("crash.*?get_structural_scan|get_functional_scan.*", f):
 					remove(path.join(getcwd(), f))
+		else:
+			pipeline.run(plugin="MultiProc",  plugin_args={'n_procs' : 4})
 	else:
 		return pipeline
 

@@ -5,11 +5,12 @@ from nipype.algorithms.modelgen import SpecifyModel
 import nipype.interfaces.io as nio
 from os import path, listdir, remove, getcwd
 from extra_interfaces import GenL2Model
-from extra_functions import get_level2_inputs, get_subjectinfo
+from extra_functions import get_level2_inputs, get_subjectinfo, write_function_call
 from preprocessing import bru_preproc
 from nipype.interfaces.nipy import SpaceTimeRealigner
 import nipype.interfaces.ants as ants
 from itertools import product
+import inspect
 import re
 
 def getlen(a):
@@ -185,7 +186,7 @@ def level1(measurements_base, functional_scan_types, structural_scan_types=[], t
 	# cluster.inputs.out_size_file = "out_size_file"
 
 	datasink = pe.Node(nio.DataSink(), name='datasink')
-	datasink.inputs.base_directory = path.join(measurements_base,"GLM",pipeline_denominator+"results")
+	datasink.inputs.base_directory = path.join(measurements_base,"GLM",pipeline_denominator,"results")
 	#remove iterfield names
 	datasink.inputs.substitutions = [('_condition_', ''),('_subject_', '.')]
 
@@ -222,6 +223,10 @@ def level1(measurements_base, functional_scan_types, structural_scan_types=[], t
 	pipeline.write_graph(dotfilename=path.join(measurements_base,"GLM",pipeline_denominator,"graph.dot"), graph2use="flat", format="png")
 	if standalone_execute:
 		pipeline.base_dir = path.join(measurements_base,"GLM")
+
+		frame = inspect.currentframe()
+		write_function_call(frame,path.join(measurements_base,"GLM",pipeline_denominator,"function_call.txt"))
+
 		if quiet:
 			try:
 				pipeline.run(plugin="MultiProc",  plugin_args={'n_procs' : 4})
@@ -239,7 +244,6 @@ def level2_contiguous(measurements_base, functional_scan_type, structural_scan_t
 	measurements_base = path.expanduser(measurements_base)
 	preprocessing = bruker_preproc(measurements_base, functional_scan_type, structural_scan_type=structural_scan_type, tr=tr, conditions=conditions, include_subjects=include_subjects, exclude_subjects=exclude_subjects, exclude_measurements=exclude_measurements, include_measurements=include_measurements, actual_size=actual_size, template=template)
 
-
 	def subjectinfo(subject_delay):
 		from nipype.interfaces.base import Bunch
 		from copy import deepcopy
@@ -256,7 +260,6 @@ def level2_contiguous(measurements_base, functional_scan_type, structural_scan_t
 						durations=[[20.0], [20.0], [20.0], [20.0], [20.0], [20.0]],
 						))
 		return output
-
 
 	onsets=[]
 	for i in range(6):
@@ -335,9 +338,9 @@ def level2_contiguous(measurements_base, functional_scan_type, structural_scan_t
 
 if __name__ == "__main__":
 	# level1("~/NIdata/ofM.dr/", {"7_EPI_CBV":"6_20_jb"}, structural_scan_types=-1, conditions=["ofM","ofM_aF","ofM_cF1","ofM_cF2","ofM_pF"], exclude_measurements=["20151027_121613_4013_1_1"])
-	# level1("~/NIdata/ofM.erc/", {"EPI_CBV_jin6":"jin6","EPI_CBV_jin10":"jin10","EPI_CBV_jin20":"jin20","EPI_CBV_jin40":"jin40","EPI_CBV_jin60":"jin60","EPI_CBV_alej":"alej",}, structural_scan_types=-1, actual_size=True)
+	level1("~/NIdata/ofM.erc/", {"EPI_CBV_jin6":"jin6","EPI_CBV_jin10":"jin10","EPI_CBV_jin20":"jin20","EPI_CBV_jin40":"jin40","EPI_CBV_jin60":"jin60","EPI_CBV_alej":"alej",}, structural_scan_types=-1, actual_size=False)
 	# level1("~/NIdata/ofM.erc/", {"EPI_CBV_jin6":"jin6","EPI_CBV_jin10":"jin10"}, structural_scan_types=["T2_TurboRARE"])
 	# level2_common_effect("~/NIdata/ofM.dr/level1_CBV", categories=["ofM_cF2"], participants=["4008","4007","4011","4012"], scan_types=["7_EPI_CBV"])
-	level2_common_effect("~/NIdata/ofM.dr/level1", categories=[["ofM"],["ofM_aF"],["ofM_cF1"],["ofM_cF2"],["ofM_pF"]], participants=["4008","4007","4012","4009"], scan_types=["7_EPI_CBV"])
+	# level2_common_effect("~/NIdata/ofM.dr/level1", categories=[["ofM"],["ofM_aF"],["ofM_cF1"],["ofM_cF2"],["ofM_pF"]], participants=["4008","4007","4012","4009"], scan_types=["7_EPI_CBV"])
 	# level2("~/NIdata/ofM.dr/level1")
 	# level2_common_effect("~/NIdata/ofM.erc/level1", categories=[], scan_types=[["EPI_CBV_jin6"],["EPI_CBV_jin10"],["EPI_CBV_jin20"],["EPI_CBV_jin40"],["EPI_CBV_jin60"],["EPI_CBV_alej"]], participants=["5502","5503"])

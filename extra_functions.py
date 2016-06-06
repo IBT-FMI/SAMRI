@@ -6,6 +6,24 @@ from os import listdir, path, makedirs, getcwd
 import os
 import pandas as pd
 import re
+import inspect
+
+def write_function_call(frame, target_path):
+	args, _, _, values = inspect.getargvalues(frame)
+	function_name = inspect.getframeinfo(frame)[2]
+	function_call = function_name+"("
+	for arg in args:
+		arg_value = values[arg]
+		if isinstance(arg_value, str):
+			arg_value = "\'"+arg_value+"\'"
+		else:
+			arg_value = str(arg_value)
+		arg_entry=arg+"="+arg_value+","
+		function_call+=arg_entry
+	function_call+=")"
+	target = open(target_path, 'w')
+	target.write(function_call)
+	target.close()
 
 def get_subjectinfo(subject_delay, scan_type, scan_types):
 	from nipype.interfaces.base import Bunch

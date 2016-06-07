@@ -101,7 +101,7 @@ def diagnostic(measurements_base, structural_scan_types=[], functional_scan_type
 		for f in listdir(getcwd()):
 			if re.search("crash.*?get_structural_scan|get_functional_scan.*", f):
 				remove(path.join(getcwd(), f))
-#
+
 	#delete all fles but final results
 	if not debug_mode:
 		shutil.rmtree(workflow_base+"/"+workflow_denominator+"_work")

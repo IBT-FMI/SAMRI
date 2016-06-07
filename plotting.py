@@ -54,6 +54,7 @@ def plot_stat_map(stat_map="/home/chymera/NIdata/ofM.dr/level2_3s/_category_mult
 	Keyword Arguments:
 	scale -- allows intelligent scaling of annotation, crosshairs, and title
 	"""
+
 	colors_plus = plt.cm.autumn(np.linspace(0., 1, 128))
 	colors_minus = plt.cm.winter(np.linspace(0, 1, 128))
 
@@ -72,6 +73,7 @@ def plot_stat_map(stat_map="/home/chymera/NIdata/ofM.dr/level2_3s/_category_mult
 		display.annotate(size=2+scale*18)
 	if title:
 		display.title(title, size=2+scale*26)
+
 	return display
 
 def plot_myanat(anat="/home/chymera/NIdata/templates/hires_QBI_chr.nii.gz"):
@@ -88,9 +90,24 @@ def plot_fsl_design(file_path):
 	df.plot()
 
 def plot_stim_design(file_path,stim):
+	if isinstance(stim,str):
+		from nipype.interfaces.base import Bunch
+		match_string='* output : '
+		with open(stim) as subject_info_report:
+			for line in subject_info_report:
+				if line[:11] == match_string:
+					_, bunch_string = line.split(match_string)
+					bunch=eval(bunch_string[1:-2])
+					break
+		durations=bunch.durations
+		onsets=bunch.onsets
+	elif isinstance(stim,dict):
+		durations = stim["durations"]
+		onsets = stim["onsets"]
+
 	df = pd.read_csv(file_path, skiprows=5, sep="\t", header=None, names=[1,2,3,4,5,6], index_col=False)
 	fig, ax = plt.subplots(figsize=(6,4) , facecolor='#eeeeee', tight_layout=True)
-	for d, o in zip(stim["durations"], stim["onsets"]):
+	for d, o in zip(durations, onsets):
 		d = int(d[0])
 		o = int(o[0])
 		ax.axvspan(o,o+d, facecolor="cyan", alpha=0.15)
@@ -105,9 +122,13 @@ if __name__ == '__main__':
 	# plot_fsl_design("/home/chymera/NIdata/ofM.dr/level1/first_level/_condition_ofM_subject_4001/modelgen/run0.mat")
 	# stim = {"durations":[[20.0], [20.0], [20.0], [20.0], [20.0], [20.0]], "onsets":[[172.44299999999998], [352.443], [532.443], [712.443], [892.443], [1072.443]]}
 	# plot_stim_design("/home/chymera/level1/first_level/_condition_ERC_ofM_subject_5503/_scan_type_T2_TurboRARE/_scan_type_EPI_CBV_alej/modelgen/run0.mat",stim)
+	plot_stim_design(
+		"/home/chymera/NIdata/ofM.erc/level1/first_level/_condition_ERC_ofM_subject_5503/_scan_type_EPI_CBV_alej/modelgen/run0.mat",
+		"/home/chymera/NIdata/ofM.erc/level1/first_level/_condition_ERC_ofM_subject_5503/_scan_type_EPI_CBV_alej/get_subject_info/_report/report.rst"
+		)
 	# plot_stat_map(stat_map="/home/chymera/cluster/othresh.nii.gz")
 	# plot_stat_map(stat_map="/home/chymera/NIdata/ofM.dr/level2_3s/_category_multi_ofM/flameo/mapflow/_flameo0/stats/tstat1.nii.gz", cbv=True, cut_coords=(-50,8,45))
-	plot_stat_map(template="/home/chymera/NIdata/templates/QBI_chr.nii.gz",cut_coords=(-50,8,45))
+	# plot_stat_map(template="/home/chymera/NIdata/templates/QBI_chr.nii.gz",cut_coords=(-50,8,45))
 	# plot_myanat()
 	# plot_timecourses()
 	plt.show()

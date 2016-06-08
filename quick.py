@@ -38,6 +38,7 @@ def diagnostic(measurements_base, structural_scan_types=[], functional_scan_type
 	exclude_subjects -- subject identifiers for which not to perform diagnostic (default None)
 	measurements -- measurement directory names on which to selectively perform diagnostic (default: all measurement directories in measurements_base are seected)
 	exclude_measurements -- measurement directory for which not to perform diagnostic (default None)
+	debug_mode -- do not delete work directory, which contains all except the final results (default False)
 	quiet -- does not report missing scan errors, and deletes their corresponding crash files (default True)
 	"""
 

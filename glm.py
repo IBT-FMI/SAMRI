@@ -1,6 +1,6 @@
 import nipype.pipeline.engine as pe
 import nipype.interfaces.utility as util
-from nipype.interfaces.fsl import GLM, MELODIC, FAST, BET, MeanImage, FLIRT, ApplyMask, ImageMaths FEATModel, Merge, L2Model, FLAMEO, Cluster
+from nipype.interfaces.fsl import GLM, MELODIC, FAST, BET, MeanImage, FLIRT, ApplyMask, ImageMaths, FEATModel, Merge, L2Model, FLAMEO, Cluster
 from gamma_fix import Level1Design
 from nipype.algorithms.modelgen import SpecifyModel
 import nipype.interfaces.io as nio

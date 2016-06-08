@@ -1,15 +1,17 @@
 import nipype.pipeline.engine as pe
 import nipype.interfaces.utility as util
-from nipype.interfaces.fsl import GLM, MELODIC, FAST, BET, MeanImage, FLIRT, ApplyMask, ImageMaths, Level1Design, FEATModel, Merge, L2Model, FLAMEO, Cluster
+from nipype.interfaces.fsl import GLM, MELODIC, FAST, BET, MeanImage, FLIRT, ApplyMask, ImageMaths FEATModel, Merge, L2Model, FLAMEO, Cluster
+from gamma_fix import Level1Design
 from nipype.algorithms.modelgen import SpecifyModel
 import nipype.interfaces.io as nio
 from os import path, listdir, remove, getcwd
 from extra_interfaces import GenL2Model
-from extra_functions import get_level2_inputs, get_subjectinfo
+from extra_functions import get_level2_inputs, get_subjectinfo, write_function_call
 from preprocessing import bru_preproc
 from nipype.interfaces.nipy import SpaceTimeRealigner
 import nipype.interfaces.ants as ants
 from itertools import product
+import inspect
 import re
 
 def getlen(a):
@@ -155,7 +157,7 @@ def level1(measurements_base, functional_scan_types, structural_scan_types=[], t
 
 	level1design = pe.Node(interface=Level1Design(), name="level1design")
 	level1design.inputs.interscan_interval = tr
-	level1design.inputs.bases = {'dgamma': {'derivs':False}}
+	level1design.inputs.bases = {'gamma': {'derivs':False}}
 	level1design.inputs.model_serial_correlations = True
 	level1design.inputs.contrasts = [('allStim','T', ["s1","s2","s3","s4","s5","s6"],[1,1,1,1,1,1])]
 
@@ -185,7 +187,7 @@ def level1(measurements_base, functional_scan_types, structural_scan_types=[], t
 	# cluster.inputs.out_size_file = "out_size_file"
 
 	datasink = pe.Node(nio.DataSink(), name='datasink')
-	datasink.inputs.base_directory = measurements_base+'/'+pipeline_denominator+"/results"
+	datasink.inputs.base_directory = path.join(measurements_base,"GLM",pipeline_denominator,"results")
 	#remove iterfield names
 	datasink.inputs.substitutions = [('_condition_', ''),('_subject_', '.')]
 
@@ -219,9 +221,13 @@ def level1(measurements_base, functional_scan_types, structural_scan_types=[], t
 		(preprocessing, first_level, [('functional_bandpass.out_file','func_glm.in_file')]),
 		])
 
-	pipeline.write_graph(dotfilename=path.join(measurements_base,pipeline_denominator,"graph.dot"), graph2use="flat", format="png")
+	pipeline.write_graph(dotfilename=path.join(measurements_base,"GLM",pipeline_denominator,"graph.dot"), graph2use="flat", format="png")
 	if standalone_execute:
-		pipeline.base_dir = measurements_base
+		pipeline.base_dir = path.join(measurements_base,"GLM")
+
+		frame = inspect.currentframe()
+		write_function_call(frame,path.join(measurements_base,"GLM",pipeline_denominator,"function_call.txt"))
+
 		if quiet:
 			try:
 				pipeline.run(plugin="MultiProc",  plugin_args={'n_procs' : 4})
@@ -230,112 +236,16 @@ def level1(measurements_base, functional_scan_types, structural_scan_types=[], t
 			for f in listdir(getcwd()):
 				if re.search("crash.*?get_structural_scan|get_functional_scan.*", f):
 					remove(path.join(getcwd(), f))
-	else:
-		return pipeline
-
-def level2_contiguous(measurements_base, functional_scan_type, structural_scan_type=None, tr=1, conditions=[], include_subjects=[], exclude_subjects=[], exclude_measurements=[], include_measurements=[], actual_size=False, pipeline_denominator="FSL_GLM2", template="/home/chymera/NIdata/templates/ds_QBI_chr.nii.gz", standalone_execute=True, compare_experiment_types=[]):
-	measurements_base = path.expanduser(measurements_base)
-	preprocessing = bruker_preproc(measurements_base, functional_scan_type, structural_scan_type=structural_scan_type, tr=tr, conditions=conditions, include_subjects=include_subjects, exclude_subjects=exclude_subjects, exclude_measurements=exclude_measurements, include_measurements=include_measurements, actual_size=actual_size, template=template)
-
-
-	def subjectinfo(subject_delay):
-		from nipype.interfaces.base import Bunch
-		from copy import deepcopy
-		onsets=[]
-		for i in range(6):
-			onsets.append([range(222,222+180*6,180)[i]])
-		output = []
-		names = ['s1', 's2', 's3', 's4', 's5', 's6']
-		for idx_a, a in enumerate(onsets):
-			for idx_b, b in enumerate(a):
-				onsets[idx_a][idx_b] = b-subject_delay
-		output.append(Bunch(conditions=names,
-						onsets=deepcopy(onsets),
-						durations=[[20.0], [20.0], [20.0], [20.0], [20.0], [20.0]],
-						))
-		return output
-
-
-	onsets=[]
-	for i in range(6):
-		onsets.append([range(222,222+180*6,180)[i]])
-
-	specify_model = pe.Node(interface=SpecifyModel(), name="specify_model")
-	specify_model.inputs.input_units = 'secs'
-	specify_model.inputs.time_repetition = tr
-	specify_model.inputs.high_pass_filter_cutoff = 128
-
-	level1design = pe.Node(interface=Level1Design(), name="level1design")
-	level1design.inputs.interscan_interval = tr
-	level1design.inputs.bases = {'dgamma': {'derivs':False}}
-	level1design.inputs.model_serial_correlations = True
-	level1design.inputs.contrasts = [('allStim','T', ["s1","s2","s3","s4","s5","s6"],[1,1,1,1,1,1])]
-
-	modelgen = pe.Node(interface=FEATModel(), name='modelgen')
-
-	# glm = pe.JoinNode(interface=GLM(), name='glm', joinfield='designs', joinsource="modelgen")
-	glm = pe.Node(interface=GLM(), name='glm', iterfield='design')
-	glm.inputs.out_cope="cope.nii.gz"
-	glm.inputs.out_varcb_name="varcb.nii.gz"
-	#not setting a betas output file might lead to beta export in lieu of COPEs
-	glm.inputs.out_file="betas.nii.gz"
-
-	first_level = pe.Workflow(name="first_level")
-
-	first_level.connect([
-		(specify_model, level1design, [('session_info', 'session_info')]),
-		(level1design, modelgen, [('ev_files', 'ev_files')]),
-		(level1design, modelgen, [('fsf_files', 'fsf_file')]),
-		(modelgen, glm, [('design_file', 'design')]),
-		(modelgen, glm, [('con_file', 'contrasts')]),
-		])
-
-	copemerge = pe.JoinNode(interface=Merge(dimension='t'), iterfield=['in_files'], name="copemerge")
-
-	varcopemerge = pe.MapNode(interface=Merge(dimension='t'), iterfield=['in_files'], name="varcopemerge")
-
-	level2model = pe.Node(interface=L2Model(), name='l2model')
-
-	flameo = pe.MapNode(interface=FLAMEO(run_mode='fe'), name="flameo", iterfield=['cope_file','var_cope_file'])
-	flameo.inputs.mask_file=template
-
-	second_level = pe.Workflow(name="second_level")
-
-	second_level.connect([
-		(copemerge,flameo,[('merged_file','cope_file')]),
-		(varcopemerge,flameo,[('merged_file','var_cope_file')]),
-		(level2model,flameo, [
-			('design_mat','design_file'),
-			('design_con','t_con_file'),
-			('design_grp','cov_split_file')
-			]),
-		])
-
-	pipeline = pe.Workflow(name=pipeline_denominator)
-
-	pipeline.connect([
-		(preprocessing, first_level, [(('timing_metadata.total_delay_s',subjectinfo),'specify_model.subject_info')]),
-		(preprocessing, first_level, [('structural_bandpass.out_file','specify_model.functional_runs')]),
-		(preprocessing, first_level, [('structural_bandpass.out_file','glm.in_file')]),
-		(first_level, second_level,[
-			('glm.out_cope','copemerge.in_files'),
-			('glm.out_varcb','varcopemerge.in_files'),
-			('glm.out_cope','l2model.num_copes'),
-			])
-		])
-
-	pipeline.write_graph(graph2use="flat")
-	if standalone_execute:
-		pipeline.base_dir = measurements_base
-		pipeline.run(plugin="MultiProc",  plugin_args={'n_procs' : 6})
+		else:
+			pipeline.run(plugin="MultiProc",  plugin_args={'n_procs' : 4})
 	else:
 		return pipeline
 
 if __name__ == "__main__":
-	level1("~/NIdata/ofM.dr/", {"7_EPI_CBV":"6_20_jb"}, structural_scan_types=-1, conditions=["ofM","ofM_aF","ofM_cF1","ofM_cF2","ofM_pF"], exclude_measurements=["20151027_121613_4013_1_1"])
-	# level1("~/NIdata/ofM.erc/", {"EPI_CBV_jin6":"jin6","EPI_CBV_jin10":"jin10","EPI_CBV_jin20":"jin20","EPI_CBV_jin40":"jin40","EPI_CBV_jin60":"jin60","EPI_CBV_alej":"alej",}, structural_scan_types=-1, actual_size=True)
+	# level1("~/NIdata/ofM.dr/", {"7_EPI_CBV":"6_20_jb"}, structural_scan_types=-1, conditions=["ofM","ofM_aF","ofM_cF1","ofM_cF2","ofM_pF"], exclude_measurements=["20151027_121613_4013_1_1"])
+	level1("~/NIdata/ofM.erc/", {"EPI_CBV_jin6":"jin6","EPI_CBV_jin10":"jin10","EPI_CBV_jin20":"jin20","EPI_CBV_jin40":"jin40","EPI_CBV_jin60":"jin60","EPI_CBV_alej":"alej",}, structural_scan_types=-1, actual_size=False, pipeline_denominator="level1_ext_gamma")
 	# level1("~/NIdata/ofM.erc/", {"EPI_CBV_jin6":"jin6","EPI_CBV_jin10":"jin10"}, structural_scan_types=["T2_TurboRARE"])
 	# level2_common_effect("~/NIdata/ofM.dr/level1_CBV", categories=["ofM_cF2"], participants=["4008","4007","4011","4012"], scan_types=["7_EPI_CBV"])
-	# level2_common_effect("~/NIdata/ofM.dr/level1_BOLD", categories=[["ofM"],["ofM_aF"],["ofM_cF1"],["ofM_cF2"],["ofM_pF"]], participants=["4008","4007","4011","4012"], scan_types=["5_EPI_BOLD"])
+	# level2_common_effect("~/NIdata/ofM.dr/level1", categories=[["ofM"],["ofM_aF"],["ofM_cF1"],["ofM_cF2"],["ofM_pF"]], participants=["4008","4007","4012","4009"], scan_types=["7_EPI_CBV"])
 	# level2("~/NIdata/ofM.dr/level1")
 	# level2_common_effect("~/NIdata/ofM.erc/level1", categories=[], scan_types=[["EPI_CBV_jin6"],["EPI_CBV_jin10"],["EPI_CBV_jin20"],["EPI_CBV_jin40"],["EPI_CBV_jin60"],["EPI_CBV_alej"]], participants=["5502","5503"])

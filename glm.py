@@ -18,7 +18,7 @@ def getlen(a):
 	the_len = len(a)
 	return the_len
 
-def level2_common_effect(level1_directory, categories=[], participants=[], scan_types=[]):
+def level2_common_effect(level1_directory, categories=[], participants=[], scan_types=[], denominator="level2"):
 	level1_directory = path.expanduser(level1_directory)
 	#edit the following lines to choose different outputs (e.g. from functional coregistration)
 	copemergeroot = level1_directory+"/results/func_cope/"
@@ -84,14 +84,14 @@ def level2_common_effect(level1_directory, categories=[], participants=[], scan_
 
 		level2model.inputs.num_copes=len(copes)
 
-	second_level = pe.Workflow(name="level2")
+	second_level = pe.Workflow(name=denominator)
 	second_level.connect(workflow_connections)
 
 	second_level.base_dir = level1_directory+"/.."
-	second_level.write_graph(dotfilename=second_level.base_dir+"/level2/graph.dot",graph2use="flat")
+	second_level.write_graph(dotfilename=path.join(second_level.base_dir,denominator,"graph.dot"),graph2use="flat")
 	second_level.run(plugin="MultiProc",  plugin_args={'n_procs' : 6})
 
-def level2(level1_directory, categories=["ofM","ofM_aF"], participants=["4008","4007","4011","4012"]):
+def level2(level1_directory, categories=["ofM","ofM_aF"], participants=["4008","4007","4011","4012"], denominator="level2"):
 	level1_directory = path.expanduser(level1_directory)
 	copemergeroot = level1_directory+"/results/cope/"
 	varcbmergeroot = level1_directory+"/results/varcb/"
@@ -115,7 +115,7 @@ def level2(level1_directory, categories=["ofM","ofM_aF"], participants=["4008","
 	flameo.inputs.mask_file="/home/chymera/NIdata/templates/ds_QBI_chr_bin.nii.gz"
 	flameo.inputs.run_mode="ols"
 
-	second_level = pe.Workflow(name="level2")
+	second_level = pe.Workflow(name=denominator)
 
 	second_level.connect([
 		(copemerge,flameo,[('merged_file','cope_file')]),
@@ -243,9 +243,9 @@ def level1(measurements_base, functional_scan_types, structural_scan_types=[], t
 
 if __name__ == "__main__":
 	# level1("~/NIdata/ofM.dr/", {"7_EPI_CBV":"6_20_jb"}, structural_scan_types=-1, conditions=["ofM","ofM_aF","ofM_cF1","ofM_cF2","ofM_pF"], exclude_measurements=["20151027_121613_4013_1_1"])
-	level1("~/NIdata/ofM.erc/", {"EPI_CBV_jin6":"jin6","EPI_CBV_jin10":"jin10","EPI_CBV_jin20":"jin20","EPI_CBV_jin40":"jin40","EPI_CBV_jin60":"jin60","EPI_CBV_alej":"alej",}, structural_scan_types=-1, actual_size=False, pipeline_denominator="level1_ext_gamma")
+	# level1("~/NIdata/ofM.erc/", {"EPI_CBV_jin6":"jin6","EPI_CBV_jin10":"jin10","EPI_CBV_jin20":"jin20","EPI_CBV_jin40":"jin40","EPI_CBV_jin60":"jin60","EPI_CBV_alej":"alej",}, structural_scan_types=-1, actual_size=False, pipeline_denominator="level1_ext_gamma")
 	# level1("~/NIdata/ofM.erc/", {"EPI_CBV_jin6":"jin6","EPI_CBV_jin10":"jin10"}, structural_scan_types=["T2_TurboRARE"])
 	# level2_common_effect("~/NIdata/ofM.dr/level1_CBV", categories=["ofM_cF2"], participants=["4008","4007","4011","4012"], scan_types=["7_EPI_CBV"])
 	# level2_common_effect("~/NIdata/ofM.dr/level1", categories=[["ofM"],["ofM_aF"],["ofM_cF1"],["ofM_cF2"],["ofM_pF"]], participants=["4008","4007","4012","4009"], scan_types=["7_EPI_CBV"])
 	# level2("~/NIdata/ofM.dr/level1")
-	# level2_common_effect("~/NIdata/ofM.erc/level1", categories=[], scan_types=[["EPI_CBV_jin6"],["EPI_CBV_jin10"],["EPI_CBV_jin20"],["EPI_CBV_jin40"],["EPI_CBV_jin60"],["EPI_CBV_alej"]], participants=["5502","5503"])
+	level2_common_effect("~/NIdata/ofM.erc/GLM/level1", categories=[], scan_types=[["EPI_CBV_jin6"],["EPI_CBV_jin10"],["EPI_CBV_jin20"],["EPI_CBV_jin40"],["EPI_CBV_jin60"],["EPI_CBV_alej"]], participants=["5502","5503"])

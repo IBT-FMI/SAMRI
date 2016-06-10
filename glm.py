@@ -101,6 +101,8 @@ def level2_common_effect(level1_directory, categories=[], participants=[], scan_
 
 	second_level.base_dir = level1_directory+"/.."
 	second_level.write_graph(dotfilename=path.join(second_level.base_dir,denominator,"graph.dot"),graph2use="flat")
+	frame = inspect.currentframe()
+	write_function_call(frame,path.join(second_level.base_dir,denominator,"function_call.txt"))
 	second_level.run(plugin="MultiProc",  plugin_args={'n_procs' : 6})
 
 def level2(level1_directory, categories=["ofM","ofM_aF"], participants=["4008","4007","4011","4012"], denominator="level2"):
@@ -260,4 +262,4 @@ if __name__ == "__main__":
 	# level2_common_effect("~/NIdata/ofM.dr/level1_CBV", categories=["ofM_cF2"], participants=["4008","4007","4011","4012"], scan_types=["7_EPI_CBV"])
 	# level2_common_effect("~/NIdata/ofM.dr/level1", categories=[["ofM"],["ofM_aF"],["ofM_cF1"],["ofM_cF2"],["ofM_pF"]], participants=["4008","4007","4012","4009"], scan_types=["7_EPI_CBV"])
 	# level2("~/NIdata/ofM.dr/level1")
-	level2_common_effect("~/NIdata/ofM.erc/GLM/level1", categories=[], scan_types=[["EPI_CBV_jin6"],["EPI_CBV_jin10"],["EPI_CBV_jin20"],["EPI_CBV_jin40"],["EPI_CBV_jin60"],["EPI_CBV_alej"]], participants=["5502","5503"])
+	level2_common_effect("~/NIdata/ofM.erc/GLM/level1_ext_gamma", categories=[], scan_types=[["EPI_CBV_jin6"],["EPI_CBV_jin10"],["EPI_CBV_jin20"],["EPI_CBV_jin40"],["EPI_CBV_jin60"],["EPI_CBV_alej"]], participants=["5502","5503"], denominator="level2_ext_gamma")

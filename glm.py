@@ -41,8 +41,20 @@ def level2_common_effect(level1_directory, categories=[], participants=[], scan_
 		(level2model,flameo, [('design_con','t_con_file')]),
 		]
 
-	if isinstance(scan_types[0],list) or isinstance(categories[0],list):
+	multi_scan_type = False
+	multi_category = False
+	try:
+		if isinstance(scan_types[0],list):
+			multi_scan_type = True
+	except IndexError:
+		pass
+	try:
+		if isinstance(categories[0],list):
+			multi_category = True
+	except IndexError:
+		pass
 
+	if multi_category or multi_scan_type:
 		get_copes = pe.Node(name='get_copes', interface=util.Function(function=get_level2_inputs,input_names=["input_root","categories","participants","scan_types"], output_names=['scan_paths']))
 		get_copes.inputs.input_root=copemergeroot
 		get_copes.inputs.participants=participants
@@ -50,7 +62,7 @@ def level2_common_effect(level1_directory, categories=[], participants=[], scan_
 		get_varcbs.inputs.input_root=varcbmergeroot
 		get_varcbs.inputs.participants=participants
 
-		if isinstance(scan_types[0],list) and not isinstance(categories[0],list):
+		if not multi_category:
 			infosource = pe.Node(interface=util.IdentityInterface(fields=['scan_type_multi']), name="infosource")
 			infosource.iterables = [('scan_type_multi',scan_types)]
 			get_copes.inputs.categories=categories
@@ -60,7 +72,7 @@ def level2_common_effect(level1_directory, categories=[], participants=[], scan_
 				(infosource, get_varcbs, [('scan_type_multi', 'scan_types')]),
 				])
 
-		if isinstance(categories[0],list) and not isinstance(scan_types[0],list):
+		if not multi_scan_type:
 			infosource = pe.Node(interface=util.IdentityInterface(fields=['category_multi']), name="infosource")
 			infosource.iterables = [('category_multi',categories)]
 			get_copes.inputs.scan_types=scan_types

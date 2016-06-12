@@ -48,7 +48,7 @@ def plot_timecourses(parcellation="/home/chymera/NIdata/templates/roi/ds_QBI_vze
 		plt.plot(time_series[i], label=region_assignments.get_value(i, "acronym"))
 	plt.legend()
 
-def plot_stat_map(stat_map="/home/chymera/NIdata/ofM.dr/level2_3s/_category_multi_ofM_cF2/flameo/mapflow/_flameo0/stats/tstat1.nii.gz" ,template="/home/chymera/NIdata/templates/ds_QBI_chr.nii.gz", cbv=True, cut_coords=None, black_bg=False, annotate=True, title=None, threshold=2.5, scale=1, draw_cross=True):
+def plot_stat_map(stat_map="/home/chymera/NIdata/ofM.dr/level2_3s/_category_multi_ofM_cF2/flameo/mapflow/_flameo0/stats/tstat1.nii.gz" ,template="/home/chymera/NIdata/templates/medres_QBI_chr.nii.gz", cbv=True, cut_coords=None, black_bg=False, annotate=True, title=None, threshold=2.5, scale=1, draw_cross=True):
 	"""Wrapper for the nilearn.plotting.plot_stat_map, provides better control over element scaling and uses a prettier default style
 
 	Keyword Arguments:
@@ -122,12 +122,13 @@ if __name__ == '__main__':
 	# plot_fsl_design("/home/chymera/NIdata/ofM.dr/level1/first_level/_condition_ofM_subject_4001/modelgen/run0.mat")
 	# stim = {"durations":[[20.0], [20.0], [20.0], [20.0], [20.0], [20.0]], "onsets":[[172.44299999999998], [352.443], [532.443], [712.443], [892.443], [1072.443]]}
 	# plot_stim_design("/home/chymera/level1/first_level/_condition_ERC_ofM_subject_5503/_scan_type_T2_TurboRARE/_scan_type_EPI_CBV_alej/modelgen/run0.mat",stim)
-	plot_stim_design(
-		"/home/chymera/NIdata/ofM.erc/level1/first_level/_condition_ERC_ofM_subject_5503/_scan_type_EPI_CBV_alej/modelgen/run0.mat",
-		"/home/chymera/NIdata/ofM.erc/level1/first_level/_condition_ERC_ofM_subject_5503/_scan_type_EPI_CBV_alej/get_subject_info/_report/report.rst"
-		)
+	# plot_stim_design(
+		# "/home/chymera/run0_dg.mat",
+		# "/home/chymera/report_dg.rst"
+		# )
 	# plot_stat_map(stat_map="/home/chymera/cluster/othresh.nii.gz")
-	# plot_stat_map(stat_map="/home/chymera/NIdata/ofM.dr/level2_3s/_category_multi_ofM/flameo/mapflow/_flameo0/stats/tstat1.nii.gz", cbv=True, cut_coords=(-50,8,45))
+	plot_stat_map(stat_map="/home/chymera/NIdata/ofM.dr/GLM/level2_gamma/_category_multi_ofM/flameo/mapflow/_flameo0/stats/tstat1.nii.gz", cbv=True, cut_coords=(-50,8,45))
+	# plot_stat_map(stat_map="/home/chymera/NIdata/ofM.erc/GLM/level2/_scan_type_multi_EPI_CBV_alej/flameo/mapflow/_flameo0/stats/tstat1.nii.gz", cbv=True, cut_coords=(-50,8,45))
 	# plot_stat_map(template="/home/chymera/NIdata/templates/QBI_chr.nii.gz",cut_coords=(-50,8,45))
 	# plot_myanat()
 	# plot_timecourses()

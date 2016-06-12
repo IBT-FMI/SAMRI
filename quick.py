@@ -2,7 +2,7 @@
 
 import nipype.pipeline.engine as pe
 import nipype.interfaces.utility as util
-from extra_interfaces import Bru2, FindScan
+from extra_interfaces import Bru2
 from nipype.interfaces.fsl import MELODIC, BET
 from os import path, listdir, remove, getcwd
 from preprocessing import bru_preproc_lite

@@ -145,55 +145,6 @@ class DcmToNii(BaseInterface):
 		outputs["echo_times"] = self.result[1]
 		return outputs
 
-class FindScanInputSpec(BaseInterfaceInputSpec):
-	scans_directory = Directory(exists=True, mandatory=True)
-	query = traits.Str(desc='what query to look for', mandatory=True)
-	query_file = traits.Str(desc='what fie from under each scan directory to look into (specifying ScanProgram.scanProgram will take the file directly from under the measurement directory - this is slower, does not work with multiple identically-named scan protocols)', mandatory=True)
-
-class FindScanOutputSpec(TraitedSpec):
-	positive_scan = Directory(exists=True)
-	positive_scans = traits.List(Directory(exists=True))
-
-class FindScan(BaseInterface):
-
-	input_spec = FindScanInputSpec
-	output_spec = FindScanOutputSpec
-
-	def _run_interface(self, runtime):
-		self.results = []
-		scans_directory = self.inputs.scans_directory
-		query = self.inputs.query
-		query_file = self.inputs.query_file
-
-		if query_file == "ScanProgram.scanProgram":
-			scan_program_file = open(scans_directory+"/ScanProgram.scanProgram", "r")
-			# redefine query, so that overlapping queries remain unambiguous (otherwise `7_EPI_CBV_jin60` would be detected also as `7_EPI_CBV_jin6`)
-			query = query+" "
-			while True:
-				current_line = scan_program_file.readline()
-				if query in current_line:
-					scan_number = current_line.split(query)[1].strip("(E").strip(")</displayName>\n")
-					self.results.append(scans_directory+"/"+scan_number)
-					break
-				#avoid infinite while loop:
-				if current_line == "</de.bruker.mri.entities.scanprogram.StudyScanProgramEntity>":
-					break
-		else:
-			for sub_dir in os.listdir(scans_directory):
-				if os.path.isdir(scans_directory+"/"+sub_dir):
-					try:
-						if query in open(scans_directory+"/"+sub_dir+"/"+query_file).read():
-							self.results.append(scans_directory+"/"+sub_dir)
-					except IOError:
-						pass
-		return runtime
-
-	def _list_outputs(self):
-		outputs = self._outputs().get()
-		outputs["positive_scan"] = self.results[0]
-		outputs["positive_scans"] = self.results
-		return outputs
-
 class SubjectInfoInputSpec(BaseInterfaceInputSpec):
 	conditions = traits.List(traits.Str(exists=True))
 	durations = traits.List(traits.List(traits.Float(exists=True)))

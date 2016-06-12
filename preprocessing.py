@@ -9,7 +9,7 @@ from nipype.interfaces.dcmstack import DcmStack
 import nipype.interfaces.io as nio
 from os import path
 import nipype.interfaces.ants as ants
-from extra_interfaces import DcmToNii, MEICA, VoxelResize, Bru2, FindScan, GetBrukerTiming
+from extra_interfaces import DcmToNii, MEICA, VoxelResize, Bru2, GetBrukerTiming
 from extra_functions import get_data_selection, get_scan
 from nodes import ants_standard_registration_warp
 from itertools import product

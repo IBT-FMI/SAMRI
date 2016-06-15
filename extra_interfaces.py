@@ -6,6 +6,60 @@ import nibabel as nb
 import numpy as np
 import os
 
+class BlurToFWHMInputSpec(AFNICommandInputSpec):
+    out_file = File(name_template="%s", desc='output image file name',
+                    argstr='-prefix %s', name_source=["in_folder"])
+    in_folder = Directory(desc='folder with DICOM images to convert',
+                          argstr='%s/*.dcm',
+                          position=-1,
+                          mandatory=True,
+                          exists=True)
+
+    filetype = traits.Enum('spgr', 'fse', 'epan', 'anat', 'ct', 'spct',
+                           'pet', 'mra', 'bmap', 'diff',
+                           'omri', 'abuc', 'fim', 'fith', 'fico', 'fitt', 'fift',
+                           'fizt', 'fict', 'fibt',
+                           'fibn', 'figt', 'fipt',
+                           'fbuc', argstr='-%s', desc='type of datafile being converted')
+
+    skipoutliers = traits.Bool(desc='skip the outliers check',
+                               argstr='-skip_outliers')
+
+    assumemosaic = traits.Bool(desc='assume that Siemens image is mosaic',
+                               argstr='-assume_dicom_mosaic')
+
+    datatype = traits.Enum('short', 'float', 'byte', 'complex',
+                           desc='set output file datatype', argstr='-datum %s')
+
+    funcparams = traits.Str(desc='parameters for functional data',
+                            argstr='-time:zt %s alt+z2')
+
+
+class BlurToFWHM(AFNICommand):
+	"""Blurs a 'master' dataset until it reaches a specified FWHM smoothness (approximately).
+
+    For complete details, see the `to3d Documentation
+    <https://afni.nimh.nih.gov/pub/dist/doc/program_help/3dBlurToFWHM.html>`_
+
+    Examples
+    ========
+
+    >>> from nipype.interfaces import afni
+    >>> To3D = afni.BlurToFWHM()
+    >>> To3D.inputs.datatype = 'float'
+    >>> To3D.inputs.in_folder = '.'
+    >>> To3D.inputs.out_file = 'dicomdir.nii'
+    >>> To3D.inputs.filetype = "anat"
+    >>> To3D.cmdline #doctest: +ELLIPSIS
+    'to3d -datum float -anat -prefix dicomdir.nii ./*.dcm'
+    >>> res = To3D.run() #doctest: +SKIP
+
+   """
+
+    _cmd = 'to3d'
+    input_spec = To3DInputSpec
+    output_spec = AFNICommandOutputSpec
+
 class GenL2ModelInputSpec(BaseInterfaceInputSpec):
 	num_copes = traits.Range(low=1, mandatory=True, desc='number of copes to be combined')
 	conditions = traits.List(mandatory=True)

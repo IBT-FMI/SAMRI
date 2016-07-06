@@ -5,6 +5,7 @@ from nipype.interfaces.fsl.maths import TemporalFilter
 from nipype.interfaces.nipy import SpaceTimeRealigner
 from nipype.interfaces.afni import Bandpass
 from nipype.interfaces.afni.base import AFNICommand
+from nipype.interfaces.afni.preprocess import BlurToFWHM
 from nipype.interfaces.dcmstack import DcmStack
 import nipype.interfaces.io as nio
 from os import path
@@ -222,10 +223,6 @@ def bru_preproc(measurements_base, functional_scan_types, structural_scan_types=
 	structural_bandpass = pe.Node(interface=TemporalFilter(), name="structural_bandpass")
 	structural_bandpass.inputs.highpass_sigma = 180
 	structural_bandpass.inputs.lowpass_sigma = 1
-
-	melodic = pe.Node(interface=MELODIC(), name="MELODIC")
-	melodic.inputs.report = True
-	melodic.inputs.dim = 8
 
 	workflow = pe.Workflow(name="bruker_preprocessing")
 

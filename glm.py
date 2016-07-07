@@ -1,7 +1,6 @@
 import nipype.pipeline.engine as pe
 import nipype.interfaces.utility as util
-from nipype.interfaces.fsl import GLM, MELODIC, FAST, BET, MeanImage, FLIRT, ApplyMask, ImageMaths, FEATModel, Merge, L2Model, FLAMEO, Cluster
-from gamma_fix import Level1Design
+from nipype.interfaces.fsl import GLM, MELODIC, FAST, BET, MeanImage, FLIRT, ApplyMask, ImageMaths, FEATModel, Merge, L2Model, FLAMEO, Cluster, model
 from nipype.algorithms.modelgen import SpecifyModel
 import nipype.interfaces.io as nio
 from os import path, listdir, remove, getcwd
@@ -169,7 +168,7 @@ def level1(measurements_base, functional_scan_types, structural_scan_types=[], t
 	specify_model.inputs.time_repetition = tr
 	specify_model.inputs.high_pass_filter_cutoff = 180
 
-	level1design = pe.Node(interface=Level1Design(), name="level1design")
+	level1design = pe.Node(interface=model.Level1Design(), name="level1design")
 	level1design.inputs.interscan_interval = tr
 	level1design.inputs.bases = {'dgamma': {'derivs':False}}
 	level1design.inputs.model_serial_correlations = True
@@ -256,10 +255,9 @@ def level1(measurements_base, functional_scan_types, structural_scan_types=[], t
 		return pipeline
 
 if __name__ == "__main__":
-	# level1("~/NIdata/ofM.dr/", {"7_EPI_CBV":"6_20_jb"}, structural_scan_types=-1, conditions=["ofM","ofM_aF","ofM_cF1","ofM_cF2","ofM_pF"], exclude_measurements=["20151027_121613_4013_1_1"], pipeline_denominator="level1_dgamma")
-	# level1("~/NIdata/ofM.erc/", {"EPI_CBV_jin6":"jin6","EPI_CBV_jin10":"jin10","EPI_CBV_jin20":"jin20","EPI_CBV_jin40":"jin40","EPI_CBV_jin60":"jin60","EPI_CBV_alej":"alej",}, structural_scan_types=-1, actual_size=False, pipeline_denominator="level1_ext_gamma")
-	# level1("~/NIdata/ofM.erc/", {"EPI_CBV_jin6":"jin6","EPI_CBV_jin10":"jin10"}, structural_scan_types=["T2_TurboRARE"])
+	# level1("~/NIdata/ofM.dr/", {"7_EPI_CBV":"6_20_jb"}, structural_scan_types=-1, conditions=["ofM","ofM_aF","ofM_cF1","ofM_cF2","ofM_pF"], exclude_measurements=["20151027_121613_4013_1_1"], pipeline_denominator="level1_dgamma_blurxy56")
+	level1("~/NIdata/ofM.erc/", {"EPI_CBV_jin6":"jin6","EPI_CBV_jin10":"jin10","EPI_CBV_jin20":"jin20","EPI_CBV_jin40":"jin40","EPI_CBV_jin60":"jin60","EPI_CBV_alej":"alej",}, structural_scan_types=-1, actual_size=False, pipeline_denominator="level1_ext_dgamma_blurxy56")
 	# level2_common_effect("~/NIdata/ofM.dr/GLM/level1_gamma", categories=["ofM_cF2"], participants=["4008","4007","4011","4012"], scan_types=["7_EPI_CBV"])
-	level2_common_effect("~/NIdata/ofM.dr/GLM/level1_gamma", categories=[["ofM"],["ofM_aF"],["ofM_cF1"],["ofM_cF2"],["ofM_pF"]], participants=["4008","4007","4011","4012"], scan_types=["7_EPI_CBV"],denominator="level2_gamma")
+	# level2_common_effect("~/NIdata/ofM.dr/GLM/level1_gamma", categories=[["ofM"],["ofM_aF"],["ofM_cF1"],["ofM_cF2"],["ofM_pF"]], participants=["4008","4007","4011","4012"], scan_types=["7_EPI_CBV"],denominator="level2_gamma")
 	# level2("~/NIdata/ofM.dr/level1")
 	# level2_common_effect("~/NIdata/ofM.erc/GLM/level1_ext_gamma", categories=[], scan_types=[["EPI_CBV_jin6"],["EPI_CBV_jin10"],["EPI_CBV_jin20"],["EPI_CBV_jin40"],["EPI_CBV_jin60"],["EPI_CBV_alej"]], participants=["5502","5503"], denominator="level2_ext_gamma")

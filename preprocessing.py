@@ -220,6 +220,9 @@ def bru_preproc(measurements_base, functional_scan_types, structural_scan_types=
 	functional_bandpass.inputs.highpass_sigma = 180
 	functional_bandpass.inputs.lowpass_sigma = 1
 
+	blur = pe.Node(interface=BlurToFWHM(), name="blur")
+	blur.inputs.fwhm = 5.6
+
 	structural_bandpass = pe.Node(interface=TemporalFilter(), name="structural_bandpass")
 	structural_bandpass.inputs.highpass_sigma = 180
 	structural_bandpass.inputs.lowpass_sigma = 1
@@ -238,7 +241,8 @@ def bru_preproc(measurements_base, functional_scan_types, structural_scan_types=
 		(functional_BET, functional_registration, [('out_file', 'moving_image')]),
 		(functional_registration, functional_warp, [('composite_transform', 'transforms')]),
 		(realigner, functional_warp, [('out_file', 'input_image')]),
-		(functional_warp, functional_bandpass, [('output_image', 'in_file')]),
+		(functional_warp, blur, [('output_image', 'in_file')]),
+		(blur, functional_bandpass, [('out_file', 'in_file')]),
 		]
 
 	if structural_scan_types:

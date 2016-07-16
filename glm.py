@@ -209,14 +209,6 @@ def level1(measurements_base, functional_scan_types, structural_scan_types=[], t
 		(func_glm, datasink, [('out_cope', 'func_cope')]),
 		(func_glm, datasink, [('out_varcb', 'func_varcb')]),
 		])
-		# (cluster, datasink, [('localmax_vol_file', 'localmax_vol_file')]),
-		# (cluster, datasink, [('max_file', 'max_file')]),
-		# (cluster, datasink, [('mean_file', 'mean_file')]),
-		# (cluster, datasink, [('pval_file', 'pval_file')]),
-		# (cluster, datasink, [('size_file', 'size_file')]),
-		# (cluster, datasink, [('threshold_file', 'threshold_file')]),
-		# (glm, cluster, [('out_t', 'in_file')]),
-		# (glm, cluster, [('out_cope', 'cope_file')]),
 
 	pipeline = pe.Workflow(name=pipeline_denominator)
 

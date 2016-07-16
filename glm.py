@@ -142,8 +142,8 @@ def level2(level1_directory, categories=["ofM","ofM_aF"], participants=["4008","
 	second_level.base_dir = level1_directory+"/.."
 	second_level.run(plugin="MultiProc",  plugin_args={'n_procs' : 6})
 
-def level1(measurements_base, functional_scan_types, structural_scan_types=[], tr=1, conditions=[], subjects=[], exclude_subjects=[], measurements=[], exclude_measurements=[], actual_size=False, pipeline_denominator="level1", template="/home/chymera/NIdata/templates/ds_QBI_chr.nii.gz", standalone_execute=True, compare_experiment_types=[], quiet=True):
-	"""First-level analysis pipeiline which calss the bru_preproc workflow for preprocessing
+def level1(measurements_base, functional_scan_types, structural_scan_types=[], tr=1, conditions=[], subjects=[], exclude_subjects=[], measurements=[], exclude_measurements=[], actual_size=False, pipeline_denominator="level1", template="/home/chymera/NIdata/templates/ds_QBI_chr.nii.gz", standalone_execute=True, compare_experiment_types=[], quiet=True, blur_xy=False):
+	"""First-level analysis pipeiline which calls the bru_preproc workflow for preprocessing
 
 	Mandatory Arguments:
 	measurements_base -- path in which to look for data to be processed
@@ -158,7 +158,7 @@ def level1(measurements_base, functional_scan_types, structural_scan_types=[], t
 		functional_scan_types_list = functional_scan_types
 
 	measurements_base = path.expanduser(measurements_base)
-	preprocessing = bru_preproc(measurements_base, functional_scan_types_list, structural_scan_types=structural_scan_types, tr=tr, conditions=conditions, subjects=subjects, exclude_subjects=exclude_subjects, measurements=measurements, exclude_measurements=exclude_measurements, actual_size=actual_size, template=template)
+	preprocessing = bru_preproc(measurements_base, functional_scan_types_list, structural_scan_types=structural_scan_types, tr=tr, conditions=conditions, subjects=subjects, exclude_subjects=exclude_subjects, measurements=measurements, exclude_measurements=exclude_measurements, actual_size=actual_size, template=template, blur_xy=blur_xy)
 
 	get_subject_info = pe.Node(name='get_subject_info', interface=util.Function(function=get_subjectinfo,input_names=["subject_delay","scan_type","scan_types"], output_names=['output']))
 	get_subject_info.inputs.scan_types = functional_scan_types

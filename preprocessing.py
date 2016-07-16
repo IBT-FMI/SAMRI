@@ -136,7 +136,7 @@ def bru_preproc_lite(measurements_base, functional_scan_types=[], structural_sca
 	# workflow.run(plugin="MultiProc")
 	return workflow
 
-def bru_preproc(measurements_base, functional_scan_types, structural_scan_types=[], tr=1, conditions=[], subjects=[], exclude_subjects=[], measurements=[], exclude_measurements=[], actual_size=False, template="/home/chymera/NIdata/templates/ds_QBI_chr.nii.gz", probability_mask="/home/chymera/NIdata/templates/ds_QBI_chr_bin.nii.gz", standalone_execute=False):
+def bru_preproc(measurements_base, functional_scan_types, structural_scan_types=[], tr=1, conditions=[], subjects=[], exclude_subjects=[], measurements=[], exclude_measurements=[], actual_size=False, template="/home/chymera/NIdata/templates/ds_QBI_chr.nii.gz", probability_mask="/home/chymera/NIdata/templates/ds_QBI_chr_bin.nii.gz", standalone_execute=False, blur_xy=False):
 
 	#select all functional/sturctural scan types unless specified
 	if not functional_scan_types or not structural_scan_types:
@@ -220,8 +220,6 @@ def bru_preproc(measurements_base, functional_scan_types, structural_scan_types=
 	functional_bandpass.inputs.highpass_sigma = 180
 	functional_bandpass.inputs.lowpass_sigma = 1
 
-	blur = pe.Node(interface=BlurToFWHM(), name="blur")
-	blur.inputs.fwhm = 5.6
 
 	structural_bandpass = pe.Node(interface=TemporalFilter(), name="structural_bandpass")
 	structural_bandpass.inputs.highpass_sigma = 180
@@ -241,9 +239,19 @@ def bru_preproc(measurements_base, functional_scan_types, structural_scan_types=
 		(functional_BET, functional_registration, [('out_file', 'moving_image')]),
 		(functional_registration, functional_warp, [('composite_transform', 'transforms')]),
 		(realigner, functional_warp, [('out_file', 'input_image')]),
-		(functional_warp, blur, [('output_image', 'in_file')]),
-		(blur, functional_bandpass, [('out_file', 'in_file')]),
 		]
+
+	if blur_xy:
+		blur = pe.Node(interface=BlurToFWHM(), name="blur")
+		blur.inputs.fwhmxy = blur_xy
+		workflow_connections.extend([
+			(functional_warp, blur, [('output_image', 'in_file')]),
+			(blur, functional_bandpass, [('out_file', 'in_file')]),
+			])
+	else:
+		workflow_connections.extend([
+			(functional_warp, functional_bandpass, [('output_image', 'in_file')]),
+			])
 
 	if structural_scan_types:
 		workflow_connections.extend([

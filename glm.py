@@ -143,7 +143,7 @@ def level2(level1_directory, categories=["ofM","ofM_aF"], participants=["4008","
 	second_level.run(plugin="MultiProc",  plugin_args={'n_procs' : 6})
 
 def level1(measurements_base, functional_scan_types, structural_scan_types=[], tr=1, conditions=[], subjects=[], exclude_subjects=[], measurements=[], exclude_measurements=[], actual_size=False, pipeline_denominator="level1", template="/home/chymera/NIdata/templates/ds_QBI_chr.nii.gz", standalone_execute=True, compare_experiment_types=[], quiet=True):
-	"""Runs a first-level analysis while calling the bru_preproc workflow for preprocessing
+	"""First-level analysis pipeiline which calss the bru_preproc workflow for preprocessing
 
 	Mandatory Arguments:
 	measurements_base -- path in which to look for data to be processed
@@ -191,13 +191,6 @@ def level1(measurements_base, functional_scan_types, structural_scan_types=[], t
 	struc_glm.inputs.out_file="betas.nii.gz"
 	struc_glm.inputs.out_t_name="t_stat.nii.gz"
 	struc_glm.inputs.out_p_name="p_stat.nii.gz"
-
-	# Cluster._cmd = "fsl_cluster" #on NeuroGentoo this file is renamed to avoid a collision with one of FSL's deps
-	# cluster = pe.Node(interface=Cluster(), name="cluster")
-	# cluster.inputs.threshold = 0.95
-	# cluster.inputs.out_max_file = "out_max_file"
-	# cluster.inputs.out_mean_file = "out_mean_file"
-	# cluster.inputs.out_size_file = "out_size_file"
 
 	datasink = pe.Node(nio.DataSink(), name='datasink')
 	datasink.inputs.base_directory = path.join(measurements_base,"GLM",pipeline_denominator,"results")

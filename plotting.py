@@ -127,8 +127,8 @@ if __name__ == '__main__':
 		# "/home/chymera/report_dg.rst"
 		# )
 	# plot_stat_map(stat_map="/home/chymera/cluster/othresh.nii.gz")
-	plot_stat_map(stat_map="/home/chymera/NIdata/ofM.dr/GLM/level2_gamma/_category_multi_ofM/flameo/mapflow/_flameo0/stats/tstat1.nii.gz", cbv=True, cut_coords=(-50,8,45))
-	# plot_stat_map(stat_map="/home/chymera/NIdata/ofM.erc/GLM/level2/_scan_type_multi_EPI_CBV_alej/flameo/mapflow/_flameo0/stats/tstat1.nii.gz", cbv=True, cut_coords=(-50,8,45))
+	# plot_stat_map(stat_map="/home/chymera/NIdata/ofM.dr/GLM/level2_dgamma/_category_multi_ofM/flameo/mapflow/_flameo0/stats/tstat1.nii.gz", cbv=True, cut_coords=(-50,8,45))
+	plot_stat_map(stat_map="/home/chymera/NIdata/ofM.erc/GLM/level2_ext_gamma/_scan_type_multi_EPI_CBV_alej/flameo/mapflow/_flameo0/stats/tstat1.nii.gz", cbv=True)
 	# plot_stat_map(template="/home/chymera/NIdata/templates/QBI_chr.nii.gz",cut_coords=(-50,8,45))
 	# plot_myanat()
 	# plot_timecourses()

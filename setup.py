@@ -11,6 +11,7 @@ setup(
 	classifiers = [],
 	install_requires = [],
 	provides = ["chyMRI"],
+	packages = ["chyMRI"],
 	entry_points = {'console_scripts' : \
 			['chyMRI = chyMRI.cli:main']
 		}

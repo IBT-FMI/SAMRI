@@ -159,9 +159,3 @@ def quick_melodic(measurements_base, functional_scan_type, workflow_base=False, 
 	#delete all fles but final results
 	if not debug_mode:
 		shutil.rmtree(workflow_base+"/"+workflow_denominator+"_work")
-
-# if __name__ == "__main__":
-	# quick_melodic("~/NIdata/ofM.dr/", "7_EPI_CBV", conditions=[], include_subjects=[], exclude_subjects=[], exclude_measurements=["20151026_135856_4006_1_1", "20151027_121613_4013_1_1"], debug_mode=True)
-	# diagnostic("/mnt/data/NIdata/ofM.dr", [], [], conditions=["ofM"], subjects=[], exclude_subjects=[], exclude_measurements=[], debug_mode=True)
-
-argh.dispatch_commands([diagnostic])

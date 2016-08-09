@@ -12,6 +12,7 @@ setup(
 	install_requires = [],
 	provides = ["chyMRI"],
 	packages = ["chyMRI"],
+	include_package_data=True,
 	entry_points = {'console_scripts' : \
 			['chyMRI = chyMRI.cli:main']
 		}

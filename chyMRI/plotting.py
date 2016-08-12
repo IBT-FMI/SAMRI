@@ -48,7 +48,7 @@ def plot_timecourses(parcellation="/home/chymera/NIdata/templates/roi/ds_QBI_vze
 		plt.plot(time_series[i], label=region_assignments.get_value(i, "acronym"))
 	plt.legend()
 
-def plot_stat_map(stat_map="/home/chymera/NIdata/ofM.dr/level2_3s/_category_multi_ofM_cF2/flameo/mapflow/_flameo0/stats/tstat1.nii.gz" ,template="/home/chymera/NIdata/templates/hires_QBI_chr.nii.gz", cbv=True, cut_coords=None, black_bg=False, annotate=True, title=None, threshold=2.5, scale=1, draw_cross=True, save_as=None, interpolation="hermite"):
+def plot_stat_map(stat_map ,template="/home/chymera/NIdata/templates/hires_QBI_chr.nii.gz", cbv=True, cut_coords=None, black_bg=False, annotate=True, title=None, threshold=2.5, scale=1, draw_cross=True, save_as=None, interpolation="hermite"):
 	"""Wrapper for the nilearn.plotting.plot_stat_map, provides better control over element scaling and uses a prettier default style
 
 	Keyword Arguments:
@@ -75,7 +75,7 @@ def plot_stat_map(stat_map="/home/chymera/NIdata/ofM.dr/level2_3s/_category_mult
 		display.title(title, size=2+scale*26)
 
 	if save_as:
-		plt.savefig(save_as, bbox_inches='tight')
+		plt.savefig(save_as, dpi=300, bbox_inches='tight')
 
 	return display
 
@@ -139,9 +139,8 @@ if __name__ == '__main__':
 	# for i in ["ofM","ofM_aF","ofM_cF1","ofM_cF2","ofM_pF"]:
 	# 	plot_stat_map(stat_map="/home/chymera/NIdata/ofM.dr/GLM/level2_dgamma_blurxy56/_category_multi_"+i+"/flameo/mapflow/_flameo0/stats/tstat1.nii.gz", cbv=True, save_as="/home/chymera/"+i+".pdf", cut_coords=(-49,8,43), threshold=3)
 
-	plot_stat_map(stat_map="/home/chymera/NIdata/ofM.dr/GLM/level2_dgamma_blurxy56/_category_multi_ofM_cF2/flameo/mapflow/_flameo0/stats/tstat1.nii.gz", cbv=True, save_as="/home/chymera/ofM_cF2.pdf", cut_coords=(-49,8,43), threshold=3, interpolation="gaussian")
+	plot_stat_map("/home/chymera/NIdata/ofM.dr/GLM/level2_dgamma_blurxy56/_category_multi_ofM_cF2/flameo/mapflow/_flameo0/stats/tstat1.nii.gz", cbv=True, save_as="/home/chymera/ofM_cF2.pdf", cut_coords=(-49,8,43), threshold=3, interpolation="gaussian")
 
-	# plot_stat_map(template="/home/chymera/NIdata/templates/QBI_chr.nii.gz",cut_coords=(-50,8,45))
 	# plot_myanat()
 	# plot_timecourses()
 	# plt.show()

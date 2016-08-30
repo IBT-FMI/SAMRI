@@ -43,7 +43,7 @@ def diagnostic(measurements_base, structural_scan_types=[], functional_scan_type
 	"""
 
 	#make measurements_base absolute (this has to be here to allow the check below)
-	measurements_base = path.expanduser(measurements_base)
+	measurements_base = path.abspath(path.expanduser(measurements_base))
 
 	#check if a bruker measurement directory was specified as the measurements_base. If so, set the root directories one level up and add the basename to include_measurements
 	if bruker_files.issubset(listdir(measurements_base)):

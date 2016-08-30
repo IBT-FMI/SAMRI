@@ -1,19 +1,19 @@
 from setuptools import setup, find_packages
 
 setup(
-	name="chyMRI",
+	name="SAMRI",
 	version="",
-	description = "Animal fMRI pipelines",
+	description = "Small animal magnetic resonance imaging via Python.",
 	author = "Horea Christian",
 	author_email = "h.chr@mail.ru",
-	url = "https://github.com/TheChymera/chyMRI",
-	keywords = ["fMRI", "pipelines", "data analysis"],
+	url = "https://github.com/TheChymera/SAMRI",
+	keywords = ["fMRI", "pipelines", "data analysis", "bruker"],
 	classifiers = [],
 	install_requires = [],
-	provides = ["chyMRI"],
-	packages = ["chyMRI"],
+	provides = ["SAMRI"],
+	packages = ["SAMRI"],
 	include_package_data=True,
 	entry_points = {'console_scripts' : \
-			['chyMRI = chyMRI.cli:main']
+			['SAMRI = SAMRI.cli:main']
 		}
 	)

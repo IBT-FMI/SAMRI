@@ -48,43 +48,6 @@ def plot_timecourses(parcellation="/home/chymera/NIdata/templates/roi/ds_QBI_vze
 		plt.plot(time_series[i], label=region_assignments.get_value(i, "acronym"))
 	plt.legend()
 
-def plot_stat_map(stat_map ,template="/home/chymera/NIdata/templates/lo_QBI_chr.nii.gz", cbv=True, cut_coords=None, black_bg=False, annotate=True, title=None, threshold=2.5, scale=1, draw_cross=True, save_as=None, interpolation="hermite"):
-	"""Wrapper for the nilearn.plotting.plot_stat_map, provides better control over element scaling and uses a prettier default style
-
-	Keyword Arguments:
-	scale -- allows intelligent scaling of annotation, crosshairs, and title
-	"""
-
-	colors_plus = plt.cm.autumn(np.linspace(0., 1, 128))
-	colors_minus = plt.cm.winter(np.linspace(0, 1, 128))
-
-	if cbv:
-		colors = np.vstack((colors_plus, colors_minus[::-1]))
-	else:
-		colors = np.vstack((colors_minus, colors_plus[::-1]))
-	mymap = mcolors.LinearSegmentedColormap.from_list('my_colormap', colors)
-
-	fig = plt.figure(figsize=(14,5), facecolor='#eeeeee')
-
-	display = plotting.plot_stat_map(stat_map, bg_img=template,threshold=threshold, figure=fig, black_bg=black_bg, vmax=40, cmap=mymap, cut_coords=cut_coords, annotate=False, title=None, draw_cross=False, interpolation=interpolation)
-	if draw_cross:
-		display.draw_cross(linewidth=scale*1.6, alpha=0.4)
-	if annotate:
-		display.annotate(size=2+scale*18)
-	if title:
-		display.title(title, size=2+scale*26)
-
-	if save_as:
-		plt.savefig(save_as, dpi=400, bbox_inches='tight')
-
-	return display
-
-def plot_myanat(anat="/home/chymera/NIdata/templates/hires_QBI_chr.nii.gz"):
-	plotting.plot_anat(anat, cut_coords=[0, 0, 0],title='Anatomy image')
-
-def plot_nii(file_path, slices):
-	plotting.plot_anat(file_path, cut_coords=slices, display_mode="y", annotate=False, draw_cross=False)
-
 # def plot_timecourse(file_path, roi_path=None, roi_number=None):
 
 def plot_fsl_design(file_path):
@@ -129,8 +92,6 @@ if __name__ == '__main__':
 		# "/home/chymera/run0_dg.mat",
 		# "/home/chymera/report_dg.rst"
 		# )
-	# plot_stat_map(stat_map="/home/chymera/cluster/othresh.nii.gz")
-	# plot_stat_map(stat_map="/home/chymera/NIdata/ofM.dr/GLM/level2_dgamma_blurxy56/_category_multi_ofM_cF2/flameo/mapflow/_flameo0/stats/tstat1.nii.gz",template="/home/chymera/NIdata/templates/medres_QBI_chr.nii.gz", cbv=True, cut_coords=(-49,8,43), threshold=3)
 
 	# from itertools import product
 	# for i,j in product(["level2_dgamma_blurxy56","level2_dgamma_blurxy56n"],["ofM","ofM_aF","ofM_cF1","ofM_cF2","ofM_pF"]):
@@ -139,10 +100,6 @@ if __name__ == '__main__':
 	# for i in ["ofM","ofM_aF","ofM_cF1","ofM_cF2","ofM_pF"]:
 	# 	plot_stat_map(stat_map="/home/chymera/NIdata/ofM.dr/GLM/level2_dgamma_blurxy56/_category_multi_"+i+"/flameo/mapflow/_flameo0/stats/tstat1.nii.gz", cbv=True, save_as="/home/chymera/"+i+".pdf", cut_coords=(-49,8,43), threshold=3)
 
-	plot_stat_map("/home/chymera/NIdata/ofM.dr/GLM/level2_dgamma_blurxy56n_old/_category_multi_ofM_cF2/flameo/mapflow/_flameo0/stats/tstat1.nii.gz", cbv=True, cut_coords=(-49,8,43), threshold=3, interpolation="gaussian")
-	plot_stat_map("/home/chymera/NIdata/ofM.dr/GLM/level2_dgamma_blurxy56_old/_category_multi_ofM_cF2/flameo/mapflow/_flameo0/stats/tstat1.nii.gz", cbv=True, cut_coords=(-49,8,43), threshold=3, interpolation="gaussian")
 	# plot_stat_map("/home/chymera/NIdata/ofM.dr/GLM/level2_dgamma_blurxy56/_category_multi_ofM_cF2/flameo/mapflow/_flameo0/stats/tstat1.nii.gz", cbv=True, save_as="/home/chymera/ofM_cF2.pdf", cut_coords=(-49,8,43), threshold=3, interpolation="gaussian")
 
-	# plot_myanat()
-	# plot_timecourses()
 	plt.show()

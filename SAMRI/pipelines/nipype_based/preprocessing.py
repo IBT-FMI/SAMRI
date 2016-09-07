@@ -1,3 +1,11 @@
+import os
+if not __package__:
+	import sys
+	pkg_root = os.path.abspath(os.path.join(os.path.dirname(os.path.realpath(__file__)),"../../.."))
+	sys.path.insert(0, pkg_root)
+	print(pkg_root)
+from SAMRI.pipelines.extra_functions import get_data_selection, get_scan
+
 import nipype.interfaces.utility as util		# utility
 import nipype.pipeline.engine as pe				# pypeline engine
 from nipype.interfaces.fsl import GLM, MELODIC, FAST, BET, MeanImage, FLIRT, ImageMaths, FSLCommand
@@ -11,7 +19,6 @@ import nipype.interfaces.io as nio
 from os import path
 import nipype.interfaces.ants as ants
 from extra_interfaces import DcmToNii, MEICA, VoxelResize, Bru2, GetBrukerTiming
-from extra_functions import get_data_selection, get_scan
 from nodes import ants_standard_registration_warp
 from itertools import product
 import pandas as pd
@@ -276,7 +283,7 @@ def bru_preproc(measurements_base, functional_scan_types, structural_scan_types=
 		return workflow
 
 if __name__ == "__main__":
+	print("a")
 	# bru_preproc_lite(measurements_base="/mnt/data/NIdata/ofM.erc/", functional_scan_types=["EPI_CBV_alej","EPI_CBV_jin6","EPI_CBV_jin10","EPI_CBV_jin20","EPI_CBV_jin40","EPI_CBV_jin60"], structural_scan_type="T2_TurboRARE", conditions=["ERC_ofM"], include_subjects=["5502","5503"])
 	# bru_preproc("/home/chymera/NIdata/ofM.erc/", ["EPI_CBV_jin10","EPI_CBV_jin60"], conditions=["ERC_ofM","ERC_ofM_r1"], structural_scan_types=["T2_TurboRARE"], standalone_execute=True)
 	# testme("~/NIdata/ofM.erc/", ["EPI_CBV_alej","EPI_CBV_jin6","EPI_CBV_jin10","EPI_CBV_jin20","EPI_CBV_jin40","EPI_CBV_jin60","T2_TurboRARE"], conditions=["ERC_ofM"], include_subjects=["5503","5502"])
-	print(thisscriptspath)

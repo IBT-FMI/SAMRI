@@ -1,9 +1,8 @@
-import os
+from os import path
 if not __package__:
 	import sys
-	pkg_root = os.path.abspath(os.path.join(os.path.dirname(os.path.realpath(__file__)),"../../.."))
+	pkg_root = path.abspath(path.join(path.dirname(path.realpath(__file__)),"../../.."))
 	sys.path.insert(0, pkg_root)
-	print(pkg_root)
 from SAMRI.pipelines.extra_functions import get_data_selection, get_scan
 
 import nipype.interfaces.utility as util		# utility
@@ -16,7 +15,6 @@ from nipype.interfaces.afni.base import AFNICommand
 from nipype.interfaces.afni.preprocess import BlurToFWHM
 from nipype.interfaces.dcmstack import DcmStack
 import nipype.interfaces.io as nio
-from os import path
 import nipype.interfaces.ants as ants
 from extra_interfaces import DcmToNii, MEICA, VoxelResize, Bru2, GetBrukerTiming
 from nodes import ants_standard_registration_warp
@@ -30,53 +28,6 @@ FSLCommand.set_default_output_type('NIFTI_GZ')
 #relative paths
 thisscriptspath = path.dirname(path.realpath(__file__))
 scan_classification_file_path = path.join(thisscriptspath,"scan_type_classification.csv")
-
-def dcm_preproc(workflow_base=".", force_convert=False, source_pattern="", IDs=""):
-	# make IDs strings
-	if "int" or "float" in str([type(ID) for ID in IDs]):
-		IDs = [str(ID) for ID in IDs]
-
-	#initiate the infosource node
-	infosource = pe.Node(interface=util.IdentityInterface(fields=['subject_id']), name="subject_info_source")
-	#define the list of subjects your pipeline should be executed on
-	infosource.iterables = ('subject_id', IDs)
-
-	#initiate the DataGrabber node with the infield: 'subject_id'
-	#and the outfield: 'func' and 'struct'
-	datasource = pe.Node(interface=nio.DataGrabber(infields=['subject_id'], outfields=['func', 'struct']), name='data_source')
-	datasource.inputs.template = source_pattern
-	#First way: define the arguments for the template '%s/%s.nii' for each field individual
-	datasource.inputs.template_args['func'] = [['subject_id', 'EPI']]
-	datasource.inputs.template_args['struct'] = [['subject_id','anatomical']]
-	datasource.inputs.sort_filelist = True
-
-	stacker = pe.Node(interface=DcmToNii(), name="stack_convert_functional")
-	stacker.inputs.group_by = "EchoTime"
-
-	struct_stacker = pe.Node(interface=DcmStack(), name="stack_convert_structural")
-
-	voxelresize = pe.Node(interface=VoxelResize(), name="voxel_resize")
-	voxelresize.inputs.resize_factor = 10
-
-	meica = pe.Node(interface=MEICA(), name="multi_echo_ICA")
-	meica.inputs.TR = 1.5
-	meica.inputs.tpattern = "altminus"
-	meica.inputs.cpus = 3
-
-	workflow = pe.Workflow(name='Preprocessing')
-	workflow.base_dir = workflow_base
-
-	workflow.connect([
-		(infosource, datasource, [('subject_id', 'subject_id')]),
-		(datasource, stacker, [('func', 'dcm_dir')]),
-		(stacker, voxelresize, [('nii_files', 'nii_files')]),
-		(datasource, struct_stacker, [('struct', 'dicom_files')]),
-		(stacker, meica, [('echo_times', 'echo_times')]),
-		(voxelresize, meica, [('resized_files', 'echo_files')]),
-		])
-
-	workflow.write_graph(graph2use="orig")
-	workflow.run(plugin="MultiProc")
 
 def bru_preproc_lite(measurements_base, functional_scan_types=[], structural_scan_types=[], tr=1, conditions=[], subjects=[], exclude_subjects=[], measurements=[], exclude_measurements=[], actual_size=False, realign=False):
 
@@ -283,7 +234,5 @@ def bru_preproc(measurements_base, functional_scan_types, structural_scan_types=
 		return workflow
 
 if __name__ == "__main__":
-	print("a")
 	# bru_preproc_lite(measurements_base="/mnt/data/NIdata/ofM.erc/", functional_scan_types=["EPI_CBV_alej","EPI_CBV_jin6","EPI_CBV_jin10","EPI_CBV_jin20","EPI_CBV_jin40","EPI_CBV_jin60"], structural_scan_type="T2_TurboRARE", conditions=["ERC_ofM"], include_subjects=["5502","5503"])
-	# bru_preproc("/home/chymera/NIdata/ofM.erc/", ["EPI_CBV_jin10","EPI_CBV_jin60"], conditions=["ERC_ofM","ERC_ofM_r1"], structural_scan_types=["T2_TurboRARE"], standalone_execute=True)
-	# testme("~/NIdata/ofM.erc/", ["EPI_CBV_alej","EPI_CBV_jin6","EPI_CBV_jin10","EPI_CBV_jin20","EPI_CBV_jin40","EPI_CBV_jin60","T2_TurboRARE"], conditions=["ERC_ofM"], include_subjects=["5503","5502"])
+	bru_preproc("/home/chymera/NIdata/ofM.erc/", ["EPI_CBV_jin10","EPI_CBV_jin60"], conditions=["ERC_ofM","ERC_ofM_r1"], structural_scan_types=["T2_TurboRARE"], standalone_execute=True)

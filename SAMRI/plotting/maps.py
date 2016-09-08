@@ -91,7 +91,12 @@ def stat(stat_maps, cbv=True, figure_title="", interpolation="hermite", template
 				ax.axis('off')
 
 	if save_as:
-		plt.savefig(os.path.abspath(os.path.expanduser(save_as)), dpi=400, bbox_inches='tight')
+		if isinstance(save_as, str):
+			plt.savefig(os.path.abspath(os.path.expanduser(save_as)), dpi=400, bbox_inches='tight')
+		else:
+			from matplotlib.backends.backend_pdf import PdfPages
+			if isinstance(save_as, PdfPages):
+				save_as.savefig()
 	else:
 		plt.show()
 

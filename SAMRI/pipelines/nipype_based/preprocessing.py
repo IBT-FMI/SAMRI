@@ -1,4 +1,4 @@
-from os import path, listdir, getcwd
+from os import path, listdir, getcwd, remove
 if not __package__:
 	import sys
 	pkg_root = path.abspath(path.join(path.dirname(path.realpath(__file__)),"../../.."))
@@ -122,6 +122,7 @@ def bru_preproc(measurements_base, functional_scan_types, structural_scan_types=
 	if structural_registration:
 		structural_scan_types = structural_scan_types[0]
 
+	# here we start to define the nipype workflow elements (nodes, connectons, meta)
 	conditions_subjects = data_selection[["condition","subject"]].drop_duplicates().values.tolist()
 	infosource = pe.Node(interface=util.IdentityInterface(fields=['condition_subject']), name="infosource")
 	infosource.iterables = [('condition_subject', conditions_subjects)]
@@ -230,7 +231,6 @@ def bru_preproc(measurements_base, functional_scan_types, structural_scan_types=
 	workflow = pe.Workflow(name=workflow_name)
 	workflow.connect(workflow_connections)
 	workflow.write_graph(dotfilename="graph.dot", graph2use="hierarchical", format="png")
-
 	workflow.base_dir = path.join(measurements_base,"preprocessing")
 	if quiet:
 		try:

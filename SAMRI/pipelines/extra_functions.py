@@ -62,6 +62,43 @@ def get_subjectinfo(subject_delay, scan_type, scan_types):
 					))
 	return output
 
+def get_subjectinfo(subject_delay, scan_type, scan_types):
+	from nipype.interfaces.base import Bunch
+	import pandas as pd
+	import numpy as np
+	from copy import deepcopy
+	import sys
+	sys.path.append('/home/chymera/src/LabbookDB/db/')
+	from query import loadSession
+	from common_classes import LaserStimulationProtocol
+	db_path="~/syncdata/meta.db"
+
+	session, engine = loadSession(db_path)
+
+	sql_query=session.query(LaserStimulationProtocol).filter(LaserStimulationProtocol.code==scan_types[scan_type])
+	mystring = sql_query.statement
+	mydf = pd.read_sql_query(mystring,engine)
+	delay = int(mydf["stimulation_onset"][0])
+	inter_stimulus_duration = int(mydf["inter_stimulus_duration"][0])
+	stimulus_duration = mydf["stimulus_duration"][0]
+	stimulus_repetitions = mydf["stimulus_repetitions"][0]
+
+	onsets=[]
+	names=[]
+	for i in range(stimulus_repetitions):
+		onset = delay+(inter_stimulus_duration+stimulus_duration)*i
+		onsets.append([onset])
+		names.append("s"+str(i+1))
+	output = []
+	for idx_a, a in enumerate(onsets):
+		for idx_b, b in enumerate(a):
+			onsets[idx_a][idx_b] = round(b-subject_delay, 2) #floating point values don't add up nicely, so we have to round (https://docs.python.org/2/tutorial/floatingpoint.html)
+	output.append(Bunch(conditions=names,
+					onsets=deepcopy(onsets),
+					durations=[[stimulus_duration]]*stimulus_repetitions
+					))
+	return output
+
 def get_level2_inputs(input_root, categories=[], participants=[], scan_types=[]):
 	import os
 	l2_inputs = []
@@ -75,9 +112,12 @@ def get_level2_inputs(input_root, categories=[], participants=[], scan_types=[])
 
 	return l2_inputs
 
-def get_scan(measurements_base, data_selection, condition, subject, scan_type):
+def get_scan(measurements_base, data_selection, selector, scan_type):
+	import pandas as pd
 	from os import path #for some reason the import outside the function fails
 	scan_paths = []
+	condition = selector[0]
+	subject = selector[1]
 	filtered_data = data_selection[(data_selection["condition"] == condition)&(data_selection["subject"] == subject)&(data_selection["scan_type"] == scan_type)]
 	measurement_path = filtered_data["measurement"].tolist()[0]
 	scan_subdir = filtered_data["scan"].tolist()[0]
@@ -186,9 +226,9 @@ def get_data_selection(workflow_base, conditions=[], scan_types=[], subjects=[],
 											break
 								except IOError:
 									pass
-								#If the ScanProgram.scanProgram file is small in size and thescan_type could not be matched, that may be because ParaVision failed
+								#If the ScanProgram.scanProgram file is small in size and the scan_type could not be matched, that may be because ParaVision failed
 								#to write all the information into the file. This happens occasionally.
-								#Thus we scan the individuual acquisition protocols as well. These are a suboptimal and second choice, because acqp scans **also**
+								#Thus we scan the individual acquisition protocols as well. These are a suboptimal and second choice, because acqp scans **also**
 								#keep the original names the sequences had on import (ans may thus be misdetected, if the name was changed by the user after import).
 								if os.stat(scan_program_file_path).st_size <= 700 and not scan_number:
 									for sub_sub_dir in listdir(path.join(workflow_base,sub_dir)):
@@ -213,7 +253,3 @@ def get_data_selection(workflow_base, conditions=[], scan_types=[], subjects=[],
 				data_selection = data_selection[(data_selection["subject"] != subject)]
 
 	return data_selection
-
-if __name__ == "__main__":
-	for nr in [4460]:
-		convert_dcm_to_nifti("/home/chymera/data/dc.rs/export_ME/dicom/"+str(nr)+"/1/EPI/")

@@ -81,4 +81,4 @@ if __name__ == '__main__':
 			"/home/chymera/NIdata/ofM.dr/GLM/level2_dgamma_blurxy7/_category_multi_ofM"+i+"/flameo/mapflow/_flameo0/stats/tstat1.nii.gz",
 			]
 		titles = [stat_map[32:-43] for stat_map in stat_maps]
-		plot_stat_map(stat_maps, cbv=True, cut_coords=(-49,8,43), threshold=2.5, interpolation="gaussian", save_as="~/ofM"+i+".pdf", titles=titles)
+		plot_stat_map(stat_maps, cbv=True, cut_coords=(-49,8,43), threshold=3, interpolation="gaussian", save_as="~/ofM"+i+".pdf", titles=titles)

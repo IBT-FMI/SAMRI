@@ -12,6 +12,7 @@ import nipype.interfaces.ants as ants
 import nipype.interfaces.io as nio
 import nipype.interfaces.utility as util		# utility
 import nipype.pipeline.engine as pe				# pypeline engine
+from copy import deepcopy
 from nipype.interfaces.fsl import GLM, MELODIC, FAST, BET, MeanImage, FLIRT, ImageMaths, FSLCommand
 from nipype.interfaces.fsl.maths import TemporalFilter
 from nipype.interfaces.nipy import SpaceTimeRealigner
@@ -111,7 +112,7 @@ def bru_preproc(measurements_base, functional_scan_types, structural_scan_types=
 		structural_scan_types = []
 
 	# define measurement directories to be processed, and populate the list either with the given include_measurements, or with an intelligent selection
-	scan_types = functional_scan_types
+	scan_types = deepcopy(functional_scan_types)
 	scan_types.extend(structural_scan_types)
 	data_selection=get_data_selection(measurements_base, conditions, scan_types=scan_types, subjects=subjects, exclude_subjects=exclude_subjects, measurements=measurements, exclude_measurements=exclude_measurements)
 	if not subjects:
@@ -138,6 +139,7 @@ def bru_preproc(measurements_base, functional_scan_types, structural_scan_types=
 	timing_metadata = pe.Node(interface=GetBrukerTiming(), name="timing_metadata")
 
 	realigner = pe.Node(interface=SpaceTimeRealigner(), name="realigner")
+	realigner.inputs.tr = 1.
 	realigner.inputs.slice_times = "asc_alt_2"
 	realigner.inputs.slice_info = 3 #3 for coronal slices (2 for horizontal, 1 for sagittal)
 

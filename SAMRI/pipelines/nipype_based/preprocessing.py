@@ -163,11 +163,6 @@ def bru_preproc(measurements_base, functional_scan_types, structural_scan_types=
 	functional_bandpass.inputs.highpass_sigma = 180
 	functional_bandpass.inputs.lowpass_sigma = 1
 
-
-	structural_bandpass = pe.Node(interface=TemporalFilter(), name="structural_bandpass")
-	structural_bandpass.inputs.highpass_sigma = 180
-	structural_bandpass.inputs.lowpass_sigma = 1
-
 	workflow_connections = [
 		(infosource, get_functional_scan, [('condition_subject', 'selector')]),
 		(get_functional_scan, functional_bru2nii, [('scan_path', 'input_dir')]),
@@ -216,6 +211,10 @@ def bru_preproc(measurements_base, functional_scan_types, structural_scan_types=
 		structural_BET = pe.Node(interface=BET(), name="structural_BET")
 		structural_BET.inputs.mask = True
 		structural_BET.inputs.frac = 0.5
+
+		structural_bandpass = pe.Node(interface=TemporalFilter(), name="structural_bandpass")
+		structural_bandpass.inputs.highpass_sigma = 180
+		structural_bandpass.inputs.lowpass_sigma = 1
 
 		workflow_connections.extend([
 			(infosource, get_structural_scan, [('condition_subject', 'selector')]),

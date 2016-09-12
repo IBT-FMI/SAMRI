@@ -139,8 +139,8 @@ def bru_preproc(measurements_base, functional_scan_types, structural_scan_types=
 	timing_metadata = pe.Node(interface=GetBrukerTiming(), name="timing_metadata")
 
 	realigner = pe.Node(interface=SpaceTimeRealigner(), name="realigner")
-	realigner.inputs.tr = 1.
 	realigner.inputs.slice_times = "asc_alt_2"
+	realigner.inputs.tr = 1.
 	realigner.inputs.slice_info = 3 #3 for coronal slices (2 for horizontal, 1 for sagittal)
 
 	temporal_mean = pe.Node(interface=MeanImage(), name="temporal_mean")
@@ -232,8 +232,8 @@ def bru_preproc(measurements_base, functional_scan_types, structural_scan_types=
 
 	workflow = pe.Workflow(name=workflow_name)
 	workflow.connect(workflow_connections)
-	workflow.write_graph(dotfilename="graph.dot", graph2use="hierarchical", format="png")
 	workflow.base_dir = path.join(measurements_base,"preprocessing")
+	workflow.write_graph(dotfilename=path.join(workflow.base_dir,workflow_name,"graph.dot"), graph2use="hierarchical", format="png")
 	if quiet:
 		try:
 			workflow.run(plugin="MultiProc",  plugin_args={'n_procs' : 4})

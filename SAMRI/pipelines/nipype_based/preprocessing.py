@@ -7,13 +7,14 @@ from SAMRI.pipelines.extra_functions import get_data_selection, get_scan
 
 import inspect
 import re
+from copy import deepcopy
+from itertools import product
+
 import pandas as pd
 import nipype.interfaces.ants as ants
 import nipype.interfaces.io as nio
 import nipype.interfaces.utility as util		# utility
 import nipype.pipeline.engine as pe				# pypeline engine
-from copy import deepcopy
-from itertools import product
 from nipype.interfaces.fsl import GLM, MELODIC, FAST, BET, MeanImage, FLIRT, ImageMaths, FSLCommand
 from nipype.interfaces.fsl.maths import TemporalFilter
 from nipype.interfaces.nipy import SpaceTimeRealigner
@@ -21,6 +22,7 @@ from nipype.interfaces.afni import Bandpass
 from nipype.interfaces.afni.base import AFNICommand
 from nipype.interfaces.afni.preprocess import BlurToFWHM
 from nipype.interfaces.dcmstack import DcmStack
+
 from extra_interfaces import DcmToNii, MEICA, VoxelResize, Bru2, GetBrukerTiming
 from nodes import ants_standard_registration_warp
 from utils import subject_condition_to_path, scs_filename

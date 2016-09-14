@@ -92,7 +92,7 @@ def diagnostic(measurements_base, structural_scan_types=[], functional_scan_type
 		])
 
 	pipeline.connect(pipeline_connections)
-	pipeline.write_graph(graph2use="flat")
+	pipeline.write_graph(dotfilename=path.join(pipeline.base_dir,workflow_denominator,"graph.dot"), graph2use="hierarchical", format="png")
 
 	if quiet:
 		try:
@@ -153,7 +153,8 @@ def quick_melodic(measurements_base, functional_scan_type, workflow_base=False, 
 		(bru_preproc_workflow, analysis_workflow, [('functional_bru2nii.nii_file','melodic.in_files')])
 		])
 
-	# pipeline.write_graph(graph2use="flat")
+
+	pipeline.write_graph(dotfilename=path.join(workflow.base_dir,workflow_name,"graph.dot"), graph2use="hierarchical", format="png")
 	pipeline.run(plugin="MultiProc")
 
 	#delete all fles but final results

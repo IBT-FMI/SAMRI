@@ -116,8 +116,8 @@ def get_scan(measurements_base, data_selection, selector, scan_type):
 	import pandas as pd
 	from os import path #for some reason the import outside the function fails
 	scan_paths = []
-	condition = selector[0]
-	subject = selector[1]
+	subject = selector[0]
+	condition = selector[1]
 	filtered_data = data_selection[(data_selection["condition"] == condition)&(data_selection["subject"] == subject)&(data_selection["scan_type"] == scan_type)]
 	measurement_path = filtered_data["measurement"].tolist()[0]
 	scan_subdir = filtered_data["scan"].tolist()[0]

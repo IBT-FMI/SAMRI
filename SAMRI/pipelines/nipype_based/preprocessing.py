@@ -26,6 +26,7 @@ from nipype.interfaces.bru2nii import Bru2
 from extra_interfaces import GetBrukerTiming
 from nodes import ants_standard_registration_warp
 from utils import subject_condition_to_path, scs_filename
+from utils import STIM_PROTOCOL_DICTINARY
 
 #set all outputs to compressed NIfTI
 AFNICommand.set_default_output_type('NIFTI_GZ')
@@ -140,6 +141,9 @@ def bru_preproc(measurements_base, functional_scan_types, structural_scan_types=
 	functional_bru2nii.inputs.actual_size=actual_size
 
 	timing_metadata = pe.Node(interface=GetBrukerTiming(), name="timing_metadata")
+
+	events_file = pe.Node(name='events_file', interface=util.Function(function=write_events_file,input_names=inspect.getargspec(write_events_file)[0], output_names=['output']))
+	events_file.inputs.stim_protocol_dictionary = STIM_PROTOCOL_DICTIONARY
 
 	realigner = pe.Node(interface=SpaceTimeRealigner(), name="realigner")
 	realigner.inputs.slice_times = "asc_alt_2"

@@ -25,8 +25,9 @@ def write_function_call(frame, target_path):
 	target.write(function_call)
 	target.close()
 
-def get_subjectinfo(subject_delay, scan_type, scan_types):
-	from nipype.interfaces.base import Bunch
+def write_events_file(subject_delay, scan_type, stim_protocol_dictionary,
+	db_path="~/syncdata/meta.db",
+	):
 	import pandas as pd
 	import numpy as np
 	from copy import deepcopy
@@ -34,7 +35,6 @@ def get_subjectinfo(subject_delay, scan_type, scan_types):
 	sys.path.append('/home/chymera/src/LabbookDB/db/')
 	from query import loadSession
 	from common_classes import LaserStimulationProtocol
-	db_path="~/syncdata/meta.db"
 
 	session, engine = loadSession(db_path)
 

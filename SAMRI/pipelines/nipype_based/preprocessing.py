@@ -21,9 +21,9 @@ from nipype.interfaces.nipy import SpaceTimeRealigner
 from nipype.interfaces.afni import Bandpass
 from nipype.interfaces.afni.base import AFNICommand
 from nipype.interfaces.afni.preprocess import BlurToFWHM
-from nipype.interfaces.dcmstack import DcmStack
+from nipype.interfaces.bru2nii import Bru2
 
-from extra_interfaces import DcmToNii, MEICA, VoxelResize, Bru2, GetBrukerTiming
+from extra_interfaces import GetBrukerTiming
 from nodes import ants_standard_registration_warp
 from utils import subject_condition_to_path, scs_filename
 
@@ -100,7 +100,7 @@ def bru_preproc_lite(measurements_base, functional_scan_types=[], structural_sca
 	# workflow.run(plugin="MultiProc")
 	return workflow
 
-def bru_preproc(measurements_base, functional_scan_types, structural_scan_types=[], workflow_name="generic", tr=1, conditions=[], subjects=[], exclude_subjects=[], measurements=[], exclude_measurements=[], actual_size=False, template="/home/chymera/NIdata/templates/ds_QBI_chr.nii.gz", blur_xy=False, structural_registration=False, quiet=True, suffix=""):
+def bru_preproc(measurements_base, functional_scan_types, structural_scan_types=[], workflow_name="generic", tr=1, conditions=[], subjects=[], exclude_subjects=[], measurements=[], exclude_measurements=[], actual_size=False, template="/home/chymera/NIdata/templates/ds_QBI_chr.nii.gz", blur_xy=False, structural_registration=False, quiet=True):
 
 	#select all functional/sturctural scan types unless specified
 	if not functional_scan_types or not structural_scan_types:
@@ -167,7 +167,9 @@ def bru_preproc(measurements_base, functional_scan_types, structural_scan_types=
 	functional_bandpass.inputs.lowpass_sigma = 1
 
 	bids_filename = pe.Node(name='bids_filename', interface=util.Function(function=scs_filename,input_names=inspect.getargspec(scs_filename)[0], output_names=['filename']))
-	bids_filename.inputs.suffix = suffix
+
+	bids_stim_filename = pe.Node(name='bids_stim_filename', interface=util.Function(function=scs_filename,input_names=inspect.getargspec(scs_filename)[0], output_names=['filename']))
+	bids_stim_filename.inputs.suffix = "events"
 
 	datasink = pe.Node(nio.DataSink(), name='datasink')
 	datasink.inputs.base_directory = path.join(measurements_base,"preprocessing",workflow_name,"results")
@@ -187,8 +189,10 @@ def bru_preproc(measurements_base, functional_scan_types, structural_scan_types=
 		(realigner, functional_warp, [('out_file', 'input_image')]),
 		(infosource, datasink, [(('subject_condition',subject_condition_to_path), 'container')]),
 		(infosource, bids_filename, [('subject_condition', 'subject_condition')]),
-		(get_functional_scan, bids_filename, [('scan_type', 'trial')]),
+		(get_functional_scan, bids_filename, [('scan_type', 'scan')]),
 		(bids_filename, functional_bandpass, [('filename', 'out_file')]),
+		(infosource, bids_stim_filename, [('subject_condition', 'subject_condition')]),
+		(get_functional_scan, bids_stim_filename, [('scan_type', 'scan')]),
 		(functional_bandpass, datasink, [('out_file', 'func')]),
 		]
 
@@ -227,6 +231,8 @@ def bru_preproc(measurements_base, functional_scan_types, structural_scan_types=
 		structural_BET.inputs.mask = True
 		structural_BET.inputs.frac = 0.5
 
+		structural_bids_filename = pe.Node(name='structural_bids_filename', interface=util.Function(function=scs_filename,input_names=inspect.getargspec(scs_filename)[0], output_names=['filename']))
+		structural_bids_filename.inputs.scan_prefix = False
 
 		workflow_connections.extend([
 			(infosource, get_structural_scan, [('subject_condition', 'selector')]),
@@ -235,6 +241,9 @@ def bru_preproc(measurements_base, functional_scan_types, structural_scan_types=
 			(structural_FAST, structural_cutoff, [('restored_image', 'in_file')]),
 			(structural_cutoff, structural_BET, [('out_file', 'in_file')]),
 			(structural_BET, structural_register, [('out_file', 'moving_image')]),
+			(infosource, structural_bids_filename, [('subject_condition', 'subject_condition')]),
+			(get_structural_scan, structural_bids_filename, [('scan_type', 'scan')]),
+			(structural_bids_filename, structural_register, [('filename', 'output_warped_image')]),
 			(structural_register, datasink, [('warped_image', 'anat')]),
 			])
 
@@ -278,4 +287,4 @@ def bru_preproc(measurements_base, functional_scan_types, structural_scan_types=
 
 if __name__ == "__main__":
 	# bru_preproc_lite(measurements_base="/mnt/data/NIdata/ofM.erc/", functional_scan_types=["EPI_CBV_alej","EPI_CBV_jin6","EPI_CBV_jin10","EPI_CBV_jin20","EPI_CBV_jin40","EPI_CBV_jin60"], structural_scan_type="T2_TurboRARE", conditions=["ERC_ofM"], include_subjects=["5502","5503"])
-	bru_preproc("/home/chymera/NIdata/ofM.erc/", ["EPI_CBV_jin10","EPI_CBV_jin60"], conditions=["ERC_ofM","ERC_ofM_r1"], structural_scan_types=-1)
+	bru_preproc("/home/chymera/NIdata/ofM.erc/", ["EPI_CBV_jin10","EPI_CBV_jin60"], conditions=["ERC_ofM","ERC_ofM_r1"], structural_scan_types=["T2_TurboRARE"])

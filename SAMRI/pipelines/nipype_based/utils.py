@@ -6,7 +6,7 @@ def subject_condition_to_path(subject_condition):
 	subject_condition[1] = "ses-" + subject_condition[1]
 	return "/".join(subject_condition)
 
-def scs_filename(subject_condition, trial, suffix="", extension=".nii.gz"):
+def scs_filename(subject_condition, scan, scan_prefix="trial", suffix="", extension=".nii.gz"):
 	"""Concatenate subject-condition and scan inputs to a BIDS-style filename
 
 	Parameters
@@ -15,7 +15,7 @@ def scs_filename(subject_condition, trial, suffix="", extension=".nii.gz"):
 	subject_condition : list
 	Length-2 list of subject and session identifiers
 
-	trial : string
+	scan : string
 	Scan identifier
 
 	suffix : string, optional
@@ -29,6 +29,9 @@ def scs_filename(subject_condition, trial, suffix="", extension=".nii.gz"):
 	subject_condition[1] = "ses-" + subject_condition[1]
 	if suffix:
 		suffix = "_"+suffix
-	trial = "".join(["task-",trial,suffix,extension])
-	subject_condition.append(trial)
+	if scan_prefix:
+		scan = "".join([scan_prefix,"-",scan,suffix,extension])
+	else:
+		scan = "".join([scan,suffix,extension])	
+	subject_condition.append(scan)
 	return "_".join(subject_condition)

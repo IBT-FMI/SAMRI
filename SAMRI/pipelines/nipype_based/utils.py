@@ -1,3 +1,12 @@
+STIM_PROTOCOL_DICTINARY={
+	"EPI_CBV_jin6":"jin6",
+	"EPI_CBV_jin10":"jin10",
+	"EPI_CBV_jin20":"jin20",
+	"EPI_CBV_jin40":"jin40",
+	"EPI_CBV_jin60":"jin60",
+	"7_EPI_CBV":"6_20_jb"
+	}
+
 def subject_condition_to_path(subject_condition):
 	# we do not want to modify the subject_condition iterator entry
 	from copy import deepcopy
@@ -32,6 +41,6 @@ def scs_filename(subject_condition, scan, scan_prefix="trial", suffix="", extens
 	if scan_prefix:
 		scan = "".join([scan_prefix,"-",scan,suffix,extension])
 	else:
-		scan = "".join([scan,suffix,extension])	
+		scan = "".join([scan,suffix,extension])
 	subject_condition.append(scan)
 	return "_".join(subject_condition)

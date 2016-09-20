@@ -1,4 +1,4 @@
-STIM_PROTOCOL_DICTINARY={
+STIM_PROTOCOL_DICTIONARY={
 	"EPI_CBV_jin6":"jin6",
 	"EPI_CBV_jin10":"jin10",
 	"EPI_CBV_jin20":"jin20",

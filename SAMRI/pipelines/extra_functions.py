@@ -1,16 +1,16 @@
-import nipype.interfaces.dcmstack as dcmstack
-import nibabel as nb
-from dcmstack.extract import minimal_extractor
-from dicom import read_file
-from os import listdir, path, makedirs, getcwd
-import os
-import pandas as pd
-import re
+import csv
 import inspect
+import os
+import re
+
+import nibabel as nb
+import pandas as pd
+from nipype_based.utils import STIM_PROTOCOL_DICTIONARY
 
 def read_bruker_timing(scan_directory):
 	from datetime import datetime
-	state_file_path = self.inputs.scan_directory+"/AdjStatePerScan"
+	scan_directory = os.path.abspath(os.path.expanduser(scan_directory))
+	state_file_path = os.path.join(scan_directory,"AdjStatePerScan")
 	state_file = open(state_file_path, "r")
 
 	delay_seconds = dummy_scans = dummy_scans_ms = 0
@@ -25,7 +25,7 @@ def read_bruker_timing(scan_directory):
 	delay = scanstart_time-trigger_time
 	delay_seconds=delay.total_seconds()
 
-	method_file_path = self.inputs.scan_directory+"/method"
+	method_file_path = os.path.join(scan_directory,"method")
 	method_file = open(method_file_path, "r")
 
 	read_variables=0 #count variables so that breaking takes place after both have been read
@@ -61,20 +61,26 @@ def write_function_call(frame, target_path):
 	target.write(function_call)
 	target.close()
 
-def write_events_file(subject_delay, scan_type, stim_protocol_dictionary,
+def write_events_file(scan_type, stim_protocol_dictionary,
 	db_path="~/syncdata/meta.db",
+	outfile="~/events.tsv",
+	subject_delay=False,
+	scan_directory=False,
 	):
 	import pandas as pd
 	import numpy as np
 	from copy import deepcopy
 	import sys
-	sys.path.append('/home/chymera/src/LabbookDB/db/')
-	from query import loadSession
-	from common_classes import LaserStimulationProtocol
+	from labbookdb.db.query import loadSession
+	from labbookdb.db.common_classes import LaserStimulationProtocol
+
+	outfile = os.path.abspath(os.path.expanduser(outfile))
+
+	if not subject_delay:
+		_, _, _, subject_delay = read_bruker_timing(scan_directory)
 
 	session, engine = loadSession(db_path)
-
-	sql_query=session.query(LaserStimulationProtocol).filter(LaserStimulationProtocol.code==scan_types[scan_type])
+	sql_query=session.query(LaserStimulationProtocol).filter(LaserStimulationProtocol.code==stim_protocol_dictionary[scan_type])
 	mystring = sql_query.statement
 	mydf = pd.read_sql_query(mystring,engine)
 	delay = int(mydf["stimulation_onset"][0])
@@ -84,19 +90,20 @@ def write_events_file(subject_delay, scan_type, stim_protocol_dictionary,
 
 	onsets=[]
 	names=[]
-	for i in range(stimulus_repetitions):
-		onset = delay+(inter_stimulus_duration+stimulus_duration)*i
-		onsets.append([onset])
-		names.append("s"+str(i+1))
-	output = []
-	for idx_a, a in enumerate(onsets):
-		for idx_b, b in enumerate(a):
-			onsets[idx_a][idx_b] = round(b-subject_delay, 2) #floating point values don't add up nicely, so we have to round (https://docs.python.org/2/tutorial/floatingpoint.html)
-	output.append(Bunch(conditions=names,
-					onsets=deepcopy(onsets),
-					durations=[[stimulus_duration]]*stimulus_repetitions
-					))
-	return output
+	with open(outfile, 'w') as tsvfile:
+		field_names =["onset","duration","stimulation_frequency"]
+		writer = csv.DictWriter(tsvfile, fieldnames=field_names, delimiter="\t")
+
+		writer.writeheader()
+		for i in range(stimulus_repetitions):
+			events={}
+			onset = delay+(inter_stimulus_duration+stimulus_duration)*i
+			events["onset"] = onset-subject_delay
+			events["duration"] = stimulus_duration
+			events["stimulation_frequency"] = stimulus_duration
+			writer.writerow(events)
+
+	return outfile
 
 def get_subjectinfo(subject_delay, scan_type, scan_types):
 	from nipype.interfaces.base import Bunch
@@ -149,30 +156,30 @@ def get_level2_inputs(input_root, categories=[], participants=[], scan_types=[])
 	return l2_inputs
 
 def get_scan(measurements_base, data_selection, selector, scan_type):
+	import os #for some reason the import outside the function fails
 	import pandas as pd
-	from os import path #for some reason the import outside the function fails
 	scan_paths = []
 	subject = selector[0]
 	condition = selector[1]
 	filtered_data = data_selection[(data_selection["condition"] == condition)&(data_selection["subject"] == subject)&(data_selection["scan_type"] == scan_type)]
 	measurement_path = filtered_data["measurement"].tolist()[0]
 	scan_subdir = filtered_data["scan"].tolist()[0]
-	scan_path = path.join(measurements_base,measurement_path,scan_subdir)
+	scan_path = os.path.join(measurements_base,measurement_path,scan_subdir)
 	return scan_path, scan_type
 
 def dcm_to_nii(dcm_dir, group_by="EchoTime", node=False):
 	if node:
-		nii_dir = getcwd()
+		nii_dir = os.getcwd()
 	else:
 		nii_dir = dcm_dir.replace("dicom", "nii")
-		if not path.exists(nii_dir):
-			makedirs(nii_dir)
+		if not os.path.exists(nii_dir):
+			os.makedirs(nii_dir)
 	dcm_dir = dcm_dir+"/"
 	stacker = dcmstack.DcmStack()
 
 	results=[]
 	if group_by:
-		dicom_files = listdir(dcm_dir)
+		dicom_files = os.listdir(dcm_dir)
 		echo_times=[]
 		for dicom_file in dicom_files:
 			meta = minimal_extractor(read_file(dcm_dir+dicom_file, stop_before_pixels=True, force=True))
@@ -196,15 +203,13 @@ def dcm_to_nii(dcm_dir, group_by="EchoTime", node=False):
 
 	return results, echo_time_set
 
-
-
 def get_data_selection(workflow_base, conditions=[], scan_types=[], subjects=[], exclude_subjects=[], measurements=[], exclude_measurements=[]):
 	import os
 
 	if measurements:
-		measurement_path_list = [path.join(workflow_base,i) for i in measurements]
+		measurement_path_list = [os.path.join(workflow_base,i) for i in measurements]
 	else:
-		measurement_path_list = listdir(workflow_base)
+		measurement_path_list = os.listdir(workflow_base)
 
 	selected_measurements=[]
 	#populate a list of lists with acceptable subject names, conditions, and sub_dir's
@@ -212,7 +217,7 @@ def get_data_selection(workflow_base, conditions=[], scan_types=[], subjects=[],
 		if sub_dir not in exclude_measurements:
 			selected_measurement = []
 			try:
-				state_file = open(path.join(workflow_base,sub_dir,"subject"), "r")
+				state_file = open(os.path.join(workflow_base,sub_dir,"subject"), "r")
 				read_variables=0 #count variables so that breaking takes place after both have been read
 				while True:
 					current_line = state_file.readline()
@@ -247,7 +252,7 @@ def get_data_selection(workflow_base, conditions=[], scan_types=[], subjects=[],
 								measurement_copy = selected_measurement[:]
 								scan_number=None
 								try:
-									scan_program_file_path = path.join(workflow_base,sub_dir,"ScanProgram.scanProgram")
+									scan_program_file_path = os.path.join(workflow_base,sub_dir,"ScanProgram.scanProgram")
 									scan_program_file = open(scan_program_file_path, "r")
 									syntax_adjusted_scan_type = scan_type+" "
 									while True:
@@ -267,9 +272,9 @@ def get_data_selection(workflow_base, conditions=[], scan_types=[], subjects=[],
 								#Thus we scan the individual acquisition protocols as well. These are a suboptimal and second choice, because acqp scans **also**
 								#keep the original names the sequences had on import (ans may thus be misdetected, if the name was changed by the user after import).
 								if os.stat(scan_program_file_path).st_size <= 700 and not scan_number:
-									for sub_sub_dir in listdir(path.join(workflow_base,sub_dir)):
+									for sub_sub_dir in os.listdir(os.path.join(workflow_base,sub_dir)):
 										try:
-											acqp_file = path.join(workflow_base,sub_dir,sub_sub_dir,"acqp")
+											acqp_file = os.path.join(workflow_base,sub_dir,sub_sub_dir,"acqp")
 											if scan_type in open(acqp_file).read():
 												scan_number = sub_sub_dir
 												measurement_copy.extend([scan_type, scan_number])
@@ -289,3 +294,6 @@ def get_data_selection(workflow_base, conditions=[], scan_types=[], subjects=[],
 				data_selection = data_selection[(data_selection["subject"] != subject)]
 
 	return data_selection
+
+if __name__ == '__main__':
+	write_events_file("EPI_CBV_jin40", STIM_PROTOCOL_DICTIONARY, scan_directory="~/NIdata/ofM.erc/20160421_124458_5500_1_2/13")

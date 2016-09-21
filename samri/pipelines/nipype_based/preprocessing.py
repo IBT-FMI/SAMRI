@@ -3,7 +3,7 @@ if not __package__:
 	import sys
 	pkg_root = path.abspath(path.join(path.dirname(path.realpath(__file__)),"../../.."))
 	sys.path.insert(0, pkg_root)
-from SAMRI.pipelines.extra_functions import get_data_selection, get_scan
+from samri.pipelines.extra_functions import get_data_selection, get_scan
 
 import inspect
 import re

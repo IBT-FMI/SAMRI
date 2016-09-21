@@ -10,10 +10,10 @@ setup(
 	keywords = ["fMRI", "pipelines", "data analysis", "bruker"],
 	classifiers = [],
 	install_requires = [],
-	provides = ["SAMRI"],
-	packages = ["SAMRI"],
+	provides = ["samri"],
+	packages = ["samri"],
 	include_package_data=True,
 	entry_points = {'console_scripts' : \
-			['SAMRI = SAMRI.cli:main']
+			['SAMRI = samri.cli:main']
 		}
 	)

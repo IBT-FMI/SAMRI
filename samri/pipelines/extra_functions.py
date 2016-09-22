@@ -63,18 +63,20 @@ def write_function_call(frame, target_path):
 
 def write_events_file(scan_type, stim_protocol_dictionary,
 	db_path="~/syncdata/meta.db",
-	outfile="~/events.tsv",
+	out_file="~/events.tsv",
 	subject_delay=False,
 	scan_directory=False,
 	):
+	import csv
+	import os
+	import sys
+	from copy import deepcopy
 	import pandas as pd
 	import numpy as np
-	from copy import deepcopy
-	import sys
 	from labbookdb.db.query import loadSession
 	from labbookdb.db.common_classes import LaserStimulationProtocol
 
-	outfile = os.path.abspath(os.path.expanduser(outfile))
+	out_file = os.path.abspath(os.path.expanduser(out_file))
 
 	if not subject_delay:
 		_, _, _, subject_delay = read_bruker_timing(scan_directory)
@@ -90,7 +92,7 @@ def write_events_file(scan_type, stim_protocol_dictionary,
 
 	onsets=[]
 	names=[]
-	with open(outfile, 'w') as tsvfile:
+	with open(out_file, 'w') as tsvfile:
 		field_names =["onset","duration","stimulation_frequency"]
 		writer = csv.DictWriter(tsvfile, fieldnames=field_names, delimiter="\t")
 
@@ -103,7 +105,7 @@ def write_events_file(scan_type, stim_protocol_dictionary,
 			events["stimulation_frequency"] = stimulus_duration
 			writer.writerow(events)
 
-	return outfile
+	return out_file
 
 def get_subjectinfo(subject_delay, scan_type, scan_types):
 	from nipype.interfaces.base import Bunch

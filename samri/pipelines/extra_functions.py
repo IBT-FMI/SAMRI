@@ -71,6 +71,7 @@ def write_events_file(scan_type, stim_protocol_dictionary,
 	import os
 	import sys
 	from copy import deepcopy
+	from datetime import datetime
 	import pandas as pd
 	import numpy as np
 	from labbookdb.db.query import loadSession
@@ -79,7 +80,38 @@ def write_events_file(scan_type, stim_protocol_dictionary,
 	out_file = os.path.abspath(os.path.expanduser(out_file))
 
 	if not subject_delay:
-		_, _, _, subject_delay = read_bruker_timing(scan_directory)
+		scan_directory = os.path.abspath(os.path.expanduser(scan_directory))
+		state_file_path = os.path.join(scan_directory,"AdjStatePerScan")
+		state_file = open(state_file_path, "r")
+
+		delay_seconds = dummy_scans = dummy_scans_ms = 0
+
+		while True:
+			current_line = state_file.readline()
+			if "AdjScanStateTime" in current_line:
+				delay_datetime_line = state_file.readline()
+				break
+
+		trigger_time, scanstart_time = [datetime.utcnow().strptime(i.split("+")[0], "<%Y-%m-%dT%H:%M:%S,%f") for i in delay_datetime_line.split(" ")]
+		delay = scanstart_time-trigger_time
+		delay_seconds=delay.total_seconds()
+
+		method_file_path = os.path.join(scan_directory,"method")
+		method_file = open(method_file_path, "r")
+
+		read_variables=0 #count variables so that breaking takes place after both have been read
+		while True:
+			current_line = method_file.readline()
+			if "##$PVM_DummyScans=" in current_line:
+				dummy_scans = int(current_line.split("=")[1])
+				read_variables +=1 #count variables
+			if "##$PVM_DummyScansDur=" in current_line:
+				dummy_scans_ms = int(current_line.split("=")[1])
+				read_variables +=1 #count variables
+			if read_variables == 2:
+				break #prevent loop from going on forever
+
+		subject_delay = delay_seconds + dummy_scans_ms/1000
 
 	session, engine = loadSession(db_path)
 	sql_query=session.query(LaserStimulationProtocol).filter(LaserStimulationProtocol.code==stim_protocol_dictionary[scan_type])
@@ -94,7 +126,7 @@ def write_events_file(scan_type, stim_protocol_dictionary,
 	names=[]
 	with open(out_file, 'w') as tsvfile:
 		field_names =["onset","duration","stimulation_frequency"]
-		writer = csv.DictWriter(tsvfile, fieldnames=field_names, delimiter="\t")
+		writer = csv.DictWriter(tsvfile, fieldnames=field_names, delimiter=b"\t")
 
 		writer.writeheader()
 		for i in range(stimulus_repetitions):

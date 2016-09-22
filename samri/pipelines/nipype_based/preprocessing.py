@@ -173,6 +173,7 @@ def bru_preproc(measurements_base, functional_scan_types, structural_scan_types=
 
 	bids_stim_filename = pe.Node(name='bids_stim_filename', interface=util.Function(function=scs_filename,input_names=inspect.getargspec(scs_filename)[0], output_names=['filename']))
 	bids_stim_filename.inputs.suffix = "events"
+	bids_stim_filename.inputs.extension = ".tsv"
 
 	datasink = pe.Node(nio.DataSink(), name='datasink')
 	datasink.inputs.base_directory = path.join(measurements_base,"preprocessing",workflow_name,"results")

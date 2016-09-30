@@ -3,7 +3,7 @@ if not __package__:
 	import sys
 	pkg_root = path.abspath(path.join(path.dirname(path.realpath(__file__)),"../../.."))
 	sys.path.insert(0, pkg_root)
-from samri.pipelines.extra_functions import get_data_selection, get_scan
+from samri.pipelines.extra_functions import get_data_selection, get_scan, write_events_file
 
 import inspect
 import re
@@ -26,7 +26,7 @@ from nipype.interfaces.bru2nii import Bru2
 from extra_interfaces import GetBrukerTiming
 from nodes import ants_standard_registration_warp
 from utils import subject_condition_to_path, scs_filename
-from utils import STIM_PROTOCOL_DICTINARY
+from utils import STIM_PROTOCOL_DICTIONARY
 
 #set all outputs to compressed NIfTI
 AFNICommand.set_default_output_type('NIFTI_GZ')
@@ -140,9 +140,7 @@ def bru_preproc(measurements_base, functional_scan_types, structural_scan_types=
 	functional_bru2nii = pe.Node(interface=Bru2(), name="functional_bru2nii")
 	functional_bru2nii.inputs.actual_size=actual_size
 
-	timing_metadata = pe.Node(interface=GetBrukerTiming(), name="timing_metadata")
-
-	events_file = pe.Node(name='events_file', interface=util.Function(function=write_events_file,input_names=inspect.getargspec(write_events_file)[0], output_names=['output']))
+	events_file = pe.Node(name='events_file', interface=util.Function(function=write_events_file,input_names=inspect.getargspec(write_events_file)[0], output_names=['out_file']))
 	events_file.inputs.stim_protocol_dictionary = STIM_PROTOCOL_DICTIONARY
 
 	realigner = pe.Node(interface=SpaceTimeRealigner(), name="realigner")
@@ -171,9 +169,11 @@ def bru_preproc(measurements_base, functional_scan_types, structural_scan_types=
 	functional_bandpass.inputs.lowpass_sigma = 1
 
 	bids_filename = pe.Node(name='bids_filename', interface=util.Function(function=scs_filename,input_names=inspect.getargspec(scs_filename)[0], output_names=['filename']))
+	bids_filename.inputs.suffix = "cbv"
 
 	bids_stim_filename = pe.Node(name='bids_stim_filename', interface=util.Function(function=scs_filename,input_names=inspect.getargspec(scs_filename)[0], output_names=['filename']))
 	bids_stim_filename.inputs.suffix = "events"
+	bids_stim_filename.inputs.extension = ".tsv"
 
 	datasink = pe.Node(nio.DataSink(), name='datasink')
 	datasink.inputs.base_directory = path.join(measurements_base,"preprocessing",workflow_name,"results")
@@ -181,8 +181,15 @@ def bru_preproc(measurements_base, functional_scan_types, structural_scan_types=
 
 	workflow_connections = [
 		(infosource, get_functional_scan, [('subject_condition', 'selector')]),
+		(infosource, bids_stim_filename, [('subject_condition', 'subject_condition')]),
+		(get_functional_scan, bids_stim_filename, [('scan_type', 'scan')]),
 		(get_functional_scan, functional_bru2nii, [('scan_path', 'input_dir')]),
-		(get_functional_scan, timing_metadata, [('scan_path', 'scan_directory')]),
+		(get_functional_scan, events_file, [
+			('scan_type', 'scan_type'),
+			('scan_path', 'scan_directory')
+			]),
+		(events_file, datasink, [('out_file', 'func.@events')]),
+		(bids_stim_filename, events_file, [('filename', 'out_file')]),
 		(functional_bru2nii, realigner, [('nii_file', 'in_file')]),
 		(realigner, temporal_mean, [('out_file', 'in_file')]),
 		(temporal_mean, functional_FAST, [('out_file', 'in_files')]),
@@ -195,8 +202,6 @@ def bru_preproc(measurements_base, functional_scan_types, structural_scan_types=
 		(infosource, bids_filename, [('subject_condition', 'subject_condition')]),
 		(get_functional_scan, bids_filename, [('scan_type', 'scan')]),
 		(bids_filename, functional_bandpass, [('filename', 'out_file')]),
-		(infosource, bids_stim_filename, [('subject_condition', 'subject_condition')]),
-		(get_functional_scan, bids_stim_filename, [('scan_type', 'scan')]),
 		(functional_bandpass, datasink, [('out_file', 'func')]),
 		]
 

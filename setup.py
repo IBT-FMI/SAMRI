@@ -5,7 +5,7 @@ setup(
 	version="",
 	description = "Small animal magnetic resonance imaging via Python.",
 	author = "Horea Christian",
-	author_email = "h.chr@mail.ru",
+	author_email = "horea.christ@yandex.com",
 	url = "https://github.com/TheChymera/SAMRI",
 	keywords = ["fMRI", "pipelines", "data analysis", "bruker"],
 	classifiers = [],

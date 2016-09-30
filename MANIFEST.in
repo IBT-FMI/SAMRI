@@ -1,1 +1,1 @@
-include chyMRI/scan_type_classification.csv
+include samri/scan_type_classification.csv

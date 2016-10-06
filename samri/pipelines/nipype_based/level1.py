@@ -1,3 +1,10 @@
+from os import path, listdir, getcwd, remove
+if not __package__:
+	import sys
+	pkg_root = path.abspath(path.join(path.dirname(path.realpath(__file__)),"../../.."))
+	sys.path.insert(0, pkg_root)
+from samri.pipelines.extra_functions import get_level2_inputs, get_subjectinfo, write_function_call, bids_inputs
+
 import inspect
 import re
 import nipype.interfaces.io as nio
@@ -6,11 +13,59 @@ import nipype.pipeline.engine as pe
 from itertools import product
 from nipype.algorithms.modelgen import SpecifyModel
 from nipype.interfaces.fsl import GLM, FEATModel, Merge, L2Model, FLAMEO, model
-from os import path, listdir, remove, getcwd
 
 from extra_interfaces import GenL2Model
-from extra_functions import get_level2_inputs, get_subjectinfo, write_function_call
 from preprocessing import bru_preproc
+
+def l1(preprocessing_dir):
+	preprocessing_dir = path.expanduser(preprocessing_dir)
+	# inputs = bids_inputs(preprocessing_dir)
+	# print(inputs)
+	# dg = nio.DataGrabber(infields=["sub"])
+	# dg = nio.DataGrabber(infields=['sub','ses','sub','ses','scan'])
+	# dg.inputs.base_directory = preprocessing_dir
+	# dg.inputs.sort_filelist = True
+	# dg.inputs.template = "%s"
+	# dg.inputs.sub = "*"
+	# dg.inputs.template = "sub-{}/ses-{}/func/sub-{}_ses-{}_trial-{}.nii.gz"
+	# dg.run()
+
+	df = nio.DataFinder()
+	df.inputs.root_paths = preprocessing_dir
+	df.inputs.match_regex = '.+/sub-(?P<sub>.+)/ses-(?P<ses>.+)/func/.*?_trial-(?P<scan>.+)\.nii.gz'
+	# df.inputs.match_regex = '.+/sub-(?P<sub>.+)/ses-(?P<ses>.+)/func/sub-(?P<sub>.+)_ses-(?P<ses>.+)_trial-(?P<scan>.+)\.nii.gz'
+	result = df.run()
+	iterfields = zip(*[result.outputs.sub, result.outputs.ses, result.outputs.scan])
+	# print(iterfields)
+
+	df1 = nio.DataFinder()
+	df1.inputs.root_paths = preprocessing_dir
+	df1.inputs.match_regex = '.+/sub-(?P<sub>.+)/ses-(?P<ses>.+)/func/.*?_trial-(?P<scan>.+)\.nii.gz'
+	# df.inputs.match_regex = '.+/sub-(?P<sub>.+)/ses-(?P<ses>.+)/func/sub-(?P<sub>.+)_ses-(?P<ses>.+)_trial-(?P<scan>.+)\.nii.gz'
+	result = df1.run()
+	iterfields = zip(*[result.outputs.sub, result.outputs.ses, result.outputs.scan])
+	# print(iterfields)
+
+
+
+	# infosource = util.IdentityInterface(fields=['sub_ses_scan'], mandatory_inputs=False)
+	# infosource.iterables = [('sub_ses_scan',iterfields)]
+	# print(infosource.inputs.sub_ses_scan)
+	# out = infosource.run()
+	# # result = infosource.run()
+	# # print(infosource.sub_ses_scan)
+	# print(out.outputs.sub_ses_scan)
+
+	# workflow_connections = [
+	# 	(infosource, get_functional_scan, [('subject_condition', 'selector')]),
+	# 	(infosource, bids_stim_filename, [('subject_condition', 'subject_condition')]),
+	# 	]
+	#
+	# workflow = pe.Workflow(name=workdir_name)
+	# workflow.connect(workflow_connections)
+	# workflow.run()
+
+	# print("sub-4011/ses-ofM_aF/func/sub-4011_ses-ofM_aF_trial-7_EPI_CBV_cbv.nii.gz")
 
 def level1(measurements_base, functional_scan_types, structural_scan_types=[], tr=1, conditions=[], subjects=[], exclude_subjects=[], measurements=[], exclude_measurements=[], actual_size=False, pipeline_denominator="level1", template="/home/chymera/NIdata/templates/ds_QBI_chr.nii.gz", standalone_execute=True, compare_experiment_types=[], quiet=True, blur_xy=False):
 	"""First-level analysis pipeiline which calls the bru_preproc workflow for preprocessing
@@ -111,11 +166,15 @@ def level1(measurements_base, functional_scan_types, structural_scan_types=[], t
 
 if __name__ == "__main__":
 	# level1("~/NIdata/ofM.dr/", {"7_EPI_CBV":"6_20_jb"}, structural_scan_types=-1, conditions=["ofM","ofM_aF","ofM_cF1","ofM_cF2","ofM_pF"], exclude_measurements=["20151027_121613_4013_1_1"], pipeline_denominator="level1_dgamma_blurxy56n", blur_xy=5.6)
-	level1("~/NIdata/ofM.erc/", {"EPI_CBV_jin6":"jin6","EPI_CBV_jin10":"jin10","EPI_CBV_jin20":"jin20","EPI_CBV_jin40":"jin40","EPI_CBV_jin60":"jin60","EPI_CBV_alej":"alej",}, structural_scan_types=-1, actual_size=False, pipeline_denominator="level1_dgamma")
-	level2_common_effect("~/NIdata/ofM.erc/GLM/level1_dgamma", categories=[], scan_types=[["EPI_CBV_jin6"],["EPI_CBV_jin10"],["EPI_CBV_jin20"],["EPI_CBV_jin40"],["EPI_CBV_jin60"],["EPI_CBV_alej"]], participants=["5502","5503"], denominator="level2_dgamma")
-	for i in range(4,8):
-		level1("~/NIdata/ofM.erc/", {"EPI_CBV_jin6":"jin6","EPI_CBV_jin10":"jin10","EPI_CBV_jin20":"jin20","EPI_CBV_jin40":"jin40","EPI_CBV_jin60":"jin60","EPI_CBV_alej":"alej",}, structural_scan_types=-1, actual_size=False, pipeline_denominator="level1_dgamma_blurxy"+str(i), blur_xy=i)
-		level2_common_effect("~/NIdata/ofM.erc/GLM/level1_dgamma_blurxy"+str(i), categories=[], scan_types=[["EPI_CBV_jin6"],["EPI_CBV_jin10"],["EPI_CBV_jin20"],["EPI_CBV_jin40"],["EPI_CBV_jin60"],["EPI_CBV_alej"]], participants=["5502","5503"], denominator="level2_dgamma_blurxy"+str(i))
+
+	# level1("~/NIdata/ofM.erc/", {"EPI_CBV_jin6":"jin6","EPI_CBV_jin10":"jin10","EPI_CBV_jin20":"jin20","EPI_CBV_jin40":"jin40","EPI_CBV_jin60":"jin60","EPI_CBV_alej":"alej",}, structural_scan_types=-1, actual_size=False, pipeline_denominator="level1_dgamma")
+	# level2_common_effect("~/NIdata/ofM.erc/GLM/level1_dgamma", categories=[], scan_types=[["EPI_CBV_jin6"],["EPI_CBV_jin10"],["EPI_CBV_jin20"],["EPI_CBV_jin40"],["EPI_CBV_jin60"],["EPI_CBV_alej"]], participants=["5502","5503"], denominator="level2_dgamma")
+	# for i in range(4,8):
+	# 	level1("~/NIdata/ofM.erc/", {"EPI_CBV_jin6":"jin6","EPI_CBV_jin10":"jin10","EPI_CBV_jin20":"jin20","EPI_CBV_jin40":"jin40","EPI_CBV_jin60":"jin60","EPI_CBV_alej":"alej",}, structural_scan_types=-1, actual_size=False, pipeline_denominator="level1_dgamma_blurxy"+str(i), blur_xy=i)
+	# 	level2_common_effect("~/NIdata/ofM.erc/GLM/level1_dgamma_blurxy"+str(i), categories=[], scan_types=[["EPI_CBV_jin6"],["EPI_CBV_jin10"],["EPI_CBV_jin20"],["EPI_CBV_jin40"],["EPI_CBV_jin60"],["EPI_CBV_alej"]], participants=["5502","5503"], denominator="level2_dgamma_blurxy"+str(i))
+
+	l1("~/NIdata/ofM.dr/preprocessing/generic")
+
 	# level2_common_effect("~/NIdata/ofM.dr/GLM/level1_gamma", categories=["ofM_cF2"], participants=["4008","4007","4011","4012"], scan_types=["7_EPI_CBV"])
 	# level2_common_effect("~/NIdata/ofM.dr/GLM/level1_dgamma_blurxy56", categories=[["ofM"],["ofM_aF"],["ofM_cF1"],["ofM_cF2"],["ofM_pF"]], participants=["4008","4007","4011","4012"], scan_types=["7_EPI_CBV"],denominator="level2_dgamma_blurxy56")
 	# level2_common_effect("~/NIdata/ofM.dr/GLM/level1_dgamma_blurxy56n", categories=[["ofM"],["ofM_aF"],["ofM_cF1"],["ofM_cF2"],["ofM_pF"]], participants=["4008","4007","4011","4012"], scan_types=["7_EPI_CBV"],denominator="level2_dgamma_blurxy56n")

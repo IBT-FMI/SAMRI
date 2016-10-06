@@ -176,6 +176,24 @@ def get_subjectinfo(subject_delay, scan_type, scan_types):
 					))
 	return output
 
+def stimulus_protocol_bunch(eventfile_path):
+	eventfile_df = pd.read_csv(eventfile_path)
+
+def bids_inputs(input_root, categories=[], participants=[], scan_types=[]):
+	import os
+	l2_inputs = []
+	for dirName, subdirList, fileList in os.walk(input_root, topdown=False):
+		if subdirList == []:
+			for my_file in fileList:
+				candidate_l2_input = os.path.join(dirName,my_file)
+				#the following string additions are performed to not accidentally match longer identifiers which include the shorter identifiers actually queried for. The path formatting is taken from the glm.py level1() datasync node, and will not work if that is modified.
+				if not "/anat/" in candidate_l2_input and candidate_l2_input[-11:] != "_events.tsv":
+					if (any("ses-"+c in candidate_l2_input for c in categories) or not categories) and (any("sub-"+p in candidate_l2_input for p in participants) or not participants) and (any("scan_type_"+s+"/" in candidate_l2_input for s in scan_types) or not scan_types):
+						l2_inputs.append(candidate_l2_input)
+
+	return l2_inputs
+
+
 def get_level2_inputs(input_root, categories=[], participants=[], scan_types=[]):
 	import os
 	l2_inputs = []

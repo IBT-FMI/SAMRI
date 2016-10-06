@@ -34,7 +34,7 @@ FSLCommand.set_default_output_type('NIFTI_GZ')
 
 #relative paths
 thisscriptspath = path.dirname(path.realpath(__file__))
-scan_classification_file_path = path.join(thisscriptspath,"scan_type_classification.csv")
+scan_classification_file_path = path.join(thisscriptspath,"..","scan_type_classification.csv")
 
 def bru_preproc_lite(measurements_base, functional_scan_types=[], structural_scan_types=[], tr=1, conditions=[], subjects=[], exclude_subjects=[], measurements=[], exclude_measurements=[], actual_size=False, realign=False):
 
@@ -101,7 +101,7 @@ def bru_preproc_lite(measurements_base, functional_scan_types=[], structural_sca
 	# workflow.run(plugin="MultiProc")
 	return workflow
 
-def bru_preproc(measurements_base, functional_scan_types, structural_scan_types=[], workflow_name="generic", tr=1, conditions=[], subjects=[], exclude_subjects=[], measurements=[], exclude_measurements=[], actual_size=False, template="/home/chymera/NIdata/templates/ds_QBI_chr.nii.gz", blur_xy=False, structural_registration=False, quiet=True):
+def bru_preproc(measurements_base, functional_scan_types=[], structural_scan_types=[], workflow_name="generic", tr=1, conditions=[], subjects=[], exclude_subjects=[], measurements=[], exclude_measurements=[], actual_size=False, template="/home/chymera/NIdata/templates/ds_QBI_chr.nii.gz", blur_xy=False, structural_registration=False, quiet=True):
 
 	#select all functional/sturctural scan types unless specified
 	if not functional_scan_types or not structural_scan_types:
@@ -176,7 +176,7 @@ def bru_preproc(measurements_base, functional_scan_types, structural_scan_types=
 	bids_stim_filename.inputs.extension = ".tsv"
 
 	datasink = pe.Node(nio.DataSink(), name='datasink')
-	datasink.inputs.base_directory = path.join(measurements_base,"preprocessing",workflow_name,"results")
+	datasink.inputs.base_directory = path.join(measurements_base,"preprocessing",workflow_name)
 	datasink.inputs.parameterization = False
 
 	workflow_connections = [
@@ -279,10 +279,11 @@ def bru_preproc(measurements_base, functional_scan_types, structural_scan_types=
 					])
 
 
-	workflow = pe.Workflow(name=workflow_name)
+	workdir_name = workflow_name+"_work"
+	workflow = pe.Workflow(name=workdir_name)
 	workflow.connect(workflow_connections)
 	workflow.base_dir = path.join(measurements_base,"preprocessing")
-	workflow.write_graph(dotfilename=path.join(workflow.base_dir,workflow_name,"graph.dot"), graph2use="hierarchical", format="png")
+	workflow.write_graph(dotfilename=path.join(workflow.base_dir,workdir_name,"graph.dot"), graph2use="hierarchical", format="png")
 	if quiet:
 		try:
 			workflow.run(plugin="MultiProc",  plugin_args={'n_procs' : 4})
@@ -296,4 +297,8 @@ def bru_preproc(measurements_base, functional_scan_types, structural_scan_types=
 
 if __name__ == "__main__":
 	# bru_preproc_lite(measurements_base="/mnt/data/NIdata/ofM.erc/", functional_scan_types=["EPI_CBV_alej","EPI_CBV_jin6","EPI_CBV_jin10","EPI_CBV_jin20","EPI_CBV_jin40","EPI_CBV_jin60"], structural_scan_type="T2_TurboRARE", conditions=["ERC_ofM"], include_subjects=["5502","5503"])
-	bru_preproc("/home/chymera/NIdata/ofM.erc/", ["EPI_CBV_jin10","EPI_CBV_jin60"], conditions=["ERC_ofM","ERC_ofM_r1"], structural_scan_types=["T2_TurboRARE"])
+	# bru_preproc("/home/chymera/NIdata/ofM.erc/", ["EPI_CBV_jin10","EPI_CBV_jin60"], conditions=["ERC_ofM","ERC_ofM_r1"], structural_scan_types=["T2_TurboRARE"])
+
+	## NEW STRUCTURE:
+	bru_preproc("/home/chymera/NIdata/ofM.dr/",exclude_subjects=[],exclude_measurements=['20151027_121613_4013_1_1'])
+	# bru_preproc("/home/chymera/NIdata/ofM.erc/",exclude_subjects=["4030","4029","4031"])

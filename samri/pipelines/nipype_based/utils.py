@@ -4,7 +4,14 @@ STIM_PROTOCOL_DICTIONARY={
 	"EPI_CBV_jin20":"jin20",
 	"EPI_CBV_jin40":"jin40",
 	"EPI_CBV_jin60":"jin60",
-	"7_EPI_CBV":"6_20_jb"
+	"EPI_CBV_alej":"alej",
+	"7_EPI_CBV_jin6":"jin6",
+	"7_EPI_CBV_jin10":"jin10",
+	"7_EPI_CBV_jin20":"jin20",
+	"7_EPI_CBV_jin40":"jin40",
+	"7_EPI_CBV_jin60":"jin60",
+	"7_EPI_CBV_alej":"alej",
+	"7_EPI_CBV":"6_20_jb",
 	}
 
 def subject_condition_to_path(subject_condition):

@@ -169,7 +169,6 @@ def bru_preproc(measurements_base, functional_scan_types=[], structural_scan_typ
 	functional_bandpass.inputs.lowpass_sigma = 1
 
 	bids_filename = pe.Node(name='bids_filename', interface=util.Function(function=scs_filename,input_names=inspect.getargspec(scs_filename)[0], output_names=['filename']))
-	bids_filename.inputs.suffix = "cbv"
 
 	bids_stim_filename = pe.Node(name='bids_stim_filename', interface=util.Function(function=scs_filename,input_names=inspect.getargspec(scs_filename)[0], output_names=['filename']))
 	bids_stim_filename.inputs.suffix = "events"

@@ -22,6 +22,17 @@ def subject_condition_to_path(subject_condition):
 	subject_condition[1] = "ses-" + subject_condition[1]
 	return "/".join(subject_condition)
 
+def sss_to_source(source_format, subject=False, session=False, scan=False, subject_session_scan=False, base_directory=False,):
+	import os
+
+	if any(a is False for a in [subject,session,scan]):
+		(subject,session,scan) = subject_session_scan
+
+	source = source_format.format(subject, session, scan)
+	if base_directory:
+		source = os.path.join(base_directory, source)
+	return source_full_path
+
 def scs_filename(subject_condition, scan, scan_prefix="trial", suffix="", extension=".nii.gz"):
 	"""Concatenate subject-condition and scan inputs to a BIDS-style filename
 

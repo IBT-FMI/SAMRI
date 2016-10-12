@@ -13,7 +13,7 @@ plt.style.use('ggplot')
 colors_plus = plt.cm.autumn(np.linspace(0., 1, 128))
 colors_minus = plt.cm.winter(np.linspace(0, 1, 128))
 
-def stat(stat_maps, cbv=True, figure_title="", interpolation="hermite", template="~/NIdata/templates/ds_QBI_chr.nii.gz", save_as="", scale=1., subplot_titles=[], cut_coords=None, threshold=3, black_bg=False, annotate=True, draw_cross=True):
+def stat(stat_maps, cbv=True, figure_title="", interpolation="hermite", template="~/NIdata/templates/ds_QBI_chr.nii.gz", save_as="", scale=1., subplot_titles=[], cut_coords=None, threshold=3, black_bg=False, annotate=True, draw_cross=True, show_plot=True):
 	"""Plot a list of statistical maps.
 	This Function acts as a wrapper of nilearn.plotting.plot_stat_map, adding support for multiple axes, using a prettier default and allowing intelligent text and crosshair scaling.
 
@@ -98,7 +98,8 @@ def stat(stat_maps, cbv=True, figure_title="", interpolation="hermite", template
 			if isinstance(save_as, PdfPages):
 				save_as.savefig()
 	else:
-		plt.show()
+		if show_plot:
+			plt.show()
 
 	return display
 
@@ -112,4 +113,5 @@ if __name__ == '__main__':
 	stat_maps = [
 		"/home/chymera/NIdata/ofM.dr/GLM/level2_dgamma_blurxy4/_category_multi_ofM_cF2/flameo/mapflow/_flameo0/stats/tstat1.nii.gz",
 		]
-	stat(stat_maps, cbv=True, template="~/NIdata/templates/ds_QBI_chr.nii.gz", cut_coords=(-49,8,43), threshold=3, interpolation="gaussian", figure_title="lala")
+	stat(stat_maps, cbv=True, template="~/NIdata/templates/ds_QBI_chr.nii.gz", threshold=3, interpolation="gaussian", figure_title="lala")
+	# stat(stat_maps, cbv=True, template="~/NIdata/templates/ds_QBI_chr.nii.gz", cut_coords=(-49,8,43), threshold=3, interpolation="gaussian", figure_title="lala")

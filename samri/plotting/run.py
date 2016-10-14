@@ -1,4 +1,4 @@
-import maps, timeseries
+import maps, timeseries, dcm
 
 def blur_kernel_compare_dr(conditions=["ofM","ofM_aF","ofM_cF1","ofM_cF2","ofM_pF"], parameters=["level2_dgamma","level2_dgamma_blurxy4","level2_dgamma_blurxy5", "level2_dgamma_blurxy6", "level2_dgamma_blurxy7"], threshold=3):
 	from matplotlib.backends.backend_pdf import PdfPages

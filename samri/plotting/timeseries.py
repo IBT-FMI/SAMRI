@@ -83,6 +83,9 @@ def plot_stim_design(file_path,stim):
 	plt.tick_params(axis='x', which='both', bottom='off', top='off', left='off', right='off')
 	plt.tick_params(axis='y', which='both', bottom='off', top='off', left='off', right='off')
 
+# def plot_model(model_file):
+
+
 if __name__ == '__main__':
 	# plot_nii("/home/chymera/FSL_GLM_work/GLM/_measurement_id_20151103_213035_4001_1_1/functional_cutoff/6_restore_maths.nii.gz", (-50,20))
 	# plot_fsl_design("/home/chymera/NIdata/ofM.dr/level1/first_level/_condition_ofM_subject_4001/modelgen/run0.mat")
@@ -101,5 +104,7 @@ if __name__ == '__main__':
 	# 	plot_stat_map(stat_map="/home/chymera/NIdata/ofM.dr/GLM/level2_dgamma_blurxy56/_category_multi_"+i+"/flameo/mapflow/_flameo0/stats/tstat1.nii.gz", cbv=True, save_as="/home/chymera/"+i+".pdf", cut_coords=(-49,8,43), threshold=3)
 
 	# plot_stat_map("/home/chymera/NIdata/ofM.dr/GLM/level2_dgamma_blurxy56/_category_multi_ofM_cF2/flameo/mapflow/_flameo0/stats/tstat1.nii.gz", cbv=True, save_as="/home/chymera/ofM_cF2.pdf", cut_coords=(-49,8,43), threshold=3, interpolation="gaussian")
+
+	# plot_model()
 
 	plt.show()

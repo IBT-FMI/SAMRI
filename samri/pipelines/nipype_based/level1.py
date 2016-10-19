@@ -18,8 +18,10 @@ from extra_interfaces import GenL2Model, SpecifyModel
 from preprocessing import bru_preproc
 from utils import sss_to_source, subject_condition_to_path
 
-def l1(preprocessing_dir, tr=1):
+def l1(preprocessing_dir, tr=1, nprocs=4):
 	preprocessing_dir = path.expanduser(preprocessing_dir)
+	if not l1_dir:
+		l1_dir = path.abspath(path.join(preprocessing_dir,"..","..","l1"))
 	# inputs = bids_inputs(preprocessing_dir)
 	# print(inputs)
 	# dg = nio.DataGrabber(infields=["sub"])
@@ -77,7 +79,7 @@ def l1(preprocessing_dir, tr=1):
 	varcb_filename.inputs.source_format = "sub-{0}/ses-{1}/sub-{0}_ses-{1}_trial-{2}_varcb.nii.gz"
 
 	datasink = pe.Node(nio.DataSink(), name='datasink')
-	datasink.inputs.base_directory = path.join(measurements_base,"preprocessing",workflow_name)
+	datasink.inputs.base_directory = path.join(l1_dir,workflow_name)
 	datasink.inputs.parameterization = False
 
 	workflow_connections = [
@@ -103,6 +105,14 @@ def l1(preprocessing_dir, tr=1):
 	workflow = pe.Workflow(name="myWF")
 	workflow.connect(workflow_connections)
 	workflow.run()
+
+	workdir_name = workflow_name+"_work"
+	workflow = pe.Workflow(name=workdir_name)
+	workflow.connect(workflow_connections)
+	workflow.base_dir = l1_dir
+	workflow.write_graph(dotfilename=path.join(workflow.base_dir,workdir_name,"graph.dot"), graph2use="hierarchical", format="png")
+
+	workflow.run(plugin="MultiProc",  plugin_args={'n_procs' : nprocs})
 
 def level1(measurements_base, functional_scan_types, structural_scan_types=[], tr=1, conditions=[], subjects=[], exclude_subjects=[], measurements=[], exclude_measurements=[], actual_size=False, pipeline_denominator="level1", template="/home/chymera/NIdata/templates/ds_QBI_chr.nii.gz", standalone_execute=True, compare_experiment_types=[], quiet=True, blur_xy=False):
 	"""First-level analysis pipeiline which calls the bru_preproc workflow for preprocessing

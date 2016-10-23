@@ -101,7 +101,7 @@ def bru_preproc_lite(measurements_base, functional_scan_types=[], structural_sca
 	# workflow.run(plugin="MultiProc")
 	return workflow
 
-def bru_preproc(measurements_base, functional_scan_types=[], structural_scan_types=[], workflow_name="generic", tr=1, conditions=[], subjects=[], exclude_subjects=[], measurements=[], exclude_measurements=[], actual_size=False, template="/home/chymera/NIdata/templates/ds_QBI_chr.nii.gz", blur_xy=False, structural_registration=False, quiet=True):
+def bru_preproc(measurements_base, functional_scan_types=[], structural_scan_types=[], workflow_name="generic", tr=1, conditions=[], subjects=[], exclude_subjects=[], measurements=[], exclude_measurements=[], actual_size=False, template="/home/chymera/NIdata/templates/ds_QBI_chr.nii.gz", functional_blur_xy=False, functional_registration="structural", quiet=True):
 
 	#select all functional/sturctural scan types unless specified
 	if not functional_scan_types or not structural_scan_types:
@@ -150,20 +150,6 @@ def bru_preproc(measurements_base, functional_scan_types=[], structural_scan_typ
 
 	temporal_mean = pe.Node(interface=MeanImage(), name="temporal_mean")
 
-	functional_register, functional_warp = ants_standard_registration_warp(template, "functional_register", "functional_warp")
-
-	functional_FAST = pe.Node(interface=FAST(), name="functional_FAST")
-	functional_FAST.inputs.segments = False
-	functional_FAST.inputs.output_biascorrected = True
-	functional_FAST.inputs.bias_iters = 8
-
-	functional_cutoff = pe.Node(interface=ImageMaths(), name="functional_cutoff")
-	functional_cutoff.inputs.op_string = "-thrP 30"
-
-	functional_BET = pe.Node(interface=BET(), name="functional_BET")
-	functional_BET.inputs.mask = True
-	functional_BET.inputs.frac = 0.5
-
 	functional_bandpass = pe.Node(interface=TemporalFilter(), name="functional_bandpass")
 	functional_bandpass.inputs.highpass_sigma = 180
 	functional_bandpass.inputs.lowpass_sigma = 1
@@ -192,11 +178,6 @@ def bru_preproc(measurements_base, functional_scan_types=[], structural_scan_typ
 		(functional_bru2nii, realigner, [('nii_file', 'in_file')]),
 		(realigner, temporal_mean, [('out_file', 'in_file')]),
 		(temporal_mean, functional_FAST, [('out_file', 'in_files')]),
-		(functional_FAST, functional_cutoff, [('restored_image', 'in_file')]),
-		(functional_cutoff, functional_BET, [('out_file', 'in_file')]),
-		(functional_BET, functional_register, [('out_file', 'moving_image')]),
-		(functional_register, functional_warp, [('composite_transform', 'transforms')]),
-		(realigner, functional_warp, [('out_file', 'input_image')]),
 		(infosource, datasink, [(('subject_condition',subject_condition_to_path), 'container')]),
 		(infosource, bids_filename, [('subject_condition', 'subject_condition')]),
 		(get_functional_scan, bids_filename, [('scan_type', 'scan')]),
@@ -204,18 +185,7 @@ def bru_preproc(measurements_base, functional_scan_types=[], structural_scan_typ
 		(functional_bandpass, datasink, [('out_file', 'func')]),
 		]
 
-	if blur_xy:
-		blur = pe.Node(interface=BlurToFWHM(), name="blur")
-		blur.inputs.fwhmxy = blur_xy
-		workflow_connections.extend([
-			(functional_warp, blur, [('output_image', 'in_file')]),
-			(blur, functional_bandpass, [('out_file', 'in_file')]),
-			])
-	else:
-		workflow_connections.extend([
-			(functional_warp, functional_bandpass, [('output_image', 'in_file')]),
-			])
-
+	#ADDING SELECTABLE NODES AND EXTENDING WORKFLOW AS APPROPRIATE:
 	if structural_scan_types:
 		get_structural_scan = pe.Node(name='get_structural_scan', interface=util.Function(function=get_scan,input_names=inspect.getargspec(get_scan)[0], output_names=['scan_path','scan_type']))
 		get_structural_scan.inputs.data_selection = data_selection
@@ -226,18 +196,35 @@ def bru_preproc(measurements_base, functional_scan_types=[], structural_scan_typ
 		structural_bru2nii.inputs.force_conversion=True
 		structural_bru2nii.inputs.actual_size=actual_size
 
-		structural_FAST = pe.Node(interface=FAST(), name="structural_FAST")
-		structural_FAST.inputs.segments = False
-		structural_FAST.inputs.output_biascorrected = True
-		structural_FAST.inputs.bias_iters = 8
+		s_biascorrect = pe.Node(interface=ants.N4BiasFieldCorrection(), name="s_biascorrect")
+		s_biascorrect.inputs.dimension = 3
+		s_biascorrect.inputs.input_image = struct_image
+		s_biascorrect.inputs.bspline_fitting_distance = 100
+		s_biascorrect.inputs.shrink_factor = 2
+		s_biascorrect.inputs.n_iterations = [200,200,200,200]
+		s_biascorrect.inputs.convergence_threshold = 1e-11
 
-		structural_cutoff = pe.Node(interface=ImageMaths(), name="structural_cutoff")
-		structural_cutoff.inputs.op_string = "-thrP 45"
-		structural_register, structural_warp = ants_standard_registration_warp(template, "structural_register", "structural_warp")
+		s_reg_biascorrect = pe.Node(interface=ants.N4BiasFieldCorrection(), name="struct_reg_biascorrect")
+		s_reg_biascorrect.inputs.dimension = 3
+		s_reg_biascorrect.inputs.input_image = struct_image
+		s_reg_biascorrect.inputs.bspline_fitting_distance = 95
+		s_reg_biascorrect.inputs.shrink_factor = 2
+		s_reg_biascorrect.inputs.n_iterations = [500,500,500,500]
+		s_reg_biascorrect.inputs.convergence_threshold = 1e-14
 
-		structural_BET = pe.Node(interface=BET(), name="structural_BET")
-		structural_BET.inputs.mask = True
-		structural_BET.inputs.frac = 0.5
+		s_cutoff = pe.Node(interface=ImageMaths(), name="s_cutoff")
+		s_cutoff.inputs.op_string = "-thrP 20 -uthrp 98"
+		s_cutoff.inputs.in_file = _n4_res.outputs.output_image
+
+		s_BET = pe.Node(interface=BET(), name="s_BET")
+		s_BET = BET()
+		s_BET.inputs.mask = True
+		s_BET.inputs.frac = 0.3
+		s_BET.inputs.robust = True
+
+		s_mask = pe.Node(interface=ApplyMask(), name="s_mask")
+
+		registration, s_warp, f_warp = functional_registration(template)
 
 		structural_bids_filename = pe.Node(name='structural_bids_filename', interface=util.Function(function=scs_filename,input_names=inspect.getargspec(scs_filename)[0], output_names=['filename']))
 		structural_bids_filename.inputs.scan_prefix = False
@@ -245,38 +232,61 @@ def bru_preproc(measurements_base, functional_scan_types=[], structural_scan_typ
 		workflow_connections.extend([
 			(infosource, get_structural_scan, [('subject_condition', 'selector')]),
 			(get_structural_scan, structural_bru2nii, [('scan_path','input_dir')]),
-			(structural_bru2nii, structural_FAST, [('nii_file', 'in_files')]),
-			(structural_FAST, structural_cutoff, [('restored_image', 'in_file')]),
-			(structural_cutoff, structural_BET, [('out_file', 'in_file')]),
-			(structural_BET, structural_register, [('out_file', 'moving_image')]),
-			(infosource, structural_bids_filename, [('subject_condition', 'subject_condition')]),
-			(get_structural_scan, structural_bids_filename, [('scan_type', 'scan')]),
-			(structural_bids_filename, structural_register, [('filename', 'output_warped_image')]),
-			(structural_register, datasink, [('warped_image', 'anat')]),
+			(structural_bru2nii, s_reg_biascorrect, [('nii_file', 'in_files')]),
+			(s_reg_biascorrect, s_cutoff, [('output_image', 'in_file')]),
+			(s_cutoff, s_BET, [('out_file', 'in_file')]),
+			(s_biascorrect, s_mask, [('output_image', 'in_file')]),
+			(s_BET, s_mask, [('mask_file', 'mask_file')]),
+			(s_mask, registration, [('out_file', 'moving_image')]),
+			(registration, s_warp, [('composite_transform', 'transforms')]),
+			(structural_bru2nii, s_warp, [('out_file', 'input_image')]),
+			(s_warp, datasink, [('output_image', 'anat')]),
 			])
 
-		if structural_registration:
-			structural_bandpass = pe.Node(interface=TemporalFilter(), name="structural_bandpass")
-			structural_bandpass.inputs.highpass_sigma = 180
-			structural_bandpass.inputs.lowpass_sigma = 1
 
-			workflow_connections.extend([
-			(structural_register, structural_warp, [('composite_transform', 'transforms')]),
-			(realigner, structural_warp, [('out_file', 'input_image')]),
+	if functional_registration == "structural":
+		if not structural_scan_types:
+			raise ValueError('The option `registration="structural"` requires there to be a structural scan type.')
+
+		workflow_connections.extend([
+			(registration, f_warp, [('composite_transform', 'transforms')]),
+			(realigner, f_warp, [('out_file', 'input_image')]),
 			])
 
-			if blur_xy:
-				structural_blur = pe.Node(interface=BlurToFWHM(), name="blur")
-				blur.inputs.fwhmxy = blur_xy
-				workflow_connections.extend([
-					(structural_warp, structural_blur, [('output_image', 'in_file')]),
-					(structural_blur, structural_bandpass, [('out_file', 'in_file')]),
-					])
-			else:
-				workflow_connections.extend([
-					(structural_warp, structural_bandpass, [('output_image', 'in_file')]),
-					])
+	elif functional_registration == "functional":
+		register, f_warp = functional_registration(template)
 
+		functional_FAST = pe.Node(interface=FAST(), name="functional_FAST")
+		functional_FAST.inputs.segments = False
+		functional_FAST.inputs.output_biascorrected = True
+		functional_FAST.inputs.bias_iters = 8
+
+		functional_cutoff = pe.Node(interface=ImageMaths(), name="functional_cutoff")
+		functional_cutoff.inputs.op_string = "-thrP 30"
+
+		functional_BET = pe.Node(interface=BET(), name="functional_BET")
+		functional_BET.inputs.mask = True
+		functional_BET.inputs.frac = 0.5
+
+		workflow_connections.extend([
+			(functional_FAST, functional_cutoff, [('restored_image', 'in_file')]),
+			(functional_cutoff, functional_BET, [('out_file', 'in_file')]),
+			(functional_BET, register, [('out_file', 'moving_image')]),
+			(register, f_warp, [('composite_transform', 'transforms')]),
+			(realigner, f_warp, [('out_file', 'input_image')]),
+			])
+
+	if functional_blur_xy:
+		blur = pe.Node(interface=BlurToFWHM(), name="blur")
+		blur.inputs.fwhmxy = functional_blur_xy
+		workflow_connections.extend([
+			(f_warp, blur, [('output_image', 'in_file')]),
+			(blur, functional_bandpass, [('out_file', 'in_file')]),
+			])
+	else:
+		workflow_connections.extend([
+			(f_warp, functional_bandpass, [('output_image', 'in_file')]),
+			])
 
 	workdir_name = workflow_name+"_work"
 	workflow = pe.Workflow(name=workdir_name)
@@ -299,5 +309,5 @@ if __name__ == "__main__":
 	# bru_preproc("/home/chymera/NIdata/ofM.erc/", ["EPI_CBV_jin10","EPI_CBV_jin60"], conditions=["ERC_ofM","ERC_ofM_r1"], structural_scan_types=["T2_TurboRARE"])
 
 	## NEW STRUCTURE:
-	bru_preproc("/home/chymera/NIdata/ofM.dr/",exclude_subjects=[],exclude_measurements=['20151027_121613_4013_1_1'])
+	bru_preproc("/home/chymera/NIdata/ofM.dr/",subjects=[4001,4007,4008,4009,4012],exclude_measurements=['20151027_121613_4013_1_1'])
 	# bru_preproc("/home/chymera/NIdata/ofM.erc/",exclude_subjects=["4030","4029","4031"])

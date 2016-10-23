@@ -16,21 +16,23 @@ def structural_per_participant_test(participant, conditions=["","_aF","_cF1","_c
 			n4 = ants.N4BiasFieldCorrection()
 			n4.inputs.dimension = 3
 			n4.inputs.input_image = mimage
-			n4.inputs.bspline_fitting_distance = 100
+			# correction bias is introduced (along the z-axis) if the following value is set to under 85. This is likely contingent on resolution.
+			n4.inputs.bspline_fitting_distance = 95
 			n4.inputs.shrink_factor = 2
-			n4.inputs.n_iterations = [200,200,200,200]
-			n4.inputs.convergence_threshold = 1e-11
-			n4.inputs.output_image = 'n4_{}_ofM{}.nii.gz'.format(participant,i)
+			n4.inputs.n_iterations = [1000,1000,1000,1000]
+			n4.inputs.convergence_threshold = 1e-14
+			n4.inputs.output_image = 'ss_n4_{}_ofM{}.nii.gz'.format(participant,i)
 			n4_res = n4.run()
 
 			struct_cutoff = ImageMaths()
-			struct_cutoff.inputs.op_string = "-thrP 30"
+			struct_cutoff.inputs.op_string = "-thrP 20"
 			struct_cutoff.inputs.in_file = n4_res.outputs.output_image
 			struct_cutoff_res = struct_cutoff.run()
 
 			struct_BET = BET()
 			struct_BET.inputs.mask = True
-			struct_BET.inputs.frac = 0.5
+			struct_BET.inputs.frac = 0.3
+			struct_BET.inputs.robust = True
 			struct_BET.inputs.in_file = struct_cutoff_res.outputs.out_file
 			struct_BET_res = struct_BET.run()
 
@@ -38,13 +40,14 @@ def structural_per_participant_test(participant, conditions=["","_aF","_cF1","_c
 			struct_registration.inputs.fixed_image = template
 			struct_registration.inputs.output_transform_prefix = "output_"
 			struct_registration.inputs.transforms = ['Affine', 'SyN'] ##
-			struct_registration.inputs.transform_parameters = [(2.0,), (1.0, 3.0, 5.0)] ##
-			struct_registration.inputs.number_of_iterations = [[2000, 500, 2000], [100, 100, 100]] #
+			struct_registration.inputs.transform_parameters = [(1.0,), (1.0, 3.0, 5.0)] ##
+			struct_registration.inputs.number_of_iterations = [[4000, 2000, 1000], [100, 100, 100]] #
 			struct_registration.inputs.dimension = 3
 			struct_registration.inputs.write_composite_transform = True
 			struct_registration.inputs.collapse_output_transforms = True
 			struct_registration.inputs.initial_moving_transform_com = True
-			struct_registration.inputs.metric = ['Mattes', 'Mattes']
+			# Tested on Affine transform: CC takes too long, Demons does not tilt, but moves the slices too far caudally
+			struct_registration.inputs.metric = ['GC', 'Mattes']
 			struct_registration.inputs.metric_weight = [1, 1]
 			struct_registration.inputs.radius_or_number_of_bins = [16, 32] #
 			struct_registration.inputs.sampling_strategy = ['Random', None]
@@ -63,7 +66,7 @@ def structural_per_participant_test(participant, conditions=["","_aF","_cF1","_c
 			struct_registration.inputs.num_threads = 4
 
 			struct_registration.inputs.moving_image = struct_BET_res.outputs.out_file
-			struct_registration.inputs.output_warped_image = '{}_ofM{}.nii.gz'.format(participant,i)
+			struct_registration.inputs.output_warped_image = 'ss_{}_ofM{}.nii.gz'.format(participant,i)
 			res = struct_registration.run()
 
 def functional_per_participant_test():
@@ -373,7 +376,10 @@ def canonical(participant, conditions=["","_aF","_cF1","_cF2","_pF"]):
 			warp.run()
 
 if __name__ == '__main__':
-	structural_per_participant_test("4012")
+	structural_per_participant_test("4001")
 	# functional_per_participant_test()
-	# structural_to_functional_per_participant_test("4012")
+	# structural_to_functional_per_participant_test("4009")
+	# structural_to_functional_per_participant_test("4008")
+	# structural_to_functional_per_participant_test("4007")
+	# structural_to_functional_per_participant_test("4001")
 	# canonical("4012",[""])

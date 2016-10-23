@@ -201,6 +201,7 @@ def structural_to_functional_per_participant_test(participant, conditions=["","_
 			struct_BET.inputs.in_file = struct_cutoff_res.outputs.out_file
 			struct_BET_res = struct_BET.run()
 
+			# we need/can not apply a fill, because the "holes" if any, will be at the rostral edge (touching it, and thus not counting as holes)
 			struct_mask = ApplyMask()
 			struct_mask.inputs.in_file = n4_res.outputs.output_image
 			struct_mask.inputs.mask_file = struct_BET_res.outputs.mask_file

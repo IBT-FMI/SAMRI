@@ -14,7 +14,22 @@ STIM_PROTOCOL_DICTIONARY={
 	"7_EPI_CBV":"6_20_jb",
 	}
 
-def datasource_exclude(in_files, excludes):
+def datasource_exclude(in_files, excludes, output="files"):
+	"""Exclude file names from a list that match a BIDS-style specifications from a dictionary.
+
+	Parameters
+	----------
+
+	in_files : list
+	A list of flie names.
+
+	excludes : dictionary
+	A dictionary with keys which are "subjects", "sessions", or "scans", and values which are lists giving the subject, session, or scan identifier respectively.
+
+	output : string
+	Either "files" or "len". The former outputs the filtered file names, the latter the length of the resulting list.
+	"""
+
 	if not excludes:
 		return in_files
 	exclude_criteria=[]
@@ -29,7 +44,10 @@ def datasource_exclude(in_files, excludes):
 			for i in excludes[key]:
 				exclude_criteria.append("trial-"+str(i))
 	out_files = [in_file for in_file in in_files if not any(criterion in in_file for criterion in exclude_criteria)]
-	return out_files
+	if output == "files":
+		return out_files
+	elif output == "len":
+		return len(out_files)
 
 
 def ss_to_path(subject_session):

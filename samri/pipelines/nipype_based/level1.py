@@ -11,35 +11,22 @@ import nipype.interfaces.io as nio
 import nipype.interfaces.utility as util
 import nipype.pipeline.engine as pe
 from itertools import product
-# from nipype.algorithms.modelgen import SpecifyModel
 from nipype.interfaces.fsl import GLM, FEATModel, Merge, L2Model, FLAMEO, model
 
 from extra_interfaces import GenL2Model, SpecifyModel
 from preprocessing import bru_preproc
-from utils import sss_to_source, subject_condition_to_path
+from utils import sss_to_source, ss_to_path
 
-def l1(preprocessing_dir, tr=1, nprocs=4):
+def l1(preprocessing_dir, tr=1, nprocs=10, l1_dir="", workflow_name="generic"):
 	preprocessing_dir = path.expanduser(preprocessing_dir)
 	if not l1_dir:
 		l1_dir = path.abspath(path.join(preprocessing_dir,"..","..","l1"))
-	# inputs = bids_inputs(preprocessing_dir)
-	# print(inputs)
-	# dg = nio.DataGrabber(infields=["sub"])
-	# dg = nio.DataGrabber(infields=['sub','ses','sub','ses','scan'])
-	# dg.inputs.base_directory = preprocessing_dir
-	# dg.inputs.sort_filelist = True
-	# dg.inputs.template = "%s"
-	# dg.inputs.sub = "*"
-	# dg.inputs.template = "sub-{}/ses-{}/func/sub-{}_ses-{}_trial-{}.nii.gz"
-	# dg.run()
 
-
-	df1 = nio.DataFinder()
-	df1.inputs.root_paths = preprocessing_dir
-	df1.inputs.match_regex = '.+/sub-(?P<sub>.+)/ses-(?P<ses>.+)/func/.*?_trial-(?P<scan>.+)\.nii.gz'
-	# df.inputs.match_regex = '.+/sub-(?P<sub>.+)/ses-(?P<ses>.+)/func/sub-(?P<sub>.+)_ses-(?P<ses>.+)_trial-(?P<scan>.+)\.nii.gz'
-	result = df1.run()
-	iterfields = zip(*[result.outputs.sub, result.outputs.ses, result.outputs.scan])
+	datafind = nio.DataFinder()
+	datafind.inputs.root_paths = preprocessing_dir
+	datafind.inputs.match_regex = '.+/sub-(?P<sub>.+)/ses-(?P<ses>.+)/func/.*?_trial-(?P<scan>.+)\.nii.gz'
+	datafind_res = datafind.run()
+	iterfields = zip(*[datafind_res.outputs.sub, datafind_res.outputs.ses, datafind_res.outputs.scan])
 
 	infosource = pe.Node(interface=util.IdentityInterface(fields=['subject_session_scan']), name="infosource")
 	infosource.iterables = [('subject_session_scan', iterfields)]
@@ -74,9 +61,9 @@ def l1(preprocessing_dir, tr=1, nprocs=4):
 	glm.inputs.out_p_name="p_stat.nii.gz"
 
 	cope_filename = pe.Node(name='cope_filename', interface=util.Function(function=sss_to_source,input_names=inspect.getargspec(sss_to_source)[0], output_names=['filename']))
-	cope_filename.inputs.source_format = "sub-{0}/ses-{1}/sub-{0}_ses-{1}_trial-{2}_cope.nii.gz"
+	cope_filename.inputs.source_format = "sub-{0}_ses-{1}_trial-{2}_cope.nii.gz"
 	varcb_filename = pe.Node(name='varcb_filename', interface=util.Function(function=sss_to_source,input_names=inspect.getargspec(sss_to_source)[0], output_names=['filename']))
-	varcb_filename.inputs.source_format = "sub-{0}/ses-{1}/sub-{0}_ses-{1}_trial-{2}_varcb.nii.gz"
+	varcb_filename.inputs.source_format = "sub-{0}_ses-{1}_trial-{2}_varcb.nii.gz"
 
 	datasink = pe.Node(nio.DataSink(), name='datasink')
 	datasink.inputs.base_directory = path.join(l1_dir,workflow_name)
@@ -93,18 +80,14 @@ def l1(preprocessing_dir, tr=1, nprocs=4):
 		(datafile_source, glm, [('out_file', 'in_file')]),
 		(modelgen, glm, [('design_file', 'design')]),
 		(modelgen, glm, [('con_file', 'contrasts')]),
-		(infosource, datasink, [(('subject_session_scan',subject_condition_to_path), 'container')]),
+		(infosource, datasink, [(('subject_session_scan',ss_to_path), 'container')]),
 		(infosource, cope_filename, [('subject_session_scan', 'subject_session_scan')]),
 		(infosource, varcb_filename, [('subject_session_scan', 'subject_session_scan')]),
 		(cope_filename, glm, [('filename', 'out_cope')]),
 		(varcb_filename, glm, [('filename', 'out_varcb_name')]),
-		(glm, datasink, [('out_cope', '@')]),
-		(glm, datasink, [('out_varcb_name', '@')]),
+		(glm, datasink, [('out_cope', '@cope')]),
+		(glm, datasink, [('out_varcb', '@varcb')]),
 		]
-
-	workflow = pe.Workflow(name="myWF")
-	workflow.connect(workflow_connections)
-	workflow.run()
 
 	workdir_name = workflow_name+"_work"
 	workflow = pe.Workflow(name=workdir_name)

@@ -107,9 +107,9 @@ def bru_preproc(measurements_base, functional_scan_types=[], structural_scan_typ
 	if not functional_scan_types or not structural_scan_types:
 		 scan_classification = pd.read_csv(scan_classification_file_path)
 		 if not functional_scan_types:
-			 functional_scan_types = list(scan_classification[(scan_classification["categories"] == "functional")]["scan_type"])
+			functional_scan_types = list(scan_classification[(scan_classification["categories"] == "functional")]["scan_type"])
 		 if not structural_scan_types:
-			 structural_scan_types = list(scan_classification[(scan_classification["categories"] == "structural")]["scan_type"])
+			structural_scan_types = list(scan_classification[(scan_classification["categories"] == "structural")]["scan_type"])
 
 	#hack to allow structural scan type disaling:
 	if structural_scan_types == -1:
@@ -125,7 +125,7 @@ def bru_preproc(measurements_base, functional_scan_types=[], structural_scan_typ
 		conditions = set(list(data_selection["condition"]))
 
 	if structural_registration:
-		structural_scan_types = structural_scan_types[0]
+		structural_scan_types = [structural_scan_types[0]]
 
 	# here we start to define the nipype workflow elements (nodes, connectons, meta)
 	subjects_conditions = data_selection[["subject","condition"]].drop_duplicates().values.tolist()
@@ -199,7 +199,7 @@ def bru_preproc(measurements_base, functional_scan_types=[], structural_scan_typ
 		s_biascorrect.inputs.n_iterations = [200,200,200,200]
 		s_biascorrect.inputs.convergence_threshold = 1e-11
 
-		s_reg_biascorrect = pe.Node(interface=ants.N4BiasFieldCorrection(), name="struct_reg_biascorrect")
+		s_reg_biascorrect = pe.Node(interface=ants.N4BiasFieldCorrection(), name="s_reg_biascorrect")
 		s_reg_biascorrect.inputs.dimension = 3
 		s_reg_biascorrect.inputs.bspline_fitting_distance = 95
 		s_reg_biascorrect.inputs.shrink_factor = 2
@@ -218,12 +218,15 @@ def bru_preproc(measurements_base, functional_scan_types=[], structural_scan_typ
 
 		registration, s_warp, f_warp = structural_registration(template)
 
-		structural_bids_filename = pe.Node(name='structural_bids_filename', interface=util.Function(function=scs_filename,input_names=inspect.getargspec(scs_filename)[0], output_names=['filename']))
-		structural_bids_filename.inputs.scan_prefix = False
+		s_bids_filename = pe.Node(name='s_bids_filename', interface=util.Function(function=scs_filename,input_names=inspect.getargspec(scs_filename)[0], output_names=['filename']))
+		s_bids_filename.inputs.scan_prefix = False
 
 		workflow_connections.extend([
 			(infosource, get_structural_scan, [('subject_condition', 'selector')]),
+			(infosource, s_bids_filename, [('subject_condition', 'subject_condition')]),
 			(get_structural_scan, structural_bru2nii, [('scan_path','input_dir')]),
+			(get_structural_scan, s_bids_filename, [('scan_type', 'scan')]),
+			(s_bids_filename, s_warp, [('filename','output_image')]),
 			(structural_bru2nii, s_biascorrect, [('nii_file', 'input_image')]),
 			(structural_bru2nii, s_reg_biascorrect, [('nii_file', 'input_image')]),
 			(s_reg_biascorrect, s_cutoff, [('output_image', 'in_file')]),
@@ -292,7 +295,7 @@ def bru_preproc(measurements_base, functional_scan_types=[], structural_scan_typ
 	workflow.write_graph(dotfilename=path.join(workflow.base_dir,workdir_name,"graph.dot"), graph2use="hierarchical", format="png")
 	if quiet:
 		try:
-			workflow.run(plugin="MultiProc",  plugin_args={'n_procs' : 4})
+			workflow.run(plugin="MultiProc",  plugin_args={'n_procs' : 6})
 		except RuntimeError:
 			print "WARNING: Some expected scans have not been found (or another TypeError has occured)."
 		for f in listdir(getcwd()):
@@ -306,5 +309,5 @@ if __name__ == "__main__":
 	# bru_preproc("/home/chymera/NIdata/ofM.erc/", ["EPI_CBV_jin10","EPI_CBV_jin60"], conditions=["ERC_ofM","ERC_ofM_r1"], structural_scan_types=["T2_TurboRARE"])
 
 	## NEW STRUCTURE:
-	bru_preproc("/home/chymera/NIdata/ofM.dr/",subjects=["4001","4007","4008","4009","4012"],exclude_measurements=['20151027_121613_4013_1_1'])
+	bru_preproc("/home/chymera/NIdata/ofM.dr/",subjects=["4001","4007","4008","4009","4012"],exclude_measurements=['20151027_121613_4013_1_1'], quiet=False)
 	# bru_preproc("/home/chymera/NIdata/ofM.erc/",exclude_subjects=["4030","4029","4031"])

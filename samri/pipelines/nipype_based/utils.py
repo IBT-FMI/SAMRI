@@ -17,7 +17,7 @@ STIM_PROTOCOL_DICTIONARY={
 def subject_condition_to_path(subject_condition):
 	# we do not want to modify the subject_condition iterator entry
 	from copy import deepcopy
-	subject_condition = deepcopy(subject_condition)
+	subject_condition = list(deepcopy(subject_condition))
 	subject_condition[0] = "sub-" + subject_condition[0]
 	subject_condition[1] = "ses-" + subject_condition[1]
 	return "/".join(subject_condition)
@@ -31,7 +31,7 @@ def sss_to_source(source_format, subject=False, session=False, scan=False, subje
 	source = source_format.format(subject, session, scan)
 	if base_directory:
 		source = os.path.join(base_directory, source)
-	return source_full_path
+	return source
 
 def scs_filename(subject_condition, scan, scan_prefix="trial", suffix="", extension=".nii.gz"):
 	"""Concatenate subject-condition and scan inputs to a BIDS-style filename

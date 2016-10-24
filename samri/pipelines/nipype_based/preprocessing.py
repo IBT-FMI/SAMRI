@@ -25,7 +25,7 @@ from nipype.interfaces.bru2nii import Bru2
 
 from extra_interfaces import GetBrukerTiming
 from nodes import functional_registration, structural_registration
-from utils import subject_condition_to_path, scs_filename
+from utils import ss_to_path, scs_filename
 from utils import STIM_PROTOCOL_DICTIONARY
 
 #set all outputs to compressed NIfTI
@@ -174,7 +174,7 @@ def bru_preproc(measurements_base, functional_scan_types=[], structural_scan_typ
 		(events_file, datasink, [('out_file', 'func.@events')]),
 		(bids_stim_filename, events_file, [('filename', 'out_file')]),
 		(functional_bru2nii, realigner, [('nii_file', 'in_file')]),
-		(infosource, datasink, [(('subject_condition',subject_condition_to_path), 'container')]),
+		(infosource, datasink, [(('subject_condition',ss_to_path), 'container')]),
 		(infosource, bids_filename, [('subject_condition', 'subject_condition')]),
 		(get_functional_scan, bids_filename, [('scan_type', 'scan')]),
 		(bids_filename, functional_bandpass, [('filename', 'out_file')]),

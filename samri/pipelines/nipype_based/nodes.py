@@ -2,7 +2,7 @@ import nipype.pipeline.engine as pe				# pypeline engine
 import nipype.interfaces.ants as ants
 from copy import deepcopy
 
-def sturctural_registration(template, num_threads=4):
+def structural_registration(template, num_threads=4):
 	registration = pe.Node(ants.Registration(), name="register")
 	registration.inputs.fixed_image = template
 	registration.inputs.output_transform_prefix = "output_"

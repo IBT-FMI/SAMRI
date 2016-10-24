@@ -194,7 +194,6 @@ def bru_preproc(measurements_base, functional_scan_types=[], structural_scan_typ
 
 		s_biascorrect = pe.Node(interface=ants.N4BiasFieldCorrection(), name="s_biascorrect")
 		s_biascorrect.inputs.dimension = 3
-		s_biascorrect.inputs.input_image = struct_image
 		s_biascorrect.inputs.bspline_fitting_distance = 100
 		s_biascorrect.inputs.shrink_factor = 2
 		s_biascorrect.inputs.n_iterations = [200,200,200,200]
@@ -202,7 +201,6 @@ def bru_preproc(measurements_base, functional_scan_types=[], structural_scan_typ
 
 		s_reg_biascorrect = pe.Node(interface=ants.N4BiasFieldCorrection(), name="struct_reg_biascorrect")
 		s_reg_biascorrect.inputs.dimension = 3
-		s_reg_biascorrect.inputs.input_image = struct_image
 		s_reg_biascorrect.inputs.bspline_fitting_distance = 95
 		s_reg_biascorrect.inputs.shrink_factor = 2
 		s_reg_biascorrect.inputs.n_iterations = [500,500,500,500]
@@ -210,17 +208,15 @@ def bru_preproc(measurements_base, functional_scan_types=[], structural_scan_typ
 
 		s_cutoff = pe.Node(interface=ImageMaths(), name="s_cutoff")
 		s_cutoff.inputs.op_string = "-thrP 20 -uthrp 98"
-		s_cutoff.inputs.in_file = _n4_res.outputs.output_image
 
 		s_BET = pe.Node(interface=BET(), name="s_BET")
-		s_BET = BET()
 		s_BET.inputs.mask = True
 		s_BET.inputs.frac = 0.3
 		s_BET.inputs.robust = True
 
 		s_mask = pe.Node(interface=ApplyMask(), name="s_mask")
 
-		registration, s_warp, f_warp = functional_registration(template)
+		registration, s_warp, f_warp = structural_registration(template)
 
 		structural_bids_filename = pe.Node(name='structural_bids_filename', interface=util.Function(function=scs_filename,input_names=inspect.getargspec(scs_filename)[0], output_names=['filename']))
 		structural_bids_filename.inputs.scan_prefix = False
@@ -228,14 +224,15 @@ def bru_preproc(measurements_base, functional_scan_types=[], structural_scan_typ
 		workflow_connections.extend([
 			(infosource, get_structural_scan, [('subject_condition', 'selector')]),
 			(get_structural_scan, structural_bru2nii, [('scan_path','input_dir')]),
-			(structural_bru2nii, s_reg_biascorrect, [('nii_file', 'in_files')]),
+			(structural_bru2nii, s_biascorrect, [('nii_file', 'input_image')]),
+			(structural_bru2nii, s_reg_biascorrect, [('nii_file', 'input_image')]),
 			(s_reg_biascorrect, s_cutoff, [('output_image', 'in_file')]),
 			(s_cutoff, s_BET, [('out_file', 'in_file')]),
 			(s_biascorrect, s_mask, [('output_image', 'in_file')]),
 			(s_BET, s_mask, [('mask_file', 'mask_file')]),
 			(s_mask, registration, [('out_file', 'moving_image')]),
 			(registration, s_warp, [('composite_transform', 'transforms')]),
-			(structural_bru2nii, s_warp, [('out_file', 'input_image')]),
+			(structural_bru2nii, s_warp, [('nii_file', 'input_image')]),
 			(s_warp, datasink, [('output_image', 'anat')]),
 			])
 

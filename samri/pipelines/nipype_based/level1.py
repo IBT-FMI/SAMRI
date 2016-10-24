@@ -18,21 +18,10 @@ from extra_interfaces import GenL2Model, SpecifyModel
 from preprocessing import bru_preproc
 from utils import sss_to_source, subject_condition_to_path
 
-def l1(preprocessing_dir, tr=1, nprocs=4):
+def l1(preprocessing_dir, tr=1, nprocs=10, l1_dir="", workflow_name="generic"):
 	preprocessing_dir = path.expanduser(preprocessing_dir)
 	if not l1_dir:
 		l1_dir = path.abspath(path.join(preprocessing_dir,"..","..","l1"))
-	# inputs = bids_inputs(preprocessing_dir)
-	# print(inputs)
-	# dg = nio.DataGrabber(infields=["sub"])
-	# dg = nio.DataGrabber(infields=['sub','ses','sub','ses','scan'])
-	# dg.inputs.base_directory = preprocessing_dir
-	# dg.inputs.sort_filelist = True
-	# dg.inputs.template = "%s"
-	# dg.inputs.sub = "*"
-	# dg.inputs.template = "sub-{}/ses-{}/func/sub-{}_ses-{}_trial-{}.nii.gz"
-	# dg.run()
-
 
 	df1 = nio.DataFinder()
 	df1.inputs.root_paths = preprocessing_dir
@@ -74,9 +63,9 @@ def l1(preprocessing_dir, tr=1, nprocs=4):
 	glm.inputs.out_p_name="p_stat.nii.gz"
 
 	cope_filename = pe.Node(name='cope_filename', interface=util.Function(function=sss_to_source,input_names=inspect.getargspec(sss_to_source)[0], output_names=['filename']))
-	cope_filename.inputs.source_format = "sub-{0}/ses-{1}/sub-{0}_ses-{1}_trial-{2}_cope.nii.gz"
+	cope_filename.inputs.source_format = "sub-{0}_ses-{1}_trial-{2}_cope.nii.gz"
 	varcb_filename = pe.Node(name='varcb_filename', interface=util.Function(function=sss_to_source,input_names=inspect.getargspec(sss_to_source)[0], output_names=['filename']))
-	varcb_filename.inputs.source_format = "sub-{0}/ses-{1}/sub-{0}_ses-{1}_trial-{2}_varcb.nii.gz"
+	varcb_filename.inputs.source_format = "sub-{0}_ses-{1}_trial-{2}_varcb.nii.gz"
 
 	datasink = pe.Node(nio.DataSink(), name='datasink')
 	datasink.inputs.base_directory = path.join(l1_dir,workflow_name)
@@ -98,13 +87,9 @@ def l1(preprocessing_dir, tr=1, nprocs=4):
 		(infosource, varcb_filename, [('subject_session_scan', 'subject_session_scan')]),
 		(cope_filename, glm, [('filename', 'out_cope')]),
 		(varcb_filename, glm, [('filename', 'out_varcb_name')]),
-		(glm, datasink, [('out_cope', '@')]),
-		(glm, datasink, [('out_varcb_name', '@')]),
+		(glm, datasink, [('out_cope', '@cope')]),
+		(glm, datasink, [('out_varcb', '@varcb')]),
 		]
-
-	workflow = pe.Workflow(name="myWF")
-	workflow.connect(workflow_connections)
-	workflow.run()
 
 	workdir_name = workflow_name+"_work"
 	workflow = pe.Workflow(name=workdir_name)

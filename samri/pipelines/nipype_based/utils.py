@@ -28,9 +28,7 @@ def datasource_exclude(in_files, excludes):
 		if key in "scans":
 			for i in excludes[key]:
 				exclude_criteria.append("trial-"+str(i))
-	print(in_files)
 	out_files = [in_file for in_file in in_files if not any(criterion in in_file for criterion in exclude_criteria)]
-	print(out_files)
 	return out_files
 
 

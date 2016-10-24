@@ -299,12 +299,12 @@ def bru_preproc(measurements_base, functional_scan_types=[], structural_scan_typ
 			if re.search("crash.*?get_structural_scan|get_functional_scan.*", f):
 				remove(path.join(getcwd(), f))
 	else:
-		workflow.run(plugin="MultiProc",  plugin_args={'n_procs' : 4})
+		workflow.run(plugin="MultiProc",  plugin_args={'n_procs' : 6})
 
 if __name__ == "__main__":
 	# bru_preproc_lite(measurements_base="/mnt/data/NIdata/ofM.erc/", functional_scan_types=["EPI_CBV_alej","EPI_CBV_jin6","EPI_CBV_jin10","EPI_CBV_jin20","EPI_CBV_jin40","EPI_CBV_jin60"], structural_scan_type="T2_TurboRARE", conditions=["ERC_ofM"], include_subjects=["5502","5503"])
 	# bru_preproc("/home/chymera/NIdata/ofM.erc/", ["EPI_CBV_jin10","EPI_CBV_jin60"], conditions=["ERC_ofM","ERC_ofM_r1"], structural_scan_types=["T2_TurboRARE"])
 
 	## NEW STRUCTURE:
-	bru_preproc("/home/chymera/NIdata/ofM.dr/",subjects=[4001,4007,4008,4009,4012],exclude_measurements=['20151027_121613_4013_1_1'])
+	bru_preproc("/home/chymera/NIdata/ofM.dr/",subjects=["4001","4007","4008","4009","4012"],exclude_measurements=['20151027_121613_4013_1_1'])
 	# bru_preproc("/home/chymera/NIdata/ofM.erc/",exclude_subjects=["4030","4029","4031"])

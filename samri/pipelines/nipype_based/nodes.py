@@ -88,4 +88,4 @@ def functional_registration(template):
 	warp.inputs.terminal_output = 'file'
 	warp.num_threads = 4
 
-	return registration, func_warp
+	return registration, warp

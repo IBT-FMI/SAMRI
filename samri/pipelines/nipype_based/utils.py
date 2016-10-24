@@ -14,6 +14,26 @@ STIM_PROTOCOL_DICTIONARY={
 	"7_EPI_CBV":"6_20_jb",
 	}
 
+def datasource_exclude(in_files, excludes):
+	if not excludes:
+		return in_files
+	exclude_criteria=[]
+	for key in excludes:
+		if key in "subjects":
+			for i in excludes[key]:
+				exclude_criteria.append("sub-"+str(i))
+		if key in "sessions":
+			for i in excludes[key]:
+				exclude_criteria.append("ses-"+str(i))
+		if key in "scans":
+			for i in excludes[key]:
+				exclude_criteria.append("trial-"+str(i))
+	print(in_files)
+	out_files = [in_file for in_file in in_files if not any(criterion in in_file for criterion in exclude_criteria)]
+	print(out_files)
+	return out_files
+
+
 def ss_to_path(subject_session):
 	"""Concatenate a (subject, session) or (subject, session, scan) tuple to a BIDS-style path"""
 	subject = "sub-" + subject_session[0]

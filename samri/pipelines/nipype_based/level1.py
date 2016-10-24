@@ -23,11 +23,11 @@ def l1(preprocessing_dir, tr=1, nprocs=10, l1_dir="", workflow_name="generic"):
 	if not l1_dir:
 		l1_dir = path.abspath(path.join(preprocessing_dir,"..","..","l1"))
 
-	df1 = nio.DataFinder()
-	df1.inputs.root_paths = preprocessing_dir
-	df1.inputs.match_regex = '.+/sub-(?P<sub>.+)/ses-(?P<ses>.+)/func/.*?_trial-(?P<scan>.+)\.nii.gz'
-	result = df1.run()
-	iterfields = zip(*[result.outputs.sub, result.outputs.ses, result.outputs.scan])
+	datafind = nio.DataFinder()
+	datafind.inputs.root_paths = preprocessing_dir
+	datafind.inputs.match_regex = '.+/sub-(?P<sub>.+)/ses-(?P<ses>.+)/func/.*?_trial-(?P<scan>.+)\.nii.gz'
+	datafind_res = datafind.run()
+	iterfields = zip(*[datafind_res.outputs.sub, datafind_res.outputs.ses, datafind_res.outputs.scan])
 
 	infosource = pe.Node(interface=util.IdentityInterface(fields=['subject_session_scan']), name="infosource")
 	infosource.iterables = [('subject_session_scan', iterfields)]

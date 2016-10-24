@@ -15,7 +15,7 @@ import nipype.interfaces.ants as ants
 import nipype.interfaces.io as nio
 import nipype.interfaces.utility as util		# utility
 import nipype.pipeline.engine as pe				# pypeline engine
-from nipype.interfaces.fsl import GLM, MELODIC, FAST, BET, MeanImage, FLIRT, ImageMaths, FSLCommand
+from nipype.interfaces.fsl import FAST, BET, MeanImage, ImageMaths, FSLCommand, ApplyMask
 from nipype.interfaces.fsl.maths import TemporalFilter
 from nipype.interfaces.nipy import SpaceTimeRealigner
 from nipype.interfaces.afni import Bandpass
@@ -24,7 +24,7 @@ from nipype.interfaces.afni.preprocess import BlurToFWHM
 from nipype.interfaces.bru2nii import Bru2
 
 from extra_interfaces import GetBrukerTiming
-from nodes import ants_standard_registration_warp
+from nodes import functional_registration, structural_registration
 from utils import subject_condition_to_path, scs_filename
 from utils import STIM_PROTOCOL_DICTIONARY
 
@@ -101,7 +101,7 @@ def bru_preproc_lite(measurements_base, functional_scan_types=[], structural_sca
 	# workflow.run(plugin="MultiProc")
 	return workflow
 
-def bru_preproc(measurements_base, functional_scan_types=[], structural_scan_types=[], workflow_name="generic", tr=1, conditions=[], subjects=[], exclude_subjects=[], measurements=[], exclude_measurements=[], actual_size=False, template="/home/chymera/NIdata/templates/ds_QBI_chr.nii.gz", functional_blur_xy=False, functional_registration="structural", quiet=True):
+def bru_preproc(measurements_base, functional_scan_types=[], structural_scan_types=[], workflow_name="generic", tr=1, conditions=[], subjects=[], exclude_subjects=[], measurements=[], exclude_measurements=[], actual_size=False, template="/home/chymera/NIdata/templates/ds_QBI_chr.nii.gz", functional_blur_xy=False, functional_registration_method="structural", quiet=True):
 
 	#select all functional/sturctural scan types unless specified
 	if not functional_scan_types or not structural_scan_types:
@@ -148,8 +148,6 @@ def bru_preproc(measurements_base, functional_scan_types=[], structural_scan_typ
 	realigner.inputs.tr = 1.
 	realigner.inputs.slice_info = 3 #3 for coronal slices (2 for horizontal, 1 for sagittal)
 
-	temporal_mean = pe.Node(interface=MeanImage(), name="temporal_mean")
-
 	functional_bandpass = pe.Node(interface=TemporalFilter(), name="functional_bandpass")
 	functional_bandpass.inputs.highpass_sigma = 180
 	functional_bandpass.inputs.lowpass_sigma = 1
@@ -176,8 +174,6 @@ def bru_preproc(measurements_base, functional_scan_types=[], structural_scan_typ
 		(events_file, datasink, [('out_file', 'func.@events')]),
 		(bids_stim_filename, events_file, [('filename', 'out_file')]),
 		(functional_bru2nii, realigner, [('nii_file', 'in_file')]),
-		(realigner, temporal_mean, [('out_file', 'in_file')]),
-		(temporal_mean, functional_FAST, [('out_file', 'in_files')]),
 		(infosource, datasink, [(('subject_condition',subject_condition_to_path), 'container')]),
 		(infosource, bids_filename, [('subject_condition', 'subject_condition')]),
 		(get_functional_scan, bids_filename, [('scan_type', 'scan')]),
@@ -244,7 +240,7 @@ def bru_preproc(measurements_base, functional_scan_types=[], structural_scan_typ
 			])
 
 
-	if functional_registration == "structural":
+	if functional_registration_method == "structural":
 		if not structural_scan_types:
 			raise ValueError('The option `registration="structural"` requires there to be a structural scan type.')
 
@@ -253,8 +249,10 @@ def bru_preproc(measurements_base, functional_scan_types=[], structural_scan_typ
 			(realigner, f_warp, [('out_file', 'input_image')]),
 			])
 
-	elif functional_registration == "functional":
+	elif functional_registration_method == "functional":
 		register, f_warp = functional_registration(template)
+
+		temporal_mean = pe.Node(interface=MeanImage(), name="temporal_mean")
 
 		functional_FAST = pe.Node(interface=FAST(), name="functional_FAST")
 		functional_FAST.inputs.segments = False
@@ -269,6 +267,8 @@ def bru_preproc(measurements_base, functional_scan_types=[], structural_scan_typ
 		functional_BET.inputs.frac = 0.5
 
 		workflow_connections.extend([
+			(realigner, temporal_mean, [('out_file', 'in_file')]),
+			(temporal_mean, functional_FAST, [('out_file', 'in_files')]),
 			(functional_FAST, functional_cutoff, [('restored_image', 'in_file')]),
 			(functional_cutoff, functional_BET, [('out_file', 'in_file')]),
 			(functional_BET, register, [('out_file', 'moving_image')]),

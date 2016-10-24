@@ -26,7 +26,6 @@ def l1(preprocessing_dir, tr=1, nprocs=10, l1_dir="", workflow_name="generic"):
 	df1 = nio.DataFinder()
 	df1.inputs.root_paths = preprocessing_dir
 	df1.inputs.match_regex = '.+/sub-(?P<sub>.+)/ses-(?P<ses>.+)/func/.*?_trial-(?P<scan>.+)\.nii.gz'
-	# df.inputs.match_regex = '.+/sub-(?P<sub>.+)/ses-(?P<ses>.+)/func/sub-(?P<sub>.+)_ses-(?P<ses>.+)_trial-(?P<scan>.+)\.nii.gz'
 	result = df1.run()
 	iterfields = zip(*[result.outputs.sub, result.outputs.ses, result.outputs.scan])
 

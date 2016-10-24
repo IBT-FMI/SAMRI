@@ -10,6 +10,7 @@ from os import path, listdir, remove, getcwd
 
 from extra_interfaces import GenL2Model
 from preprocessing import bru_preproc
+from utils import datasource_exclude
 try:
 	from ..extra_functions import get_level2_inputs, get_subjectinfo, write_function_call
 except ValueError:
@@ -20,12 +21,10 @@ except ValueError:
 
 def getlen(a):
 	return len(a)
-def copemerge_filename(a):
-	return a+"_cope.nii.gz"
-def varcbmerge_filename(a):
-	return a+"_varcb.nii.gz"
+def add_suffix(name, suffix):
+	return str(name)+str(suffix)
 
-def l2_common_effect(l1_dir, tr=1, nprocs=6, l2_dir="", workflow_name="generic", groupby="session"):
+def l2_common_effect(l1_dir, tr=1, nprocs=6, l2_dir="", workflow_name="generic", groupby="session", excludes={}):
 	l1_dir = path.expanduser(l1_dir)
 	if not l2_dir:
 		l2_dir = path.abspath(path.join(l1_dir,"..","..","l2"))
@@ -34,6 +33,9 @@ def l2_common_effect(l1_dir, tr=1, nprocs=6, l2_dir="", workflow_name="generic",
 	datafind.inputs.root_paths = l1_dir
 	datafind.inputs.match_regex = '.+/sub-(?P<sub>.+)/ses-(?P<ses>.+)/.*?_trial-(?P<scan>.+)_cope\.nii.gz'
 	datafind_res = datafind.run()
+	subjects = set(datafind_res.outputs.sub)
+	sessions = set(datafind_res.outputs.ses)
+	scans = set(datafind_res.outputs.scan)
 
 	datasource = pe.Node(interface=nio.DataGrabber(infields=["group",], outfields=["copes", "varcbs"]), name="datasource")
 	datasource.inputs.base_directory = l1_dir
@@ -57,22 +59,22 @@ def l2_common_effect(l1_dir, tr=1, nprocs=6, l2_dir="", workflow_name="generic",
 
 	datasink = pe.Node(nio.DataSink(), name='datasink')
 	datasink.inputs.base_directory = path.join(l2_dir,workflow_name)
-	datasink.inputs.parameterization = False
+	datasink.inputs.substitutions = [('_iterable_', ''),]
 
-	if groupby == "session":
-		infosource.iterables = [('iterable', set(datafind_res.outputs.ses))]
-		datasource.inputs.field_template = dict(
-			copes="sub-*/ses-%s/sub-*_ses-%s_trial-*_cope.nii.gz",
-			varcbs="sub-*/ses-%s/sub-*_ses-%s_trial-*_varcb.nii.gz",
-			)
-	elif groupby == "subject":
-		infosource.iterables = [('iterable', set(datafind_res.outputs.sub))]
+	if groupby == "subject":
+		infosource.iterables = [('iterable', subjects)]
 		datasource.inputs.field_template = dict(
 			copes="sub-%s/ses-*/sub-%s_ses-*_trial-*_cope.nii.gz",
 			varcbs="sub-%s/ses-*/sub-%s_ses-*_trial-*_varcb.nii.gz",
 			)
+	elif groupby == "session":
+		infosource.iterables = [('iterable', sessions)]
+		datasource.inputs.field_template = dict(
+			copes="sub-*/ses-%s/sub-*_ses-%s_trial-*_cope.nii.gz",
+			varcbs="sub-*/ses-%s/sub-*_ses-%s_trial-*_varcb.nii.gz",
+			)
 	elif groupby == "scan":
-		infosource.iterables = [('iterable', set(datafind_res.outputs.scan))]
+		infosource.iterables = [('iterable', scans)]
 		datasource.inputs.template_args = dict(
 			copes=[['group']],
 			varcbs=[['group']]
@@ -84,21 +86,20 @@ def l2_common_effect(l1_dir, tr=1, nprocs=6, l2_dir="", workflow_name="generic",
 
 	workflow_connections = [
 		(infosource, datasource, [('iterable', 'group')]),
-		(infosource, copemerge, [(('iterable',copemerge_filename), 'merged_file')]),
-		(infosource, varcopemerge, [(('iterable',varcbmerge_filename), 'merged_file')]),
-		(datasource, copemerge, [('copes', 'in_files')]),
-		(datasource, varcopemerge, [('varcbs', 'in_files')]),
-		(datasource, level2model, [(('copes',getlen), 'num_copes')]),
+		(infosource, copemerge, [(('iterable',add_suffix,"_cope.nii.gz"), 'merged_file')]),
+		(infosource, varcopemerge, [(('iterable',add_suffix,"_varcb.nii.gz"), 'merged_file')]),
+		(datasource, copemerge, [(('copes',datasource_exclude,excludes), 'in_files')]),
+		(datasource, varcopemerge, [(('varcbs',datasource_exclude,excludes), 'in_files')]),
+		(datasource, level2model, [(('copes',datasource_exclude,excludes,"len"), 'num_copes')]),
 		(copemerge,flameo,[('merged_file','cope_file')]),
 		(varcopemerge,flameo,[('merged_file','var_cope_file')]),
 		(level2model,flameo, [('design_mat','design_file')]),
 		(level2model,flameo, [('design_grp','cov_split_file')]),
 		(level2model,flameo, [('design_con','t_con_file')]),
-		(infosource, datasink, [('iterable', 'container')]),
-		(flameo, datasink, [('copes', 'container.@copes')]),
-		(flameo, datasink, [('fstats', 'container.@fstats')]),
-		(flameo, datasink, [('tstats', 'container.@tstats')]),
-		(flameo, datasink, [('zstats', 'container.@zstats')]),
+		(flameo, datasink, [('copes', '@copes')]),
+		(flameo, datasink, [('fstats', '@fstats')]),
+		(flameo, datasink, [('tstats', '@tstats')]),
+		(flameo, datasink, [('zstats', '@zstats')]),
 		]
 
 	workdir_name = workflow_name+"_work"
@@ -241,5 +242,5 @@ if __name__ == "__main__":
 	# for i in range(4,8):
 	# 	level1("~/NIdata/ofM.erc/", {"EPI_CBV_jin6":"jin6","EPI_CBV_jin10":"jin10","EPI_CBV_jin20":"jin20","EPI_CBV_jin40":"jin40","EPI_CBV_jin60":"jin60","EPI_CBV_alej":"alej",}, structural_scan_types=-1, actual_size=False, pipeline_denominator="level1_dgamma_blurxy"+str(i), blur_xy=i)
 
-	l2_common_effect("~/NIdata/ofM.dr/l1/generic", workflow_name="sessionwise", groupby="session")
+	l2_common_effect("~/NIdata/ofM.dr/l1/generic", workflow_name="sessionwise", groupby="session", excludes={"subjects":["4001","4008"]})
 	l2_common_effect("~/NIdata/ofM.dr/l1/generic", workflow_name="subjectwise", groupby="subject")

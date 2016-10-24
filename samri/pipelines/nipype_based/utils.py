@@ -14,21 +14,22 @@ STIM_PROTOCOL_DICTIONARY={
 	"7_EPI_CBV":"6_20_jb",
 	}
 
-def subject_condition_to_path(subject_condition):
-	# we do not want to modify the subject_condition iterator entry
-	from copy import deepcopy
-	subject_condition = list(deepcopy(subject_condition))
-	subject_condition[0] = "sub-" + subject_condition[0]
-	subject_condition[1] = "ses-" + subject_condition[1]
-	return "/".join(subject_condition)
+def ss_to_path(subject_session):
+	"""Concatenate a (subject, session) or (subject, session, scan) tuple to a BIDS-style path"""
+	subject = "sub-" + subject_session[0]
+	session = "ses-" + subject_session[1]
+	return "/".join([subject,session])
 
-def sss_to_source(source_format, subject=False, session=False, scan=False, subject_session_scan=False, base_directory=False,):
+def sss_to_source(source_format, subject=False, session=False, scan=False, subject_session_scan=False, base_directory=False, groupby=False):
 	import os
 
 	if any(a is False for a in [subject,session,scan]):
 		(subject,session,scan) = subject_session_scan
 
-	source = source_format.format(subject, session, scan)
+	if groupby == "session":
+		source = source_format.format("*", session, "*")
+	else:
+		source = source_format.format(subject, session, scan)
 	if base_directory:
 		source = os.path.join(base_directory, source)
 	return source

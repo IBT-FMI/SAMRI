@@ -36,7 +36,6 @@ def plot_timecourses(parcellation="/home/chymera/NIdata/templates/roi/ds_QBI_vze
 
 	results = datasource.run()
 	nii_data = results.outputs.stimulation_file
-	print nii_data
 
 	masker = NiftiLabelsMasker(labels_img=parcellation, standardize=True, memory='nilearn_cache', verbose=5)
 
@@ -107,4 +106,6 @@ if __name__ == '__main__':
 
 	# plot_model()
 
-	plt.show()
+	# plt.show()
+
+	plot_timecourses()

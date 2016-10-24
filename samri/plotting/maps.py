@@ -108,10 +108,3 @@ def plot_myanat(anat="/home/chymera/NIdata/templates/hires_QBI_chr.nii.gz"):
 
 def plot_nii(file_path, slices):
 	plotting.plot_anat(file_path, cut_coords=slices, display_mode="y", annotate=False, draw_cross=False)
-
-if __name__ == '__main__':
-	stat_maps = [
-		"/home/chymera/NIdata/ofM.dr/GLM/level2_dgamma_blurxy4/_category_multi_ofM_cF2/flameo/mapflow/_flameo0/stats/tstat1.nii.gz",
-		]
-	stat(stat_maps, cbv=True, template="~/NIdata/templates/ds_QBI_chr.nii.gz", threshold=3, interpolation="gaussian", figure_title="lala")
-	# stat(stat_maps, cbv=True, template="~/NIdata/templates/ds_QBI_chr.nii.gz", cut_coords=(-49,8,43), threshold=3, interpolation="gaussian", figure_title="lala")

@@ -25,7 +25,7 @@ def copemerge_filename(a):
 def varcbmerge_filename(a):
 	return a+"_varcb.nii.gz"
 
-def l2_common_effect(l1_dir, tr=1, nprocs=2, l2_dir="", workflow_name="generic", groupby="session"):
+def l2_common_effect(l1_dir, tr=1, nprocs=6, l2_dir="", workflow_name="generic", groupby="session"):
 	l1_dir = path.expanduser(l1_dir)
 	if not l2_dir:
 		l2_dir = path.abspath(path.join(l1_dir,"..","..","l2"))
@@ -46,29 +46,6 @@ def l2_common_effect(l1_dir, tr=1, nprocs=2, l2_dir="", workflow_name="generic",
 
 	infosource = pe.Node(interface=util.IdentityInterface(fields=['iterable']), name="infosource")
 
-	if groupby == "session":
-		infosource.iterables = [('iterable', set(datafind_res.outputs.ses))]
-		datasource.inputs.field_template = dict(
-			copes="sub-*/ses-%s/sub-*_ses-%s_trial-*_cope.nii.gz",
-			varcbs="sub-*/ses-%s/sub-*_ses-%s_trial-*_varcb.nii.gz",
-			)
-	if groupby == "subject":
-		infosource.iterables = [('iterable', set(datafind_res.outputs.sub))]
-		datasource.inputs.field_template = dict(
-			copes="sub-%s/ses-*/sub-%s_ses-*_trial-*_cope.nii.gz ",
-			varcbs="sub-%s/ses-*/sub-%s_ses-*_trial-*_varcb.nii.gz ",
-			)
-	if groupby == "scan":
-		infosource.iterables = [('iterable', set(datafind_res.outputs.sub))]
-		datasource.inputs.template_args = dict(
-			copes=[['group']],
-			varcbs=[['group']]
-			)
-		datasource.inputs.field_template = dict(
-			copes="sub-*/ses-*/sub-*_ses-*_trial-%s_cope.nii.gz ",
-			varcbs="sub-*/ses-*/sub-*_ses-*_trial-%s_varcb.nii.gz ",
-			)
-
 	copemerge = pe.Node(interface=fsl.Merge(dimension='t'),name="copemerge")
 	varcopemerge = pe.Node(interface=fsl.Merge(dimension='t'),name="varcopemerge")
 
@@ -77,6 +54,33 @@ def l2_common_effect(l1_dir, tr=1, nprocs=2, l2_dir="", workflow_name="generic",
 	flameo = pe.Node(interface=fsl.FLAMEO(), name="flameo")
 	flameo.inputs.mask_file="/home/chymera/NIdata/templates/ds_QBI_chr_bin.nii.gz"
 	flameo.inputs.run_mode="ols"
+
+	datasink = pe.Node(nio.DataSink(), name='datasink')
+	datasink.inputs.base_directory = path.join(l2_dir,workflow_name)
+	datasink.inputs.parameterization = False
+
+	if groupby == "session":
+		infosource.iterables = [('iterable', set(datafind_res.outputs.ses))]
+		datasource.inputs.field_template = dict(
+			copes="sub-*/ses-%s/sub-*_ses-%s_trial-*_cope.nii.gz",
+			varcbs="sub-*/ses-%s/sub-*_ses-%s_trial-*_varcb.nii.gz",
+			)
+	elif groupby == "subject":
+		infosource.iterables = [('iterable', set(datafind_res.outputs.sub))]
+		datasource.inputs.field_template = dict(
+			copes="sub-%s/ses-*/sub-%s_ses-*_trial-*_cope.nii.gz",
+			varcbs="sub-%s/ses-*/sub-%s_ses-*_trial-*_varcb.nii.gz",
+			)
+	elif groupby == "scan":
+		infosource.iterables = [('iterable', set(datafind_res.outputs.scan))]
+		datasource.inputs.template_args = dict(
+			copes=[['group']],
+			varcbs=[['group']]
+			)
+		datasource.inputs.field_template = dict(
+			copes="sub-*/ses-*/sub-*_ses-*_trial-%s_cope.nii.gz ",
+			varcbs="sub-*/ses-*/sub-*_ses-*_trial-%s_varcb.nii.gz ",
+			)
 
 	workflow_connections = [
 		(infosource, datasource, [('iterable', 'group')]),
@@ -90,6 +94,11 @@ def l2_common_effect(l1_dir, tr=1, nprocs=2, l2_dir="", workflow_name="generic",
 		(level2model,flameo, [('design_mat','design_file')]),
 		(level2model,flameo, [('design_grp','cov_split_file')]),
 		(level2model,flameo, [('design_con','t_con_file')]),
+		(infosource, datasink, [('iterable', 'container')]),
+		(flameo, datasink, [('copes', 'container.@copes')]),
+		(flameo, datasink, [('fstats', 'container.@fstats')]),
+		(flameo, datasink, [('tstats', 'container.@tstats')]),
+		(flameo, datasink, [('zstats', 'container.@zstats')]),
 		]
 
 	workdir_name = workflow_name+"_work"
@@ -232,4 +241,5 @@ if __name__ == "__main__":
 	# for i in range(4,8):
 	# 	level1("~/NIdata/ofM.erc/", {"EPI_CBV_jin6":"jin6","EPI_CBV_jin10":"jin10","EPI_CBV_jin20":"jin20","EPI_CBV_jin40":"jin40","EPI_CBV_jin60":"jin60","EPI_CBV_alej":"alej",}, structural_scan_types=-1, actual_size=False, pipeline_denominator="level1_dgamma_blurxy"+str(i), blur_xy=i)
 
-	l2_common_effect("~/NIdata/ofM.dr/l1/generic")
+	l2_common_effect("~/NIdata/ofM.dr/l1/generic", workflow_name="sessionwise", groupby="session")
+	l2_common_effect("~/NIdata/ofM.dr/l1/generic", workflow_name="subjectwise", groupby="subject")

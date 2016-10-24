@@ -11,12 +11,11 @@ import nipype.interfaces.io as nio
 import nipype.interfaces.utility as util
 import nipype.pipeline.engine as pe
 from itertools import product
-# from nipype.algorithms.modelgen import SpecifyModel
 from nipype.interfaces.fsl import GLM, FEATModel, Merge, L2Model, FLAMEO, model
 
 from extra_interfaces import GenL2Model, SpecifyModel
 from preprocessing import bru_preproc
-from utils import sss_to_source, subject_condition_to_path
+from utils import sss_to_source, ss_to_path
 
 def l1(preprocessing_dir, tr=1, nprocs=10, l1_dir="", workflow_name="generic"):
 	preprocessing_dir = path.expanduser(preprocessing_dir)
@@ -81,7 +80,7 @@ def l1(preprocessing_dir, tr=1, nprocs=10, l1_dir="", workflow_name="generic"):
 		(datafile_source, glm, [('out_file', 'in_file')]),
 		(modelgen, glm, [('design_file', 'design')]),
 		(modelgen, glm, [('con_file', 'contrasts')]),
-		(infosource, datasink, [(('subject_session_scan',subject_condition_to_path), 'container')]),
+		(infosource, datasink, [(('subject_session_scan',ss_to_path), 'container')]),
 		(infosource, cope_filename, [('subject_session_scan', 'subject_session_scan')]),
 		(infosource, varcb_filename, [('subject_session_scan', 'subject_session_scan')]),
 		(cope_filename, glm, [('filename', 'out_cope')]),

@@ -31,19 +31,20 @@ def datasource_exclude(in_files, excludes, output="files"):
 	"""
 
 	if not excludes:
-		return in_files
-	exclude_criteria=[]
-	for key in excludes:
-		if key in "subjects":
-			for i in excludes[key]:
-				exclude_criteria.append("sub-"+str(i))
-		if key in "sessions":
-			for i in excludes[key]:
-				exclude_criteria.append("ses-"+str(i))
-		if key in "scans":
-			for i in excludes[key]:
-				exclude_criteria.append("trial-"+str(i))
-	out_files = [in_file for in_file in in_files if not any(criterion in in_file for criterion in exclude_criteria)]
+		out_files = in_files
+	else:
+		exclude_criteria=[]
+		for key in excludes:
+			if key in "subjects":
+				for i in excludes[key]:
+					exclude_criteria.append("sub-"+str(i))
+			if key in "sessions":
+				for i in excludes[key]:
+					exclude_criteria.append("ses-"+str(i))
+			if key in "scans":
+				for i in excludes[key]:
+					exclude_criteria.append("trial-"+str(i))
+		out_files = [in_file for in_file in in_files if not any(criterion in in_file for criterion in exclude_criteria)]
 	if output == "files":
 		return out_files
 	elif output == "len":

@@ -3,7 +3,7 @@ import nibabel
 from nilearn import image, plotting
 import pandas as pd
 import numpy as np
-from nilearn.input_data import NiftiLabelsMasker
+from nilearn.input_data import NiftiLabelsMasker, NiftiMapsMasker
 import nipype.interfaces.io as nio
 
 import matplotlib.pyplot as plt
@@ -47,8 +47,6 @@ def plot_timecourses(parcellation="/home/chymera/NIdata/templates/roi/ds_QBI_vze
 		plt.plot(time_series[i], label=region_assignments.get_value(i, "acronym"))
 	plt.legend()
 
-# def plot_timecourse(file_path, roi_path=None, roi_number=None):
-
 def plot_fsl_design(file_path):
 	df = pd.read_csv(file_path, skiprows=5, sep="\t", header=None, names=[1,2,3,4,5,6], index_col=False)
 	print(df)
@@ -71,19 +69,56 @@ def plot_stim_design(file_path,stim):
 		onsets = stim["onsets"]
 
 	df = pd.read_csv(file_path, skiprows=5, sep="\t", header=None, names=[1,2,3,4,5,6], index_col=False)
-	fig, ax = plt.subplots(figsize=(6,4) , facecolor='#eeeeee', tight_layout=True)
-	for d, o in zip(durations, onsets):
-		d = int(d[0])
-		o = int(o[0])
-		ax.axvspan(o,o+d, facecolor="cyan", alpha=0.15)
-		plt.hold(True)
+	# fig, ax = plt.subplots(figsize=(6,4) , facecolor='#eeeeee', tight_layout=True)
+	# for d, o in zip(durations, onsets):
+	# 	d = int(d[0])
+	# 	o = int(o[0])
+	# 	ax.axvspan(o,o+d, facecolor="cyan", alpha=0.15)
+	# 	plt.hold(True)
 	ax = df.plot(ax=ax)
 	#remove bottom and top small tick lines
 	plt.tick_params(axis='x', which='both', bottom='off', top='off', left='off', right='off')
 	plt.tick_params(axis='y', which='both', bottom='off', top='off', left='off', right='off')
 
-# def plot_model(model_file):
+def roi_based(parcellation="/home/chymera/NIdata/templates/roi/ctx_chr.nii.gz", subject=4007, session="ofM_cF2", scan="7_EPI_CBV", workflows=["generic"], warp_name="", melodic_hit=""):
 
+	# parcellation="/home/chymera/NIdata/templates/roi/ds_QBI_vze_chr.nii.gz",
+	# region_assignments = pd.read_csv("/home/chymera/NIdata/templates/roi/QBI_vze_chr.csv", index_col=["ID"])
+	# masker = NiftiMapsMasker(maps_img=parcellation, standardize=True, memory='nilearn_cache', verbose=5)
+	# masker = NiftiMapsMasker(labels_img=parcellation, standardize=True, memory='nilearn_cache', verbose=5)
+	# parcel=5
+	masker = NiftiLabelsMasker(labels_img=parcellation, standardize=True, memory='nilearn_cache', verbose=5)
+	parcel=0
+
+	melodic_file = "/home/chymera/NIdata/ofM.dr/DIAGNOSTIC/{1}/MELODIC_reports/_condition_ofM_cF2_subject_{0}/_scan_type_{2}/report/t{3}.txt".format(subject, session, scan, melodic_hit)
+
+	events_file = "/home/chymera/NIdata/ofM.dr/preprocessing/{0}/sub-{1}/ses-{2}/func/sub-{1}_ses-{2}_trial-{3}_events.tsv".format(workflows[0], subject, session, scan)
+
+	events_df = pd.read_csv(events_file, sep="\t")
+	melodic = np.loadtxt(melodic_file)
+
+	fig, ax = plt.subplots(figsize=(6,4) , facecolor='#eeeeee', tight_layout=True)
+	for d, o in zip(events_df["duration"], events_df["onset"]):
+		d = round(d)
+		o = round(o)
+		ax.axvspan(o,o+d, facecolor="cyan", alpha=0.15)
+		plt.hold(True)
+	plt.plot(melodic)
+	for workflow in workflows:
+		final_timecourse_file = "/home/chymera/NIdata/ofM.dr/preprocessing/{0}/sub-{1}/ses-{2}/func/sub-{1}_ses-{2}_trial-{3}.nii.gz".format(workflow, subject, session, scan)
+		print(final_timecourse_file)
+		final_time_series = masker.fit_transform(final_timecourse_file).T
+		plt.plot(final_time_series[parcel])
+	if warp_name:
+		timecourse_file = "/home/chymera/NIdata/ofM.dr/preprocessing/{4}_work/_subject_condition_{0}.{1}/_scan_type_T2_TurboRARE/_scan_type_{2}/f_warp/{3}".format(subject, session, scan, warp_name, workflow)
+		time_series = masker.fit_transform(timecourse_file).T
+		plt.plot(time_series[parcel])
+	# fsl_design = "/home/chymera/NIdata/ofM.dr/l1/generic_work/_subject_session_scan_{0}.{1}.{2}/modelgen/run0.mat".format(subject, session, scan)
+	# fsl_design_df = pd.read_csv(fsl_design, skiprows=5, sep="\t", header=None, names=[1,2,3,4,5,6], index_col=False)
+	# plt.plot(fsl_design_df[[1]])
+	plt.show()
+
+	# plt.show()
 
 if __name__ == '__main__':
 	# plot_nii("/home/chymera/FSL_GLM_work/GLM/_measurement_id_20151103_213035_4001_1_1/functional_cutoff/6_restore_maths.nii.gz", (-50,20))
@@ -104,8 +139,7 @@ if __name__ == '__main__':
 
 	# plot_stat_map("/home/chymera/NIdata/ofM.dr/GLM/level2_dgamma_blurxy56/_category_multi_ofM_cF2/flameo/mapflow/_flameo0/stats/tstat1.nii.gz", cbv=True, save_as="/home/chymera/ofM_cF2.pdf", cut_coords=(-49,8,43), threshold=3, interpolation="gaussian")
 
-	# plot_model()
-
-	# plt.show()
-
-	plot_timecourses()
+	# roi_based(subject=4007, warp_name="corr_10_trans.nii.gz", melodic_hit=5)
+	# roi_based(subject=4007, workflows=["norealign","generic"], melodic_hit=5)
+	# roi_based(subject=4007, workflows=["norealign"], melodic_hit=5, warp_name="10_trans.nii")
+	roi_based(subject=4007, workflows=["norealign","generic"], melodic_hit=5)

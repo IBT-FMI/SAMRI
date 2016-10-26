@@ -90,12 +90,10 @@ def roi_based(parcellation="/home/chymera/NIdata/templates/roi/ctx_chr.nii.gz", 
 	masker = NiftiLabelsMasker(labels_img=parcellation, standardize=True, memory='nilearn_cache', verbose=5)
 	parcel=0
 
-	melodic_file = "/home/chymera/NIdata/ofM.dr/DIAGNOSTIC/{1}/MELODIC_reports/_condition_ofM_cF2_subject_{0}/_scan_type_{2}/report/t{3}.txt".format(subject, session, scan, melodic_hit)
 
 	events_file = "/home/chymera/NIdata/ofM.dr/preprocessing/{0}/sub-{1}/ses-{2}/func/sub-{1}_ses-{2}_trial-{3}_events.tsv".format(workflows[0], subject, session, scan)
 
 	events_df = pd.read_csv(events_file, sep="\t")
-	melodic = np.loadtxt(melodic_file)
 
 	fig, ax = plt.subplots(figsize=(6,4) , facecolor='#eeeeee', tight_layout=True)
 	for d, o in zip(events_df["duration"], events_df["onset"]):
@@ -103,7 +101,10 @@ def roi_based(parcellation="/home/chymera/NIdata/templates/roi/ctx_chr.nii.gz", 
 		o = round(o)
 		ax.axvspan(o,o+d, facecolor="cyan", alpha=0.15)
 		plt.hold(True)
-	plt.plot(melodic)
+	if melodic_hit:
+		melodic_file = "/home/chymera/NIdata/ofM.dr/DIAGNOSTIC/{1}/MELODIC_reports/_condition_ofM_cF2_subject_{0}/_scan_type_{2}/report/t{3}.txt".format(subject, session, scan, melodic_hit)
+		melodic = np.loadtxt(melodic_file)
+		plt.plot(melodic)
 	for workflow in workflows:
 		final_timecourse_file = "/home/chymera/NIdata/ofM.dr/preprocessing/{0}/sub-{1}/ses-{2}/func/sub-{1}_ses-{2}_trial-{3}.nii.gz".format(workflow, subject, session, scan)
 		print(final_timecourse_file)
@@ -142,4 +143,5 @@ if __name__ == '__main__':
 	# roi_based(subject=4007, warp_name="corr_10_trans.nii.gz", melodic_hit=5)
 	# roi_based(subject=4007, workflows=["norealign","generic"], melodic_hit=5)
 	# roi_based(subject=4007, workflows=["norealign"], melodic_hit=5, warp_name="10_trans.nii")
-	roi_based(subject=4007, workflows=["norealign","generic"], melodic_hit=5)
+	# roi_based(subject=4012, workflows=["norealign","generic"], melodic_hit=5)
+	roi_based(subject=4012, session="ofM_cF1", workflows=["norealign","generic"])

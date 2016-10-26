@@ -337,7 +337,7 @@ def get_data_selection(workflow_base, conditions=[], scan_types=[], subjects=[],
 			except IOError:
 				pass
 
-	data_selection = pd.DataFrame(selected_measurements, columns=["subject", "condition", "measurement", "scan_type", "scan"])
+	data_selection = pd.DataFrame(selected_measurements, columns=["subject", "session", "measurement", "scan_type", "scan"])
 
 	#drop subjects which do not have measurements for all conditions
 	if len(conditions) > 1:

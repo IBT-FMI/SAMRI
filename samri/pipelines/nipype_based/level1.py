@@ -203,9 +203,5 @@ if __name__ == "__main__":
 	# 	level1("~/NIdata/ofM.erc/", {"EPI_CBV_jin6":"jin6","EPI_CBV_jin10":"jin10","EPI_CBV_jin20":"jin20","EPI_CBV_jin40":"jin40","EPI_CBV_jin60":"jin60","EPI_CBV_alej":"alej",}, structural_scan_types=-1, actual_size=False, pipeline_denominator="level1_dgamma_blurxy"+str(i), blur_xy=i)
 	# 	level2_common_effect("~/NIdata/ofM.erc/GLM/level1_dgamma_blurxy"+str(i), categories=[], scan_types=[["EPI_CBV_jin6"],["EPI_CBV_jin10"],["EPI_CBV_jin20"],["EPI_CBV_jin40"],["EPI_CBV_jin60"],["EPI_CBV_alej"]], participants=["5502","5503"], denominator="level2_dgamma_blurxy"+str(i))
 
-	l1("~/NIdata/ofM.dr/preprocessing/generic")
-
-	# level2_common_effect("~/NIdata/ofM.dr/GLM/level1_gamma", categories=["ofM_cF2"], participants=["4008","4007","4011","4012"], scan_types=["7_EPI_CBV"])
-	# level2_common_effect("~/NIdata/ofM.dr/GLM/level1_dgamma_blurxy56", categories=[["ofM"],["ofM_aF"],["ofM_cF1"],["ofM_cF2"],["ofM_pF"]], participants=["4008","4007","4011","4012"], scan_types=["7_EPI_CBV"],denominator="level2_dgamma_blurxy56")
-	# level2_common_effect("~/NIdata/ofM.dr/GLM/level1_dgamma_blurxy56n", categories=[["ofM"],["ofM_aF"],["ofM_cF1"],["ofM_cF2"],["ofM_pF"]], participants=["4008","4007","4011","4012"], scan_types=["7_EPI_CBV"],denominator="level2_dgamma_blurxy56n")
-	# level2_common_effect("~/NIdata/ofM.erc/GLM/level1_ext_dgamma_blur56", categories=[], scan_types=[["EPI_CBV_jin6"],["EPI_CBV_jin10"],["EPI_CBV_jin20"],["EPI_CBV_jin40"],["EPI_CBV_jin60"],["EPI_CBV_alej"]], participants=["5502","5503"], denominator="level2_ext_dgamma_level1_ext_dgamma_blur56")
+	l1("~/NIdata/ofM.dr/preprocessing/norealign", workflow_name="norealign")
+	# l1("~/NIdata/ofM.dr/preprocessing/generic")

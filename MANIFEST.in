@@ -1,1 +1,1 @@
-include samri/scan_type_classification.csv
+include samri/pipelines/scan_type_classification.csv

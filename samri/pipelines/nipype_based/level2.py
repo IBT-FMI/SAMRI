@@ -242,5 +242,10 @@ if __name__ == "__main__":
 	# for i in range(4,8):
 	# 	level1("~/NIdata/ofM.erc/", {"EPI_CBV_jin6":"jin6","EPI_CBV_jin10":"jin10","EPI_CBV_jin20":"jin20","EPI_CBV_jin40":"jin40","EPI_CBV_jin60":"jin60","EPI_CBV_alej":"alej",}, structural_scan_types=-1, actual_size=False, pipeline_denominator="level1_dgamma_blurxy"+str(i), blur_xy=i)
 
-	l2_common_effect("~/NIdata/ofM.dr/l1/generic", workflow_name="sessionwise", groupby="session", excludes={"subjects":["4001","4008"]})
-	l2_common_effect("~/NIdata/ofM.dr/l1/generic", workflow_name="subjectwise", groupby="subject")
+	# l2_common_effect("~/NIdata/ofM.dr/l1/generic", workflow_name="subjectwise", groupby="subject")
+	# l2_common_effect("~/NIdata/ofM.dr/l1/generic", workflow_name="sessionwise_responders", groupby="session", excludes={"subjects":["4001","4008"]})
+	# l2_common_effect("~/NIdata/ofM.dr/l1/generic", workflow_name="sessionwise_all", groupby="session")
+
+	# l2_common_effect("~/NIdata/ofM.dr/l1/generic_funcreg", workflow_name="subjectwise_funcreg", groupby="subject")
+	# l2_common_effect("~/NIdata/ofM.dr/l1/norealign", workflow_name="subjectwise_norealign", groupby="subject")
+	l2_common_effect("~/NIdata/ofM.dr/l1/norealign", workflow_name="sessionwise_norealign", groupby="session")

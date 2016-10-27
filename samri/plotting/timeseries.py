@@ -80,14 +80,15 @@ def plot_stim_design(file_path,stim):
 	plt.tick_params(axis='x', which='both', bottom='off', top='off', left='off', right='off')
 	plt.tick_params(axis='y', which='both', bottom='off', top='off', left='off', right='off')
 
-def roi_based(parcellation="/home/chymera/NIdata/templates/roi/ctx_chr.nii.gz", subject=4007, session="ofM_cF2", scan="7_EPI_CBV", workflows=["generic"], warp_name="", melodic_hit=""):
+def roi_based(roi="/home/chymera/NIdata/templates/roi/ctx_chr.nii.gz", subject=4007, session="ofM_cF2", scan="7_EPI_CBV", workflows=["generic"], warp_name="", melodic_hit=""):
 
 	# parcellation="/home/chymera/NIdata/templates/roi/ds_QBI_vze_chr.nii.gz",
 	# region_assignments = pd.read_csv("/home/chymera/NIdata/templates/roi/QBI_vze_chr.csv", index_col=["ID"])
 	# masker = NiftiMapsMasker(maps_img=parcellation, standardize=True, memory='nilearn_cache', verbose=5)
 	# masker = NiftiMapsMasker(labels_img=parcellation, standardize=True, memory='nilearn_cache', verbose=5)
 	# parcel=5
-	masker = NiftiLabelsMasker(labels_img=parcellation, standardize=True, memory='nilearn_cache', verbose=5)
+	roi = "/home/chymera/NIdata/templates/roi/{}_chr.nii.gz".format(roi)
+	masker = NiftiLabelsMasker(labels_img=roi, standardize=True, memory='nilearn_cache', verbose=5)
 	parcel=0
 
 
@@ -117,6 +118,7 @@ def roi_based(parcellation="/home/chymera/NIdata/templates/roi/ctx_chr.nii.gz", 
 	# fsl_design = "/home/chymera/NIdata/ofM.dr/l1/generic_work/_subject_session_scan_{0}.{1}.{2}/modelgen/run0.mat".format(subject, session, scan)
 	# fsl_design_df = pd.read_csv(fsl_design, skiprows=5, sep="\t", header=None, names=[1,2,3,4,5,6], index_col=False)
 	# plt.plot(fsl_design_df[[1]])
+	print(len(final_time_series[parcel]))
 	plt.show()
 
 	# plt.show()
@@ -141,7 +143,8 @@ if __name__ == '__main__':
 	# plot_stat_map("/home/chymera/NIdata/ofM.dr/GLM/level2_dgamma_blurxy56/_category_multi_ofM_cF2/flameo/mapflow/_flameo0/stats/tstat1.nii.gz", cbv=True, save_as="/home/chymera/ofM_cF2.pdf", cut_coords=(-49,8,43), threshold=3, interpolation="gaussian")
 
 	# roi_based(subject=4007, warp_name="corr_10_trans.nii.gz", melodic_hit=5)
-	# roi_based(subject=4007, workflows=["norealign","generic"], melodic_hit=5)
+	# roi_based(subject=4007, roi="dr", workflows=["generic"], melodic_hit=5)
+	roi_based(subject=4001, roi="dr", workflows=["generic"])
 	# roi_based(subject=4007, workflows=["norealign"], melodic_hit=5, warp_name="10_trans.nii")
 	# roi_based(subject=4012, workflows=["norealign","generic"], melodic_hit=5)
-	roi_based(subject=4012, session="ofM_cF1", workflows=["norealign","generic"])
+	# roi_based(subject=4012, session="ofM_cF1", workflows=["norealign","generic"])

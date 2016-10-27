@@ -212,8 +212,8 @@ def get_scan(measurements_base, data_selection, selector, scan_type):
 	import pandas as pd
 	scan_paths = []
 	subject = selector[0]
-	condition = selector[1]
-	filtered_data = data_selection[(data_selection["condition"] == condition)&(data_selection["subject"] == subject)&(data_selection["scan_type"] == scan_type)]
+	session = selector[1]
+	filtered_data = data_selection[(data_selection["session"] == session)&(data_selection["subject"] == subject)&(data_selection["scan_type"] == scan_type)]
 	measurement_path = filtered_data["measurement"].tolist()[0]
 	scan_subdir = filtered_data["scan"].tolist()[0]
 	scan_path = os.path.join(measurements_base,measurement_path,scan_subdir)
@@ -255,7 +255,7 @@ def dcm_to_nii(dcm_dir, group_by="EchoTime", node=False):
 
 	return results, echo_time_set
 
-def get_data_selection(workflow_base, conditions=[], scan_types=[], subjects=[], exclude_subjects=[], measurements=[], exclude_measurements=[]):
+def get_data_selection(workflow_base, sessions=[], scan_types=[], subjects=[], exclude_subjects=[], measurements=[], exclude_measurements=[]):
 	import os
 
 	if measurements:
@@ -264,7 +264,7 @@ def get_data_selection(workflow_base, conditions=[], scan_types=[], subjects=[],
 		measurement_path_list = os.listdir(workflow_base)
 
 	selected_measurements=[]
-	#populate a list of lists with acceptable subject names, conditions, and sub_dir's
+	#populate a list of lists with acceptable subject names, sessions, and sub_dir's
 	for sub_dir in measurement_path_list:
 		if sub_dir not in exclude_measurements:
 			selected_measurement = []
@@ -285,14 +285,14 @@ def get_data_selection(workflow_base, conditions=[], scan_types=[], subjects=[],
 						read_variables +=1 #count recorded variables
 					if "##$SUBJECT_study_name=" in current_line:
 						entry=re.sub("[<>\n]", "", state_file.readline())
-						if entry in conditions or len(conditions) == 0:
+						if entry in sessions or len(sessions) == 0:
 							selected_measurement.append(entry)
 						else:
 							break
 						read_variables +=1 #count recorded variables
 					if read_variables == 2:
 						selected_measurement.append(sub_dir)
-						#if the directory passed both the subject and conditions tests, append a line for it
+						#if the directory passed both the subject and sessions tests, append a line for it
 						if not scan_types:
 							#add two empty entries to fill columns otherwise dedicated to the scan program
 							selected_measurement.extend(["",""])
@@ -339,10 +339,10 @@ def get_data_selection(workflow_base, conditions=[], scan_types=[], subjects=[],
 
 	data_selection = pd.DataFrame(selected_measurements, columns=["subject", "session", "measurement", "scan_type", "scan"])
 
-	#drop subjects which do not have measurements for all conditions
-	if len(conditions) > 1:
+	#drop subjects which do not have measurements for all sessions
+	if len(sessions) > 1:
 		for subject in set(data_selection["subject"]):
-			if len(data_selection[(data_selection["subject"] == subject)]) < len(conditions):
+			if len(data_selection[(data_selection["subject"] == subject)]) < len(sessions):
 				data_selection = data_selection[(data_selection["subject"] != subject)]
 
 	return data_selection

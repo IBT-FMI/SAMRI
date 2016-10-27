@@ -80,7 +80,7 @@ def diagnostic(measurements_base, structural_scan_types=[], functional_scan_type
 
 	pipeline_connections = [
 		(bru_preproc_workflow, datasink, [('infosource.condition','container')]),
-		(bru_preproc_workflow, datasink, [('structural_bru2nii.nii_file','structural')]),
+		(bru_preproc_workflow, datasink, [('s_bru2nii.nii_file','structural')]),
 		]
 
 	if realign:
@@ -89,7 +89,7 @@ def diagnostic(measurements_base, structural_scan_types=[], functional_scan_type
 			])
 	else:
 		pipeline_connections.extend([
-		(bru_preproc_workflow, analysis_workflow, [('functional_bru2nii.nii_file','melodic.in_files')])
+		(bru_preproc_workflow, analysis_workflow, [('f_bru2nii.nii_file','melodic.in_files')])
 		])
 
 	pipeline.connect(pipeline_connections)

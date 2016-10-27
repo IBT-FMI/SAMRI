@@ -115,10 +115,10 @@ def bru_preproc(measurements_base,
 
 	#select all functional/sturctural scan types unless specified
 	if not functional_scan_types or not structural_scan_types:
-		 scan_classification = pd.read_csv(scan_classification_file_path)
-		 if not functional_scan_types:
+		scan_classification = pd.read_csv(scan_classification_file_path)
+		if not functional_scan_types:
 			functional_scan_types = list(scan_classification[(scan_classification["categories"] == "functional")]["scan_type"])
-		 if not structural_scan_types:
+		if not structural_scan_types:
 			structural_scan_types = list(scan_classification[(scan_classification["categories"] == "structural")]["scan_type"])
 
 	#hack to allow structural scan type disaling:

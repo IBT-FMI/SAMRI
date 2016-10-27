@@ -57,7 +57,7 @@ def diagnostic(measurements_base, structural_scan_types=[], functional_scan_type
 	else:
 		workflow_base = measurements_base
 
-	bru_preproc_workflow = bru_preproc_lite(measurements_base, functional_scan_types=functional_scan_types, structural_scan_types=structural_scan_types, tr=tr, conditions=sessions, subjects=subjects, exclude_subjects=exclude_subjects, exclude_measurements=exclude_measurements, measurements=measurements, actual_size=actual_size)
+	bru_preproc_workflow = bru_preproc_lite(measurements_base, functional_scan_types=functional_scan_types, structural_scan_types=structural_scan_types, tr=tr, sessions=sessions, subjects=subjects, exclude_subjects=exclude_subjects, exclude_measurements=exclude_measurements, measurements=measurements, actual_size=actual_size)
 
 	melodic = pe.Node(interface=MELODIC(), name="melodic")
 	melodic.inputs.tr_sec = tr

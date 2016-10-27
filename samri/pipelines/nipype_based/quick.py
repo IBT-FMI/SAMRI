@@ -21,7 +21,7 @@ bruker_files = {"AdjStatePerStudy", "ResultState", "subject"}
 @argh.arg('--exclude-subjects', nargs='+', type=str)
 @argh.arg('--measurements', nargs='+', type=str)
 @argh.arg('--exclude_measurements', nargs='+', type=str)
-def diagnostic(measurements_base, structural_scan_types=[], functional_scan_types=[], workflow_base=False, tr=1, sessions=[], workflow_denominator="DIAGNOSTIC", subjects=[], exclude_subjects=[], measurements=[], exclude_measurements=[], debug_mode=False, actual_size=False, realign=False, quiet=True, dimensions=8):
+def diagnostic(measurements_base, structural_scan_types=[], functional_scan_types=[], workflow_base=False, tr=1, sessions=[], workflow_denominator="DIAGNOSTIC", subjects=[], exclude_subjects=[], measurements=[], exclude_measurements=[], debug=False, actual_size=False, realign=False, quiet=True, dimensions=8):
 	"""Runs a diagnostic analysis, returning MELODIC (ICA) results and structural scans.
 
 	Mandatory Arguments:
@@ -38,7 +38,7 @@ def diagnostic(measurements_base, structural_scan_types=[], functional_scan_type
 	exclude_subjects -- subject identifiers for which not to perform diagnostic (default None)
 	measurements -- measurement directory names on which to selectively perform diagnostic (default: all measurement directories in measurements_base are seected)
 	exclude_measurements -- measurement directory for which not to perform diagnostic (default None)
-	debug_mode -- do not delete work directory, which contains all except the final results (default False)
+	debug -- do not delete work directory, which contains all except the final results (default False)
 	quiet -- does not report missing scan errors, and deletes their corresponding crash files (default True)
 	dimensions -- number of dimensions to extract from MELODIC (default 8)
 	"""
@@ -105,5 +105,5 @@ def diagnostic(measurements_base, structural_scan_types=[], functional_scan_type
 				remove(path.join(getcwd(), f))
 
 	#delete all fles but final results
-	if not debug_mode:
+	if not debug:
 		shutil.rmtree(workflow_base+"/"+workflow_denominator+"_work")

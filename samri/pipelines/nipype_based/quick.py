@@ -16,12 +16,12 @@ bruker_files = {"AdjStatePerStudy", "ResultState", "subject"}
 
 @argh.arg('-f', '--functional_scan_types', nargs='+', type=str)
 @argh.arg('--structural_scan_types', nargs='+', type=str)
-@argh.arg('-c', '--conditions', nargs='+', type=str)
+@argh.arg('--sessions', nargs='+', type=str)
 @argh.arg('--subjects', nargs='+', type=str)
 @argh.arg('--exclude-subjects', nargs='+', type=str)
 @argh.arg('--measurements', nargs='+', type=str)
 @argh.arg('--exclude_measurements', nargs='+', type=str)
-def diagnostic(measurements_base, structural_scan_types=[], functional_scan_types=[], workflow_base=False, tr=1, conditions=[], workflow_denominator="DIAGNOSTIC", subjects=[], exclude_subjects=[], measurements=[], exclude_measurements=[], debug_mode=False, actual_size=False, realign=False, quiet=True):
+def diagnostic(measurements_base, structural_scan_types=[], functional_scan_types=[], workflow_base=False, tr=1, sessions=[], workflow_denominator="DIAGNOSTIC", subjects=[], exclude_subjects=[], measurements=[], exclude_measurements=[], debug_mode=False, actual_size=False, realign=False, quiet=True):
 	"""Runs a diagnostic analysis, returning MELODIC (ICA) results and structural scans.
 
 	Mandatory Arguments:
@@ -32,7 +32,7 @@ def diagnostic(measurements_base, structural_scan_types=[], functional_scan_type
 	functional_scan_types -- functional scan identifiers for which to perform the diafnostic (default: all structural scan type values from the scan_type_classification.csv file)
 	workflow_base -- path in which to place the workflow and results
 	tr -- repetition time (default: 1)
-	conditions -- condition (e.g. operation, substance administration) identifiers for which to perform the diafnostic (default: all conditions are selected)
+	sessions -- session (e.g. operation, substance administration) identifiers for which to perform the diafnostic (default: all sessions are selected)
 	workflow_denominator -- name of main workflow directory (default "DIAGNOSTIC")
 	subjects -- subject identifiers for which to perform the diagnostic (default: all subjects are selected)
 	exclude_subjects -- subject identifiers for which not to perform diagnostic (default None)
@@ -56,7 +56,7 @@ def diagnostic(measurements_base, structural_scan_types=[], functional_scan_type
 	else:
 		workflow_base = measurements_base
 
-	bru_preproc_workflow = bru_preproc_lite(measurements_base, functional_scan_types=functional_scan_types, structural_scan_types=structural_scan_types, tr=tr, conditions=conditions, subjects=subjects, exclude_subjects=exclude_subjects, exclude_measurements=exclude_measurements, measurements=measurements, actual_size=actual_size)
+	bru_preproc_workflow = bru_preproc_lite(measurements_base, functional_scan_types=functional_scan_types, structural_scan_types=structural_scan_types, tr=tr, conditions=sessions, subjects=subjects, exclude_subjects=exclude_subjects, exclude_measurements=exclude_measurements, measurements=measurements, actual_size=actual_size)
 
 	melodic = pe.Node(interface=MELODIC(), name="melodic")
 	melodic.inputs.tr_sec = tr

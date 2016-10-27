@@ -307,7 +307,7 @@ def bru_preproc(measurements_base,
 		try:
 			workflow.run(plugin="MultiProc",  plugin_args={'n_procs' : n_procs})
 		except RuntimeError:
-			print "WARNING: Some expected scans have not been found (or another TypeError has occured)."
+			print("WARNING: Some expected scans have not been found (or another TypeError has occured).")
 		for f in listdir(getcwd()):
 			if re.search("crash.*?get_structural_scan|get_functional_scan.*?pklz", f):
 				remove(path.join(getcwd(), f))

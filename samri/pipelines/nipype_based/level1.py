@@ -185,7 +185,7 @@ def level1(measurements_base, functional_scan_types, structural_scan_types=[], t
 			try:
 				pipeline.run(plugin="MultiProc",  plugin_args={'n_procs' : 4})
 			except RuntimeError:
-				print "WARNING: Some expected scans have not been found (or another RuntimeError has occured)."
+				print("WARNING: Some expected scans have not been found (or another RuntimeError has occured).")
 			for f in listdir(getcwd()):
 				if re.search("crash.*?get_structural_scan|get_functional_scan.*", f):
 					remove(path.join(getcwd(), f))

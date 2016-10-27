@@ -99,7 +99,7 @@ def diagnostic(measurements_base, structural_scan_types=[], functional_scan_type
 		try:
 			pipeline.run(plugin="MultiProc")
 		except RuntimeError:
-			print "WARNING: Some expected scans have not been found (or another RuntimeError has occured)."
+			print("WARNING: Some expected scans have not been found (or another RuntimeError has occured).")
 		for f in listdir(getcwd()):
 			if re.search("crash.*?get_structural_scan|get_functional_scan.*", f):
 				remove(path.join(getcwd(), f))

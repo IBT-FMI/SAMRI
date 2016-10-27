@@ -71,13 +71,13 @@ def sss_to_source(source_format, subject=False, session=False, scan=False, subje
 		source = os.path.join(base_directory, source)
 	return source
 
-def scs_filename(subject_condition, scan, scan_prefix="trial", suffix="", extension=".nii.gz"):
+def sss_filename(subject_session, scan, scan_prefix="trial", suffix="", extension=".nii.gz"):
 	"""Concatenate subject-condition and scan inputs to a BIDS-style filename
 
 	Parameters
 	----------
 
-	subject_condition : list
+	subject_session : list
 	Length-2 list of subject and session identifiers
 
 	scan : string
@@ -86,17 +86,17 @@ def scs_filename(subject_condition, scan, scan_prefix="trial", suffix="", extens
 	suffix : string, optional
 	Measurement type suffix (commonly "bold" or "cbv")
 	"""
-	# we do not want to modify the subject_condition iterator entry
+	# we do not want to modify the subject_session iterator entry
 	from copy import deepcopy
-	subject_condition = deepcopy(subject_condition)
+	subject_session = deepcopy(subject_session)
 
-	subject_condition[0] = "sub-" + subject_condition[0]
-	subject_condition[1] = "ses-" + subject_condition[1]
+	subject_session[0] = "sub-" + subject_session[0]
+	subject_session[1] = "ses-" + subject_session[1]
 	if suffix:
 		suffix = "_"+suffix
 	if scan_prefix:
 		scan = "".join([scan_prefix,"-",scan,suffix,extension])
 	else:
 		scan = "".join([scan,suffix,extension])
-	subject_condition.append(scan)
-	return "_".join(subject_condition)
+	subject_session.append(scan)
+	return "_".join(subject_session)

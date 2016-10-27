@@ -19,7 +19,7 @@ from nipype.interfaces import afni, bru2nii, fsl, nipy
 
 from extra_interfaces import GetBrukerTiming
 from nodes import functional_registration, structural_registration
-from utils import ss_to_path, scs_filename
+from utils import ss_to_path, sss_filename
 from utils import STIM_PROTOCOL_DICTIONARY
 
 #set all outputs to compressed NIfTI
@@ -162,9 +162,9 @@ def bru_preproc(measurements_base,
 	bandpass.inputs.highpass_sigma = 180
 	bandpass.inputs.lowpass_sigma = 1
 
-	bids_filename = pe.Node(name='bids_filename', interface=util.Function(function=scs_filename,input_names=inspect.getargspec(scs_filename)[0], output_names=['filename']))
+	bids_filename = pe.Node(name='bids_filename', interface=util.Function(function=sss_filename,input_names=inspect.getargspec(sss_filename)[0], output_names=['filename']))
 
-	bids_stim_filename = pe.Node(name='bids_stim_filename', interface=util.Function(function=scs_filename,input_names=inspect.getargspec(scs_filename)[0], output_names=['filename']))
+	bids_stim_filename = pe.Node(name='bids_stim_filename', interface=util.Function(function=sss_filename,input_names=inspect.getargspec(sss_filename)[0], output_names=['filename']))
 	bids_stim_filename.inputs.suffix = "events"
 	bids_stim_filename.inputs.extension = ".tsv"
 
@@ -228,7 +228,7 @@ def bru_preproc(measurements_base,
 
 		registration, s_warp, f_warp = structural_registration(template)
 
-		s_bids_filename = pe.Node(name='s_bids_filename', interface=util.Function(function=scs_filename,input_names=inspect.getargspec(scs_filename)[0], output_names=['filename']))
+		s_bids_filename = pe.Node(name='s_bids_filename', interface=util.Function(function=sss_filename,input_names=inspect.getargspec(sss_filename)[0], output_names=['filename']))
 		s_bids_filename.inputs.scan_prefix = False
 
 		workflow_connections.extend([
@@ -309,7 +309,7 @@ def bru_preproc(measurements_base,
 		except RuntimeError:
 			print "WARNING: Some expected scans have not been found (or another TypeError has occured)."
 		for f in listdir(getcwd()):
-			if re.search("crash.*?get_structural_scan|get_functional_scan.*", f):
+			if re.search("crash.*?get_structural_scan|get_functional_scan.*?pklz", f):
 				remove(path.join(getcwd(), f))
 	else:
 		workflow.run(plugin="MultiProc",  plugin_args={'n_procs' : n_procs})

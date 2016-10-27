@@ -21,7 +21,7 @@ bruker_files = {"AdjStatePerStudy", "ResultState", "subject"}
 @argh.arg('--exclude-subjects', nargs='+', type=str)
 @argh.arg('--measurements', nargs='+', type=str)
 @argh.arg('--exclude_measurements', nargs='+', type=str)
-def diagnostic(measurements_base, structural_scan_types=[], functional_scan_types=[], workflow_base=False, tr=1, sessions=[], workflow_denominator="DIAGNOSTIC", subjects=[], exclude_subjects=[], measurements=[], exclude_measurements=[], debug_mode=False, actual_size=False, realign=False, quiet=True):
+def diagnostic(measurements_base, structural_scan_types=[], functional_scan_types=[], workflow_base=False, tr=1, sessions=[], workflow_denominator="DIAGNOSTIC", subjects=[], exclude_subjects=[], measurements=[], exclude_measurements=[], debug_mode=False, actual_size=False, realign=False, quiet=True, dimensions=8):
 	"""Runs a diagnostic analysis, returning MELODIC (ICA) results and structural scans.
 
 	Mandatory Arguments:
@@ -40,6 +40,7 @@ def diagnostic(measurements_base, structural_scan_types=[], functional_scan_type
 	exclude_measurements -- measurement directory for which not to perform diagnostic (default None)
 	debug_mode -- do not delete work directory, which contains all except the final results (default False)
 	quiet -- does not report missing scan errors, and deletes their corresponding crash files (default True)
+	dimensions -- number of dimensions to extract from MELODIC (default 8)
 	"""
 
 	#make measurements_base absolute (this has to be here to allow the check below)
@@ -61,7 +62,7 @@ def diagnostic(measurements_base, structural_scan_types=[], functional_scan_type
 	melodic = pe.Node(interface=MELODIC(), name="melodic")
 	melodic.inputs.tr_sec = tr
 	melodic.inputs.report = True
-	melodic.inputs.dim = 8
+	melodic.inputs.dim = dimensions
 
 	datasink = pe.Node(nio.DataSink(), name='datasink')
 	datasink.inputs.base_directory = workflow_base+"/"+workflow_denominator

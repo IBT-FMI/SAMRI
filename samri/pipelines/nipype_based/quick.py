@@ -79,7 +79,7 @@ def diagnostic(measurements_base, structural_scan_types=[], functional_scan_type
 	pipeline.base_dir = workflow_base
 
 	pipeline_connections = [
-		(bru_preproc_workflow, datasink, [('infosource.condition','container')]),
+		(bru_preproc_workflow, datasink, [('infosource.session','container')]),
 		(bru_preproc_workflow, datasink, [('s_bru2nii.nii_file','structural')]),
 		]
 

@@ -3,7 +3,10 @@ if not __package__:
 	import sys
 	pkg_root = path.abspath(path.join(path.dirname(path.realpath(__file__)),"../../.."))
 	sys.path.insert(0, pkg_root)
-from samri.pipelines.extra_functions import get_data_selection, get_scan, write_events_file
+try:
+	from ..extra_functions import get_data_selection, get_scan, write_events_file
+except ValueError:
+	from samri.pipelines.extra_functions import get_data_selection, get_scan, write_events_file
 
 import re
 import inspect
@@ -52,7 +55,7 @@ def bru_preproc_lite(measurements_base, functional_scan_types=[], structural_sca
 	infosource = pe.Node(interface=util.IdentityInterface(fields=['session','subject']), name="infosource")
 	infosource.iterables = [('subject',subjects),('session',sessions)]
 
-	get_functional_scan = pe.Node(name='get_functional_scan', interface=util.Function(function=get_scan,input_names=["measurements_base","data_selection","session","subject","scan_type"], output_names=['scan_path','scan_type']))
+	get_functional_scan = pe.Node(name='get_functional_scan',  interface=util.Function(function=get_scan,input_names=inspect.getargspec(get_scan)[0], output_names=['scan_path','scan_type']))
 	get_functional_scan.inputs.data_selection = data_selection
 	get_functional_scan.inputs.measurements_base = measurements_base
 	get_functional_scan.iterables = ("scan_type", functional_scan_types)
@@ -61,7 +64,7 @@ def bru_preproc_lite(measurements_base, functional_scan_types=[], structural_sca
 	f_bru2nii.inputs.actual_size=actual_size
 
 	if structural_scan_types:
-		get_structural_scan = pe.Node(name='get_structural_scan', interface=util.Function(function=get_scan,input_names=["measurements_base","data_selection","session","subject","scan_type"], output_names=['scan_path','scan_type']))
+		get_structural_scan = pe.Node(name='get_structural_scan',  interface=util.Function(function=get_scan,input_names=inspect.getargspec(get_scan)[0], output_names=['scan_path','scan_type']))
 		get_structural_scan.inputs.data_selection = data_selection
 		get_structural_scan.inputs.measurements_base = measurements_base
 		get_structural_scan.iterables = ("scan_type", structural_scan_types)

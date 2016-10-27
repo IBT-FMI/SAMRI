@@ -21,7 +21,7 @@ bruker_files = {"AdjStatePerStudy", "ResultState", "subject"}
 @argh.arg('--exclude-subjects', nargs='+', type=str)
 @argh.arg('--measurements', nargs='+', type=str)
 @argh.arg('--exclude_measurements', nargs='+', type=str)
-def diagnostic(measurements_base, structural_scan_types=[], functional_scan_types=[], workflow_base=False, tr=1, sessions=[], workflow_denominator="DIAGNOSTIC", subjects=[], exclude_subjects=[], measurements=[], exclude_measurements=[], debug=False, actual_size=False, realign=False, quiet=True, dimensions=8):
+def diagnostic(measurements_base, structural_scan_types=[], functional_scan_types=[], workflow_base=False, tr=1, sessions=[], workflow_denominator="DIAGNOSTIC", subjects=[], exclude_subjects=[], measurements=[], exclude_measurements=[], keep_work=False, actual_size=False, realign=False, loud=False, dimensions=8):
 	"""Runs a diagnostic analysis, returning MELODIC (ICA) results and structural scans.
 
 	Mandatory Arguments:
@@ -39,7 +39,7 @@ def diagnostic(measurements_base, structural_scan_types=[], functional_scan_type
 	measurements -- measurement directory names on which to selectively perform diagnostic (default: all measurement directories in measurements_base are seected)
 	exclude_measurements -- measurement directory for which not to perform diagnostic (default None)
 	debug -- do not delete work directory, which contains all except the final results (default False)
-	quiet -- does not report missing scan errors, and deletes their corresponding crash files (default True)
+	loud -- reports missing scan errors, and does not delete their corresponding crash files (default False)
 	dimensions -- number of dimensions to extract from MELODIC (default 8)
 	"""
 
@@ -65,7 +65,7 @@ def diagnostic(measurements_base, structural_scan_types=[], functional_scan_type
 	melodic.inputs.dim = dimensions
 
 	datasink = pe.Node(nio.DataSink(), name='datasink')
-	datasink.inputs.base_directory = workflow_base+"/"+workflow_denominator
+	datasink.inputs.base_directory = path.join(workflow_base,workflow_denominator)
 
 	#SET UP ANALYSIS WORKFLOW:
 	analysis_workflow = pe.Workflow(name="ICA")
@@ -95,7 +95,7 @@ def diagnostic(measurements_base, structural_scan_types=[], functional_scan_type
 	pipeline.connect(pipeline_connections)
 	pipeline.write_graph(graph2use="flat")
 
-	if quiet:
+	if not loud:
 		try:
 			pipeline.run(plugin="MultiProc")
 		except RuntimeError:
@@ -103,7 +103,9 @@ def diagnostic(measurements_base, structural_scan_types=[], functional_scan_type
 		for f in listdir(getcwd()):
 			if re.search("crash.*?get_structural_scan|get_functional_scan.*", f):
 				remove(path.join(getcwd(), f))
+	else:
+		pipeline.run(plugin="MultiProc")
 
 	#delete all fles but final results
-	if not debug:
+	if not keep_work:
 		shutil.rmtree(workflow_base+"/"+workflow_denominator+"_work")

@@ -207,12 +207,14 @@ def get_level2_inputs(input_root, categories=[], participants=[], scan_types=[])
 
 	return l2_inputs
 
-def get_scan(measurements_base, data_selection, selector, scan_type):
+def get_scan(measurements_base, data_selection, scan_type, selector=None, subject=None, session=None):
 	import os #for some reason the import outside the function fails
 	import pandas as pd
 	scan_paths = []
-	subject = selector[0]
-	session = selector[1]
+	if not subject:
+		subject = selector[0]
+	if not session:
+		session = selector[1]
 	filtered_data = data_selection[(data_selection["session"] == session)&(data_selection["subject"] == subject)&(data_selection["scan_type"] == scan_type)]
 	measurement_path = filtered_data["measurement"].tolist()[0]
 	scan_subdir = filtered_data["scan"].tolist()[0]

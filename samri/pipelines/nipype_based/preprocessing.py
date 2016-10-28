@@ -20,7 +20,6 @@ import nipype.pipeline.engine as pe				# pypeline engine
 import pandas as pd
 from nipype.interfaces import afni, bru2nii, fsl, nipy
 
-from extra_interfaces import GetBrukerTiming
 from nodes import functional_registration, structural_registration
 from utils import ss_to_path, sss_filename
 from utils import STIM_PROTOCOL_DICTIONARY

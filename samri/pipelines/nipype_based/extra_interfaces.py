@@ -1,7 +1,8 @@
-from nipype.interfaces.base import BaseInterface, BaseInterfaceInputSpec, traits, File, TraitedSpec, Directory, CommandLineInputSpec, CommandLine, InputMultiPath, isdefined, Bunch
+from nipype.interfaces.base import BaseInterface, BaseInterfaceInputSpec, traits, File, TraitedSpec, Directory, CommandLineInputSpec, CommandLine, InputMultiPath, isdefined, Bunch, OutputMultiPath, load_template
 from nipype.interfaces.afni.base import AFNICommandOutputSpec, AFNICommandInputSpec, AFNICommand
 from nipype.utils.filemanip import split_filename
 from itertools import product
+from nibabel import load
 
 import nibabel as nb
 import numpy as np
@@ -30,7 +31,7 @@ def scale_timings(timelist, input_units, output_units, time_repetition):
 	return timelist
 
 
-def gen_info(run_event_files):
+def gen_info(run_event_files, one_condition_file):
 	"""Generate subject_info structure from a list of event files or a multirow event file.
 	"""
 	info = []
@@ -39,23 +40,34 @@ def gen_info(run_event_files):
 		if len(run_event_files) == 1 and ".tsv" in event_files:
 			event_file = event_files
 			with open(event_file) as tsv:
-				for ix, line in enumerate(csv.reader(tsv, delimiter="\t")):
-					if ix == 0 and isinstance(line[0], str):
-						continue
-					name = "e{}".format(ix)
+				eventfile_data = list(csv.reader(tsv, delimiter="\t"))
+				if isinstance(eventfile_data[0][0], str):
+					eventfile_data = eventfile_data[1:]
+				eventfile_data = [[round(float(i)) for i in sublist] for sublist in eventfile_data]
+				if one_condition_file:
+					name = "e0"
+					onsets = [i[0] for i in eventfile_data]
+					durations = [i[1] for i in eventfile_data]
+					amplitudes = [i[2] for i in eventfile_data]
 					runinfo.conditions.append(name)
-					event_info = np.atleast_2d(line)
-					event_info = [[round(float(y)) for y in sublist] for sublist in event_info]
-					event_info=np.array([np.array(sublist) for sublist in event_info])
-					runinfo.onsets.append(event_info[:, 0].tolist())
-					if event_info.shape[1] > 1:
-						runinfo.durations.append(event_info[:, 1].tolist())
-					else:
-						runinfo.durations.append([0])
-					if event_info.shape[1] > 2:
-						runinfo.amplitudes.append(event_info[:, 2].tolist())
-					else:
-						delattr(runinfo, 'amplitudes')
+					runinfo.onsets.append(onsets)
+					runinfo.durations.append(durations)
+					runinfo.amplitudes.append(amplitudes)
+				else:
+					for ix, line in enumerate(eventfile_data):
+						name = "e{}".format(ix)
+						runinfo.conditions.append(name)
+						event_info = np.atleast_2d(line)
+						event_info=np.array([np.array(sublist) for sublist in event_info])
+						runinfo.onsets.append(event_info[:, 0].tolist())
+						if event_info.shape[1] > 1:
+							runinfo.durations.append(event_info[:, 1].tolist())
+						else:
+							runinfo.durations.append([0])
+						if event_info.shape[1] > 2:
+							runinfo.amplitudes.append(event_info[:, 2].tolist())
+						else:
+							delattr(runinfo, 'amplitudes')
 		else:
 			for event_file in event_files:
 				_, name = os.path.split(event_file)
@@ -107,6 +119,7 @@ class SpecifyModelInputSpec(BaseInterfaceInputSpec):
 	time_repetition = traits.Float(mandatory=True,
 								   desc=("Time between the start of one volume to the start of "
 										 "the next image volume."))
+	one_condition_file = traits.Bool(mandatory=False,default=True)
 	# Not implemented yet
 	# polynomial_order = traits.Range(0, low=0,
 	#		desc ="Number of polynomial functions to model high pass filter.")
@@ -300,7 +313,7 @@ class SpecifyModel(BaseInterface):
 			if isdefined(self.inputs.subject_info):
 				infolist = self.inputs.subject_info
 			else:
-				infolist = gen_info(self.inputs.event_files)
+				infolist = gen_info(self.inputs.event_files, self.inputs.one_condition_file)
 		self._sessinfo = self._generate_standard_design(infolist,
 														functional_runs=self.inputs.functional_runs,
 														realignment_parameters=realignment_parameters,
@@ -632,4 +645,338 @@ class MEICA(CommandLine):
 	def _list_outputs(self):
 		outputs = self._outputs().get()
 		outputs["nii_files"] = self.result
+		return outputs
+
+class Level1DesignInputSpec(BaseInterfaceInputSpec):
+	interscan_interval = traits.Float(mandatory=True,
+									  desc='Interscan  interval (in secs)')
+	session_info = traits.Any(mandatory=True,
+							  desc=('Session specific information generated '
+									'by ``modelgen.SpecifyModel``'))
+	bases = traits.Either(
+		traits.Dict(traits.Enum(
+			'dgamma'), traits.Dict(traits.Enum('derivs'), traits.Bool)),
+		traits.Dict(traits.Enum('gamma'), traits.Dict(
+					traits.Enum('derivs', 'gammasigma', 'gammadelay'))),
+		traits.Dict(traits.Enum('none'), traits.Enum(None)),
+		mandatory=True,
+		desc=("name of basis function and options e.g., "
+			  "{'dgamma': {'derivs': True}}"))
+	model_serial_correlations = traits.Bool(
+		desc="Option to model serial correlations using an \
+autoregressive estimator (order 1). Setting this option is only \
+useful in the context of the fsf file. If you set this to False, you need to \
+repeat this option for FILMGLS by setting autocorr_noestimate to True",
+		mandatory=True)
+	contrasts = traits.List(
+		traits.Either(traits.Tuple(traits.Str,
+								   traits.Enum('T'),
+								   traits.List(traits.Str),
+								   traits.List(traits.Float)),
+					  traits.Tuple(traits.Str,
+								   traits.Enum('T'),
+								   traits.List(traits.Str),
+								   traits.List(traits.Float),
+								   traits.List(traits.Float)),
+					  traits.Tuple(traits.Str,
+								   traits.Enum('F'),
+								   traits.List(
+									   traits.Either(
+										   traits.Tuple(traits.Str,
+														traits.Enum('T'),
+														traits.List(
+															traits.Str),
+														traits.List(
+															traits.Float)),
+										   traits.Tuple(
+											   traits.Str,
+											   traits.Enum('T'),
+											   traits.List(
+												   traits.Str),
+											   traits.List(
+												   traits.Float),
+											   traits.List(
+												   traits.Float)))))),
+		desc="List of contrasts with each contrast being a list of the form - \
+[('name', 'stat', [condition list], [weight list], [session list])]. if \
+session list is None or not provided, all sessions are used. For F \
+contrasts, the condition list should contain previously defined \
+T-contrasts.")
+
+
+class Level1DesignOutputSpec(TraitedSpec):
+	fsf_files = OutputMultiPath(File(exists=True),
+								desc='FSL feat specification files')
+	ev_files = OutputMultiPath(traits.List(File(exists=True)),
+							   desc='condition information files')
+
+
+class Level1Design(BaseInterface):
+	"""Generate FEAT specific files
+
+	Examples
+	--------
+
+	>>> level1design = Level1Design()
+	>>> level1design.inputs.interscan_interval = 2.5
+	>>> level1design.inputs.bases = {'dgamma':{'derivs': False}}
+	>>> level1design.inputs.session_info = 'session_info.npz'
+	>>> level1design.run() # doctest: +SKIP
+
+	"""
+
+	input_spec = Level1DesignInputSpec
+	output_spec = Level1DesignOutputSpec
+
+	def _create_ev_file(self, evfname, evinfo):
+		f = open(evfname, 'wt')
+		for i in evinfo:
+			if len(i) == 3:
+				f.write('%f %f %f\n' % (i[0], i[1], i[2]))
+			else:
+				f.write('%f\n' % i[0])
+		f.close()
+
+	def _create_ev_files(
+		self, cwd, runinfo, runidx, model_parameters, contrasts,
+			do_tempfilter, basis_key):
+		"""Creates EV files from condition and regressor information.
+
+		   Parameters:
+		   -----------
+
+		   runinfo : dict
+			   Generated by `SpecifyModel` and contains information
+			   about events and other regressors.
+		   runidx  : int
+			   Index to run number
+		   design_parameters : dict
+			   A dictionary containing the model parameters for the
+			   given design type.
+		   contrasts : list of lists
+			   Information on contrasts to be evaluated
+		"""
+		conds = {}
+		evname = []
+		if basis_key == "dgamma":
+			basis_key = "hrf"
+		ev_template = load_template('feat_ev_'+basis_key+'.tcl')
+		ev_none = load_template('feat_ev_none.tcl')
+		ev_ortho = load_template('feat_ev_ortho.tcl')
+		ev_txt = ''
+		# generate sections for conditions and other nuisance
+		# regressors
+		num_evs = [0, 0]
+		for field in ['cond', 'regress']:
+			for i, cond in enumerate(runinfo[field]):
+				name = cond['name']
+				evname.append(name)
+				evfname = os.path.join(cwd, 'ev_%s_%d_%d.txt' % (name, runidx,
+																 len(evname)))
+				evinfo = []
+				num_evs[0] += 1
+				num_evs[1] += 1
+				if field == 'cond':
+					for j, onset in enumerate(cond['onset']):
+						try:
+							amplitudes = cond['amplitudes']
+							if len(amplitudes) > 1:
+								amp = amplitudes[j]
+							else:
+								amp = amplitudes[0]
+						except KeyError:
+							amp = 1
+						if len(cond['duration']) > 1:
+							evinfo.insert(j, [onset, cond['duration'][j], amp])
+						else:
+							evinfo.insert(j, [onset, cond['duration'][0], amp])
+					model_parameters['ev_num'] = num_evs[0]
+					model_parameters['ev_name'] = name
+					model_parameters['tempfilt_yn'] = do_tempfilter
+					model_parameters['cond_file'] = evfname
+					try:
+						model_parameters['temporalderiv'] = model_parameters.pop('derivs')
+					except KeyError:
+						pass
+					else:
+						evname.append(name + 'TD')
+						num_evs[1] += 1
+					ev_txt += ev_template.substitute(model_parameters)
+				elif field == 'regress':
+					evinfo = [[j] for j in cond['val']]
+					ev_txt += ev_none.substitute(ev_num=num_evs[0],
+												 ev_name=name,
+												 tempfilt_yn=do_tempfilter,
+												 cond_file=evfname)
+				ev_txt += "\n"
+				conds[name] = evfname
+				self._create_ev_file(evfname, evinfo)
+		# add ev orthogonalization
+		for i in range(1, num_evs[0] + 1):
+			for j in range(0, num_evs[0] + 1):
+				ev_txt += ev_ortho.substitute(c0=i, c1=j)
+				ev_txt += "\n"
+		# add contrast info to fsf file
+		if isdefined(contrasts):
+			contrast_header = load_template('feat_contrast_header.tcl')
+			contrast_prolog = load_template('feat_contrast_prolog.tcl')
+			contrast_element = load_template('feat_contrast_element.tcl')
+			contrast_ftest_element = load_template(
+				'feat_contrast_ftest_element.tcl')
+			contrastmask_header = load_template('feat_contrastmask_header.tcl')
+			contrastmask_footer = load_template('feat_contrastmask_footer.tcl')
+			contrastmask_element = load_template(
+				'feat_contrastmask_element.tcl')
+			# add t/f contrast info
+			ev_txt += contrast_header.substitute()
+			con_names = []
+			for j, con in enumerate(contrasts):
+				con_names.append(con[0])
+			con_map = {}
+			ftest_idx = []
+			ttest_idx = []
+			for j, con in enumerate(contrasts):
+				if con[1] == 'F':
+					ftest_idx.append(j)
+					for c in con[2]:
+						if c[0] not in list(con_map.keys()):
+							con_map[c[0]] = []
+						con_map[c[0]].append(j)
+				else:
+					ttest_idx.append(j)
+
+			for ctype in ['real', 'orig']:
+				for j, con in enumerate(contrasts):
+					if con[1] == 'F':
+						continue
+					tidx = ttest_idx.index(j) + 1
+					ev_txt += contrast_prolog.substitute(cnum=tidx,
+														 ctype=ctype,
+														 cname=con[0])
+					count = 0
+					for c in range(1, len(evname) + 1):
+						if evname[c - 1].endswith('TD') and ctype == 'orig':
+							continue
+						count = count + 1
+						if evname[c - 1] in con[2]:
+							val = con[3][con[2].index(evname[c - 1])]
+						else:
+							val = 0.0
+						ev_txt += contrast_element.substitute(
+							cnum=tidx, element=count, ctype=ctype, val=val)
+						ev_txt += "\n"
+
+					for fconidx in ftest_idx:
+						fval = 0
+						if (con[0] in con_map.keys() and
+								fconidx in con_map[con[0]]):
+							fval = 1
+						ev_txt += contrast_ftest_element.substitute(
+							cnum=ftest_idx.index(fconidx) + 1,
+							element=tidx,
+							ctype=ctype,
+							val=fval)
+						ev_txt += "\n"
+
+			# add contrast mask info
+			ev_txt += contrastmask_header.substitute()
+			for j, _ in enumerate(contrasts):
+				for k, _ in enumerate(contrasts):
+					if j != k:
+						ev_txt += contrastmask_element.substitute(c1=j + 1,
+																  c2=k + 1)
+			ev_txt += contrastmask_footer.substitute()
+		return num_evs, ev_txt
+
+	def _format_session_info(self, session_info):
+		if isinstance(session_info, dict):
+			session_info = [session_info]
+		return session_info
+
+	def _get_func_files(self, session_info):
+		"""Returns functional files in the order of runs
+		"""
+		func_files = []
+		for i, info in enumerate(session_info):
+			func_files.insert(i, info['scans'])
+		return func_files
+
+	def _run_interface(self, runtime):
+		cwd = os.getcwd()
+		fsf_header = load_template('feat_header_l1.tcl')
+		fsf_postscript = load_template('feat_nongui.tcl')
+
+		prewhiten = 0
+		if isdefined(self.inputs.model_serial_correlations):
+			prewhiten = int(self.inputs.model_serial_correlations)
+		basis_key = list(self.inputs.bases.keys())[0]
+		model_parameters = dict(self.inputs.bases[basis_key])
+		session_info = self._format_session_info(self.inputs.session_info)
+		func_files = self._get_func_files(session_info)
+		n_tcon = 0
+		n_fcon = 0
+		if isdefined(self.inputs.contrasts):
+			for i, c in enumerate(self.inputs.contrasts):
+				if c[1] == 'T':
+					n_tcon += 1
+				elif c[1] == 'F':
+					n_fcon += 1
+
+		for i, info in enumerate(session_info):
+			do_tempfilter = 1
+			if info['hpf'] == np.inf:
+				do_tempfilter = 0
+			num_evs, cond_txt = self._create_ev_files(cwd, info, i, model_parameters,
+													  self.inputs.contrasts,
+													  do_tempfilter, basis_key)
+			nim = load(func_files[i])
+			(_, _, _, timepoints) = nim.shape
+			fsf_txt = fsf_header.substitute(
+				run_num=i,
+				interscan_interval=self.inputs.interscan_interval,
+				num_vols=timepoints,
+				prewhiten=prewhiten,
+				num_evs=num_evs[0],
+				num_evs_real=num_evs[1],
+				num_tcon=n_tcon,
+				num_fcon=n_fcon,
+				high_pass_filter_cutoff=info[
+					'hpf'],
+				temphp_yn=do_tempfilter,
+				func_file=func_files[i])
+			fsf_txt += cond_txt
+			fsf_txt += fsf_postscript.substitute(overwrite=1)
+
+			f = open(os.path.join(cwd, 'run%d.fsf' % i), 'w')
+			f.write(fsf_txt)
+			f.close()
+
+		return runtime
+
+	def _list_outputs(self):
+		outputs = self.output_spec().get()
+		cwd = os.getcwd()
+		outputs['fsf_files'] = []
+		outputs['ev_files'] = []
+		usetd = 0
+		basis_key = list(self.inputs.bases.keys())[0]
+		if basis_key in ['dgamma', 'gamma']:
+			usetd = int(self.inputs.bases[basis_key]['derivs'])
+		for runno, runinfo in enumerate(
+				self._format_session_info(self.inputs.session_info)):
+			outputs['fsf_files'].append(os.path.join(cwd, 'run%d.fsf' % runno))
+			outputs['ev_files'].insert(runno, [])
+			evname = []
+			for field in ['cond', 'regress']:
+				for i, cond in enumerate(runinfo[field]):
+					name = cond['name']
+					evname.append(name)
+					evfname = os.path.join(
+						cwd, 'ev_%s_%d_%d.txt' % (name, runno,
+												  len(evname)))
+					if field == 'cond':
+						if usetd:
+							evname.append(name + 'TD')
+					outputs['ev_files'][runno].append(
+						os.path.join(cwd, evfname))
 		return outputs

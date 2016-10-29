@@ -11,13 +11,13 @@ import nipype.interfaces.io as nio
 import nipype.interfaces.utility as util
 import nipype.pipeline.engine as pe
 from itertools import product
-from nipype.interfaces.fsl import GLM, FEATModel, Merge, L2Model, FLAMEO, model
+from nipype.interfaces.fsl
 
-from extra_interfaces import GenL2Model, SpecifyModel
+from extra_interfaces import GenL2Model, SpecifyModel, Level1Design
 from preprocessing import bru_preproc
 from utils import sss_to_source, ss_to_path
 
-def l1(preprocessing_dir, tr=1, nprocs=10, l1_dir="", workflow_name="generic", highpass_sigma=290):
+def l1(preprocessing_dir, tr=1, nprocs=10, l1_dir="", workflow_name="generic", highpass_sigma=290, per_event_contrasts=False):
 	preprocessing_dir = path.expanduser(preprocessing_dir)
 	if not l1_dir:
 		l1_dir = path.abspath(path.join(preprocessing_dir,"..","..","l1"))
@@ -44,15 +44,18 @@ def l1(preprocessing_dir, tr=1, nprocs=10, l1_dir="", workflow_name="generic", h
 	specify_model.inputs.time_repetition = tr
 	specify_model.inputs.high_pass_filter_cutoff = highpass_sigma
 
-	level1design = pe.Node(interface=model.Level1Design(), name="level1design")
+	level1design = pe.Node(interface=Level1Design(), name="level1design")
 	level1design.inputs.interscan_interval = tr
-	level1design.inputs.bases = {'dgamma': {'derivs':False}}
+	level1design.inputs.bases = {'gamma': {'derivs':False, 'gammasigma':10, 'gammadelay':5}}
 	level1design.inputs.model_serial_correlations = True
-	level1design.inputs.contrasts = [('allStim','T', ["e1","e2","e3","e4","e5","e6"],[1,1,1,1,1,1])] #condition names as defined in specify_model
+	if per_event_contrasts:
+		level1design.inputs.contrasts = [('allStim','T', ["e0","e1","e2","e3","e4","e5"],[1,1,1,1,1,1])] #condition names as defined in specify_model
+	else:
+		level1design.inputs.contrasts = [('allStim','T', ["e0"],[1])] #condition names as defined in specify_model
 
-	modelgen = pe.Node(interface=FEATModel(), name='modelgen')
+	modelgen = pe.Node(interface=fsl.FEATModel(), name='modelgen')
 
-	glm = pe.Node(interface=GLM(), name='glm', iterfield='design')
+	glm = pe.Node(interface=fsl.GLM(), name='glm', iterfield='design')
 	glm.inputs.out_cope="cope.nii.gz"
 	glm.inputs.out_varcb_name="varcb.nii.gz"
 	#not setting a betas output file might lead to beta export in lieu of COPEs
@@ -123,15 +126,15 @@ def level1(measurements_base, functional_scan_types, structural_scan_types=[], t
 	specify_model.inputs.time_repetition = tr
 	specify_model.inputs.high_pass_filter_cutoff = 180
 
-	level1design = pe.Node(interface=model.Level1Design(), name="level1design")
+	level1design = pe.Node(interface=fsl.model.Level1Design(), name="level1design")
 	level1design.inputs.interscan_interval = tr
 	level1design.inputs.bases = {'dgamma': {'derivs':False}}
 	level1design.inputs.model_serial_correlations = True
 	level1design.inputs.contrasts = [('allStim','T', ["s1","s2","s3","s4","s5","s6"],[1,1,1,1,1,1])]
 
-	modelgen = pe.Node(interface=FEATModel(), name='modelgen')
+	modelgen = pe.Node(interface=fsl.FEATModel(), name='modelgen')
 
-	func_glm = pe.Node(interface=GLM(), name='func_glm', iterfield='design')
+	func_glm = pe.Node(interface=fsl.GLM(), name='func_glm', iterfield='design')
 	func_glm.inputs.out_cope="cope.nii.gz"
 	func_glm.inputs.out_varcb_name="varcb.nii.gz"
 	#not setting a betas output file might lead to beta export in lieu of COPEs
@@ -139,7 +142,7 @@ def level1(measurements_base, functional_scan_types, structural_scan_types=[], t
 	func_glm.inputs.out_t_name="t_stat.nii.gz"
 	func_glm.inputs.out_p_name="p_stat.nii.gz"
 
-	struc_glm = pe.Node(interface=GLM(), name='struc_glm', iterfield='design')
+	struc_glm = pe.Node(interface=fsl.GLM(), name='struc_glm', iterfield='design')
 	struc_glm.inputs.out_cope="cope.nii.gz"
 	struc_glm.inputs.out_varcb_name="varcb.nii.gz"
 	#not setting a betas output file might lead to beta export in lieu of COPEs

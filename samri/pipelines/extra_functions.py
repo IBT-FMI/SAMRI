@@ -66,6 +66,7 @@ def write_events_file(scan_type, stim_protocol_dictionary,
 	out_file="~/events.tsv",
 	subject_delay=False,
 	scan_directory=False,
+	very_nasty_bruker_delay_hack=False,
 	):
 	import csv
 	import os
@@ -112,6 +113,8 @@ def write_events_file(scan_type, stim_protocol_dictionary,
 				break #prevent loop from going on forever
 
 		subject_delay = delay_seconds + dummy_scans_ms/1000
+		if very_nasty_bruker_delay_hack:
+			subject_delay += 12
 
 	session, engine = loadSession(db_path)
 	sql_query=session.query(LaserStimulationProtocol).filter(LaserStimulationProtocol.code==stim_protocol_dictionary[scan_type])
@@ -126,7 +129,7 @@ def write_events_file(scan_type, stim_protocol_dictionary,
 	names=[]
 	with open(out_file, 'w') as tsvfile:
 		field_names =["onset","duration","stimulation_frequency"]
-		writer = csv.DictWriter(tsvfile, fieldnames=field_names, delimiter=b"\t")
+		writer = csv.DictWriter(tsvfile, fieldnames=field_names, delimiter="\t")
 
 		writer.writeheader()
 		for i in range(stimulus_repetitions):
@@ -350,4 +353,4 @@ def get_data_selection(workflow_base, sessions=[], scan_types=[], subjects=[], e
 	return data_selection
 
 if __name__ == '__main__':
-	write_events_file("EPI_CBV_jin40", STIM_PROTOCOL_DICTIONARY, scan_directory="~/NIdata/ofM.erc/20160421_124458_5500_1_2/13")
+	write_events_file("7_EPI_CBV", STIM_PROTOCOL_DICTIONARY, scan_directory="~/NIdata/ofM.dr/20151208_182500_4007_1_4/10")

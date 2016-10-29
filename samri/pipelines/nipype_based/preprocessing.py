@@ -97,7 +97,7 @@ def bru_preproc_lite(measurements_base, functional_scan_types=[], structural_sca
 	# workflow.run(plugin="MultiProc")
 	return workflow
 
-def bru_preproc(measurements_base,
+def bruker(measurements_base,
 	functional_scan_types=[],
 	structural_scan_types=[],
 	sessions=[],
@@ -108,9 +108,11 @@ def bru_preproc(measurements_base,
 	actual_size=False,
 	functional_blur_xy=False,
 	functional_registration_method="structural",
+	highpass_sigma=270,
 	n_procs=6,
 	template="/home/chymera/NIdata/templates/ds_QBI_chr.nii.gz",
 	tr=1,
+	very_nasty_bruker_delay_hack=False,
 	workflow_name="generic",
 	quiet=True,
 	):
@@ -154,6 +156,7 @@ def bru_preproc(measurements_base,
 
 	events_file = pe.Node(name='events_file', interface=util.Function(function=write_events_file,input_names=inspect.getargspec(write_events_file)[0], output_names=['out_file']))
 	events_file.inputs.stim_protocol_dictionary = STIM_PROTOCOL_DICTIONARY
+	events_file.inputs.very_nasty_bruker_delay_hack = very_nasty_bruker_delay_hack
 
 	realigner = pe.Node(interface=nipy.SpaceTimeRealigner(), name="realigner")
 	realigner.inputs.slice_times = "asc_alt_2"
@@ -161,8 +164,8 @@ def bru_preproc(measurements_base,
 	realigner.inputs.slice_info = 3 #3 for coronal slices (2 for horizontal, 1 for sagittal)
 
 	bandpass = pe.Node(interface=fsl.maths.TemporalFilter(), name="bandpass")
-	bandpass.inputs.highpass_sigma = 180
-	bandpass.inputs.lowpass_sigma = 1
+	bandpass.inputs.highpass_sigma = highpass_sigma
+	bandpass.inputs.lowpass_sigma = tr
 
 	bids_filename = pe.Node(name='bids_filename', interface=util.Function(function=sss_filename,input_names=inspect.getargspec(sss_filename)[0], output_names=['filename']))
 
@@ -317,5 +320,5 @@ def bru_preproc(measurements_base,
 		workflow.run(plugin="MultiProc",  plugin_args={'n_procs' : n_procs})
 
 if __name__ == "__main__":
-	bru_preproc("/home/chymera/NIdata/ofM.dr/",exclude_measurements=['20151027_121613_4013_1_1'])
+	bruker("/home/chymera/NIdata/ofM.dr/",exclude_measurements=['20151027_121613_4013_1_1'], very_nasty_bruker_delay_hack=True)
 	# bru_preproc("/home/chymera/NIdata/ofM.erc/",exclude_subjects=["4030","4029","4031"])

@@ -32,7 +32,7 @@ fsl.FSLCommand.set_default_output_type('NIFTI_GZ')
 thisscriptspath = path.dirname(path.realpath(__file__))
 scan_classification_file_path = path.join(thisscriptspath,"..","scan_type_classification.csv")
 
-def bru_preproc_lite(measurements_base, functional_scan_types=[], structural_scan_types=[], tr=1, sessions=[], subjects=[], exclude_subjects=[], measurements=[], exclude_measurements=[], actual_size=False, realign=False):
+def bruker_lite(measurements_base, functional_scan_types=[], structural_scan_types=[], tr=1, sessions=[], subjects=[], exclude_subjects=[], measurements=[], exclude_measurements=[], actual_size=False, realign=False):
 
 	#select all functional/sturctural scan types unless specified
 	if not functional_scan_types or not structural_scan_types:
@@ -321,4 +321,4 @@ def bruker(measurements_base,
 
 if __name__ == "__main__":
 	bruker("/home/chymera/NIdata/ofM.dr/",exclude_measurements=['20151027_121613_4013_1_1'], very_nasty_bruker_delay_hack=True)
-	# bru_preproc("/home/chymera/NIdata/ofM.erc/",exclude_subjects=["4030","4029","4031"])
+	# bruker("/home/chymera/NIdata/ofM.erc/",exclude_subjects=["4030","4029","4031"])

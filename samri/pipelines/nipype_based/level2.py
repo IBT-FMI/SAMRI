@@ -9,7 +9,7 @@ from nipype.algorithms.modelgen import SpecifyModel
 from os import path, listdir, remove, getcwd
 
 from extra_interfaces import GenL2Model
-from preprocessing import bru_preproc
+from preprocessing import bruker
 from utils import datasource_exclude
 try:
 	from ..extra_functions import get_level2_inputs, get_subjectinfo, write_function_call

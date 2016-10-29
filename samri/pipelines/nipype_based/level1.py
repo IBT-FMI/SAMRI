@@ -42,7 +42,7 @@ def l1(preprocessing_dir, tr=1, nprocs=10, l1_dir="", workflow_name="generic"):
 	specify_model = pe.Node(interface=SpecifyModel(), name="specify_model")
 	specify_model.inputs.input_units = 'secs'
 	specify_model.inputs.time_repetition = tr
-	specify_model.inputs.high_pass_filter_cutoff = 180
+	specify_model.inputs.high_pass_filter_cutoff =
 
 	level1design = pe.Node(interface=model.Level1Design(), name="level1design")
 	level1design.inputs.interscan_interval = tr

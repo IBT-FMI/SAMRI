@@ -17,7 +17,7 @@ from extra_interfaces import GenL2Model, SpecifyModel
 from preprocessing import bru_preproc
 from utils import sss_to_source, ss_to_path
 
-def l1(preprocessing_dir, tr=1, nprocs=10, l1_dir="", workflow_name="generic"):
+def l1(preprocessing_dir, tr=1, nprocs=10, l1_dir="", workflow_name="generic", highpass_sigma=290):
 	preprocessing_dir = path.expanduser(preprocessing_dir)
 	if not l1_dir:
 		l1_dir = path.abspath(path.join(preprocessing_dir,"..","..","l1"))
@@ -42,7 +42,7 @@ def l1(preprocessing_dir, tr=1, nprocs=10, l1_dir="", workflow_name="generic"):
 	specify_model = pe.Node(interface=SpecifyModel(), name="specify_model")
 	specify_model.inputs.input_units = 'secs'
 	specify_model.inputs.time_repetition = tr
-	specify_model.inputs.high_pass_filter_cutoff =
+	specify_model.inputs.high_pass_filter_cutoff = highpass_sigma
 
 	level1design = pe.Node(interface=model.Level1Design(), name="level1design")
 	level1design.inputs.interscan_interval = tr

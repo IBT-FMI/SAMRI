@@ -19,6 +19,35 @@ def fslmaths_invert_values(img_path):
 	op_string = "-sub {0} -sub {0}".format(img_path)
 	return op_string
 
+def iterfield_selector(iterfields, selector, action):
+	"""Include or exclude entries from iterfields based on a selector dictionary
+
+	Parameters
+	----------
+
+	iterfields : list
+	A list of lists (or tuples) containing entries fromatted at (subject_id,session_id,trial_id)
+
+	selector : dict
+	A dictionary with any combination of "sessions", "subjects", "trials" as keys and corresponding identifiers as values.
+
+	action : "exclude" or "include"
+	Whether to exclude or include (and exclude all the other) matching entries from the output.
+	"""
+	name_map = {"subjects": 0, "sessions": 1, "trials":2}
+	keep = []
+	for ix, iterfield in enumerate(iterfields):
+		for key in selector:
+			selector[key] = [str(i) for i in selector[key]]
+			if iterfield[name_map[key]] in selector[key]:
+				keep.append(ix)
+				break
+	if action == "exclude":
+		iterfields = [iterfields[i] for i in range(len(iterfields)) if i not in keep]
+	elif action == "include":
+		iterfields = [iterfields[i] for i in keep]
+	return iterfields
+
 def datasource_exclude(in_files, excludes, output="files"):
 	"""Exclude file names from a list that match a BIDS-style specifications from a dictionary.
 

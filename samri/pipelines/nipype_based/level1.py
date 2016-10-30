@@ -15,37 +15,50 @@ from nipype.interfaces import fsl
 
 from extra_interfaces import GenL2Model, SpecifyModel, Level1Design
 from preprocessing import bruker
-from utils import sss_to_source, ss_to_path
+from utils import sss_to_source, ss_to_path, iterfield_selector
 
 def l1(preprocessing_dir,
 	highpass_sigma=290,
+	include={},
+	exclude={},
 	l1_dir="",
 	nprocs=10,
+	mask="/home/chymera/NIdata/templates/ds_QBI_chr_bin.nii.gz",
 	per_event_contrasts=False,
-	sessions=[],
-	subjects=[],
 	tr=1,
-	trials=[],
 	workflow_name="generic",
 	):
+	"""Calculate subject level GLM statistics.
+
+	Parameters
+	----------
+
+	include : dict
+	A dictionary with any combination of "sessions", "subjects", "trials" as keys and corresponding identifiers as values.
+	If this is specified ony matching entries will be included in the analysis.
+
+	exclude : dict
+	A dictionary with any combination of "sessions", "subjects", "trials" as keys and corresponding identifiers as values.
+	If this is specified ony non-matching entries will be included in the analysis.
+	"""
+
 	preprocessing_dir = path.expanduser(preprocessing_dir)
 	if not l1_dir:
 		l1_dir = path.abspath(path.join(preprocessing_dir,"..","..","l1"))
-
-	sessions = [str(i) for i in sessions]
-	subjects = [str(i) for i in subjects]
-	trials = [str(i) for i in trials]
 
 	datafind = nio.DataFinder()
 	datafind.inputs.root_paths = preprocessing_dir
 	datafind.inputs.match_regex = '.+/sub-(?P<sub>.+)/ses-(?P<ses>.+)/func/.*?_trial-(?P<scan>.+)\.nii.gz'
 	datafind_res = datafind.run()
 	iterfields = zip(*[datafind_res.outputs.sub, datafind_res.outputs.ses, datafind_res.outputs.scan])
-	iterfields = [i for i in iterfields if
-		all([any([i[0] in subjects, not subjects]),
-		any([i[1] in sessions, not sessions]),
-		any([i[2] in trials, not trials]),
-		])]
+
+	if include:
+		iterfields = iterfield_selector(iterfields, include, "include")
+	if exclude:
+		iterfields = iterfield_selector(iterfields, exclude, "exclude")
+
+	print(iterfields)
+	return
 
 	infosource = pe.Node(interface=util.IdentityInterface(fields=['subject_session_scan']), name="infosource")
 	infosource.iterables = [('subject_session_scan', iterfields)]
@@ -80,6 +93,7 @@ def l1(preprocessing_dir,
 	glm = pe.Node(interface=fsl.GLM(), name='glm', iterfield='design')
 	glm.inputs.out_cope="cope.nii.gz"
 	glm.inputs.out_varcb_name="varcb.nii.gz"
+	glm.inputs.mask=mask
 	#not setting a betas output file might lead to beta export in lieu of COPEs
 	glm.inputs.out_file="betas.nii.gz"
 	glm.inputs.out_t_name="t_stat.nii.gz"
@@ -228,5 +242,6 @@ if __name__ == "__main__":
 	# 	level1("~/NIdata/ofM.erc/", {"EPI_CBV_jin6":"jin6","EPI_CBV_jin10":"jin10","EPI_CBV_jin20":"jin20","EPI_CBV_jin40":"jin40","EPI_CBV_jin60":"jin60","EPI_CBV_alej":"alej",}, structural_scan_types=-1, actual_size=False, pipeline_denominator="level1_dgamma_blurxy"+str(i), blur_xy=i)
 	# 	level2_common_effect("~/NIdata/ofM.erc/GLM/level1_dgamma_blurxy"+str(i), categories=[], scan_types=[["EPI_CBV_jin6"],["EPI_CBV_jin10"],["EPI_CBV_jin20"],["EPI_CBV_jin40"],["EPI_CBV_jin60"],["EPI_CBV_alej"]], participants=["5502","5503"], denominator="level2_dgamma_blurxy"+str(i))
 
-	l1("~/NIdata/ofM.dr/preprocessing/generic", workflow_name="generic", subjects=[i for i in range(4001,4009)]+[4011,4012])
+	l1("~/NIdata/ofM.dr/preprocessing/generic", workflow_name="generic", include={"subjects":[i for i in range(4001,4010)]+[4011,4012],"sessions":[]}, mask=None)
+	l1("~/NIdata/ofM.dr/preprocessing/generic", workflow_name="masked", include={"subjects":[i for i in range(4001,4010)]+[4011,4012],"sessions":[]})
 	# l1("~/NIdata/ofM.dr/preprocessing/generic")

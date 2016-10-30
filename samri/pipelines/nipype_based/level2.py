@@ -24,7 +24,15 @@ def getlen(a):
 def add_suffix(name, suffix):
 	return str(name)+str(suffix)
 
-def l2_common_effect(l1_dir, tr=1, nprocs=6, l2_dir="", workflow_name="generic", groupby="session", excludes={}):
+def l2_common_effect(l1_dir,
+	tr=1,
+	nprocs=6,
+	l2_dir="",
+	workflow_name="generic",
+	groupby="session",
+	excludes={},
+	):
+	
 	l1_dir = path.expanduser(l1_dir)
 	if not l2_dir:
 		l2_dir = path.abspath(path.join(l1_dir,"..","..","l2"))

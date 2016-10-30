@@ -11,22 +11,41 @@ import nipype.interfaces.io as nio
 import nipype.interfaces.utility as util
 import nipype.pipeline.engine as pe
 from itertools import product
-from nipype.interfaces.fsl
+from nipype.interfaces import fsl
 
 from extra_interfaces import GenL2Model, SpecifyModel, Level1Design
-from preprocessing import bru_preproc
+from preprocessing import bruker
 from utils import sss_to_source, ss_to_path
 
-def l1(preprocessing_dir, tr=1, nprocs=10, l1_dir="", workflow_name="generic", highpass_sigma=290, per_event_contrasts=False):
+def l1(preprocessing_dir,
+	highpass_sigma=290,
+	l1_dir="",
+	nprocs=10,
+	per_event_contrasts=False,
+	sessions=[],
+	subjects=[],
+	tr=1,
+	trials=[],
+	workflow_name="generic",
+	):
 	preprocessing_dir = path.expanduser(preprocessing_dir)
 	if not l1_dir:
 		l1_dir = path.abspath(path.join(preprocessing_dir,"..","..","l1"))
+
+	sessions = [str(i) for i in sessions]
+	subjects = [str(i) for i in subjects]
+	trials = [str(i) for i in trials]
 
 	datafind = nio.DataFinder()
 	datafind.inputs.root_paths = preprocessing_dir
 	datafind.inputs.match_regex = '.+/sub-(?P<sub>.+)/ses-(?P<ses>.+)/func/.*?_trial-(?P<scan>.+)\.nii.gz'
 	datafind_res = datafind.run()
 	iterfields = zip(*[datafind_res.outputs.sub, datafind_res.outputs.ses, datafind_res.outputs.scan])
+	iterfields = [i for i in iterfields if
+		all([any([i[0] in subjects, not subjects]),
+		any([i[1] in sessions, not sessions]),
+		any([i[2] in trials, not trials]),
+		])]
 
 	infosource = pe.Node(interface=util.IdentityInterface(fields=['subject_session_scan']), name="infosource")
 	infosource.iterables = [('subject_session_scan', iterfields)]
@@ -43,10 +62,13 @@ def l1(preprocessing_dir, tr=1, nprocs=10, l1_dir="", workflow_name="generic", h
 	specify_model.inputs.input_units = 'secs'
 	specify_model.inputs.time_repetition = tr
 	specify_model.inputs.high_pass_filter_cutoff = highpass_sigma
+	specify_model.inputs.one_condition_file = True
+	specify_model.inputs.habituation_regressor = True
 
 	level1design = pe.Node(interface=Level1Design(), name="level1design")
 	level1design.inputs.interscan_interval = tr
 	level1design.inputs.bases = {'gamma': {'derivs':False, 'gammasigma':10, 'gammadelay':5}}
+	level1design.inputs.orthogonalization = {1: {0:0,1:0,2:0}, 2: {0:1,1:1,2:0}}
 	level1design.inputs.model_serial_correlations = True
 	if per_event_contrasts:
 		level1design.inputs.contrasts = [('allStim','T', ["e0","e1","e2","e3","e4","e5"],[1,1,1,1,1,1])] #condition names as defined in specify_model
@@ -206,5 +228,5 @@ if __name__ == "__main__":
 	# 	level1("~/NIdata/ofM.erc/", {"EPI_CBV_jin6":"jin6","EPI_CBV_jin10":"jin10","EPI_CBV_jin20":"jin20","EPI_CBV_jin40":"jin40","EPI_CBV_jin60":"jin60","EPI_CBV_alej":"alej",}, structural_scan_types=-1, actual_size=False, pipeline_denominator="level1_dgamma_blurxy"+str(i), blur_xy=i)
 	# 	level2_common_effect("~/NIdata/ofM.erc/GLM/level1_dgamma_blurxy"+str(i), categories=[], scan_types=[["EPI_CBV_jin6"],["EPI_CBV_jin10"],["EPI_CBV_jin20"],["EPI_CBV_jin40"],["EPI_CBV_jin60"],["EPI_CBV_alej"]], participants=["5502","5503"], denominator="level2_dgamma_blurxy"+str(i))
 
-	l1("~/NIdata/ofM.dr/preprocessing/norealign", workflow_name="norealign")
+	l1("~/NIdata/ofM.dr/preprocessing/generic", workflow_name="generic", subjects=[i for i in range(4001,4009)]+[4011,4012])
 	# l1("~/NIdata/ofM.dr/preprocessing/generic")

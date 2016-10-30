@@ -16,7 +16,7 @@ STIM_PROTOCOL_DICTIONARY={
 
 def fslmaths_invert_values(img_path):
 	"""Calculates the op_string required to make an fsl.ImageMaths() node invert an image"""
-	op_string = "-sub {0} -sub {0}".format(op_string)
+	op_string = "-sub {0} -sub {0}".format(img_path)
 	return op_string
 
 def datasource_exclude(in_files, excludes, output="files"):

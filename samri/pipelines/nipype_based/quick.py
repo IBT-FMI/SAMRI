@@ -5,7 +5,7 @@ import nipype.interfaces.utility as util
 from extra_interfaces import Bru2
 from nipype.interfaces.fsl import MELODIC, BET
 from os import path, listdir, remove, getcwd
-from preprocessing import bru_preproc_lite
+from preprocessing import bruker_lite
 import nipype.interfaces.io as nio
 import shutil
 import re
@@ -57,7 +57,7 @@ def diagnostic(measurements_base, structural_scan_types=[], functional_scan_type
 	else:
 		workflow_base = measurements_base
 
-	bru_preproc_workflow = bru_preproc_lite(measurements_base, functional_scan_types=functional_scan_types, structural_scan_types=structural_scan_types, tr=tr, sessions=sessions, subjects=subjects, exclude_subjects=exclude_subjects, exclude_measurements=exclude_measurements, measurements=measurements, actual_size=actual_size)
+	bruker_workflow = bruker_lite(measurements_base, functional_scan_types=functional_scan_types, structural_scan_types=structural_scan_types, tr=tr, sessions=sessions, subjects=subjects, exclude_subjects=exclude_subjects, exclude_measurements=exclude_measurements, measurements=measurements, actual_size=actual_size)
 
 	melodic = pe.Node(interface=MELODIC(), name="melodic")
 	melodic.inputs.tr_sec = tr
@@ -79,17 +79,17 @@ def diagnostic(measurements_base, structural_scan_types=[], functional_scan_type
 	pipeline.base_dir = workflow_base
 
 	pipeline_connections = [
-		(bru_preproc_workflow, datasink, [('infosource.session','container')]),
-		(bru_preproc_workflow, datasink, [('s_bru2nii.nii_file','structural')]),
+		(bruker_workflow, datasink, [('infosource.session','container')]),
+		(bruker_workflow, datasink, [('s_bru2nii.nii_file','structural')]),
 		]
 
 	if realign:
 		pipeline_connections.extend([
-			(bru_preproc_workflow, analysis_workflow, [('realigner.out_file','melodic.in_files')])
+			(bruker_workflow, analysis_workflow, [('realigner.out_file','melodic.in_files')])
 			])
 	else:
 		pipeline_connections.extend([
-		(bru_preproc_workflow, analysis_workflow, [('f_bru2nii.nii_file','melodic.in_files')])
+		(bruker_workflow, analysis_workflow, [('f_bru2nii.nii_file','melodic.in_files')])
 		])
 
 	pipeline.connect(pipeline_connections)

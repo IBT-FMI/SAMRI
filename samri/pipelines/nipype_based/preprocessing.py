@@ -21,7 +21,7 @@ import pandas as pd
 from nipype.interfaces import afni, bru2nii, fsl, nipy
 
 from nodes import functional_registration, structural_registration
-from utils import ss_to_path, sss_filename
+from utils import ss_to_path, sss_filename, fslmaths_invert_values
 from utils import STIM_PROTOCOL_DICTIONARY
 
 #set all outputs to compressed NIfTI
@@ -32,7 +32,7 @@ fsl.FSLCommand.set_default_output_type('NIFTI_GZ')
 thisscriptspath = path.dirname(path.realpath(__file__))
 scan_classification_file_path = path.join(thisscriptspath,"..","scan_type_classification.csv")
 
-def bru_preproc_lite(measurements_base, functional_scan_types=[], structural_scan_types=[], tr=1, sessions=[], subjects=[], exclude_subjects=[], measurements=[], exclude_measurements=[], actual_size=False, realign=False):
+def bruker_lite(measurements_base, functional_scan_types=[], structural_scan_types=[], tr=1, sessions=[], subjects=[], exclude_subjects=[], measurements=[], exclude_measurements=[], actual_size=False, realign=False):
 
 	#select all functional/sturctural scan types unless specified
 	if not functional_scan_types or not structural_scan_types:
@@ -109,6 +109,7 @@ def bruker(measurements_base,
 	functional_blur_xy=False,
 	functional_registration_method="structural",
 	highpass_sigma=270,
+	negative_contrast_agent=False,
 	n_procs=6,
 	template="/home/chymera/NIdata/templates/ds_QBI_chr.nii.gz",
 	tr=1,
@@ -291,12 +292,31 @@ def bruker(measurements_base,
 			(realigner, f_warp, [('out_file', 'input_image')]),
 			])
 
-	if functional_blur_xy:
+
+	invert = pe.Node(interface=fsl.ImageMaths(), name="invert")
+	if functional_blur_xy and negative_contrast_agent:
 		blur = pe.Node(interface=afni.preprocess.BlurToFWHM(), name="blur")
 		blur.inputs.fwhmxy = functional_blur_xy
 		workflow_connections.extend([
 			(f_warp, blur, [('output_image', 'in_file')]),
+			(blur, invert, [(('out_file', fslmaths_invert_values), 'op_string')]),
+			(invert, bandpass, [('out_file', 'in_file')]),
+			])
+	elif functional_blur_xy:
+		blur = pe.Node(interface=afni.preprocess.BlurToFWHM(), name="blur")
+		blur.inputs.fwhmxy = functional_blur_xy
+		workflow_connections.extend([
+			(f_warp, blur, [('output_image', 'in_file')]),
+			(f_warp, invert, [('output_image', 'in_file')]),
 			(blur, bandpass, [('out_file', 'in_file')]),
+			])
+	elif negative_contrast_agent:
+		blur = pe.Node(interface=afni.preprocess.BlurToFWHM(), name="blur")
+		blur.inputs.fwhmxy = functional_blur_xy
+		workflow_connections.extend([
+			(f_warp, invert, [(('output_image', fslmaths_invert_values), 'op_string')]),
+			(f_warp, invert, [('output_image', 'in_file')]),
+			(invert, bandpass, [('out_file', 'in_file')]),
 			])
 	else:
 		workflow_connections.extend([
@@ -320,5 +340,5 @@ def bruker(measurements_base,
 		workflow.run(plugin="MultiProc",  plugin_args={'n_procs' : n_procs})
 
 if __name__ == "__main__":
-	bruker("/home/chymera/NIdata/ofM.dr/",exclude_measurements=['20151027_121613_4013_1_1'], very_nasty_bruker_delay_hack=True)
+	bruker("/home/chymera/NIdata/ofM.dr/",exclude_measurements=['20151027_121613_4013_1_1'], very_nasty_bruker_delay_hack=True, negative_contrast_agent=True)
 	# bru_preproc("/home/chymera/NIdata/ofM.erc/",exclude_subjects=["4030","4029","4031"])

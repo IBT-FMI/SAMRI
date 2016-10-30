@@ -31,14 +31,13 @@ def scale_timings(timelist, input_units, output_units, time_repetition):
 	return timelist
 
 
-def gen_info(run_event_files, one_condition_file):
+def gen_info(run_event_files, one_condition_file, habituation_regressor):
 	"""Generate subject_info structure from a list of event files or a multirow event file.
 	"""
 	info = []
-	for i, event_files in enumerate(run_event_files):
+	for i, event_file in enumerate(run_event_files):
 		runinfo = Bunch(conditions=[], onsets=[], durations=[], amplitudes=[])
-		if len(run_event_files) == 1 and ".tsv" in event_files:
-			event_file = event_files
+		if event_file.endswith(".tsv"):
 			with open(event_file) as tsv:
 				eventfile_data = list(csv.reader(tsv, delimiter="\t"))
 				if isinstance(eventfile_data[0][0], str):
@@ -53,6 +52,15 @@ def gen_info(run_event_files, one_condition_file):
 					runinfo.onsets.append(onsets)
 					runinfo.durations.append(durations)
 					runinfo.amplitudes.append(amplitudes)
+					if habituation_regressor:
+						name = "e1"
+						onsets = [i[0] for i in eventfile_data]
+						durations = [i[1] for i in eventfile_data]
+						amplitudes = [len(eventfile_data)-i for i in range(len(eventfile_data))]
+						runinfo.conditions.append(name)
+						runinfo.onsets.append(onsets)
+						runinfo.durations.append(durations)
+						runinfo.amplitudes.append(amplitudes)
 				else:
 					for ix, line in enumerate(eventfile_data):
 						name = "e{}".format(ix)
@@ -76,7 +84,6 @@ def gen_info(run_event_files, one_condition_file):
 				elif '.txt' in name:
 					name, _ = name.split('.txt')
 				runinfo.conditions.append(name)
-				print(np.loadtxt(event_file))
 				event_info = np.atleast_2d(np.loadtxt(event_file))
 				runinfo.onsets.append(event_info[:, 0].tolist())
 				if event_info.shape[1] > 1:
@@ -120,6 +127,7 @@ class SpecifyModelInputSpec(BaseInterfaceInputSpec):
 								   desc=("Time between the start of one volume to the start of "
 										 "the next image volume."))
 	one_condition_file = traits.Bool(mandatory=False,default=True)
+	habituation_regressor = traits.Bool(mandatory=False,default=False)
 	# Not implemented yet
 	# polynomial_order = traits.Range(0, low=0,
 	#		desc ="Number of polynomial functions to model high pass filter.")
@@ -201,9 +209,9 @@ class SpecifyModel(BaseInterface):
 	output_spec = SpecifyModelOutputSpec
 
 	def _generate_standard_design(self, infolist,
-								  functional_runs=None,
-								  realignment_parameters=None,
-								  outliers=None):
+								functional_runs=None,
+								realignment_parameters=None,
+								outliers=None):
 		""" Generates a standard design matrix paradigm given information about
 			each run
 		"""
@@ -313,7 +321,7 @@ class SpecifyModel(BaseInterface):
 			if isdefined(self.inputs.subject_info):
 				infolist = self.inputs.subject_info
 			else:
-				infolist = gen_info(self.inputs.event_files, self.inputs.one_condition_file)
+				infolist = gen_info(self.inputs.event_files, self.inputs.one_condition_file, self.inputs.habituation_regressor)
 		self._sessinfo = self._generate_standard_design(infolist,
 														functional_runs=self.inputs.functional_runs,
 														realignment_parameters=realignment_parameters,
@@ -658,10 +666,11 @@ class Level1DesignInputSpec(BaseInterfaceInputSpec):
 			'dgamma'), traits.Dict(traits.Enum('derivs'), traits.Bool)),
 		traits.Dict(traits.Enum('gamma'), traits.Dict(
 					traits.Enum('derivs', 'gammasigma', 'gammadelay'))),
-		traits.Dict(traits.Enum('none'), traits.Enum(None)),
+		traits.Dict(traits.Enum('none'), traits.Dict()),
 		mandatory=True,
 		desc=("name of basis function and options e.g., "
 			  "{'dgamma': {'derivs': True}}"))
+	orthogonalization = traits.Dict(traits.Int, traits.Dict(traits.Int, traits.Either(traits.Bool,traits.Int)))
 	model_serial_correlations = traits.Bool(
 		desc="Option to model serial correlations using an \
 autoregressive estimator (order 1). Setting this option is only \
@@ -738,7 +747,7 @@ class Level1Design(BaseInterface):
 		f.close()
 
 	def _create_ev_files(
-		self, cwd, runinfo, runidx, model_parameters, contrasts,
+		self, cwd, runinfo, runidx, ev_parameters, orthogonalization, contrasts,
 			do_tempfilter, basis_key):
 		"""Creates EV files from condition and regressor information.
 
@@ -760,6 +769,15 @@ class Level1Design(BaseInterface):
 		evname = []
 		if basis_key == "dgamma":
 			basis_key = "hrf"
+		elif basis_key == "gamma":
+			try:
+				_ = ev_parameters['gammasigma']
+			except KeyError:
+				ev_parameters['gammasigma'] = 3
+			try:
+				_ = ev_parameters['gammadelay']
+			except KeyError:
+				ev_parameters['gammadelay'] = 6
 		ev_template = load_template('feat_ev_'+basis_key+'.tcl')
 		ev_none = load_template('feat_ev_none.tcl')
 		ev_ortho = load_template('feat_ev_ortho.tcl')
@@ -790,18 +808,19 @@ class Level1Design(BaseInterface):
 							evinfo.insert(j, [onset, cond['duration'][j], amp])
 						else:
 							evinfo.insert(j, [onset, cond['duration'][0], amp])
-					model_parameters['ev_num'] = num_evs[0]
-					model_parameters['ev_name'] = name
-					model_parameters['tempfilt_yn'] = do_tempfilter
-					model_parameters['cond_file'] = evfname
+					ev_parameters['ev_num'] = num_evs[0]
+					ev_parameters['ev_name'] = name
+					ev_parameters['tempfilt_yn'] = do_tempfilter
+					ev_parameters['cond_file'] = evfname
 					try:
-						model_parameters['temporalderiv'] = model_parameters.pop('derivs')
+						ev_parameters['temporalderiv'] = ev_parameters.pop('derivs')
 					except KeyError:
 						pass
 					else:
-						evname.append(name + 'TD')
-						num_evs[1] += 1
-					ev_txt += ev_template.substitute(model_parameters)
+						if ev_parameters['temporalderiv']:
+							evname.append(name + 'TD')
+							num_evs[1] += 1
+					ev_txt += ev_template.substitute(ev_parameters)
 				elif field == 'regress':
 					evinfo = [[j] for j in cond['val']]
 					ev_txt += ev_none.substitute(ev_num=num_evs[0],
@@ -814,7 +833,11 @@ class Level1Design(BaseInterface):
 		# add ev orthogonalization
 		for i in range(1, num_evs[0] + 1):
 			for j in range(0, num_evs[0] + 1):
-				ev_txt += ev_ortho.substitute(c0=i, c1=j)
+				if not orthogonalization:
+					orthogonal = 0
+				else:
+					orthogonal = int(orthogonalization[i][j])
+				ev_txt += ev_ortho.substitute(c0=i, c1=j, orthogonal=orthogonal)
 				ev_txt += "\n"
 		# add contrast info to fsf file
 		if isdefined(contrasts):
@@ -910,7 +933,7 @@ class Level1Design(BaseInterface):
 		if isdefined(self.inputs.model_serial_correlations):
 			prewhiten = int(self.inputs.model_serial_correlations)
 		basis_key = list(self.inputs.bases.keys())[0]
-		model_parameters = dict(self.inputs.bases[basis_key])
+		ev_parameters = dict(self.inputs.bases[basis_key])
 		session_info = self._format_session_info(self.inputs.session_info)
 		func_files = self._get_func_files(session_info)
 		n_tcon = 0
@@ -926,7 +949,7 @@ class Level1Design(BaseInterface):
 			do_tempfilter = 1
 			if info['hpf'] == np.inf:
 				do_tempfilter = 0
-			num_evs, cond_txt = self._create_ev_files(cwd, info, i, model_parameters,
+			num_evs, cond_txt = self._create_ev_files(cwd, info, i, ev_parameters, self.inputs.orthogonalization,
 													  self.inputs.contrasts,
 													  do_tempfilter, basis_key)
 			nim = load(func_files[i])
@@ -973,7 +996,7 @@ class Level1Design(BaseInterface):
 					evname.append(name)
 					evfname = os.path.join(
 						cwd, 'ev_%s_%d_%d.txt' % (name, runno,
-												  len(evname)))
+												len(evname)))
 					if field == 'cond':
 						if usetd:
 							evname.append(name + 'TD')

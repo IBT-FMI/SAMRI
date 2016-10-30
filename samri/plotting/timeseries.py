@@ -91,8 +91,8 @@ def roi_based(roi="/home/chymera/NIdata/templates/roi/ctx_chr.nii.gz", subject=4
 	masker = NiftiLabelsMasker(labels_img=roi, standardize=True, memory='nilearn_cache', verbose=5)
 	parcel=0
 
-
-	events_file = "/home/chymera/NIdata/ofM.dr/preprocessing/{0}/sub-{1}/ses-{2}/func/sub-{1}_ses-{2}_trial-{3}_events.tsv".format(workflows[0], subject, session, scan)
+	# events_file = "/home/chymera/NIdata/ofM.dr/preprocessing/{0}/sub-{1}/ses-{2}/func/sub-{1}_ses-{2}_trial-{3}_events.tsv".format(workflows[0], subject, session, scan)
+	events_file = "/home/chymera/events.tsv"
 
 	events_df = pd.read_csv(events_file, sep="\t")
 
@@ -103,7 +103,8 @@ def roi_based(roi="/home/chymera/NIdata/templates/roi/ctx_chr.nii.gz", subject=4
 		ax.axvspan(o,o+d, facecolor="cyan", alpha=0.15)
 		plt.hold(True)
 	if melodic_hit:
-		melodic_file = "/home/chymera/NIdata/ofM.dr/DIAGNOSTIC/{1}/MELODIC_reports/_condition_ofM_cF2_subject_{0}/_scan_type_{2}/report/t{3}.txt".format(subject, session, scan, melodic_hit)
+		melodic_file = "/home/chymera/NIdata/ofM.dr/20151208_182500_4007_1_4/melo10/report/t4.txt"
+		# melodic_file = "/home/chymera/NIdata/ofM.dr/DIAGNOSTIC/{1}/MELODIC_reports/_condition_ofM_cF2_subject_{0}/_scan_type_{2}/report/t{3}.txt".format(subject, session, scan, melodic_hit)
 		melodic = np.loadtxt(melodic_file)
 		plt.plot(melodic)
 	for workflow in workflows:
@@ -115,10 +116,14 @@ def roi_based(roi="/home/chymera/NIdata/templates/roi/ctx_chr.nii.gz", subject=4
 		timecourse_file = "/home/chymera/NIdata/ofM.dr/preprocessing/{4}_work/_subject_condition_{0}.{1}/_scan_type_T2_TurboRARE/_scan_type_{2}/f_warp/{3}".format(subject, session, scan, warp_name, workflow)
 		time_series = masker.fit_transform(timecourse_file).T
 		plt.plot(time_series[parcel])
+	fsl_design = "/home/chymera/src/SAMRI/run0.mat"
 	# fsl_design = "/home/chymera/NIdata/ofM.dr/l1/generic_work/_subject_session_scan_{0}.{1}.{2}/modelgen/run0.mat".format(subject, session, scan)
-	# fsl_design_df = pd.read_csv(fsl_design, skiprows=5, sep="\t", header=None, names=[1,2,3,4,5,6], index_col=False)
-	# plt.plot(fsl_design_df[[1]])
-	print(len(final_time_series[parcel]))
+	fsl_design_df = pd.read_csv(fsl_design, skiprows=5, sep="\t", header=None, names=[1,2,3,4,5,6], index_col=False)
+	fsl_design_df = fsl_design_df/6
+	plt.plot(fsl_design_df[[1]])
+	plt.plot(fsl_design_df[[2]])
+	plt.plot(fsl_design_df[[3]])
+	print(fsl_design_df)
 	plt.show()
 
 	# plt.show()
@@ -144,7 +149,8 @@ if __name__ == '__main__':
 
 	# roi_based(subject=4007, warp_name="corr_10_trans.nii.gz", melodic_hit=5)
 	# roi_based(subject=4007, roi="dr", workflows=["generic"], melodic_hit=5)
-	roi_based(subject=4001, roi="dr", workflows=["generic"])
+	# roi_based(subject=4001, roi="dr", workflows=["generic"])
+	roi_based(subject=4007, roi="ctx", workflows=["generic"],melodic_hit=True)
 	# roi_based(subject=4007, workflows=["norealign"], melodic_hit=5, warp_name="10_trans.nii")
 	# roi_based(subject=4012, workflows=["norealign","generic"], melodic_hit=5)
 	# roi_based(subject=4012, session="ofM_cF1", workflows=["norealign","generic"])

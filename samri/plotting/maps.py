@@ -13,7 +13,7 @@ plt.style.use('ggplot')
 colors_plus = plt.cm.autumn(np.linspace(0., 1, 128))
 colors_minus = plt.cm.winter(np.linspace(0, 1, 128))
 
-def stat(stat_maps, cbv=True, figure_title="", interpolation="hermite", template="~/NIdata/templates/ds_QBI_chr.nii.gz", save_as="", scale=1., subplot_titles=[], cut_coords=None, threshold=3, black_bg=False, annotate=True, draw_cross=True, show_plot=True):
+def stat(stat_maps, figure_title="", interpolation="hermite", template="~/NIdata/templates/ds_QBI_chr.nii.gz", save_as="", scale=1., subplot_titles=[], cut_coords=None, threshold=3, black_bg=False, annotate=True, draw_cross=True, show_plot=True):
 	"""Plot a list of statistical maps.
 	This Function acts as a wrapper of nilearn.plotting.plot_stat_map, adding support for multiple axes, using a prettier default and allowing intelligent text and crosshair scaling.
 
@@ -22,9 +22,6 @@ def stat(stat_maps, cbv=True, figure_title="", interpolation="hermite", template
 
 	stat_maps : list
 	A list of strings giving the paths to the statistical maps to be plotted.
-
-	cbv : boolean, optional
-	Whether the statistics are from a negative contrast agent cbv measurement. If True the colormap is inverted to visually present the actual neuronal activity.
 
 	figure_title : string, optional
 	Title for the entire figure.
@@ -49,10 +46,7 @@ def stat(stat_maps, cbv=True, figure_title="", interpolation="hermite", template
 	stat_maps = [os.path.abspath(os.path.expanduser(stat_map)) for stat_map in stat_maps]
 	template = os.path.abspath(os.path.expanduser(template))
 
-	if cbv:
-		colors = np.vstack((colors_plus, colors_minus[::-1]))
-	else:
-		colors = np.vstack((colors_minus, colors_plus[::-1]))
+	colors = np.vstack((colors_minus, colors_plus[::-1]))
 	mymap = mcolors.LinearSegmentedColormap.from_list('my_colormap', colors)
 
 	if len(stat_maps) == 1:

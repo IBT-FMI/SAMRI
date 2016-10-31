@@ -670,7 +670,11 @@ class Level1DesignInputSpec(BaseInterfaceInputSpec):
 		mandatory=True,
 		desc=("name of basis function and options e.g., "
 			  "{'dgamma': {'derivs': True}}"))
-	orthogonalization = traits.Dict(traits.Int, traits.Dict(traits.Int, traits.Either(traits.Bool,traits.Int)))
+	orthogonalization = traits.Dict(
+		traits.Int, traits.Dict(traits.Int, traits.Either(traits.Bool,traits.Int)),
+		mandatory=False,
+		default={},
+		)
 	model_serial_correlations = traits.Bool(
 		desc="Option to model serial correlations using an \
 autoregressive estimator (order 1). Setting this option is only \
@@ -833,10 +837,10 @@ class Level1Design(BaseInterface):
 		# add ev orthogonalization
 		for i in range(1, num_evs[0] + 1):
 			for j in range(0, num_evs[0] + 1):
-				if not orthogonalization:
-					orthogonal = 0
-				else:
+				try:
 					orthogonal = int(orthogonalization[i][j])
+				except (ValueError, TypeError):
+					orthogonal = 0
 				ev_txt += ev_ortho.substitute(c0=i, c1=j, orthogonal=orthogonal)
 				ev_txt += "\n"
 		# add contrast info to fsf file

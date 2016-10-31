@@ -11,13 +11,39 @@ import nipype.interfaces.io as nio
 import nipype.interfaces.utility as util
 import nipype.pipeline.engine as pe
 from itertools import product
-from nipype.interfaces.fsl
+from nipype.interfaces import fsl
 
 from extra_interfaces import GenL2Model, SpecifyModel, Level1Design
-from preprocessing import bru_preproc
-from utils import sss_to_source, ss_to_path
+from preprocessing import bruker
+from utils import sss_to_source, ss_to_path, iterfield_selector
 
-def l1(preprocessing_dir, tr=1, nprocs=10, l1_dir="", workflow_name="generic", highpass_sigma=290, per_event_contrasts=False):
+def l1(preprocessing_dir,
+	highpass_sigma=290,
+	include={},
+	exclude={},
+	l1_dir="",
+	nprocs=10,
+	mask="/home/chymera/NIdata/templates/ds_QBI_chr_bin.nii.gz",
+	per_stimulus_contrast=False,
+	habituation_regressor=True,
+	habituation_regressor_in_contrast=False,
+	tr=1,
+	workflow_name="generic",
+	):
+	"""Calculate subject level GLM statistics.
+
+	Parameters
+	----------
+
+	include : dict
+	A dictionary with any combination of "sessions", "subjects", "trials" as keys and corresponding identifiers as values.
+	If this is specified ony matching entries will be included in the analysis.
+
+	exclude : dict
+	A dictionary with any combination of "sessions", "subjects", "trials" as keys and corresponding identifiers as values.
+	If this is specified ony non-matching entries will be included in the analysis.
+	"""
+
 	preprocessing_dir = path.expanduser(preprocessing_dir)
 	if not l1_dir:
 		l1_dir = path.abspath(path.join(preprocessing_dir,"..","..","l1"))
@@ -27,6 +53,11 @@ def l1(preprocessing_dir, tr=1, nprocs=10, l1_dir="", workflow_name="generic", h
 	datafind.inputs.match_regex = '.+/sub-(?P<sub>.+)/ses-(?P<ses>.+)/func/.*?_trial-(?P<scan>.+)\.nii.gz'
 	datafind_res = datafind.run()
 	iterfields = zip(*[datafind_res.outputs.sub, datafind_res.outputs.ses, datafind_res.outputs.scan])
+
+	if include:
+		iterfields = iterfield_selector(iterfields, include, "include")
+	if exclude:
+		iterfields = iterfield_selector(iterfields, exclude, "exclude")
 
 	infosource = pe.Node(interface=util.IdentityInterface(fields=['subject_session_scan']), name="infosource")
 	infosource.iterables = [('subject_session_scan', iterfields)]
@@ -43,25 +74,32 @@ def l1(preprocessing_dir, tr=1, nprocs=10, l1_dir="", workflow_name="generic", h
 	specify_model.inputs.input_units = 'secs'
 	specify_model.inputs.time_repetition = tr
 	specify_model.inputs.high_pass_filter_cutoff = highpass_sigma
+	specify_model.inputs.one_condition_file = not per_stimulus_contrast
+	specify_model.inputs.habituation_regressor = any([habituation_regressor, habituation_regressor_in_contrast])
 
 	level1design = pe.Node(interface=Level1Design(), name="level1design")
 	level1design.inputs.interscan_interval = tr
 	level1design.inputs.bases = {'gamma': {'derivs':False, 'gammasigma':10, 'gammadelay':5}}
+	level1design.inputs.orthogonalization = {1: {0:0,1:0,2:0}, 2: {0:1,1:1,2:0}}
 	level1design.inputs.model_serial_correlations = True
-	if per_event_contrasts:
+	if per_stimulus_contrast:
 		level1design.inputs.contrasts = [('allStim','T', ["e0","e1","e2","e3","e4","e5"],[1,1,1,1,1,1])] #condition names as defined in specify_model
+	elif habituation_regressor_in_contrast:
+		level1design.inputs.contrasts = [('allStim','T', ["e0", "e1"],[1,1])] #condition names as defined in specify_model
 	else:
 		level1design.inputs.contrasts = [('allStim','T', ["e0"],[1])] #condition names as defined in specify_model
 
 	modelgen = pe.Node(interface=fsl.FEATModel(), name='modelgen')
 
 	glm = pe.Node(interface=fsl.GLM(), name='glm', iterfield='design')
-	glm.inputs.out_cope="cope.nii.gz"
-	glm.inputs.out_varcb_name="varcb.nii.gz"
+	glm.inputs.out_cope = "cope.nii.gz"
+	glm.inputs.out_varcb_name = "varcb.nii.gz"
 	#not setting a betas output file might lead to beta export in lieu of COPEs
-	glm.inputs.out_file="betas.nii.gz"
-	glm.inputs.out_t_name="t_stat.nii.gz"
-	glm.inputs.out_p_name="p_stat.nii.gz"
+	glm.inputs.out_file = "betas.nii.gz"
+	glm.inputs.out_t_name = "t_stat.nii.gz"
+	glm.inputs.out_p_name = "p_stat.nii.gz"
+	if mask:
+		glm.inputs.mask = mask
 
 	cope_filename = pe.Node(name='cope_filename', interface=util.Function(function=sss_to_source,input_names=inspect.getargspec(sss_to_source)[0], output_names=['filename']))
 	cope_filename.inputs.source_format = "sub-{0}_ses-{1}_trial-{2}_cope.nii.gz"
@@ -206,5 +244,6 @@ if __name__ == "__main__":
 	# 	level1("~/NIdata/ofM.erc/", {"EPI_CBV_jin6":"jin6","EPI_CBV_jin10":"jin10","EPI_CBV_jin20":"jin20","EPI_CBV_jin40":"jin40","EPI_CBV_jin60":"jin60","EPI_CBV_alej":"alej",}, structural_scan_types=-1, actual_size=False, pipeline_denominator="level1_dgamma_blurxy"+str(i), blur_xy=i)
 	# 	level2_common_effect("~/NIdata/ofM.erc/GLM/level1_dgamma_blurxy"+str(i), categories=[], scan_types=[["EPI_CBV_jin6"],["EPI_CBV_jin10"],["EPI_CBV_jin20"],["EPI_CBV_jin40"],["EPI_CBV_jin60"],["EPI_CBV_alej"]], participants=["5502","5503"], denominator="level2_dgamma_blurxy"+str(i))
 
-	l1("~/NIdata/ofM.dr/preprocessing/norealign", workflow_name="norealign")
+	l1("~/NIdata/ofM.dr/preprocessing/generic", workflow_name="withhabituation", include={"subjects":[i for i in range(4001,4010)]+[4011,4012]}, habituation_regressor_in_contrast=True)
+	l1("~/NIdata/ofM.dr/preprocessing/generic", workflow_name="generic", include={"subjects":[i for i in range(4001,4010)]+[4011,4012]})
 	# l1("~/NIdata/ofM.dr/preprocessing/generic")

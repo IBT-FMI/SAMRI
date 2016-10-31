@@ -25,14 +25,14 @@ def add_suffix(name, suffix):
 	return str(name)+str(suffix)
 
 def l2_common_effect(l1_dir,
+	exclude={},
+	groupby="session",
+	l2_dir="",
 	tr=1,
 	nprocs=6,
-	l2_dir="",
 	workflow_name="generic",
-	groupby="session",
-	excludes={},
 	):
-	
+
 	l1_dir = path.expanduser(l1_dir)
 	if not l2_dir:
 		l2_dir = path.abspath(path.join(l1_dir,"..","..","l2"))
@@ -96,9 +96,9 @@ def l2_common_effect(l1_dir,
 		(infosource, datasource, [('iterable', 'group')]),
 		(infosource, copemerge, [(('iterable',add_suffix,"_cope.nii.gz"), 'merged_file')]),
 		(infosource, varcopemerge, [(('iterable',add_suffix,"_varcb.nii.gz"), 'merged_file')]),
-		(datasource, copemerge, [(('copes',datasource_exclude,excludes), 'in_files')]),
-		(datasource, varcopemerge, [(('varcbs',datasource_exclude,excludes), 'in_files')]),
-		(datasource, level2model, [(('copes',datasource_exclude,excludes,"len"), 'num_copes')]),
+		(datasource, copemerge, [(('copes',datasource_exclude,exclude), 'in_files')]),
+		(datasource, varcopemerge, [(('varcbs',datasource_exclude,exclude), 'in_files')]),
+		(datasource, level2model, [(('copes',datasource_exclude,exclude,"len"), 'num_copes')]),
 		(copemerge,flameo,[('merged_file','cope_file')]),
 		(varcopemerge,flameo,[('merged_file','var_cope_file')]),
 		(level2model,flameo, [('design_mat','design_file')]),
@@ -251,9 +251,15 @@ if __name__ == "__main__":
 	# 	level1("~/NIdata/ofM.erc/", {"EPI_CBV_jin6":"jin6","EPI_CBV_jin10":"jin10","EPI_CBV_jin20":"jin20","EPI_CBV_jin40":"jin40","EPI_CBV_jin60":"jin60","EPI_CBV_alej":"alej",}, structural_scan_types=-1, actual_size=False, pipeline_denominator="level1_dgamma_blurxy"+str(i), blur_xy=i)
 
 	# l2_common_effect("~/NIdata/ofM.dr/l1/generic", workflow_name="subjectwise", groupby="subject")
-	# l2_common_effect("~/NIdata/ofM.dr/l1/generic", workflow_name="sessionwise_responders", groupby="session", excludes={"subjects":["4001","4008"]})
+	# l2_common_effect("~/NIdata/ofM.dr/l1/generic", workflow_name="sessionwise_responders", groupby="session", exclude={"subjects":["4001","4008"]})
 	# l2_common_effect("~/NIdata/ofM.dr/l1/generic", workflow_name="sessionwise_all", groupby="session")
 
 	# l2_common_effect("~/NIdata/ofM.dr/l1/generic_funcreg", workflow_name="subjectwise_funcreg", groupby="subject")
 	# l2_common_effect("~/NIdata/ofM.dr/l1/norealign", workflow_name="subjectwise_norealign", groupby="subject")
-	l2_common_effect("~/NIdata/ofM.dr/l1/norealign", workflow_name="sessionwise_norealign", groupby="session")
+	# l2_common_effect("~/NIdata/ofM.dr/l1/generic", workflow_name="sessionwise_generic", groupby="session", exclude={"subjects":["4001","4002","4003","4004","4005","4006","4009"]})
+	# l2_common_effect("~/NIdata/ofM.dr/l1/withhabituation", workflow_name="subjectwise_withhabituation", groupby="subject")
+	# l2_common_effect("~/NIdata/ofM.dr/l1/generic", workflow_name="subjectwise_generic", groupby="subject")
+	# l2_common_effect("~/NIdata/ofM.dr/l1/withhabituation", workflow_name="subjectwise_withhabituation", groupby="subject")
+
+	# l2_common_effect("~/NIdata/ofM.dr/l1/dr_mask", workflow_name="subjectwise_dr_mask", groupby="subject")
+	l2_common_effect("~/NIdata/ofM.dr/l1/dr_mask", workflow_name="sessionwise_dr_mask", groupby="session", exclude={"subjects":["4001","4002","4003","4004","4005","4006","4009","4013"]})

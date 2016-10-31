@@ -105,6 +105,8 @@ def l1(preprocessing_dir,
 	cope_filename.inputs.source_format = "sub-{0}_ses-{1}_trial-{2}_cope.nii.gz"
 	varcb_filename = pe.Node(name='varcb_filename', interface=util.Function(function=sss_to_source,input_names=inspect.getargspec(sss_to_source)[0], output_names=['filename']))
 	varcb_filename.inputs.source_format = "sub-{0}_ses-{1}_trial-{2}_varcb.nii.gz"
+	tstat_filename = pe.Node(name='tstat_filename', interface=util.Function(function=sss_to_source,input_names=inspect.getargspec(sss_to_source)[0], output_names=['filename']))
+	tstat_filename.inputs.source_format = "sub-{0}_ses-{1}_trial-{2}_tstat.nii.gz"
 
 	datasink = pe.Node(nio.DataSink(), name='datasink')
 	datasink.inputs.base_directory = path.join(l1_dir,workflow_name)
@@ -124,8 +126,11 @@ def l1(preprocessing_dir,
 		(infosource, datasink, [(('subject_session_scan',ss_to_path), 'container')]),
 		(infosource, cope_filename, [('subject_session_scan', 'subject_session_scan')]),
 		(infosource, varcb_filename, [('subject_session_scan', 'subject_session_scan')]),
+		(infosource, tstat_filename, [('subject_session_scan', 'subject_session_scan')]),
 		(cope_filename, glm, [('filename', 'out_cope')]),
 		(varcb_filename, glm, [('filename', 'out_varcb_name')]),
+		(tstat_filename, glm, [('filename', 'out_t_name')]),
+		(glm, datasink, [('out_t', '@tstat')]),
 		(glm, datasink, [('out_cope', '@cope')]),
 		(glm, datasink, [('out_varcb', '@varcb')]),
 		]
@@ -236,14 +241,12 @@ def level1(measurements_base, functional_scan_types, structural_scan_types=[], t
 		return pipeline
 
 if __name__ == "__main__":
-	# level1("~/NIdata/ofM.dr/", {"7_EPI_CBV":"6_20_jb"}, structural_scan_types=-1, conditions=["ofM","ofM_aF","ofM_cF1","ofM_cF2","ofM_pF"], exclude_measurements=["20151027_121613_4013_1_1"], pipeline_denominator="level1_dgamma_blurxy56n", blur_xy=5.6)
-
 	# level1("~/NIdata/ofM.erc/", {"EPI_CBV_jin6":"jin6","EPI_CBV_jin10":"jin10","EPI_CBV_jin20":"jin20","EPI_CBV_jin40":"jin40","EPI_CBV_jin60":"jin60","EPI_CBV_alej":"alej",}, structural_scan_types=-1, actual_size=False, pipeline_denominator="level1_dgamma")
 	# level2_common_effect("~/NIdata/ofM.erc/GLM/level1_dgamma", categories=[], scan_types=[["EPI_CBV_jin6"],["EPI_CBV_jin10"],["EPI_CBV_jin20"],["EPI_CBV_jin40"],["EPI_CBV_jin60"],["EPI_CBV_alej"]], participants=["5502","5503"], denominator="level2_dgamma")
 	# for i in range(4,8):
 	# 	level1("~/NIdata/ofM.erc/", {"EPI_CBV_jin6":"jin6","EPI_CBV_jin10":"jin10","EPI_CBV_jin20":"jin20","EPI_CBV_jin40":"jin40","EPI_CBV_jin60":"jin60","EPI_CBV_alej":"alej",}, structural_scan_types=-1, actual_size=False, pipeline_denominator="level1_dgamma_blurxy"+str(i), blur_xy=i)
 	# 	level2_common_effect("~/NIdata/ofM.erc/GLM/level1_dgamma_blurxy"+str(i), categories=[], scan_types=[["EPI_CBV_jin6"],["EPI_CBV_jin10"],["EPI_CBV_jin20"],["EPI_CBV_jin40"],["EPI_CBV_jin60"],["EPI_CBV_alej"]], participants=["5502","5503"], denominator="level2_dgamma_blurxy"+str(i))
 
-	l1("~/NIdata/ofM.dr/preprocessing/generic", workflow_name="withhabituation", include={"subjects":[i for i in range(4001,4010)]+[4011,4012]}, habituation_regressor_in_contrast=True)
-	l1("~/NIdata/ofM.dr/preprocessing/generic", workflow_name="generic", include={"subjects":[i for i in range(4001,4010)]+[4011,4012]})
+	# l1("~/NIdata/ofM.dr/preprocessing/generic", workflow_name="generic", include={"subjects":[i for i in range(4001,4010)]+[4011,4012]})
+	l1("~/NIdata/ofM.dr/preprocessing/generic", workflow_name="dr_mask", include={"subjects":[i for i in range(4001,4010)]+[4011,4012]}, mask="/home/chymera/NIdata/templates/roi/f_dr_chr_bin.nii.gz")
 	# l1("~/NIdata/ofM.dr/preprocessing/generic")

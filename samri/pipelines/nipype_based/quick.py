@@ -108,4 +108,4 @@ def diagnostic(measurements_base, structural_scan_types=[], functional_scan_type
 
 	#delete all fles but final results
 	if not keep_work:
-		shutil.rmtree(workflow_base+"/"+workflow_denominator+"_work")
+		shutil.rmtree(path.join(workflow_base,workflow_denominator,"_work"))

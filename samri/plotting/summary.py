@@ -4,6 +4,7 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
+from nilearn.input_data import NiftiMasker
 sns.set_style("white", {'legend.frameon': True})
 plt.style.use('ggplot')
 
@@ -16,14 +17,17 @@ except NameError:
 	class FileNotFoundError(OSError):
 		pass
 
-def roi_per_session(participants, legend_loc="best"):
+def roi_per_session(participants, legend_loc="best", roi="f_dr"):
 	sessions = ["ofM","ofM_aF","ofM_cF1","ofM_cF2","ofM_pF"]
 	df = pd.DataFrame({})
+	roi_path = "/home/chymera/NIdata/templates/roi/{}_chr.nii.gz".format(roi)
+	masker = NiftiMasker(mask_img=roi_path, standardize=True)
 	for participant, session in product(participants, sessions):
 		data={}
 		try:
 			session_participant_file = "/home/chymera/NIdata/ofM.dr/l1/dr_mask/sub-{0}/ses-{1}/sub-{0}_ses-{1}_trial-7_EPI_CBV_tstat.nii.gz".format(participant,session)
-			img = nib.load(session_participant_file).get_data()
+			img = nib.load(session_participant_file)
+			img = masker.fit_transform(img)
 			# img = img[np.where(abs(img) >= 3 )]
 			# value = np.nansum(img)
 			img = img.flatten()
@@ -35,9 +39,9 @@ def roi_per_session(participants, legend_loc="best"):
 			data["value"]=i
 			df_ = pd.DataFrame(data, index=[None])
 			df = pd.concat([df,df_])
-	# sns.pointplot(x="session", y="value", hue="participant", data=df, dodge=True, jitter=True, legend_out=False)
-	# sns.pointplot(x="session", y="value", hue="participant", data=df, dodge=True, jitter=True, legend_out=False)
-	sns.violinplot(x="session", y="value", hue="participant", data=df, inner=None)
+	sns.pointplot(x="session", y="value", hue="participant", data=df, dodge=True, jitter=True, legend_out=False)
+	# sns.violinplot(x="session", y="value", hue="participant", data=df, inner=None)
+	# sns.swarmplot(x="session", y="value", hue="participant", data=df, split=True)
 
 def fc_per_session(participants, legend_loc="best"):
 	sessions = ["ofM","ofM_aF","ofM_cF1","ofM_cF2","ofM_pF"]

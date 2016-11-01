@@ -2,10 +2,14 @@ import nipype.interfaces.ants as ants
 import os
 from nipype.interfaces.fsl import ApplyMask, GLM, MELODIC, FAST, BET, MeanImage, FLIRT, ImageMaths, FSLCommand
 
-def structural_per_participant_test(participant, conditions=["","_aF","_cF1","_cF2","_pF"]):
+def structural_per_participant_test(participant,
+	conditions=["","_aF","_cF1","_cF2","_pF"],
+	template="/home/chymera/NIdata/templates/ds_QBI_chr.nii.gz",
+	):
+
 	for i in conditions:
-		template = "/home/chymera/NIdata/templates/ambmc-c57bl6-model-symmet_v0.8_chrXS.nii.gz"
-		image_dir = "/home/chymera/NIdata/ofM.dr/preprocessing/generic_work/_subject_condition_{}.ofM{}/_scan_type_T2_TurboRARE/structural_bru2nii/".format(participant,i)
+		image_dir = "/home/chymera/NIdata/ofM.dr/preprocessing/generic_work/_subject_session_{}.ofM{}/_scan_type_T2_TurboRARE/s_bru2nii/".format(participant,i)
+		print(image_dir)
 		try:
 			for myfile in os.listdir(image_dir):
 				if myfile.endswith(".nii"):
@@ -90,7 +94,7 @@ def functional_per_participant_test():
 	for i in ["","_aF","_cF1","_cF2","_pF"]:
 		template = "/home/chymera/NIdata/templates/ds_QBI_chr.nii.gz"
 		participant = "4008"
-		image_dir = "/home/chymera/NIdata/ofM.dr/preprocessing/generic_work/_subject_condition_{}.ofM{}/_scan_type_7_EPI_CBV/temporal_mean/".format(participant,i)
+		image_dir = "/home/chymera/NIdata/ofM.dr/preprocessing/generic_work/_subject_session_{}.ofM{}/_scan_type_7_EPI_CBV/temporal_mean/".format(participant,i)
 		try:
 			for myfile in os.listdir(image_dir):
 				if myfile.endswith(".nii.gz"):
@@ -151,11 +155,10 @@ def functional_per_participant_test():
 			registration.inputs.output_warped_image = '{}_ofM{}.nii.gz'.format(participant,i)
 			res = registration.run()
 
-def structural_to_functional_per_participant_test(participant, conditions=["","_aF","_cF1","_cF2","_pF"]):
+def structural_to_functional_per_participant_test(participant, conditions=["","_aF","_cF1","_cF2","_pF"], template = "/home/chymera/NIdata/templates/ds_QBI_chr.nii.gz"):
 	for i in conditions:
-		template = "/home/chymera/NIdata/templates/ds_QBI_chr.nii.gz"
-		func_image_dir = "/home/chymera/NIdata/ofM.dr/preprocessing/generic_work/_subject_condition_{}.ofM{}/_scan_type_7_EPI_CBV/temporal_mean/".format(participant,i)
-		struct_image_dir = "/home/chymera/NIdata/ofM.dr/preprocessing/generic_work/_subject_condition_{}.ofM{}/_scan_type_T2_TurboRARE/structural_bru2nii/".format(participant,i)
+		func_image_dir = "/home/chymera/NIdata/ofM.dr/preprocessing/generic_work/_subject_session_{}.ofM{}/_scan_type_7_EPI_CBV/temporal_mean/".format(participant,i)
+		struct_image_dir = "/home/chymera/NIdata/ofM.dr/preprocessing/generic_work/_subject_session_{}.ofM{}/_scan_type_T2_TurboRARE/s_bru2nii/".format(participant,i)
 		try:
 			for myfile in os.listdir(func_image_dir):
 				if myfile.endswith(".nii.gz"):
@@ -237,6 +240,7 @@ def structural_to_functional_per_participant_test(participant, conditions=["","_
 			struct_registration.inputs.num_threads = 6
 
 			struct_registration.inputs.moving_image = struct_mask_res.outputs.out_file
+			struct_registration.inputs.output_warped_image = 's_{}_ofM{}.nii.gz'.format(participant,i)
 			struct_registration_res = struct_registration.run()
 
 			warp = ants.ApplyTransforms()
@@ -252,16 +256,15 @@ def structural_to_functional_per_participant_test(participant, conditions=["","_
 			warp.inputs.transforms = struct_registration_res.outputs.composite_transform
 			warp.run()
 
-def canonical(participant, conditions=["","_aF","_cF1","_cF2","_pF"]):
+def canonical(participant, conditions=["","_aF","_cF1","_cF2","_pF"],template = "/home/chymera/NIdata/templates/ds_QBI_chr.nii.gz"):
 	"""Warp a functional image based on the functional-to-structural and the structural-to-template registrations.
 	Currently this approach is failing because the functiona-to-structural registration pushes the brain stem too far down.
 	This may be
 
 	"""
 	for i in conditions:
-		template = "/home/chymera/NIdata/templates/ds_QBI_chr.nii.gz"
-		func_image_dir = "/home/chymera/NIdata/ofM.dr/preprocessing/generic_work/_subject_condition_{}.ofM{}/_scan_type_7_EPI_CBV/temporal_mean/".format(participant,i)
-		struct_image_dir = "/home/chymera/NIdata/ofM.dr/preprocessing/generic_work/_subject_condition_{}.ofM{}/_scan_type_T2_TurboRARE/structural_bru2nii/".format(participant,i)
+		func_image_dir = "/home/chymera/NIdata/ofM.dr/preprocessing/generic_work/_subject_session_{}.ofM{}/_scan_type_7_EPI_CBV/temporal_mean/".format(participant,i)
+		struct_image_dir = "/home/chymera/NIdata/ofM.dr/preprocessing/generic_work/_subject_session_{}.ofM{}/_scan_type_T2_TurboRARE/s_bru2nii/".format(participant,i)
 		try:
 			for myfile in os.listdir(func_image_dir):
 				if myfile.endswith(".nii.gz"):
@@ -360,9 +363,9 @@ def canonical(participant, conditions=["","_aF","_cF1","_cF2","_pF"]):
 			func_registration = ants.Registration()
 			func_registration.inputs.fixed_image = n4_res.outputs.output_image
 			func_registration.inputs.output_transform_prefix = "func_"
-			func_registration.inputs.transforms = ['SyN']
-			func_registration.inputs.transform_parameters = [(.5, 3.0, 5.0)]
-			func_registration.inputs.number_of_iterations = [[100, 100, 100]]
+			func_registration.inputs.transforms = ['Rigid']
+			func_registration.inputs.transform_parameters = [(0.1,)]
+			func_registration.inputs.number_of_iterations = [[40, 20, 10]]
 			func_registration.inputs.dimension = 3
 			func_registration.inputs.write_composite_transform = True
 			func_registration.inputs.collapse_output_transforms = True
@@ -370,10 +373,10 @@ def canonical(participant, conditions=["","_aF","_cF1","_cF2","_pF"]):
 			func_registration.inputs.metric = ['MeanSquares']
 			func_registration.inputs.metric_weight = [1]
 			func_registration.inputs.radius_or_number_of_bins = [16]
-			func_registration.inputs.sampling_strategy = [None]
+			func_registration.inputs.sampling_strategy = ["Regular"]
 			func_registration.inputs.sampling_percentage = [0.3]
-			func_registration.inputs.convergence_threshold = [1.e-8]
-			func_registration.inputs.convergence_window_size = [20]
+			func_registration.inputs.convergence_threshold = [1.e-2]
+			func_registration.inputs.convergence_window_size = [8]
 			func_registration.inputs.smoothing_sigmas = [[4, 2, 1]] # [1,0.5,0]
 			func_registration.inputs.sigma_units = ['vox']
 			func_registration.inputs.shrink_factors = [[3, 2, 1]]
@@ -414,10 +417,10 @@ if __name__ == '__main__':
 	# structural_to_functional_per_participant_test("4008")
 	# structural_to_functional_per_participant_test("4009")
 	# structural_to_functional_per_participant_test("4011")
-	# structural_to_functional_per_participant_test("4012")
+	# structural_to_functional_per_participant_test("4007",["_cF2"])
+	canonical("4007",["_cF2"])
 	# canonical("4001")
-	# canonical("4007")
-	structural_per_participant_test("4012",["_cF2"])
+	# structural_per_participant_test("4007",["_cF2"])
 	# canonical("4008")
 	# canonical("4009")
 	# canonical("4011")

@@ -27,6 +27,7 @@ def add_suffix(name, suffix):
 def l2_common_effect(l1_dir,
 	exclude={},
 	groupby="session",
+	keep_work=False,
 	l2_dir="",
 	tr=1,
 	nprocs=6,
@@ -117,7 +118,8 @@ def l2_common_effect(l1_dir,
 	workflow.write_graph(dotfilename=path.join(workflow.base_dir,workdir_name,"graph.dot"), graph2use="hierarchical", format="png")
 
 	workflow.run(plugin="MultiProc",  plugin_args={'n_procs' : nprocs})
-
+	if not keep_work:
+		shutil.rmtree(path.join(workdir_name))
 
 def level2(level1_directory, categories=["ofM","ofM_aF"], participants=["4008","4007","4011","4012"], denominator="level2"):
 	level1_directory = path.expanduser(level1_directory)

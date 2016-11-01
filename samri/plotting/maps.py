@@ -1,8 +1,7 @@
 import os
-import nibabel
+import nibabel as nib
 import pandas as pd
 import numpy as np
-import nipype.interfaces.io as nio
 from nilearn import image, plotting
 from nilearn.input_data import NiftiLabelsMasker
 
@@ -102,3 +101,11 @@ def plot_myanat(anat="/home/chymera/NIdata/templates/hires_QBI_chr.nii.gz"):
 
 def plot_nii(file_path, slices):
 	plotting.plot_anat(file_path, cut_coords=slices, display_mode="y", annotate=False, draw_cross=False)
+
+def from_multi_contrast(session_participant_file, template="/home/chymera/NIdata/templates/ds_QBI_chr.nii.gz", threshold="2"):
+	img = nib.load(session_participant_file)
+	print(img.__dict__)
+	plotting.plot_stat_map(img, bg_img=template,threshold=threshold, black_bg=False, vmax=40)
+
+if __name__ == '__main__':
+	from_multi_contrast("/home/chymera/generic_separateh/sub-4007/ses-ofM_cF2/sub-4007_ses-ofM_cF2_trial-7_EPI_CBV_tstat.nii.gz")

@@ -4,7 +4,7 @@ from nipype.interfaces.fsl import ApplyMask, GLM, MELODIC, FAST, BET, MeanImage,
 
 def structural_per_participant_test(participant, conditions=["","_aF","_cF1","_cF2","_pF"]):
 	for i in conditions:
-		template = "/home/chymera/NIdata/templates/ds_QBI_chr.nii.gz"
+		template = "/home/chymera/NIdata/templates/ambmc-c57bl6-model-symmet_v0.8_chrXS.nii.gz"
 		image_dir = "/home/chymera/NIdata/ofM.dr/preprocessing/generic_work/_subject_condition_{}.ofM{}/_scan_type_T2_TurboRARE/structural_bru2nii/".format(participant,i)
 		try:
 			for myfile in os.listdir(image_dir):
@@ -56,27 +56,27 @@ def structural_per_participant_test(participant, conditions=["","_aF","_cF1","_c
 			struct_registration = ants.Registration()
 			struct_registration.inputs.fixed_image = template
 			struct_registration.inputs.output_transform_prefix = "output_"
-			struct_registration.inputs.transforms = ['Affine', 'SyN'] ##
-			struct_registration.inputs.transform_parameters = [(1.0,), (1.0, 3.0, 5.0)] ##
-			struct_registration.inputs.number_of_iterations = [[2000, 1000, 500], [100, 100, 100]] #
+			struct_registration.inputs.transforms = ['Rigid', 'Affine', 'SyN'] ##
+			struct_registration.inputs.transform_parameters = [(.1,), (1.0,), (1.0, 3.0, 5.0)] ##
+			struct_registration.inputs.number_of_iterations = [[150,100,50], [2000, 1000, 500], [100, 100, 100]] #
 			struct_registration.inputs.dimension = 3
 			struct_registration.inputs.write_composite_transform = True
 			struct_registration.inputs.collapse_output_transforms = True
 			struct_registration.inputs.initial_moving_transform_com = True
 			# Tested on Affine transform: CC takes too long; Demons does not tilt, but moves the slices too far caudally; GC tilts too much on
-			struct_registration.inputs.metric = ['MeanSquares', 'Mattes']
-			struct_registration.inputs.metric_weight = [1, 1]
-			struct_registration.inputs.radius_or_number_of_bins = [16, 32] #
-			struct_registration.inputs.sampling_strategy = ['Random', None]
-			struct_registration.inputs.sampling_percentage = [0.3, 0.3]
-			struct_registration.inputs.convergence_threshold = [1.e-11, 1.e-8] #
-			struct_registration.inputs.convergence_window_size = [20, 20]
-			struct_registration.inputs.smoothing_sigmas = [[4, 2, 1], [4, 2, 1]]
-			struct_registration.inputs.sigma_units = ['vox', 'vox']
-			struct_registration.inputs.shrink_factors = [[3, 2, 1],[3, 2, 1]]
-			struct_registration.inputs.use_estimate_learning_rate_once = [True, True]
+			struct_registration.inputs.metric = ['MeanSquares', 'MeanSquares', 'Mattes']
+			struct_registration.inputs.metric_weight = [1, 1, 1]
+			struct_registration.inputs.radius_or_number_of_bins = [16, 16, 32] #
+			struct_registration.inputs.sampling_strategy = ['Random','Random', None]
+			struct_registration.inputs.sampling_percentage = [0.3, 0.3, 0.3]
+			struct_registration.inputs.convergence_threshold = [1.e-10, 1.e-11, 1.e-8] #
+			struct_registration.inputs.convergence_window_size = [20, 20, 20]
+			struct_registration.inputs.smoothing_sigmas = [[4, 2, 1], [4, 2, 1], [4, 2, 1]]
+			struct_registration.inputs.sigma_units = ['vox', 'vox', 'vox']
+			struct_registration.inputs.shrink_factors = [[3, 2, 1],[3, 2, 1],[3, 2, 1]]
+			struct_registration.inputs.use_estimate_learning_rate_once = [True, True, True]
 			# if the fixed_image is not acquired similarly to the moving_image (e.g. RARE to histological (e.g. AMBMC)) this should be False
-			struct_registration.inputs.use_histogram_matching = [False, False]
+			struct_registration.inputs.use_histogram_matching = [False, False, False]
 			struct_registration.inputs.winsorize_lower_quantile = 0.005
 			struct_registration.inputs.winsorize_upper_quantile = 0.98
 			struct_registration.inputs.args = '--float'
@@ -416,7 +416,8 @@ if __name__ == '__main__':
 	# structural_to_functional_per_participant_test("4011")
 	# structural_to_functional_per_participant_test("4012")
 	# canonical("4001")
-	canonical("4007")
+	# canonical("4007")
+	structural_per_participant_test("4012",["_cF2"])
 	# canonical("4008")
 	# canonical("4009")
 	# canonical("4011")

@@ -25,8 +25,7 @@ def l1(preprocessing_dir,
 	nprocs=10,
 	mask="/home/chymera/NIdata/templates/ds_QBI_chr_bin.nii.gz",
 	per_stimulus_contrast=False,
-	habituation_regressor=True,
-	habituation_regressor_in_contrast=False,
+	habituation="",
 	tr=1,
 	workflow_name="generic",
 	):
@@ -42,6 +41,10 @@ def l1(preprocessing_dir,
 	exclude : dict
 	A dictionary with any combination of "sessions", "subjects", "trials" as keys and corresponding identifiers as values.
 	If this is specified ony non-matching entries will be included in the analysis.
+
+	habituation : string
+	One value of "confound", "in_main_contrast", "separate_contrast", "" indicating how the habituation regressor should be handled.
+	"" or any other value which evaluates to False will mean no habituation regressor is used int he model
 	"""
 
 	preprocessing_dir = path.expanduser(preprocessing_dir)
@@ -75,7 +78,7 @@ def l1(preprocessing_dir,
 	specify_model.inputs.time_repetition = tr
 	specify_model.inputs.high_pass_filter_cutoff = highpass_sigma
 	specify_model.inputs.one_condition_file = not per_stimulus_contrast
-	specify_model.inputs.habituation_regressor = any([habituation_regressor, habituation_regressor_in_contrast])
+	specify_model.inputs.habituation_regressor = bool(habituation)
 
 	level1design = pe.Node(interface=Level1Design(), name="level1design")
 	level1design.inputs.interscan_interval = tr
@@ -84,8 +87,12 @@ def l1(preprocessing_dir,
 	level1design.inputs.model_serial_correlations = True
 	if per_stimulus_contrast:
 		level1design.inputs.contrasts = [('allStim','T', ["e0","e1","e2","e3","e4","e5"],[1,1,1,1,1,1])] #condition names as defined in specify_model
-	elif habituation_regressor_in_contrast:
+	elif habituation=="separate_contrast":
+		level1design.inputs.contrasts = [('allStim','T', ["e0"],[1]),('allStim','T', ["e1"],[1])] #condition names as defined in specify_model
+	elif habituation=="in_main_contrast":
 		level1design.inputs.contrasts = [('allStim','T', ["e0", "e1"],[1,1])] #condition names as defined in specify_model
+	elif habituation=="confound":
+		level1design.inputs.contrasts = [('allStim','T', ["e0"],[1])] #condition names as defined in specify_model
 	else:
 		level1design.inputs.contrasts = [('allStim','T', ["e0"],[1])] #condition names as defined in specify_model
 
@@ -105,6 +112,8 @@ def l1(preprocessing_dir,
 	cope_filename.inputs.source_format = "sub-{0}_ses-{1}_trial-{2}_cope.nii.gz"
 	varcb_filename = pe.Node(name='varcb_filename', interface=util.Function(function=sss_to_source,input_names=inspect.getargspec(sss_to_source)[0], output_names=['filename']))
 	varcb_filename.inputs.source_format = "sub-{0}_ses-{1}_trial-{2}_varcb.nii.gz"
+	tstat_filename = pe.Node(name='tstat_filename', interface=util.Function(function=sss_to_source,input_names=inspect.getargspec(sss_to_source)[0], output_names=['filename']))
+	tstat_filename.inputs.source_format = "sub-{0}_ses-{1}_trial-{2}_tstat.nii.gz"
 
 	datasink = pe.Node(nio.DataSink(), name='datasink')
 	datasink.inputs.base_directory = path.join(l1_dir,workflow_name)
@@ -124,8 +133,11 @@ def l1(preprocessing_dir,
 		(infosource, datasink, [(('subject_session_scan',ss_to_path), 'container')]),
 		(infosource, cope_filename, [('subject_session_scan', 'subject_session_scan')]),
 		(infosource, varcb_filename, [('subject_session_scan', 'subject_session_scan')]),
+		(infosource, tstat_filename, [('subject_session_scan', 'subject_session_scan')]),
 		(cope_filename, glm, [('filename', 'out_cope')]),
 		(varcb_filename, glm, [('filename', 'out_varcb_name')]),
+		(tstat_filename, glm, [('filename', 'out_t_name')]),
+		(glm, datasink, [('out_t', '@tstat')]),
 		(glm, datasink, [('out_cope', '@cope')]),
 		(glm, datasink, [('out_varcb', '@varcb')]),
 		]
@@ -236,14 +248,14 @@ def level1(measurements_base, functional_scan_types, structural_scan_types=[], t
 		return pipeline
 
 if __name__ == "__main__":
-	# level1("~/NIdata/ofM.dr/", {"7_EPI_CBV":"6_20_jb"}, structural_scan_types=-1, conditions=["ofM","ofM_aF","ofM_cF1","ofM_cF2","ofM_pF"], exclude_measurements=["20151027_121613_4013_1_1"], pipeline_denominator="level1_dgamma_blurxy56n", blur_xy=5.6)
-
 	# level1("~/NIdata/ofM.erc/", {"EPI_CBV_jin6":"jin6","EPI_CBV_jin10":"jin10","EPI_CBV_jin20":"jin20","EPI_CBV_jin40":"jin40","EPI_CBV_jin60":"jin60","EPI_CBV_alej":"alej",}, structural_scan_types=-1, actual_size=False, pipeline_denominator="level1_dgamma")
 	# level2_common_effect("~/NIdata/ofM.erc/GLM/level1_dgamma", categories=[], scan_types=[["EPI_CBV_jin6"],["EPI_CBV_jin10"],["EPI_CBV_jin20"],["EPI_CBV_jin40"],["EPI_CBV_jin60"],["EPI_CBV_alej"]], participants=["5502","5503"], denominator="level2_dgamma")
 	# for i in range(4,8):
 	# 	level1("~/NIdata/ofM.erc/", {"EPI_CBV_jin6":"jin6","EPI_CBV_jin10":"jin10","EPI_CBV_jin20":"jin20","EPI_CBV_jin40":"jin40","EPI_CBV_jin60":"jin60","EPI_CBV_alej":"alej",}, structural_scan_types=-1, actual_size=False, pipeline_denominator="level1_dgamma_blurxy"+str(i), blur_xy=i)
 	# 	level2_common_effect("~/NIdata/ofM.erc/GLM/level1_dgamma_blurxy"+str(i), categories=[], scan_types=[["EPI_CBV_jin6"],["EPI_CBV_jin10"],["EPI_CBV_jin20"],["EPI_CBV_jin40"],["EPI_CBV_jin60"],["EPI_CBV_alej"]], participants=["5502","5503"], denominator="level2_dgamma_blurxy"+str(i))
 
-	l1("~/NIdata/ofM.dr/preprocessing/generic", workflow_name="withhabituation", include={"subjects":[i for i in range(4001,4010)]+[4011,4012]}, habituation_regressor_in_contrast=True)
-	l1("~/NIdata/ofM.dr/preprocessing/generic", workflow_name="generic", include={"subjects":[i for i in range(4001,4010)]+[4011,4012]})
+	# l1("~/NIdata/ofM.dr/preprocessing/generic", workflow_name="generic", include={"subjects":[i for i in range(4001,4010)]+[4011,4012]})
+	l1("~/NIdata/ofM.dr/preprocessing/generic", workflow_name="generic_noh", include={"subjects":[i for i in range(4001,4010)]+[4011,4012]}, habituation="")
+	l1("~/NIdata/ofM.dr/preprocessing/generic", workflow_name="generic_confoundh", include={"subjects":[i for i in range(4001,4010)]+[4011,4012]}, habituation="confound")
+	l1("~/NIdata/ofM.dr/preprocessing/generic", workflow_name="generic_separateh", include={"subjects":[i for i in range(4001,4010)]+[4011,4012]}, habituation="separate_contrast")
 	# l1("~/NIdata/ofM.dr/preprocessing/generic")

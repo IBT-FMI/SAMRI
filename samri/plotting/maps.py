@@ -12,7 +12,7 @@ plt.style.use('ggplot')
 colors_plus = plt.cm.autumn(np.linspace(0., 1, 128))
 colors_minus = plt.cm.winter(np.linspace(0, 1, 128))
 
-def stat(stat_maps, figure_title="", interpolation="hermite", template="~/NIdata/templates/ds_QBI_chr.nii.gz", save_as="", scale=1., subplot_titles=[], cut_coords=None, threshold=3, black_bg=False, annotate=True, draw_cross=True, show_plot=True):
+def stat(stat_maps, figure_title="", interpolation="hermite", template="~/NIdata/templates/ds_QBI_chr.nii.gz", save_as="", scale=1., subplot_titles=[], cut_coords=None, threshold=3, black_bg=False, annotate=True, draw_cross=True, show_plot=True, dim="auto", orientation="landscape"):
 	"""Plot a list of statistical maps.
 	This Function acts as a wrapper of nilearn.plotting.plot_stat_map, adding support for multiple axes, using a prettier default and allowing intelligent text and crosshair scaling.
 
@@ -54,18 +54,24 @@ def stat(stat_maps, figure_title="", interpolation="hermite", template="~/NIdata
 			fig.suptitle(figure_title, fontsize=scale*20, fontweight='bold')
 		if subplot_titles:
 			title = subplot_titles[0]
-		display = plotting.plot_stat_map(stat_maps[0], bg_img=template,threshold=threshold, figure=fig, axes=axes, black_bg=black_bg, vmax=40, cmap=mymap, cut_coords=cut_coords, annotate=False, title=None, draw_cross=False, interpolation=interpolation)
+		display = plotting.plot_stat_map(stat_maps[0], bg_img=template,threshold=threshold, figure=fig, axes=axes, black_bg=black_bg, vmax=40, cmap=mymap, cut_coords=cut_coords[0], annotate=False, title=None, draw_cross=False, interpolation=interpolation, dim=dim)
 		if draw_cross:
-			display.draw_cross(linewidth=scale*1.6, alpha=0.4)
+			display.draw_cross(linewidth=scale*1.6, alpha=0.3)
 		if annotate:
 			display.annotate(size=2+scale*18)
 		if subplot_titles:
 			display.title(title, size=2+scale*26)
 	else:
-		ncols = 2
-		#we use inverse floor division to get the ceiling
-		nrows = -(-len(stat_maps)//2)
-		scale = scale/float(ncols)
+		if orientation == "landscape":
+			ncols = 2
+			#we use inverse floor division to get the ceiling
+			nrows = -(-len(stat_maps)//2)
+			scale = scale/float(ncols)
+		if orientation == "portrait":
+			nrows = 2
+			#we use inverse floor division to get the ceiling
+			ncols = -(-len(stat_maps)//2)
+			scale = scale/float(nrows)
 		fig, axes = plt.subplots(figsize=(8*nrows,7*ncols), facecolor='#eeeeee', nrows=nrows, ncols=ncols)
 		if figure_title:
 			fig.suptitle(figure_title, fontsize=scale*30, fontweight='bold')
@@ -73,7 +79,7 @@ def stat(stat_maps, figure_title="", interpolation="hermite", template="~/NIdata
 			try:
 				if subplot_titles:
 					title = subplot_titles[ix]
-				display = plotting.plot_stat_map(stat_maps[ix], bg_img=template,threshold=threshold, figure=fig, axes=ax, black_bg=black_bg, vmax=40, cmap=mymap, cut_coords=cut_coords, annotate=False, title=None, draw_cross=False, interpolation=interpolation)
+				display = plotting.plot_stat_map(stat_maps[ix], bg_img=template,threshold=threshold, figure=fig, axes=ax, black_bg=black_bg, vmax=40, cmap=mymap, cut_coords=cut_coords[ix], annotate=False, title=None, draw_cross=False, interpolation=interpolation,dim=dim)
 				if draw_cross:
 					display.draw_cross(linewidth=scale*1.6, alpha=0.4)
 				if annotate:

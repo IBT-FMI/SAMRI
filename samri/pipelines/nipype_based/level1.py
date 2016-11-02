@@ -7,6 +7,7 @@ from samri.pipelines.extra_functions import get_level2_inputs, get_subjectinfo, 
 
 import inspect
 import re
+import shutil
 import nipype.interfaces.io as nio
 import nipype.interfaces.utility as util
 import nipype.pipeline.engine as pe
@@ -21,6 +22,7 @@ def l1(preprocessing_dir,
 	highpass_sigma=290,
 	include={},
 	exclude={},
+	keep_work=False,
 	l1_dir="",
 	nprocs=10,
 	mask="/home/chymera/NIdata/templates/ds_QBI_chr_bin.nii.gz",
@@ -114,6 +116,12 @@ def l1(preprocessing_dir,
 	varcb_filename.inputs.source_format = "sub-{0}_ses-{1}_trial-{2}_varcb.nii.gz"
 	tstat_filename = pe.Node(name='tstat_filename', interface=util.Function(function=sss_to_source,input_names=inspect.getargspec(sss_to_source)[0], output_names=['filename']))
 	tstat_filename.inputs.source_format = "sub-{0}_ses-{1}_trial-{2}_tstat.nii.gz"
+	zstat_filename = pe.Node(name='zstat_filename', interface=util.Function(function=sss_to_source,input_names=inspect.getargspec(sss_to_source)[0], output_names=['filename']))
+	zstat_filename.inputs.source_format = "sub-{0}_ses-{1}_trial-{2}_zstat.nii.gz"
+	pstat_filename = pe.Node(name='pstat_filename', interface=util.Function(function=sss_to_source,input_names=inspect.getargspec(sss_to_source)[0], output_names=['filename']))
+	pstat_filename.inputs.source_format = "sub-{0}_ses-{1}_trial-{2}_pstat.nii.gz"
+	pfstat_filename = pe.Node(name='pfstat_filename', interface=util.Function(function=sss_to_source,input_names=inspect.getargspec(sss_to_source)[0], output_names=['filename']))
+	pfstat_filename.inputs.source_format = "sub-{0}_ses-{1}_trial-{2}_pfstat.nii.gz"
 
 	datasink = pe.Node(nio.DataSink(), name='datasink')
 	datasink.inputs.base_directory = path.join(l1_dir,workflow_name)
@@ -134,9 +142,18 @@ def l1(preprocessing_dir,
 		(infosource, cope_filename, [('subject_session_scan', 'subject_session_scan')]),
 		(infosource, varcb_filename, [('subject_session_scan', 'subject_session_scan')]),
 		(infosource, tstat_filename, [('subject_session_scan', 'subject_session_scan')]),
+		(infosource, zstat_filename, [('subject_session_scan', 'subject_session_scan')]),
+		(infosource, pstat_filename, [('subject_session_scan', 'subject_session_scan')]),
+		(infosource, pfstat_filename, [('subject_session_scan', 'subject_session_scan')]),
 		(cope_filename, glm, [('filename', 'out_cope')]),
 		(varcb_filename, glm, [('filename', 'out_varcb_name')]),
 		(tstat_filename, glm, [('filename', 'out_t_name')]),
+		(zstat_filename, glm, [('filename', 'out_z_name')]),
+		(pstat_filename, glm, [('filename', 'out_p_name')]),
+		(pfstat_filename, glm, [('filename', 'out_pf_name')]),
+		(glm, datasink, [('out_pf', '@pfstat')]),
+		(glm, datasink, [('out_p', '@pstat')]),
+		(glm, datasink, [('out_z', '@zstat')]),
 		(glm, datasink, [('out_t', '@tstat')]),
 		(glm, datasink, [('out_cope', '@cope')]),
 		(glm, datasink, [('out_varcb', '@varcb')]),
@@ -149,6 +166,8 @@ def l1(preprocessing_dir,
 	workflow.write_graph(dotfilename=path.join(workflow.base_dir,workdir_name,"graph.dot"), graph2use="hierarchical", format="png")
 
 	workflow.run(plugin="MultiProc",  plugin_args={'n_procs' : nprocs})
+	if not keep_work:
+		shutil.rmtree(path.join(l1_dir,workdir_name))
 
 def level1(measurements_base, functional_scan_types, structural_scan_types=[], tr=1, conditions=[], subjects=[], exclude_subjects=[], measurements=[], exclude_measurements=[], actual_size=False, pipeline_denominator="level1", template="/home/chymera/NIdata/templates/ds_QBI_chr.nii.gz", standalone_execute=True, compare_experiment_types=[], quiet=True, blur_xy=False):
 	"""First-level analysis pipeiline which calls the bru_preproc workflow for preprocessing
@@ -254,8 +273,9 @@ if __name__ == "__main__":
 	# 	level1("~/NIdata/ofM.erc/", {"EPI_CBV_jin6":"jin6","EPI_CBV_jin10":"jin10","EPI_CBV_jin20":"jin20","EPI_CBV_jin40":"jin40","EPI_CBV_jin60":"jin60","EPI_CBV_alej":"alej",}, structural_scan_types=-1, actual_size=False, pipeline_denominator="level1_dgamma_blurxy"+str(i), blur_xy=i)
 	# 	level2_common_effect("~/NIdata/ofM.erc/GLM/level1_dgamma_blurxy"+str(i), categories=[], scan_types=[["EPI_CBV_jin6"],["EPI_CBV_jin10"],["EPI_CBV_jin20"],["EPI_CBV_jin40"],["EPI_CBV_jin60"],["EPI_CBV_alej"]], participants=["5502","5503"], denominator="level2_dgamma_blurxy"+str(i))
 
-	# l1("~/NIdata/ofM.dr/preprocessing/generic", workflow_name="generic", include={"subjects":[i for i in range(4001,4010)]+[4011,4012]})
-	l1("~/NIdata/ofM.dr/preprocessing/generic", workflow_name="generic_noh", include={"subjects":[i for i in range(4001,4010)]+[4011,4012]}, habituation="")
-	l1("~/NIdata/ofM.dr/preprocessing/generic", workflow_name="generic_confoundh", include={"subjects":[i for i in range(4001,4010)]+[4011,4012]}, habituation="confound")
-	l1("~/NIdata/ofM.dr/preprocessing/generic", workflow_name="generic_separateh", include={"subjects":[i for i in range(4001,4010)]+[4011,4012]}, habituation="separate_contrast")
+	l1("~/NIdata/ofM.dr/preprocessing/blur", workflow_name="blur_dr", include={"subjects":[i for i in range(4001,4010)]+[4011,4012]}, habituation="confound",mask="/home/chymera/NIdata/templates/roi/f_dr_chr_bin.nii.gz",)
+	# l1("~/NIdata/ofM.dr/preprocessing/generic", workflow_name="generic_noh", include={"subjects":[i for i in range(4001,4010)]+[4011,4012]}, habituation="")
+	# l1("~/NIdata/ofM.dr/preprocessing/generic", workflow_name="generic_confoundh", include={"subjects":[i for i in range(4001,4010)]+[4011,4012]}, habituation="confound")
+	# l1("~/NIdata/ofM.dr/preprocessing/generic", workflow_name="generic_inmainh", include={"subjects":[i for i in range(4001,4010)]+[4011,4012]}, habituation="in_main_contrast")
+	# l1("~/NIdata/ofM.dr/preprocessing/generic", workflow_name="generic_separateh", include={"subjects":[i for i in range(4001,4010)]+[4011,4012]}, habituation="separate_contrast")
 	# l1("~/NIdata/ofM.dr/preprocessing/generic")

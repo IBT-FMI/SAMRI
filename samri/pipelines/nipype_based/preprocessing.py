@@ -20,7 +20,7 @@ import nipype.pipeline.engine as pe				# pypeline engine
 import pandas as pd
 from nipype.interfaces import afni, bru2nii, fsl, nipy
 
-from nodes import functional_registration, structural_registration
+from nodes import functional_registration, structural_registration, composite_registration
 from utils import ss_to_path, sss_filename, fslmaths_invert_values
 from utils import STIM_PROTOCOL_DICTIONARY
 
@@ -110,7 +110,7 @@ def bruker(measurements_base,
 	functional_registration_method="structural",
 	highpass_sigma=270,
 	negative_contrast_agent=False,
-	n_procs=6,
+	n_procs=8,
 	template="/home/chymera/NIdata/templates/ds_QBI_chr.nii.gz",
 	tr=1,
 	very_nasty_bruker_delay_hack=False,
@@ -232,7 +232,7 @@ def bruker(measurements_base,
 
 		s_mask = pe.Node(interface=fsl.ApplyMask(), name="s_mask")
 
-		registration, s_warp, f_warp = structural_registration(template)
+		s_register, s_warp, f_warp = structural_registration(template)
 
 		s_bids_filename = pe.Node(name='s_bids_filename', interface=util.Function(function=sss_filename,input_names=inspect.getargspec(sss_filename)[0], output_names=['filename']))
 		s_bids_filename.inputs.scan_prefix = False
@@ -249,8 +249,8 @@ def bruker(measurements_base,
 			(s_cutoff, s_BET, [('out_file', 'in_file')]),
 			(s_biascorrect, s_mask, [('output_image', 'in_file')]),
 			(s_BET, s_mask, [('mask_file', 'mask_file')]),
-			(s_mask, registration, [('out_file', 'moving_image')]),
-			(registration, s_warp, [('composite_transform', 'transforms')]),
+			(s_mask, s_register, [('out_file', 'moving_image')]),
+			(s_register, s_warp, [('composite_transform', 'transforms')]),
 			(s_bru2nii, s_warp, [('nii_file', 'input_image')]),
 			(s_warp, datasink, [('output_image', 'anat')]),
 			])
@@ -259,12 +259,37 @@ def bruker(measurements_base,
 		if not structural_scan_types:
 			raise ValueError('The option `registration="structural"` requires there to be a structural scan type.')
 		workflow_connections.extend([
-			(registration, f_warp, [('composite_transform', 'transforms')]),
+			(s_register, f_warp, [('composite_transform', 'transforms')]),
 			(realigner, f_warp, [('out_file', 'input_image')]),
 			])
+	if functional_registration_method == "composite":
+		if not structural_scan_types:
+			raise ValueError('The option `registration="composite"` requires there to be a structural scan type.')
+		f_register, f_warp = composite_registration(template)
 
+		temporal_mean = pe.Node(interface=fsl.MeanImage(), name="temporal_mean")
+
+		f_biascorrect = pe.Node(interface=ants.N4BiasFieldCorrection(), name="f_biascorrect")
+		f_biascorrect.inputs.dimension = 3
+		f_biascorrect.inputs.bspline_fitting_distance = 100
+		f_biascorrect.inputs.shrink_factor = 2
+		f_biascorrect.inputs.n_iterations = [200,200,200,200]
+		f_biascorrect.inputs.convergence_threshold = 1e-11
+
+		merge = pe.Node(util.Merge(2), name='merge')
+
+		workflow_connections.extend([
+			(realigner, temporal_mean, [('out_file', 'in_file')]),
+			(temporal_mean, f_biascorrect, [('out_file', 'input_image')]),
+			(f_biascorrect, f_register, [('output_image', 'moving_image')]),
+			(s_biascorrect, f_register, [('output_image', 'fixed_image')]),
+			(f_register, merge, [('composite_transform', 'in1')]),
+			(s_register, merge, [('composite_transform', 'in2')]),
+			(merge, f_warp, [('out', 'transforms')]),
+			(realigner, f_warp, [('out_file', 'input_image')]),
+			])
 	elif functional_registration_method == "functional":
-		register, f_warp = functional_registration(template)
+		f_register, f_warp = functional_registration(template)
 
 		temporal_mean = pe.Node(interface=fsl.MeanImage(), name="temporal_mean")
 
@@ -284,8 +309,8 @@ def bruker(measurements_base,
 
 		workflow_connections.extend([
 			(realigner, temporal_mean, [('out_file', 'in_file')]),
-			(temporal_mean, f_biascorrect, [('out_file', 'in_files')]),
-			(f_biascorrect, f_cutoff, [('restored_image', 'in_file')]),
+			(temporal_mean, f_biascorrect, [('out_file', 'input_image')]),
+			(f_biascorrect, f_cutoff, [('output_image', 'in_file')]),
 			(f_cutoff, f_BET, [('out_file', 'in_file')]),
 			(f_BET, register, [('out_file', 'moving_image')]),
 			(register, f_warp, [('composite_transform', 'transforms')]),
@@ -300,6 +325,7 @@ def bruker(measurements_base,
 		workflow_connections.extend([
 			(f_warp, blur, [('output_image', 'in_file')]),
 			(blur, invert, [(('out_file', fslmaths_invert_values), 'op_string')]),
+			(blur, invert, [('out_file', 'in_file')]),
 			(invert, bandpass, [('out_file', 'in_file')]),
 			])
 	elif functional_blur_xy:
@@ -307,7 +333,6 @@ def bruker(measurements_base,
 		blur.inputs.fwhmxy = functional_blur_xy
 		workflow_connections.extend([
 			(f_warp, blur, [('output_image', 'in_file')]),
-			(f_warp, invert, [('output_image', 'in_file')]),
 			(blur, bandpass, [('out_file', 'in_file')]),
 			])
 	elif negative_contrast_agent:
@@ -340,5 +365,4 @@ def bruker(measurements_base,
 		workflow.run(plugin="MultiProc",  plugin_args={'n_procs' : n_procs})
 
 if __name__ == "__main__":
-	bruker("/home/chymera/NIdata/ofM.dr/",exclude_measurements=['20151027_121613_4013_1_1'], very_nasty_bruker_delay_hack=True, negative_contrast_agent=True, functional_blur_xy=4)
-	# bru_preproc("/home/chymera/NIdata/ofM.erc/",exclude_subjects=["4030","4029","4031"])
+	bruker("/home/chymera/NIdata/ofM.dr/",exclude_measurements=['20151027_121613_4013_1_1'], workflow_name="composite", very_nasty_bruker_delay_hack=True, negative_contrast_agent=True, functional_blur_xy=4, functional_registration_method="composite")

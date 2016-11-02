@@ -12,7 +12,7 @@ plt.style.use('ggplot')
 colors_plus = plt.cm.autumn(np.linspace(0., 1, 128))
 colors_minus = plt.cm.winter(np.linspace(0, 1, 128))
 
-def stat(stat_maps, figure_title="", interpolation="hermite", template="~/NIdata/templates/ds_QBI_chr.nii.gz", save_as="", scale=1., subplot_titles=[], cut_coords=None, threshold=3, black_bg=False, annotate=True, draw_cross=True, show_plot=True, dim="auto", orientation="landscape"):
+def stat(stat_maps, figure_title="", interpolation="hermite", template="~/NIdata/templates/ds_QBI_chr.nii.gz", save_as="", scale=1., subplot_titles=[], cut_coords=[None], threshold=3, black_bg=False, annotate=True, draw_cross=True, show_plot=True, dim="auto", orientation="landscape"):
 	"""Plot a list of statistical maps.
 	This Function acts as a wrapper of nilearn.plotting.plot_stat_map, adding support for multiple axes, using a prettier default and allowing intelligent text and crosshair scaling.
 
@@ -42,8 +42,14 @@ def stat(stat_maps, figure_title="", interpolation="hermite", template="~/NIdata
 	"""
 
 	#make sure paths are absolute
-	stat_maps = [os.path.abspath(os.path.expanduser(stat_map)) for stat_map in stat_maps]
-	template = os.path.abspath(os.path.expanduser(template))
+	try:
+		stat_maps = [os.path.abspath(os.path.expanduser(stat_map)) for stat_map in stat_maps]
+	except AttributeError:
+		pass
+	try:
+		template = os.path.abspath(os.path.expanduser(template))
+	except AttributeError:
+		pass
 
 	colors = np.vstack((colors_minus, colors_plus[::-1]))
 	mymap = mcolors.LinearSegmentedColormap.from_list('my_colormap', colors)
@@ -62,6 +68,8 @@ def stat(stat_maps, figure_title="", interpolation="hermite", template="~/NIdata
 		if subplot_titles:
 			display.title(title, size=2+scale*26)
 	else:
+		if len(cut_coords) == 1:
+			cut_coords = cut_coords*len(stat_maps)
 		if orientation == "landscape":
 			ncols = 2
 			#we use inverse floor division to get the ceiling

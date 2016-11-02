@@ -1,5 +1,6 @@
 import inspect
 import re
+import shutil
 import nipype.interfaces.io as nio
 import nipype.interfaces.utility as util
 import nipype.pipeline.engine as pe
@@ -29,6 +30,7 @@ def l2_common_effect(l1_dir,
 	groupby="session",
 	keep_work=False,
 	l2_dir="",
+	loud=False,
 	tr=1,
 	nprocs=6,
 	workflow_name="generic",
@@ -117,9 +119,21 @@ def l2_common_effect(l1_dir,
 	workflow.base_dir = l2_dir
 	workflow.write_graph(dotfilename=path.join(workflow.base_dir,workdir_name,"graph.dot"), graph2use="hierarchical", format="png")
 
-	workflow.run(plugin="MultiProc",  plugin_args={'n_procs' : nprocs})
+
+	if not loud:
+		try:
+			workflow.run(plugin="MultiProc",  plugin_args={'n_procs' : nprocs})
+		except RuntimeError:
+			print("WARNING: Some expected scans have not been found (or another RuntimeError has occured).")
+		for f in listdir(getcwd()):
+			if re.search("crash.*?-varcopemerge|-copemerge.*", f):
+				remove(path.join(getcwd(), f))
+	else:
+		workflow.run(plugin="MultiProc",  plugin_args={'n_procs' : nprocs})
+
+
 	if not keep_work:
-		shutil.rmtree(path.join(workdir_name))
+		shutil.rmtree(path.join(l2_dir,workdir_name))
 
 def level2(level1_directory, categories=["ofM","ofM_aF"], participants=["4008","4007","4011","4012"], denominator="level2"):
 	level1_directory = path.expanduser(level1_directory)
@@ -177,5 +191,5 @@ if __name__ == "__main__":
 	# l2_common_effect("~/NIdata/ofM.dr/l1/generic", workflow_name="subjectwise_generic", groupby="subject")
 	# l2_common_effect("~/NIdata/ofM.dr/l1/withhabituation", workflow_name="subjectwise_withhabituation", groupby="subject")
 
-	# l2_common_effect("~/NIdata/ofM.dr/l1/dr_mask", workflow_name="subjectwise_dr_mask", groupby="subject")
-	l2_common_effect("~/NIdata/ofM.dr/l1/dr_mask", workflow_name="sessionwise_dr_mask", groupby="session", exclude={"subjects":["4001","4002","4003","4004","4005","4006","4009","4013"]})
+	l2_common_effect("~/NIdata/ofM.dr/l1/blur", workflow_name="subjectwise_blur", groupby="subject")
+	l2_common_effect("~/NIdata/ofM.dr/l1/blur", workflow_name="sessionwise_blur", groupby="session", exclude={"subjects":["4001","4002","4003","4004","4005","4006","4009","4013"]})

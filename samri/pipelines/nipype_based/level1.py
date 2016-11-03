@@ -267,12 +267,6 @@ def level1(measurements_base, functional_scan_types, structural_scan_types=[], t
 		return pipeline
 
 if __name__ == "__main__":
-	# level1("~/NIdata/ofM.erc/", {"EPI_CBV_jin6":"jin6","EPI_CBV_jin10":"jin10","EPI_CBV_jin20":"jin20","EPI_CBV_jin40":"jin40","EPI_CBV_jin60":"jin60","EPI_CBV_alej":"alej",}, structural_scan_types=-1, actual_size=False, pipeline_denominator="level1_dgamma")
-	# level2_common_effect("~/NIdata/ofM.erc/GLM/level1_dgamma", categories=[], scan_types=[["EPI_CBV_jin6"],["EPI_CBV_jin10"],["EPI_CBV_jin20"],["EPI_CBV_jin40"],["EPI_CBV_jin60"],["EPI_CBV_alej"]], participants=["5502","5503"], denominator="level2_dgamma")
-	# for i in range(4,8):
-	# 	level1("~/NIdata/ofM.erc/", {"EPI_CBV_jin6":"jin6","EPI_CBV_jin10":"jin10","EPI_CBV_jin20":"jin20","EPI_CBV_jin40":"jin40","EPI_CBV_jin60":"jin60","EPI_CBV_alej":"alej",}, structural_scan_types=-1, actual_size=False, pipeline_denominator="level1_dgamma_blurxy"+str(i), blur_xy=i)
-	# 	level2_common_effect("~/NIdata/ofM.erc/GLM/level1_dgamma_blurxy"+str(i), categories=[], scan_types=[["EPI_CBV_jin6"],["EPI_CBV_jin10"],["EPI_CBV_jin20"],["EPI_CBV_jin40"],["EPI_CBV_jin60"],["EPI_CBV_alej"]], participants=["5502","5503"], denominator="level2_dgamma_blurxy"+str(i))
-
 	l1("~/NIdata/ofM.dr/preprocessing/blur", workflow_name="blur_dr", include={"subjects":[i for i in range(4001,4010)]+[4011,4012]}, habituation="confound",mask="/home/chymera/NIdata/templates/roi/f_dr_chr_bin.nii.gz",)
 	# l1("~/NIdata/ofM.dr/preprocessing/generic", workflow_name="generic_noh", include={"subjects":[i for i in range(4001,4010)]+[4011,4012]}, habituation="")
 	# l1("~/NIdata/ofM.dr/preprocessing/generic", workflow_name="generic_confoundh", include={"subjects":[i for i in range(4001,4010)]+[4011,4012]}, habituation="confound")

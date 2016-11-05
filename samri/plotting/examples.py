@@ -1,6 +1,8 @@
-import maps, timeseries, dcm
+import matplotlib.pyplot as plt
 
-def responder_overview(workflow="subjectwise",cut_coords=None, threshold=2.5):
+import maps, timeseries, dcm, summary
+
+def responder_overview(workflow="subjectwise",cut_coords=[None], threshold=2.5):
 	"""Test te per-animal signal across sessions. 4001 is a negative control (transgene but no injection)"""
 	subjects = ["4001","4005","4007","4008","4009","4011","4012"]
 	stat_maps = ["/home/chymera/NIdata/ofM.dr/l2/{0}/{1}/tstat1.nii.gz".format(workflow, i) for i in subjects]
@@ -31,23 +33,23 @@ def blur_kernel_compare_dr(conditions=["ofM","ofM_aF","ofM_cF1","ofM_cF2","ofM_p
 		maps.stat(stat_maps, cut_coords=(-49,8,43), threshold=threshold, interpolation="none", template="~/NIdata/templates/hires_QBI_chr.nii.gz", save_as=pp, figure_title=condition, subplot_titles=parameters)
 	pp.close()
 
-# def roi_pp():
-# 	from matplotlib.backends.backend_pdf import PdfPages
-# 	pp = PdfPages('/home/chymera/DR.pdf')
-# 	for condition in conditions:
-# 		stat_maps = ["~/NIdata/ofM.dr/GLM/"+parameter+"/_category_multi_"+condition+"/flameo/mapflow/_flameo0/stats/tstat1.nii.gz" for parameter in parameters]
-# 		titles = [stat_map[32:-43] for stat_map in stat_maps]
-# 		maps.stat(stat_maps, cut_coords=(-49,8,43), threshold=threshold, interpolation="none", template="~/NIdata/templates/hires_QBI_chr.nii.gz", save_as=pp, figure_title=condition, subplot_titles=parameters)
-# 	pp.close()
+def roi_per_session():
+	fit, rep, tab = summary.roi_per_session(sessions=["ofM","ofM_aF","ofM_cF1","ofM_cF2","ofM_pF"],subjects=[4007,4008,4009,4011,4012], legend_loc=2, figure="per-participant")
+	print(rep)
+	plt.show()
+
+def p_clusters():
+	fc_per_session(sessions=["ofM","ofM_aF","ofM_cF1"],subjects=[4007,4008,4009,4011,4012], legend_loc=2, figure="per-participant")
 
 if __name__ == '__main__':
 	# session_overview("sessionwise_generic")
-	# responder_overview("subjectwise_generic", cut_coords=(-50,12,46))
+	responder_overview("subjectwise_composite")
 	# responder_overview("subjectwise_dr_mask", cut_coords=(-50,12,46))
 	# session_overview("sessionwise_generic",)
-	session_overview("sessionwise_blur", cut_coords=(-50,12,46))
-	session_overview("sessionwise_generic", cut_coords=(-50,12,46))
+	# session_overview("sessionwise_blur", cut_coords=(-50,12,46))
+	# session_overview("sessionwise_generic", cut_coords=(-50,12,46))
 	# responder_overview("subjectwise_generic")
 	# responder_overview("subjectwise_withhabituation")
 	# session_overview("responders")
 	# session_overview("all")
+	# roi_per_session()

@@ -6,7 +6,7 @@ CYAN_ = (0,0.9,0.9,0.5)
 CORAL = (0.9,0.4,0.2,1)
 CORAL_ = (0.9,0.4,0.2,0.5)
 
-def dcm_graph():
+def dcm_graph(output=None):
 	g = Graph()
 	vlabel = g.new_vertex_property('string')
 	g.vertex_properties['vlabel'] = vlabel
@@ -23,10 +23,12 @@ def dcm_graph():
 	g.edge_properties['egradient'] = egradient
 	ewidth = g.new_edge_property('double')
 	g.edge_properties['ewidth'] = ewidth
+	elabel = g.new_edge_property("string")
+	g.edge_properties['elabel'] = elabel
 
 
 	v1 = g.add_vertex()
-	g.vp.vposition[v1] = (1,1)
+	g.vp.vposition[v1] = (1.5,1.5)
 	g.vp.vlabel[v1] = "laser"
 	g.vp.vcolor[v1] = CYAN
 	g.vp.vfillcolor[v1] = CYAN_
@@ -44,15 +46,11 @@ def dcm_graph():
 	e = g.add_edge(v1, v2)
 	g.ep.egradient[e] = (1,)+CYAN
 	g.ep.ewidth[e] = 14
-	e = g.add_edge(v2, v2)
-	g.ep.egradient[e] = (1,)+CORAL
-	g.ep.ewidth[e] = 3
+	g.ep.elabel[e] = u"u\u2081"
 	e = g.add_edge(v2, v3)
 	g.ep.egradient[e] = (1,)+CORAL
 	g.ep.ewidth[e] = 7
-	e = g.add_edge(v3, v2)
-	g.ep.egradient[e] = (1,)+CORAL
-	g.ep.ewidth[e] = 3
+	g.ep.elabel[e] = u"u\u2082"
 
 	# pos = sfdp_layout(g)
 	pos = fruchterman_reingold_layout(g, n_iter=1000)
@@ -69,10 +67,14 @@ def dcm_graph():
 		vertex_font_size=16,
 		edge_gradient=g.edge_properties["egradient"],
 		edge_pen_width=g.edge_properties["ewidth"],
+		edge_text=elabel,
+		edge_font_size=30,
+		edge_text_distance=15,
 		output_size=(500, 500),
-		output="~/two-nodes.pdf",
+		output=output,
 		)
-	plt.show()
 
 if __name__ == '__main__':
-	dcm_graph()
+	# dcm_graph()
+	dcm_graph(output="~/two-nodes.png")
+	plt.show()

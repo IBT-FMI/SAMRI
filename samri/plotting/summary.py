@@ -1,6 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+import os
+
 from nilearn.input_data import NiftiLabelsMasker, NiftiMapsMasker
+from nipype.interfaces.io import DataFinder
 import nibabel as nib
 import numpy as np
 import pandas as pd
@@ -114,6 +117,24 @@ def roi_per_session(l1_dir, sessions, subjects,
 
 	return fit, report, latex_prepared
 
+def responders(l2_dir,
+	roi="ctx_chr",
+	data_root="~/NIdata/ofM.dr",
+	roi_root="~/NIdata/templates/roi"
+	):
+
+	data_regex = "(?P<subject>.+)/tstat1.nii.gz"
+	data_path = "{data_root}/l2/{l2_dir}/".format(data_root=data_root, l2_dir=l2_dir)
+	data_path = os.path.expanduser(data_path)
+	roi_path = "{roi_root}/{roi}.nii.gz".format(roi_root=roi_root, roi=roi)
+	roi_path = os.path.expanduser(roi_path)
+
+	data_find = DataFinder()
+	data_find.inputs.root_paths = data_path
+	data_find.inputs.match_regex = os.path.join(data_path,data_regex)
+	result = data_find.run()
+	print(result.outputs.out_paths)
+	print(result.outputs.subject)
 
 def fc_per_session(sessions, subjects, preprocessing_dir,
 	l1_dir = None,

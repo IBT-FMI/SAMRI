@@ -42,6 +42,10 @@ def p_clusters():
 	summary.fc_per_session(["ofM","ofM_aF","ofM_cF1","ofM_cF2","ofM_pF"],[4007,4008,4009,4011,4012],"composite", l1_dir="composite_dr", l1_workdir="composite_work", p_level=0.05, figure="timecourses")
 	plt.show()
 
+def check_responders():
+	summary.responders("subjectwise_composite")
+
+
 if __name__ == '__main__':
 	# session_overview("sessionwise_generic")
 	# responder_overview("subjectwise_composite")
@@ -52,5 +56,6 @@ if __name__ == '__main__':
 	# responder_overview("subjectwise_generic")
 	# responder_overview("subjectwise_withhabituation")
 	# session_overview("responders")
-	roi_per_session("composite")
+	# roi_per_session("composite")
 	# p_clusters()
+	check_responders()

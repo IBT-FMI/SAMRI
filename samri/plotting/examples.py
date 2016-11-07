@@ -10,7 +10,7 @@ def responder_overview(workflow="subjectwise",cut_coords=[None], threshold=2.5):
 		cut_coords = [cut_coords]
 	maps.stat(stat_maps, template="~/NIdata/templates/ds_QBI_chr.nii.gz", threshold=threshold, interpolation="gaussian", figure_title="Non/Responders", subplot_titles=subjects, cut_coords=cut_coords)
 
-def session_overview(subset="all", cut_coords=None, threshold=2.5):
+def session_overview(subset="all", cut_coords=[None], threshold=2.5):
 	"""Test te per-animal signal across sessions. 4001 is a negative control (transgene but no injection)"""
 	sessions = ["ofM","ofM_aF","ofM_cF1","ofM_cF2","ofM_pF"]
 	stat_maps = ["/home/chymera/NIdata/ofM.dr/l2/{0}/{1}/tstat1.nii.gz".format(subset,i) for i in sessions]
@@ -33,23 +33,24 @@ def blur_kernel_compare_dr(conditions=["ofM","ofM_aF","ofM_cF1","ofM_cF2","ofM_p
 		maps.stat(stat_maps, cut_coords=(-49,8,43), threshold=threshold, interpolation="none", template="~/NIdata/templates/hires_QBI_chr.nii.gz", save_as=pp, figure_title=condition, subplot_titles=parameters)
 	pp.close()
 
-def roi_per_session():
-	fit, rep, tab = summary.roi_per_session(sessions=["ofM","ofM_aF","ofM_cF1","ofM_cF2","ofM_pF"],subjects=[4007,4008,4009,4011,4012], legend_loc=2, figure="per-participant")
+def roi_per_session(l1_dir):
+	fit, rep, tab = summary.roi_per_session(l1_dir, ["ofM","ofM_aF","ofM_cF1","ofM_cF2","ofM_pF"], [4007,4008,4009,4011,4012], legend_loc=2, figure="both",roi="ctx")
 	print(rep)
 	plt.show()
 
 def p_clusters():
-	fc_per_session(sessions=["ofM","ofM_aF","ofM_cF1"],subjects=[4007,4008,4009,4011,4012], legend_loc=2, figure="per-participant")
+	summary.fc_per_session(["ofM","ofM_aF","ofM_cF1","ofM_cF2","ofM_pF"],[4007,4008,4009,4011,4012],"composite", l1_dir="composite_dr", l1_workdir="composite_work", p_level=0.05, figure="timecourses")
+	plt.show()
 
 if __name__ == '__main__':
 	# session_overview("sessionwise_generic")
-	responder_overview("subjectwise_composite")
+	# responder_overview("subjectwise_composite")
 	# responder_overview("subjectwise_dr_mask", cut_coords=(-50,12,46))
-	# session_overview("sessionwise_generic",)
+	# session_overview("sessionwise_composite_w4011",cut_coords=(-50,16,44))
 	# session_overview("sessionwise_blur", cut_coords=(-50,12,46))
 	# session_overview("sessionwise_generic", cut_coords=(-50,12,46))
 	# responder_overview("subjectwise_generic")
 	# responder_overview("subjectwise_withhabituation")
 	# session_overview("responders")
-	# session_overview("all")
-	# roi_per_session()
+	roi_per_session("composite")
+	# p_clusters()

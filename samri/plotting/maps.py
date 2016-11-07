@@ -12,7 +12,22 @@ plt.style.use('ggplot')
 colors_plus = plt.cm.autumn(np.linspace(0., 1, 128))
 colors_minus = plt.cm.winter(np.linspace(0, 1, 128))
 
-def stat(stat_maps, figure_title="", interpolation="hermite", template="~/NIdata/templates/ds_QBI_chr.nii.gz", save_as="", scale=1., subplot_titles=[], cut_coords=[None], threshold=3, black_bg=False, annotate=True, draw_cross=True, show_plot=True, dim="auto", orientation="landscape"):
+def stat(stat_maps,
+	figure_title="",
+	interpolation="hermite",
+	template="~/NIdata/templates/ds_QBI_chr.nii.gz",
+	save_as="",
+	scale=1.,
+	subplot_titles=[],
+	cut_coords=[None],
+	threshold=3,
+	black_bg=False,
+	annotate=True,
+	draw_cross=True,
+	show_plot=True,
+	dim="auto",
+	orientation="landscape"):
+	
 	"""Plot a list of statistical maps.
 	This Function acts as a wrapper of nilearn.plotting.plot_stat_map, adding support for multiple axes, using a prettier default and allowing intelligent text and crosshair scaling.
 

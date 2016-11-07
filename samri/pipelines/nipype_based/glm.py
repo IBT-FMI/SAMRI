@@ -16,7 +16,7 @@ from nipype.interfaces import fsl
 
 from extra_interfaces import GenL2Model, SpecifyModel, Level1Design
 from preprocessing import bruker
-from utils import sss_to_source, ss_to_path, iterfield_selector
+from utils import sss_to_source, ss_to_path, iterfield_selector, datasource_exclude
 
 def l1(preprocessing_dir,
 	highpass_sigma=290,
@@ -168,3 +168,118 @@ def l1(preprocessing_dir,
 	workflow.run(plugin="MultiProc",  plugin_args={'n_procs' : nprocs})
 	if not keep_work:
 		shutil.rmtree(path.join(l1_dir,workdir_name))
+
+def getlen(a):
+	return len(a)
+def add_suffix(name, suffix):
+	return str(name)+str(suffix)
+
+def l2_common_effect(l1_dir,
+	exclude={},
+	groupby="session",
+	keep_work=False,
+	l2_dir="",
+	loud=False,
+	tr=1,
+	nprocs=6,
+	workflow_name="generic",
+	):
+
+	l1_dir = path.expanduser(l1_dir)
+	if not l2_dir:
+		l2_dir = path.abspath(path.join(l1_dir,"..","..","l2"))
+
+	datafind = nio.DataFinder()
+	datafind.inputs.root_paths = l1_dir
+	datafind.inputs.match_regex = '.+/sub-(?P<sub>.+)/ses-(?P<ses>.+)/.*?_trial-(?P<scan>.+)_cope\.nii.gz'
+	datafind_res = datafind.run()
+	subjects = set(datafind_res.outputs.sub)
+	sessions = set(datafind_res.outputs.ses)
+	scans = set(datafind_res.outputs.scan)
+
+	datasource = pe.Node(interface=nio.DataGrabber(infields=["group",], outfields=["copes", "varcbs"]), name="datasource")
+	datasource.inputs.base_directory = l1_dir
+	datasource.inputs.sort_filelist = True
+	datasource.inputs.template = "*"
+	datasource.inputs.template_args = dict(
+		copes=[['group','group']],
+		varcbs=[['group','group']]
+		)
+
+	infosource = pe.Node(interface=util.IdentityInterface(fields=['iterable']), name="infosource")
+
+	copemerge = pe.Node(interface=fsl.Merge(dimension='t'),name="copemerge")
+	varcopemerge = pe.Node(interface=fsl.Merge(dimension='t'),name="varcopemerge")
+
+	level2model = pe.Node(interface=fsl.L2Model(),name='level2model')
+
+	flameo = pe.Node(interface=fsl.FLAMEO(), name="flameo")
+	flameo.inputs.mask_file="/home/chymera/NIdata/templates/ds_QBI_chr_bin.nii.gz"
+	flameo.inputs.run_mode="ols"
+
+	datasink = pe.Node(nio.DataSink(), name='datasink')
+	datasink.inputs.base_directory = path.join(l2_dir,workflow_name)
+	datasink.inputs.substitutions = [('_iterable_', ''),]
+
+	if groupby == "subject":
+		infosource.iterables = [('iterable', subjects)]
+		datasource.inputs.field_template = dict(
+			copes="sub-%s/ses-*/sub-%s_ses-*_trial-*_cope.nii.gz",
+			varcbs="sub-%s/ses-*/sub-%s_ses-*_trial-*_varcb.nii.gz",
+			)
+	elif groupby == "session":
+		infosource.iterables = [('iterable', sessions)]
+		datasource.inputs.field_template = dict(
+			copes="sub-*/ses-%s/sub-*_ses-%s_trial-*_cope.nii.gz",
+			varcbs="sub-*/ses-%s/sub-*_ses-%s_trial-*_varcb.nii.gz",
+			)
+	elif groupby == "scan":
+		infosource.iterables = [('iterable', scans)]
+		datasource.inputs.template_args = dict(
+			copes=[['group']],
+			varcbs=[['group']]
+			)
+		datasource.inputs.field_template = dict(
+			copes="sub-*/ses-*/sub-*_ses-*_trial-%s_cope.nii.gz ",
+			varcbs="sub-*/ses-*/sub-*_ses-*_trial-%s_varcb.nii.gz ",
+			)
+
+	workflow_connections = [
+		(infosource, datasource, [('iterable', 'group')]),
+		(infosource, copemerge, [(('iterable',add_suffix,"_cope.nii.gz"), 'merged_file')]),
+		(infosource, varcopemerge, [(('iterable',add_suffix,"_varcb.nii.gz"), 'merged_file')]),
+		(datasource, copemerge, [(('copes',datasource_exclude,exclude), 'in_files')]),
+		(datasource, varcopemerge, [(('varcbs',datasource_exclude,exclude), 'in_files')]),
+		(datasource, level2model, [(('copes',datasource_exclude,exclude,"len"), 'num_copes')]),
+		(copemerge,flameo,[('merged_file','cope_file')]),
+		(varcopemerge,flameo,[('merged_file','var_cope_file')]),
+		(level2model,flameo, [('design_mat','design_file')]),
+		(level2model,flameo, [('design_grp','cov_split_file')]),
+		(level2model,flameo, [('design_con','t_con_file')]),
+		(flameo, datasink, [('copes', '@copes')]),
+		(flameo, datasink, [('fstats', '@fstats')]),
+		(flameo, datasink, [('tstats', '@tstats')]),
+		(flameo, datasink, [('zstats', '@zstats')]),
+		]
+
+	workdir_name = workflow_name+"_work"
+	workflow = pe.Workflow(name=workdir_name)
+	workflow.connect(workflow_connections)
+	workflow.base_dir = l2_dir
+	workflow.write_graph(dotfilename=path.join(workflow.base_dir,workdir_name,"graph.dot"), graph2use="hierarchical", format="png")
+
+
+	if not loud:
+		try:
+			workflow.run(plugin="MultiProc",  plugin_args={'n_procs' : nprocs})
+		except RuntimeError:
+			print("WARNING: Some expected scans have not been found (or another RuntimeError has occured).")
+		for f in listdir(getcwd()):
+			if re.search("crash.*?-varcopemerge|-copemerge.*", f):
+				remove(path.join(getcwd(), f))
+	else:
+		workflow.run(plugin="MultiProc",  plugin_args={'n_procs' : nprocs})
+
+
+	if not keep_work:
+		shutil.rmtree(path.join(l2_dir,workdir_name))

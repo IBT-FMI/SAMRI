@@ -12,7 +12,6 @@ plt.style.use('ggplot')
 
 import statsmodels.api as sm
 import statsmodels.formula.api as smf
-from statsmodels.stats.anova import anova_lm
 try:
 	import maps, timeseries, dcm
 except ImportError:
@@ -32,13 +31,15 @@ except NameError:
 	class FileNotFoundError(OSError):
 		pass
 
-def roi_per_session(sessions, subjects,
+def roi_per_session(l1_dir, sessions, subjects,
 	legend_loc="best",
 	roi="f_dr",
 	figure="groups",
 	tabref="tab",
 	xy_label=[],
 	):
+
+	session_participant_format = "/home/chymera/NIdata/ofM.dr/l1/{0}/sub-{1}/ses-{2}/sub-{1}_ses-{2}_trial-7_EPI_CBV_tstat.nii.gz"
 
 	voxeldf = pd.DataFrame({})
 	subjectdf = pd.DataFrame({})
@@ -47,7 +48,7 @@ def roi_per_session(sessions, subjects,
 	for subject, session in product(subjects, sessions):
 		subject_data={}
 		try:
-			session_participant_file = "/home/chymera/NIdata/ofM.dr/l1/blur_dr/sub-{0}/ses-{1}/sub-{0}_ses-{1}_trial-7_EPI_CBV_tstat.nii.gz".format(subject,session)
+			session_participant_file = session_participant_format.format(l1_dir,subject,session)
 			img = nib.load(session_participant_file)
 			img = masker.fit_transform(img)
 			img = img.flatten()
@@ -114,18 +115,33 @@ def roi_per_session(sessions, subjects,
 	return fit, report, latex_prepared
 
 
-def fc_per_session(sessions, subjects,
+def fc_per_session(sessions, subjects, preprocessing_dir,
+	l1_dir = None,
+	l1_workdir = None,
 	legend_loc="best",
 	roi="f_dr",
+	figure="maps",
+	p_level=0.1,
 	):
 
+	if not l1_dir:
+		l1_dir = preprocessing_dir
+	if not l1_workdir:
+		l1_workdir = l1_dir+"_work"
+
 	df = pd.DataFrame({})
-	stat_maps=[]
+	timecourses = []
+	stat_maps = []
+	subplot_titles = []
+	designs = []
 	roi_path = "/home/chymera/NIdata/templates/roi/{}_chr.nii.gz".format(roi)
-	masker = NiftiMasker(mask_img=roi_path, standardize=True)
+	# masker = NiftiMasker(mask_img=roi_path, standardize=True)
 	for subject, session in product(subjects, sessions):
 		data={}
-		session_participant_file = "/home/chymera/NIdata/ofM.dr/l1/blur_dr/sub-{0}/ses-{1}/sub-{0}_ses-{1}_trial-7_EPI_CBV_pstat.nii.gz".format(subject,session)
+		timecourse_file = "/home/chymera/NIdata/ofM.dr/preprocessing/{2}/sub-{0}/ses-{1}/func/sub-{0}_ses-{1}_trial-7_EPI_CBV.nii.gz".format(subject,session,preprocessing_dir)
+		cope_file = "/home/chymera/NIdata/ofM.dr/l1/{2}/sub-{0}/ses-{1}/sub-{0}_ses-{1}_trial-7_EPI_CBV_cope.nii.gz".format(subject,session,l1_dir)
+		session_participant_file = "/home/chymera/NIdata/ofM.dr/l1/{2}/sub-{0}/ses-{1}/sub-{0}_ses-{1}_trial-7_EPI_CBV_pstat.nii.gz".format(subject,session,l1_dir)
+		design_file = "/home/chymera/NIdata/ofM.dr/l1/{0}/_subject_session_scan_{1}.{2}.7_EPI_CBV/modelgen/run0.mat".format(l1_workdir,subject,session)
 		try:
 			img = nib.load(session_participant_file)
 		except (FileNotFoundError, nib.py3k.FileNotFoundError):
@@ -138,13 +154,37 @@ def fc_per_session(sessions, subjects,
 			data = data.flatten()
 			print(np.count_nonzero(data))
 			nonzeros = np.nonzero(data)
-			_, nonzero_data, _, _ = multipletests(data[nonzeros], 0.01, method="fdr_bh")
+			_, nonzero_data, _, _ = multipletests(data[nonzeros], p_level, method="fdr_bh")
 			nonzero_mask = deepcopy(nonzero_data)
-			nonzero_mask[nonzero_data <= 0.01] = 1
-			nonzero_mask[nonzero_data > 0.01] = 0
+			nonzero_mask[nonzero_data <= p_level] = 1
+			nonzero_mask[nonzero_data > p_level] = 0
 			data[nonzeros] = nonzero_mask
 			data = data.reshape(shape)
 			print(np.count_nonzero(data))
-			img = nib.Nifti1Image(data, affine, header=header)
+			img = nib.Nifti1Image(data, affine, header)
+		p_masker = NiftiMasker(mask_img=img)
+		try:
+			timecourse = p_masker.fit_transform(timecourse_file).T
+			betas = p_masker.fit_transform(cope_file).T
+		except ValueError:
+			continue
+		subplot_titles.append(" ".join([str(subject),str(session)]))
+		timecourses.append(timecourse)
+		design = pd.read_csv(design_file, skiprows=5, sep="\t", header=None, index_col=False)
+		design = design*np.mean(betas)
+		designs.append(design)
 		stat_maps.append(img)
-	maps.stat(stat_maps, template="~/NIdata/templates/ds_QBI_chr.nii.gz", threshold=0.1, interpolation="gaussian")
+
+	if figure == "maps":
+		maps.stat(stat_maps, template="~/NIdata/templates/ds_QBI_chr.nii.gz", threshold=0.1, interpolation="gaussian", subplot_titles=subplot_titles)
+	elif figure == "timecourses":
+		ncols = 2
+		#we use inverse floor division to get the ceiling
+		nrows = -(-len(timecourses)//2)
+		fig, axes = plt.subplots(figsize=(8*nrows,7*ncols), facecolor='#eeeeee', nrows=nrows, ncols=ncols)
+		for ix, timecourse in enumerate(timecourses):
+			row = -(-(ix+1) // 2)
+			col = (ix+1) // row
+			ax = axes[row-1][col-1]
+			ax.plot(np.mean(timecourses[ix], axis=0))
+			ax.plot(designs[ix][[0]])

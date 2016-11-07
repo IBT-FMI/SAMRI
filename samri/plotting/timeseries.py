@@ -103,21 +103,17 @@ def roi_based(roi="/home/chymera/NIdata/templates/roi/ctx_chr.nii.gz", subject=4
 		plt.plot(melodic)
 	for workflow in workflows:
 		final_timecourse_file = "/home/chymera/NIdata/ofM.dr/preprocessing/{0}/sub-{1}/ses-{2}/func/sub-{1}_ses-{2}_trial-{3}.nii.gz".format(workflow, subject, session, scan)
-		print(final_timecourse_file)
 		final_time_series = masker.fit_transform(final_timecourse_file).T
 		plt.plot(final_time_series[parcel])
 	if warp_name:
 		timecourse_file = "/home/chymera/NIdata/ofM.dr/preprocessing/{4}_work/_subject_condition_{0}.{1}/_scan_type_T2_TurboRARE/_scan_type_{2}/f_warp/{3}".format(subject, session, scan, warp_name, workflow)
 		time_series = masker.fit_transform(timecourse_file).T
 		plt.plot(time_series[parcel])
-	fsl_design = "/home/chymera/NIdata/ofM.dr/l1/generic_work/_subject_session_scan_4007.ofM.7_EPI_CBV/modelgen/run0.mat"
+	fsl_design = "/home/chymera/NIdata/ofM.dr/l1/{0}_work/_subject_session_scan_{1}.{2}.7_EPI_CBV/modelgen/run0.mat".format(workflow,subject,session)
 	# fsl_design = "/home/chymera/NIdata/ofM.dr/l1/generic_work/_subject_session_scan_{0}.{1}.{2}/modelgen/run0.mat".format(subject, session, scan)
 	fsl_design_df = pd.read_csv(fsl_design, skiprows=5, sep="\t", header=None, index_col=False)
 	fsl_design_df = fsl_design_df/6
-	print(fsl_design_df)
-	plt.plot(fsl_design_df[[0]])
-	plt.plot(fsl_design_df[[1]])
-	plt.plot(fsl_design_df[[2]])
+	plt.plot(fsl_design_df[[0,1,2]])
 	plt.show()
 
 	# plt.show()
@@ -144,7 +140,7 @@ if __name__ == '__main__':
 	# roi_based(subject=4007, warp_name="corr_10_trans.nii.gz", melodic_hit=5)
 	# roi_based(subject=4007, roi="dr", workflows=["generic"], melodic_hit=5)
 	# roi_based(subject=4001, roi="dr", workflows=["generic"])
-	roi_based(subject=4007, roi="f_dr", workflows=["generic"])
+	roi_based(subject=4007, roi="f_dr", workflows=["composite"])
 	# roi_based(subject=4007, workflows=["norealign"], melodic_hit=5, warp_name="10_trans.nii")
 	# roi_based(subject=4012, workflows=["norealign","generic"], melodic_hit=5)
 	# roi_based(subject=4012, session="ofM_cF1", workflows=["norealign","generic"])

@@ -256,7 +256,7 @@ def structural_to_functional_per_participant_test(participant, conditions=["","_
 			warp.inputs.transforms = struct_registration_res.outputs.composite_transform
 			warp.run()
 
-def canonical(participant, conditions=["","_aF","_cF1","_cF2","_pF"],template = "/home/chymera/NIdata/templates/ds_QBI_chr.nii.gz"):
+def canonical_(participant, conditions=["","_aF","_cF1","_cF2","_pF"],template = "/home/chymera/NIdata/templates/ds_QBI_chr.nii.gz"):
 	"""Warp a functional image based on the functional-to-structural and the structural-to-template registrations.
 	Currently this approach is failing because the functiona-to-structural registration pushes the brain stem too far down.
 	This may be
@@ -404,6 +404,154 @@ def canonical(participant, conditions=["","_aF","_cF1","_cF2","_pF"],template = 
 			warp.inputs.transforms = [func_registration_res.outputs.composite_transform, struct_registration_res.outputs.composite_transform]
 			warp.run()
 
+def canonical(participant, regdir, f2s, conditions=["","_aF","_cF1","_cF2","_pF"],template = "/home/chymera/NIdata/templates/ds_QBI_chr.nii.gz"):
+	"""Warp a functional image based on the functional-to-structural and the structural-to-template registrations.
+	Currently this approach is failing because the functiona-to-structural registration pushes the brain stem too far down.
+	This may be
+
+	"""
+	for i in conditions:
+		func_image_dir = "/home/chymera/NIdata/ofM.dr/preprocessing/composite_work/_subject_session_{}.ofM{}/_scan_type_7_EPI_CBV/temporal_mean/".format(participant,i)
+		struct_image_dir = "/home/chymera/NIdata/ofM.dr/preprocessing/composite_work/_subject_session_{}.ofM{}/_scan_type_T2_TurboRARE/s_bru2nii/".format(participant,i)
+		try:
+			for myfile in os.listdir(func_image_dir):
+				if myfile.endswith(".nii.gz"):
+					func_image = os.path.join(func_image_dir,myfile)
+			for myfile in os.listdir(struct_image_dir):
+				if myfile.endswith(".nii"):
+					struct_image = os.path.join(struct_image_dir,myfile)
+		except FileNotFoundError:
+			pass
+		else:
+			#struct
+			n4 = ants.N4BiasFieldCorrection()
+			n4.inputs.dimension = 3
+			n4.inputs.input_image = struct_image
+			# correction bias is introduced (along the z-axis) if the following value is set to under 85. This is likely contingent on resolution.
+			n4.inputs.bspline_fitting_distance = 100
+			n4.inputs.shrink_factor = 2
+			n4.inputs.n_iterations = [200,200,200,200]
+			n4.inputs.convergence_threshold = 1e-11
+			n4.inputs.output_image = '{}/ss_n4_{}_ofM{}.nii.gz'.format(regdir,participant,i)
+			n4_res = n4.run()
+
+			_n4 = ants.N4BiasFieldCorrection()
+			_n4.inputs.dimension = 3
+			_n4.inputs.input_image = struct_image
+			# correction bias is introduced (along the z-axis) if the following value is set to under 85. This is likely contingent on resolution.
+			_n4.inputs.bspline_fitting_distance = 95
+			_n4.inputs.shrink_factor = 2
+			_n4.inputs.n_iterations = [500,500,500,500]
+			_n4.inputs.convergence_threshold = 1e-14
+			_n4.inputs.output_image = '{}/ss__n4_{}_ofM{}.nii.gz'.format(regdir,participant,i)
+			_n4_res = _n4.run()
+
+			#we do this on a separate bias-corrected image to remove hyperintensities which we have to create in order to prevent brain regions being caught by the negative threshold
+			struct_cutoff = ImageMaths()
+			struct_cutoff.inputs.op_string = "-thrP 20 -uthrp 98"
+			struct_cutoff.inputs.in_file = _n4_res.outputs.output_image
+			struct_cutoff_res = struct_cutoff.run()
+
+			struct_BET = BET()
+			struct_BET.inputs.mask = True
+			struct_BET.inputs.frac = 0.3
+			struct_BET.inputs.robust = True
+			struct_BET.inputs.in_file = struct_cutoff_res.outputs.out_file
+			struct_BET_res = struct_BET.run()
+
+			struct_mask = ApplyMask()
+			struct_mask.inputs.in_file = n4_res.outputs.output_image
+			struct_mask.inputs.mask_file = struct_BET_res.outputs.mask_file
+			struct_mask_res = struct_mask.run()
+
+			struct_registration = ants.Registration()
+			struct_registration.inputs.fixed_image = template
+			struct_registration.inputs.output_transform_prefix = "output_"
+			struct_registration.inputs.transforms = ['Affine', 'SyN'] ##
+			struct_registration.inputs.transform_parameters = [(1.0,), (1.0, 3.0, 5.0)] ##
+			struct_registration.inputs.number_of_iterations = [[2000, 1000, 500], [100, 100, 100]] #
+			struct_registration.inputs.dimension = 3
+			struct_registration.inputs.write_composite_transform = True
+			struct_registration.inputs.collapse_output_transforms = True
+			struct_registration.inputs.initial_moving_transform_com = True
+			# Tested on Affine transform: CC takes too long; Demons does not tilt, but moves the slices too far caudally; GC tilts too much on
+			struct_registration.inputs.metric = ['MeanSquares', 'Mattes']
+			struct_registration.inputs.metric_weight = [1, 1]
+			struct_registration.inputs.radius_or_number_of_bins = [16, 32] #
+			struct_registration.inputs.sampling_strategy = ['Random', None]
+			struct_registration.inputs.sampling_percentage = [0.3, 0.3]
+			struct_registration.inputs.convergence_threshold = [1.e-11, 1.e-8] #
+			struct_registration.inputs.convergence_window_size = [20, 20]
+			struct_registration.inputs.smoothing_sigmas = [[4, 2, 1], [4, 2, 1]]
+			struct_registration.inputs.sigma_units = ['vox', 'vox']
+			struct_registration.inputs.shrink_factors = [[3, 2, 1],[3, 2, 1]]
+			struct_registration.inputs.use_estimate_learning_rate_once = [True, True]
+			# if the fixed_image is not acquired similarly to the moving_image (e.g. RARE to histological (e.g. AMBMC)) this should be False
+			struct_registration.inputs.use_histogram_matching = [False, False]
+			struct_registration.inputs.winsorize_lower_quantile = 0.005
+			struct_registration.inputs.winsorize_upper_quantile = 0.98
+			struct_registration.inputs.args = '--float'
+			struct_registration.inputs.num_threads = 6
+
+			struct_registration.inputs.moving_image = struct_mask_res.outputs.out_file
+			struct_registration.inputs.output_warped_image = '{}/s_{}_ofM{}.nii.gz'.format(regdir,participant,i)
+			struct_registration_res = struct_registration.run()
+
+			#func
+			func_n4 = ants.N4BiasFieldCorrection()
+			func_n4.inputs.dimension = 3
+			func_n4.inputs.input_image = func_image
+			func_n4.inputs.bspline_fitting_distance = 100
+			func_n4.inputs.shrink_factor = 2
+			func_n4.inputs.n_iterations = [200,200,200,200]
+			func_n4.inputs.convergence_threshold = 1e-11
+			func_n4.inputs.output_image = '{}/f_n4_{}_ofM{}.nii.gz'.format(regdir,participant,i)
+			func_n4_res = func_n4.run()
+
+			func_registration = ants.Registration()
+			func_registration.inputs.fixed_image = n4_res.outputs.output_image
+			func_registration.inputs.output_transform_prefix = "func_"
+			func_registration.inputs.transforms = [f2s]
+			func_registration.inputs.transform_parameters = [(0.1,)]
+			func_registration.inputs.number_of_iterations = [[40, 20, 10]]
+			func_registration.inputs.dimension = 3
+			func_registration.inputs.write_composite_transform = True
+			func_registration.inputs.collapse_output_transforms = True
+			func_registration.inputs.initial_moving_transform_com = True
+			func_registration.inputs.metric = ['MeanSquares']
+			func_registration.inputs.metric_weight = [1]
+			func_registration.inputs.radius_or_number_of_bins = [16]
+			func_registration.inputs.sampling_strategy = ["Regular"]
+			func_registration.inputs.sampling_percentage = [0.3]
+			func_registration.inputs.convergence_threshold = [1.e-2]
+			func_registration.inputs.convergence_window_size = [8]
+			func_registration.inputs.smoothing_sigmas = [[4, 2, 1]] # [1,0.5,0]
+			func_registration.inputs.sigma_units = ['vox']
+			func_registration.inputs.shrink_factors = [[3, 2, 1]]
+			func_registration.inputs.use_estimate_learning_rate_once = [True]
+			func_registration.inputs.use_histogram_matching = [False]
+			func_registration.inputs.winsorize_lower_quantile = 0.005
+			func_registration.inputs.winsorize_upper_quantile = 0.995
+			func_registration.inputs.args = '--float'
+			func_registration.inputs.num_threads = 6
+
+			func_registration.inputs.moving_image = func_n4_res.outputs.output_image
+			func_registration.inputs.output_warped_image = '{}/f_{}_ofM{}.nii.gz'.format(regdir,participant,i)
+			func_registration_res = func_registration.run()
+
+			warp = ants.ApplyTransforms()
+			warp.inputs.reference_image = template
+			warp.inputs.input_image_type = 3
+			warp.inputs.interpolation = 'Linear'
+			warp.inputs.invert_transform_flags = [False, False]
+			warp.inputs.terminal_output = 'file'
+			warp.inputs.output_image = '{}/{}_ofM{}.nii.gz'.format(regdir,participant,i)
+			warp.num_threads = 6
+
+			warp.inputs.input_image = func_image
+			warp.inputs.transforms = [func_registration_res.outputs.composite_transform, struct_registration_res.outputs.composite_transform]
+			warp.run()
+
 if __name__ == '__main__':
 	# structural_per_participant_test("4001")
 	# structural_per_participant_test("4007")
@@ -418,7 +566,9 @@ if __name__ == '__main__':
 	# structural_to_functional_per_participant_test("4009")
 	# structural_to_functional_per_participant_test("4011")
 	# structural_to_functional_per_participant_test("4007",["_cF2"])
-	canonical("4007",["_cF2"])
+	canonical("4007","transl","Translation")
+	canonical("4007","rig","Rigid")
+	# canonical("4007",["_cF2"])
 	# canonical("4001")
 	# structural_per_participant_test("4007",["_cF2"])
 	# canonical("4008")

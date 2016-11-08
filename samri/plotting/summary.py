@@ -132,9 +132,22 @@ def responders(l2_dir,
 	data_find = DataFinder()
 	data_find.inputs.root_paths = data_path
 	data_find.inputs.match_regex = os.path.join(data_path,data_regex)
-	result = data_find.run()
-	print(result.outputs.out_paths)
-	print(result.outputs.subject)
+	found_data = data_find.run().outputs
+
+	masker = NiftiMasker(mask_img=roi_path)
+	voxeldf = pd.DataFrame({})
+	for subject, data_file in zip(found_data.subject, found_data.out_paths):
+		subject_data = {}
+		print(subject, data_file)
+		img = nib.load(data_file)
+		img = masker.fit_transform(img)
+		img = img.flatten()
+		subject_data["subject"]=subject
+		for i in img:
+			voxel_data = deepcopy(subject_data)
+			voxel_data["t"]=i
+			df_ = pd.DataFrame(voxel_data, index=[None])
+			voxeldf = pd.concat([voxeldf,df_])
 
 def fc_per_session(sessions, subjects, preprocessing_dir,
 	l1_dir = None,

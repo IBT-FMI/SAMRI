@@ -5,8 +5,10 @@ CYAN = (0,0.9,0.9,1)
 CYAN_ = (0,0.9,0.9,0.5)
 CORAL = (0.9,0.4,0.2,1)
 CORAL_ = (0.9,0.4,0.2,0.5)
+GRAY = (0.6,0.6,0.6,1)
+GRAY_ = (0.6,0.6,0.6,0.5)
 
-def dcm_graph(output=None):
+def default_graph():
 	g = Graph()
 	vlabel = g.new_vertex_property('string')
 	g.vertex_properties['vlabel'] = vlabel
@@ -25,8 +27,9 @@ def dcm_graph(output=None):
 	g.edge_properties['ewidth'] = ewidth
 	elabel = g.new_edge_property("string")
 	g.edge_properties['elabel'] = elabel
+	return g
 
-
+def add_nodes(g, which="basic"):
 	v1 = g.add_vertex()
 	g.vp.vposition[v1] = (1.5,1.5)
 	g.vp.vlabel[v1] = "laser"
@@ -42,39 +45,45 @@ def dcm_graph(output=None):
 	g.vp.vlabel[v3] = "Cortex"
 	g.vp.vcolor[v3] = CORAL_
 	g.vp.vfillcolor[v3] = CORAL
+	return g, (v1,v2,v3)
 
-	e = g.add_edge(v1, v2)
-	g.ep.egradient[e] = (1,)+CYAN
-	g.ep.ewidth[e] = 14
-	g.ep.elabel[e] = u"u\u2081"
-	e = g.add_edge(v2, v3)
-	g.ep.egradient[e] = (1,)+CORAL
-	g.ep.ewidth[e] = 7
-	g.ep.elabel[e] = u"u\u2082"
-
-	# pos = sfdp_layout(g)
+def plot_graph(g, output=None):
 	pos = fruchterman_reingold_layout(g, n_iter=1000)
-	# pos = arf_layout(g, max_iter=0)
-	# pos = radial_tree_layout(g, g.vertex(0))
-	# pos = planar_layout(g)
-
-
 	graph_draw(g,
 		pos=g.vertex_properties['vposition'],
 		vertex_text=g.vertex_properties['vlabel'],
 		vertex_color=g.vertex_properties['vcolor'],
 		vertex_fill_color=g.vertex_properties['vfillcolor'],
 		vertex_font_size=16,
-		edge_gradient=g.edge_properties["egradient"],
-		edge_pen_width=g.edge_properties["ewidth"],
-		edge_text=elabel,
+		edge_gradient=g.ep.egradient,
+		edge_pen_width=g.ep.ewidth,
+		edge_text=g.ep.elabel,
 		edge_font_size=30,
 		edge_text_distance=15,
 		output_size=(500, 500),
 		output=output,
 		)
 
+def simple_dr(output=None):
+	g = default_graph()
+	g, (v1,v2,v3) = add_nodes(g)
+
+	e = g.add_edge(v1, v2)
+	g.ep.egradient[e] = (1,)+CYAN
+	g.ep.ewidth[e] = 16
+	g.ep.elabel[e] = u"u\u2081"
+	e = g.add_edge(v2, v3)
+	g.ep.egradient[e] = (1,)+CORAL
+	g.ep.ewidth[e] = 8
+	g.ep.elabel[e] = u"u\u2082"
+	e = g.add_edge(v1, v3)
+	g.ep.egradient[e] = (1,)+GRAY
+	g.ep.ewidth[e] = 4
+	g.ep.elabel[e] = u"u\u2083"
+
+	plot_graph(g, output)
+
 if __name__ == '__main__':
-	# dcm_graph()
-	dcm_graph(output="~/two-nodes.png")
+	simple_dr()
+	# dcm_graph(output="~/two-nodes.png")
 	plt.show()

@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 import os
 
 from nilearn.input_data import NiftiLabelsMasker, NiftiMapsMasker
@@ -13,12 +12,13 @@ from nilearn.input_data import NiftiMasker
 sns.set_style("white", {'legend.frameon': True})
 plt.style.use('ggplot')
 
+
 import statsmodels.api as sm
 import statsmodels.formula.api as smf
 try:
-	import maps, timeseries, dcm
+	import maps, timeseries
 except ImportError:
-	from ..plotting import maps, timeseries, dcm
+	from ..plotting import maps, timeseries
 
 from statsmodels.sandbox.stats.multicomp import multipletests
 
@@ -37,10 +37,16 @@ except NameError:
 def roi_per_session(l1_dir, sessions, subjects,
 	legend_loc="best",
 	roi="f_dr",
-	figure="groups",
+	figure="per-participant",
 	tabref="tab",
 	xy_label=[],
+	obfuscate=False,
+	matplotlibrc=False,
+	color="#E69F00"
 	):
+
+	if matplotlibrc:
+		matplotlibrc.main()
 
 	session_participant_format = "/home/chymera/NIdata/ofM.dr/l1/{0}/sub-{1}/ses-{2}/sub-{1}_ses-{2}_trial-7_EPI_CBV_tstat.nii.gz"
 
@@ -69,31 +75,18 @@ def roi_per_session(l1_dir, sessions, subjects,
 		df_ = pd.DataFrame(subject_data, index=[None])
 		subjectdf = pd.concat([subjectdf,df_])
 
-	obf_session={"ofM":"_pre","ofM_aF":"t1","ofM_cF1":"t2","ofM_cF2":"t3","ofM_pF":"post"}
-	subjectdf = subjectdf.replace({"session": obf_session})
+	if obfuscate:
+		obf_session={"ofM":"_pre","ofM_aF":"t1","ofM_cF1":"t2","ofM_cF2":"t3","ofM_pF":"post"}
+		subjectdf = subjectdf.replace({"session": obf_session})
 	subjectdf.to_csv("~/MixedLM_data.csv")
 
 	model = smf.mixedlm("t ~ session", subjectdf, groups=subjectdf["subject"])
 	fit = model.fit()
 	report = fit.summary()
-	latex_rep = report.as_latex()
 
-	latex_conversion = {"Intercept":u"Intercept (Naïve)", "session[T.ofM_aF]":"Acute", "session[T.ofM_cF1]":"Chronic (2w)", "session[T.ofM_cF2]":"Phronic (4w)", "session[T.ofM_pF]":"Post"}
-	latex_prepared = []
-	for line in latex_rep.split("\n"):
-		try:
-			elements = line.split(" ")
-		except AttributeError:
-			pass
-		else:
-			if elements[0] in latex_conversion:
-				if elements[1] != "RE":
-					elements[0] = latex_conversion[elements[0]]
-			line = " ".join(elements)
-		latex_prepared.append(line)
-		if "\\caption{" in line:
-			latex_prepared.append("\\label{tab:"+tabref+"}")
-	latex_prepared = "\n".join(latex_prepared)
+	# create a restriction for every regressor - except intercept (first) and random effects (last)
+	omnibus_tests = np.eye(len(fit.params))[1:-1]
+	anova = fit.f_test(omnibus_tests)
 
 	names_for_plotting = {"ofM":u"naïve", "ofM_aF":"acute", "ofM_cF1":"chronic (2w)", "ofM_cF2":"chronic (4w)", "ofM_pF":"post"}
 	voxeldf = voxeldf.replace({"session": names_for_plotting})
@@ -104,18 +97,18 @@ def roi_per_session(l1_dir, sessions, subjects,
 		if xy_label:
 			ax.set(xlabel=xy_label[0], ylabel=xy_label[1])
 	elif figure == "per-participant":
-		ax = sns.pointplot(x="session", y="t", data=subjectdf, ci=68.3, dodge=True, jitter=True, legend_out=False, units="subject")
+		ax = sns.pointplot(x="session", y="t", data=subjectdf, ci=68.3, dodge=True, jitter=True, legend_out=False, units="subject", color=color)
 		if xy_label:
 			ax.set(xlabel=xy_label[0], ylabel=xy_label[1])
 	elif figure == "both":
 		f, (ax1, ax2) = plt.subplots(1,2)
 		ax1 = sns.pointplot(x="session", y="t", hue="subject", data=voxeldf, ci=68.3, dodge=True, jitter=True, legend_out=False, units="subject", ax=ax1)
-		ax2 = sns.pointplot(x="session", y="t", data=subjectdf, ci=68.3, dodge=True, jitter=True, legend_out=False, units="subject",ax=ax2)
+		ax2 = sns.pointplot(x="session", y="t", data=subjectdf, ci=68.3, dodge=True, jitter=True, legend_out=False, units="subject",ax=ax2, color=color)
 		if xy_label:
 			ax1.set(xlabel=xy_label[0], ylabel=xy_label[1])
 			ax2.set(xlabel=xy_label[0], ylabel=xy_label[1])
 
-	return fit, report, latex_prepared
+	return fit, anova
 
 def responders(l2_dir,
 	roi="ctx_chr",

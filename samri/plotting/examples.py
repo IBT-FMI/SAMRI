@@ -1,6 +1,6 @@
 import matplotlib.pyplot as plt
 
-import maps, timeseries, dcm, summary
+import maps, timeseries, summary
 
 def responder_overview(workflow="subjectwise",cut_coords=[None], threshold=2.5):
 	"""Test te per-animal signal across sessions. 4001 is a negative control (transgene but no injection)"""
@@ -34,8 +34,7 @@ def blur_kernel_compare_dr(conditions=["ofM","ofM_aF","ofM_cF1","ofM_cF2","ofM_p
 	pp.close()
 
 def roi_per_session(l1_dir):
-	fit, rep, tab = summary.roi_per_session(l1_dir, ["ofM","ofM_aF","ofM_cF1","ofM_cF2","ofM_pF"], [4007,4008,4009,4011,4012], legend_loc=2, figure="both",roi="ctx")
-	print(rep)
+	fit, anova = summary.roi_per_session(l1_dir, ["ofM","ofM_aF","ofM_cF1","ofM_cF2","ofM_pF"], [4007,4008,4009,4011,4012], legend_loc=2, figure="per-participant",roi="ctx", color="#56B4E9")
 	plt.show()
 
 def p_clusters():
@@ -56,6 +55,6 @@ if __name__ == '__main__':
 	# responder_overview("subjectwise_generic")
 	# responder_overview("subjectwise_withhabituation")
 	# session_overview("responders")
-	# roi_per_session("composite")
+	roi_per_session("composite")
 	# p_clusters()
-	check_responders()
+	# check_responders()

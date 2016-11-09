@@ -33,8 +33,8 @@ def blur_kernel_compare_dr(conditions=["ofM","ofM_aF","ofM_cF1","ofM_cF2","ofM_p
 		maps.stat(stat_maps, cut_coords=(-49,8,43), threshold=threshold, interpolation="none", template="~/NIdata/templates/hires_QBI_chr.nii.gz", save_as=pp, figure_title=condition, subplot_titles=parameters)
 	pp.close()
 
-def roi_per_session(l1_dir):
-	fit, anova = summary.roi_per_session(l1_dir, ["ofM","ofM_aF","ofM_cF1","ofM_cF2","ofM_pF"], [4007,4008,4009,4011,4012], legend_loc=2, figure="per-participant",roi="ctx", color="#56B4E9")
+def roi_per_session(l1_dir, roi, color):
+	fit, anova = summary.roi_per_session(l1_dir, [4007,4008,4009,4011,4012], ["ofM","ofM_aF","ofM_cF1","ofM_cF2","ofM_pF"], legend_loc=2, figure="per-participant",roi=roi, color=color)
 	plt.show()
 
 def p_clusters():
@@ -55,6 +55,7 @@ if __name__ == '__main__':
 	# responder_overview("subjectwise_generic")
 	# responder_overview("subjectwise_withhabituation")
 	# session_overview("responders")
-	roi_per_session("composite")
+	roi_per_session("composite", "ctx", "#56B4E9")
+	# roi_per_session("composite", "f_dr", "#56B4E9")
 	# p_clusters()
 	# check_responders()

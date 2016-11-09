@@ -22,6 +22,9 @@ except ImportError:
 
 from statsmodels.sandbox.stats.multicomp import multipletests
 
+from joblib import Parallel, delayed
+import multiprocessing as mp
+
 import inspect
 
 from itertools import product
@@ -34,7 +37,31 @@ except NameError:
 	class FileNotFoundError(OSError):
 		pass
 
-def roi_per_session(l1_dir, sessions, subjects,
+def add_roi_data(l1_dir,subject,session,masker):
+	session_participant_format = "/home/chymera/NIdata/ofM.dr/l1/{0}/sub-{1}/ses-{2}/sub-{1}_ses-{2}_trial-7_EPI_CBV_tstat.nii.gz"
+	subject_data={}
+	try:
+		session_participant_file = session_participant_format.format(l1_dir,subject,session)
+		img = nib.load(session_participant_file)
+		img = masker.fit_transform(img)
+		img = img.flatten()
+		mean = np.nanmean(img)
+	except (FileNotFoundError, nib.py3k.FileNotFoundError):
+		img=[None]
+	else:
+		subject_data["session"]=session
+		subject_data["subject"]=subject
+		for i in img:
+			voxel_data = deepcopy(subject_data)
+			voxel_data["t"]=i
+			df_ = pd.DataFrame(voxel_data, index=[None])
+			voxeldf = pd.concat([voxeldf,df_])
+		subject_data["t"]=mean
+		df_ = pd.DataFrame(subject_data, index=[None])
+		subjectdf = pd.concat([subjectdf,df_])
+		print(subjectdf)
+
+def roi_per_session(l1_dir, subjects, sessions,
 	legend_loc="best",
 	roi="f_dr",
 	figure="per-participant",
@@ -48,37 +75,38 @@ def roi_per_session(l1_dir, sessions, subjects,
 	if matplotlibrc:
 		matplotlibrc.main()
 
-	session_participant_format = "/home/chymera/NIdata/ofM.dr/l1/{0}/sub-{1}/ses-{2}/sub-{1}_ses-{2}_trial-7_EPI_CBV_tstat.nii.gz"
+	mgr = mp.Manager()
+	ns = mgr.Namespace()
 
 	voxeldf = pd.DataFrame({})
 	subjectdf = pd.DataFrame({})
+	ns.voxeldf = voxeldf
+	ns.subjectdf = subjectdf
+
 	roi_path = "/home/chymera/NIdata/templates/roi/{}_chr.nii.gz".format(roi)
 	masker = NiftiMasker(mask_img=roi_path)
-	for subject, session in product(subjects, sessions):
-		subject_data={}
-		try:
-			session_participant_file = session_participant_format.format(l1_dir,subject,session)
-			img = nib.load(session_participant_file)
-			img = masker.fit_transform(img)
-			img = img.flatten()
-			mean = np.nanmean(img)
-		except (FileNotFoundError, nib.py3k.FileNotFoundError):
-			img=[None]
-		subject_data["session"]=session
-		subject_data["subject"]=subject
-		for i in img:
-			voxel_data = deepcopy(subject_data)
-			voxel_data["t"]=i
-			df_ = pd.DataFrame(voxel_data, index=[None])
-			voxeldf = pd.concat([voxeldf,df_])
-		subject_data["t"]=mean
-		df_ = pd.DataFrame(subject_data, index=[None])
-		subjectdf = pd.concat([subjectdf,df_])
+
+	iter_product = product(subjects, sessions)
+	iter_subjects = []
+	iter_sessions = []
+	for i in iter_product:
+		iter_subjects.append(i[0])
+		iter_sessions.append(i[1])
+	iter_len = len(iter_sessions)
+	n_jobs = mp.cpu_count()-2
+	Parallel(n_jobs=n_jobs, verbose=0, backend="threading")(map(delayed(add_roi_data),
+		[l1_dir]*iter_len,
+		iter_subjects,
+		iter_sessions,
+		[masker]*iter_len,
+		))
+
+	print(subjectdf)
 
 	if obfuscate:
-		obf_session={"ofM":"_pre","ofM_aF":"t1","ofM_cF1":"t2","ofM_cF2":"t3","ofM_pF":"post"}
+		obf_session = {"ofM":"_pre","ofM_aF":"t1","ofM_cF1":"t2","ofM_cF2":"t3","ofM_pF":"post"}
 		subjectdf = subjectdf.replace({"session": obf_session})
-	subjectdf.to_csv("~/MixedLM_data.csv")
+		subjectdf.to_csv("~/MixedLM_data.csv")
 
 	model = smf.mixedlm("t ~ session", subjectdf, groups=subjectdf["subject"])
 	fit = model.fit()

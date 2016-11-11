@@ -47,7 +47,7 @@ def add_nodes(g, which="basic"):
 	g.vp.vfillcolor[v3] = CORAL
 	return g, (v1,v2,v3)
 
-def plot_graph(g, output=None, fit_view=0.9):
+def plot_graph(g, output=None, fit_view=0.9, graphsize=500):
 	pos = fruchterman_reingold_layout(g, n_iter=1000)
 	graph_draw(g,
 		pos=g.vertex_properties['vposition'],
@@ -60,11 +60,11 @@ def plot_graph(g, output=None, fit_view=0.9):
 		edge_text=g.ep.elabel,
 		edge_font_size=30,
 		edge_text_distance=15,
-		output_size=(500, 500),
+		output_size=(graphsize, graphsize),
 		output=output,
 		)
 
-def simple_dr(output=None, fit_view=0.9):
+def simple_dr(output=None, fit_view=0.9, graphsize=500):
 	g = default_graph()
 	g, (v1,v2,v3) = add_nodes(g)
 
@@ -81,9 +81,4 @@ def simple_dr(output=None, fit_view=0.9):
 	g.ep.ewidth[e] = 4
 	g.ep.elabel[e] = u"u\u2083"
 
-	plot_graph(g, output, fit_view)
-
-if __name__ == '__main__':
-	simple_dr()
-	# dcm_graph(output="~/two-nodes.png")
-	# plt.show()
+	plot_graph(g, output, fit_view, graphsize)

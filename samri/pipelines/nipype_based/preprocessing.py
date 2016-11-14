@@ -32,7 +32,18 @@ fsl.FSLCommand.set_default_output_type('NIFTI_GZ')
 thisscriptspath = path.dirname(path.realpath(__file__))
 scan_classification_file_path = path.join(thisscriptspath,"..","scan_type_classification.csv")
 
-def bruker_lite(measurements_base, functional_scan_types=[], structural_scan_types=[], tr=1, sessions=[], subjects=[], exclude_subjects=[], measurements=[], exclude_measurements=[], actual_size=False, realign=False):
+def bruker_lite(measurements_base,
+	functional_scan_types=[],
+	structural_scan_types=[],
+	tr=1,
+	sessions=[],
+	subjects=[],
+	exclude_subjects=[],
+	measurements=[],
+	exclude_measurements=[],
+	actual_size=False,
+	realign=False,
+	):
 
 	#select all functional/sturctural scan types unless specified
 	if not functional_scan_types or not structural_scan_types:
@@ -115,7 +126,7 @@ def bruker(measurements_base,
 	tr=1,
 	very_nasty_bruker_delay_hack=False,
 	workflow_name="generic",
-	quiet=True,
+	loud=False,
 	keep_work=False,
 	):
 
@@ -354,7 +365,7 @@ def bruker(measurements_base,
 	workflow.connect(workflow_connections)
 	workflow.base_dir = path.join(measurements_base,"preprocessing")
 	workflow.write_graph(dotfilename=path.join(workflow.base_dir,workdir_name,"graph.dot"), graph2use="hierarchical", format="png")
-	if quiet:
+	if not loud:
 		try:
 			workflow.run(plugin="MultiProc",  plugin_args={'n_procs' : n_procs})
 		except RuntimeError:

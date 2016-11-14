@@ -37,8 +37,9 @@ def diagnostic(measurements_base,
 	realign=False,
 	loud=False,
 	dimensions=8,
+	n_procs=8,
 	):
-	
+
 	"""Runs a diagnostic analysis, returning MELODIC (ICA) results and structural scans.
 
 	Mandatory Arguments:
@@ -114,14 +115,14 @@ def diagnostic(measurements_base,
 
 	if not loud:
 		try:
-			pipeline.run(plugin="MultiProc")
+			pipeline.run(plugin="MultiProc",  plugin_args={'n_procs' : n_procs})
 		except RuntimeError:
 			print("WARNING: Some expected scans have not been found (or another RuntimeError has occured).")
 		for f in listdir(getcwd()):
 			if re.search("crash.*?get_structural_scan|get_functional_scan.*", f):
 				remove(path.join(getcwd(), f))
 	else:
-		pipeline.run(plugin="MultiProc")
+		pipeline.run(plugin="MultiProc",  plugin_args={'n_procs' : n_procs})
 
 	#delete all fles but final results
 	if not keep_work:

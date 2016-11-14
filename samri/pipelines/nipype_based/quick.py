@@ -21,7 +21,24 @@ bruker_files = {"AdjStatePerStudy", "ResultState", "subject"}
 @argh.arg('--exclude-subjects', nargs='+', type=str)
 @argh.arg('--measurements', nargs='+', type=str)
 @argh.arg('--exclude_measurements', nargs='+', type=str)
-def diagnostic(measurements_base, structural_scan_types=[], functional_scan_types=[], workflow_base=False, tr=1, sessions=[], workflow_denominator="DIAGNOSTIC", subjects=[], exclude_subjects=[], measurements=[], exclude_measurements=[], keep_work=False, actual_size=False, realign=False, loud=False, dimensions=8):
+def diagnostic(measurements_base,
+	structural_scan_types=[],
+	functional_scan_types=[],
+	workflow_base=False,
+	tr=1,
+	sessions=[],
+	workflow_denominator="DIAGNOSTIC",
+	subjects=[],
+	exclude_subjects=[],
+	measurements=[],
+	exclude_measurements=[],
+	keep_work=False,
+	actual_size=False,
+	realign=False,
+	loud=False,
+	dimensions=8,
+	):
+	
 	"""Runs a diagnostic analysis, returning MELODIC (ICA) results and structural scans.
 
 	Mandatory Arguments:

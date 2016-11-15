@@ -32,7 +32,18 @@ fsl.FSLCommand.set_default_output_type('NIFTI_GZ')
 thisscriptspath = path.dirname(path.realpath(__file__))
 scan_classification_file_path = path.join(thisscriptspath,"..","scan_type_classification.csv")
 
-def bruker_lite(measurements_base, functional_scan_types=[], structural_scan_types=[], tr=1, sessions=[], subjects=[], exclude_subjects=[], measurements=[], exclude_measurements=[], actual_size=False, realign=False):
+def bruker_lite(measurements_base,
+	functional_scan_types=[],
+	structural_scan_types=[],
+	tr=1,
+	sessions=[],
+	subjects=[],
+	exclude_subjects=[],
+	measurements=[],
+	exclude_measurements=[],
+	actual_size=False,
+	realign=False,
+	):
 
 	#select all functional/sturctural scan types unless specified
 	if not functional_scan_types or not structural_scan_types:
@@ -54,19 +65,19 @@ def bruker_lite(measurements_base, functional_scan_types=[], structural_scan_typ
 	infosource = pe.Node(interface=util.IdentityInterface(fields=['session','subject']), name="infosource")
 	infosource.iterables = [('subject',subjects),('session',sessions)]
 
-	get_functional_scan = pe.Node(name='get_functional_scan',  interface=util.Function(function=get_scan,input_names=inspect.getargspec(get_scan)[0], output_names=['scan_path','scan_type']))
-	get_functional_scan.inputs.data_selection = data_selection
-	get_functional_scan.inputs.measurements_base = measurements_base
-	get_functional_scan.iterables = ("scan_type", functional_scan_types)
+	get_f_scan = pe.Node(name='get_f_scan',  interface=util.Function(function=get_scan,input_names=inspect.getargspec(get_scan)[0], output_names=['scan_path','scan_type']))
+	get_f_scan.inputs.data_selection = data_selection
+	get_f_scan.inputs.measurements_base = measurements_base
+	get_f_scan.iterables = ("scan_type", functional_scan_types)
 
 	f_bru2nii = pe.Node(interface=bru2nii.Bru2(), name="f_bru2nii")
 	f_bru2nii.inputs.actual_size=actual_size
 
 	if structural_scan_types:
-		get_structural_scan = pe.Node(name='get_structural_scan',  interface=util.Function(function=get_scan,input_names=inspect.getargspec(get_scan)[0], output_names=['scan_path','scan_type']))
-		get_structural_scan.inputs.data_selection = data_selection
-		get_structural_scan.inputs.measurements_base = measurements_base
-		get_structural_scan.iterables = ("scan_type", structural_scan_types)
+		get_s_scan = pe.Node(name='get_s_scan',  interface=util.Function(function=get_scan,input_names=inspect.getargspec(get_scan)[0], output_names=['scan_path','scan_type']))
+		get_s_scan.inputs.data_selection = data_selection
+		get_s_scan.inputs.measurements_base = measurements_base
+		get_s_scan.iterables = ("scan_type", structural_scan_types)
 
 		s_bru2nii = pe.Node(interface=bru2nii.Bru2(), name="s_bru2nii")
 		s_bru2nii.inputs.force_conversion=True
@@ -80,8 +91,8 @@ def bruker_lite(measurements_base, functional_scan_types=[], structural_scan_typ
 	workflow = pe.Workflow(name="PreprocessingLite")
 
 	workflow_connections = [
-		(infosource, get_functional_scan, [('session', 'session'),('subject', 'subject')]),
-		(get_functional_scan, f_bru2nii, [('scan_path', 'input_dir')]),
+		(infosource, get_f_scan, [('session', 'session'),('subject', 'subject')]),
+		(get_f_scan, f_bru2nii, [('scan_path', 'input_dir')]),
 		]
 	if realign:
 		workflow_connections.extend([
@@ -89,8 +100,8 @@ def bruker_lite(measurements_base, functional_scan_types=[], structural_scan_typ
 			])
 	if structural_scan_types:
 		workflow_connections.extend([
-			(infosource, get_structural_scan, [('session', 'session'),('subject', 'subject')]),
-			(get_structural_scan, s_bru2nii, [('scan_path','input_dir')]),
+			(infosource, get_s_scan, [('session', 'session'),('subject', 'subject')]),
+			(get_s_scan, s_bru2nii, [('scan_path','input_dir')]),
 			])
 
 	workflow.connect(workflow_connections)
@@ -115,7 +126,8 @@ def bruker(measurements_base,
 	tr=1,
 	very_nasty_bruker_delay_hack=False,
 	workflow_name="generic",
-	quiet=True,
+	loud=False,
+	keep_work=False,
 	):
 
 	#select all functional/sturctural scan types unless specified
@@ -147,10 +159,10 @@ def bruker(measurements_base,
 	infosource = pe.Node(interface=util.IdentityInterface(fields=['subject_session']), name="infosource")
 	infosource.iterables = [('subject_session', subjects_sessions)]
 
-	get_functional_scan = pe.Node(name='get_functional_scan', interface=util.Function(function=get_scan,input_names=inspect.getargspec(get_scan)[0], output_names=['scan_path','scan_type']))
-	get_functional_scan.inputs.data_selection = data_selection
-	get_functional_scan.inputs.measurements_base = measurements_base
-	get_functional_scan.iterables = ("scan_type", functional_scan_types)
+	get_f_scan = pe.Node(name='get_f_scan', interface=util.Function(function=get_scan,input_names=inspect.getargspec(get_scan)[0], output_names=['scan_path','scan_type']))
+	get_f_scan.inputs.data_selection = data_selection
+	get_f_scan.inputs.measurements_base = measurements_base
+	get_f_scan.iterables = ("scan_type", functional_scan_types)
 
 	f_bru2nii = pe.Node(interface=bru2nii.Bru2(), name="f_bru2nii")
 	f_bru2nii.inputs.actual_size=actual_size
@@ -179,11 +191,11 @@ def bruker(measurements_base,
 	datasink.inputs.parameterization = False
 
 	workflow_connections = [
-		(infosource, get_functional_scan, [('subject_session', 'selector')]),
+		(infosource, get_f_scan, [('subject_session', 'selector')]),
 		(infosource, bids_stim_filename, [('subject_session', 'subject_session')]),
-		(get_functional_scan, bids_stim_filename, [('scan_type', 'scan')]),
-		(get_functional_scan, f_bru2nii, [('scan_path', 'input_dir')]),
-		(get_functional_scan, events_file, [
+		(get_f_scan, bids_stim_filename, [('scan_type', 'scan')]),
+		(get_f_scan, f_bru2nii, [('scan_path', 'input_dir')]),
+		(get_f_scan, events_file, [
 			('scan_type', 'scan_type'),
 			('scan_path', 'scan_directory')
 			]),
@@ -192,17 +204,17 @@ def bruker(measurements_base,
 		(f_bru2nii, realigner, [('nii_file', 'in_file')]),
 		(infosource, datasink, [(('subject_session',ss_to_path), 'container')]),
 		(infosource, bids_filename, [('subject_session', 'subject_session')]),
-		(get_functional_scan, bids_filename, [('scan_type', 'scan')]),
+		(get_f_scan, bids_filename, [('scan_type', 'scan')]),
 		(bids_filename, bandpass, [('filename', 'out_file')]),
 		(bandpass, datasink, [('out_file', 'func')]),
 		]
 
 	#ADDING SELECTABLE NODES AND EXTENDING WORKFLOW AS APPROPRIATE:
 	if structural_scan_types:
-		get_structural_scan = pe.Node(name='get_structural_scan', interface=util.Function(function=get_scan,input_names=inspect.getargspec(get_scan)[0], output_names=['scan_path','scan_type']))
-		get_structural_scan.inputs.data_selection = data_selection
-		get_structural_scan.inputs.measurements_base = measurements_base
-		get_structural_scan.iterables = ("scan_type", structural_scan_types)
+		get_s_scan = pe.Node(name='get_s_scan', interface=util.Function(function=get_scan,input_names=inspect.getargspec(get_scan)[0], output_names=['scan_path','scan_type']))
+		get_s_scan.inputs.data_selection = data_selection
+		get_s_scan.inputs.measurements_base = measurements_base
+		get_s_scan.iterables = ("scan_type", structural_scan_types)
 
 		s_bru2nii = pe.Node(interface=bru2nii.Bru2(), name="s_bru2nii")
 		s_bru2nii.inputs.force_conversion=True
@@ -238,10 +250,10 @@ def bruker(measurements_base,
 		s_bids_filename.inputs.scan_prefix = False
 
 		workflow_connections.extend([
-			(infosource, get_structural_scan, [('subject_session', 'selector')]),
+			(infosource, get_s_scan, [('subject_session', 'selector')]),
 			(infosource, s_bids_filename, [('subject_session', 'subject_session')]),
-			(get_structural_scan, s_bru2nii, [('scan_path','input_dir')]),
-			(get_structural_scan, s_bids_filename, [('scan_type', 'scan')]),
+			(get_s_scan, s_bru2nii, [('scan_path','input_dir')]),
+			(get_s_scan, s_bids_filename, [('scan_type', 'scan')]),
 			(s_bids_filename, s_warp, [('filename','output_image')]),
 			(s_bru2nii, s_biascorrect, [('nii_file', 'input_image')]),
 			(s_bru2nii, s_reg_biascorrect, [('nii_file', 'input_image')]),
@@ -353,16 +365,18 @@ def bruker(measurements_base,
 	workflow.connect(workflow_connections)
 	workflow.base_dir = path.join(measurements_base,"preprocessing")
 	workflow.write_graph(dotfilename=path.join(workflow.base_dir,workdir_name,"graph.dot"), graph2use="hierarchical", format="png")
-	if quiet:
+	if not loud:
 		try:
 			workflow.run(plugin="MultiProc",  plugin_args={'n_procs' : n_procs})
 		except RuntimeError:
 			print("WARNING: Some expected scans have not been found (or another TypeError has occured).")
 		for f in listdir(getcwd()):
-			if re.search("crash.*?get_structural_scan|get_functional_scan.*?pklz", f):
+			if re.search("crash.*?get_s_scan|get_f_scan.*?pklz", f):
 				remove(path.join(getcwd(), f))
 	else:
 		workflow.run(plugin="MultiProc",  plugin_args={'n_procs' : n_procs})
+	if not keep_work:
+		shutil.rmtree(path.join(l1_dir,workdir_name))
 
 if __name__ == "__main__":
 	bruker("/home/chymera/NIdata/ofM.dr/",exclude_measurements=['20151027_121613_4013_1_1'], workflow_name="composite", very_nasty_bruker_delay_hack=True, negative_contrast_agent=True, functional_blur_xy=4, functional_registration_method="composite")

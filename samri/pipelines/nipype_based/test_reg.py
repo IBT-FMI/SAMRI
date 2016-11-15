@@ -2,6 +2,11 @@ import nipype.interfaces.ants as ants
 import os
 from nipype.interfaces.fsl import ApplyMask, GLM, MELODIC, FAST, BET, MeanImage, FLIRT, ImageMaths, FSLCommand
 
+try:
+	FileNotFoundError
+except NameError:
+	FileNotFoundError = IOError
+
 def structural_per_participant_test(participant,
 	conditions=["","_aF","_cF1","_cF2","_pF"],
 	template="/home/chymera/NIdata/templates/ds_QBI_chr.nii.gz",
@@ -155,16 +160,23 @@ def functional_per_participant_test():
 			registration.inputs.output_warped_image = '{}_ofM{}.nii.gz'.format(participant,i)
 			res = registration.run()
 
-def structural_to_functional_per_participant_test(participant, conditions=["","_aF","_cF1","_cF2","_pF"], template = "/home/chymera/NIdata/templates/ds_QBI_chr.nii.gz"):
-	for i in conditions:
-		func_image_dir = "/home/chymera/NIdata/ofM.dr/preprocessing/generic_work/_subject_session_{}.ofM{}/_scan_type_7_EPI_CBV/temporal_mean/".format(participant,i)
-		struct_image_dir = "/home/chymera/NIdata/ofM.dr/preprocessing/generic_work/_subject_session_{}.ofM{}/_scan_type_T2_TurboRARE/s_bru2nii/".format(participant,i)
+def structural_to_functional_per_participant_test(subjects_participants = [{'subject' : 11, 'session': 'rstFMRI_with_medetadomine'}],
+	conditions=["","_aF","_cF1","_cF2","_pF"],
+	template = "~/GitHub/mriPipeline/templates/waxholm/WHS_SD_rat_T2star_v1.01_downsample3.nii.gz",
+	f_file_format = "~/GitHub/mripipeline/base/preprocessing/generic_work/_subject_session_{subject}.{session}/_scan_type_SE_EPI/f_bru2nii/",
+	s_file_format = "~/GitHub/mripipeline/base/preprocessing/generic_work/_subject_session_{subject}.{session}/_scan_type_T2_TurboRARE/s_bru2nii/",
+	):
+
+	template = os.path.expanduser(template)
+	for subject_participant in subjects_participants:
+		func_image_dir = os.path.expanduser(f_file_format.format(**subject_participant))
+		struct_image_dir = os.path.expanduser(s_file_format.format(**subject_participant))
 		try:
 			for myfile in os.listdir(func_image_dir):
-				if myfile.endswith(".nii.gz"):
+				if myfile.endswith((".nii.gz", ".nii")):
 					func_image = os.path.join(func_image_dir,myfile)
 			for myfile in os.listdir(struct_image_dir):
-				if myfile.endswith(".nii"):
+				if myfile.endswith((".nii.gz", ".nii")):
 					struct_image = os.path.join(struct_image_dir,myfile)
 		except FileNotFoundError:
 			pass
@@ -177,7 +189,7 @@ def structural_to_functional_per_participant_test(participant, conditions=["","_
 			n4.inputs.shrink_factor = 2
 			n4.inputs.n_iterations = [200,200,200,200]
 			n4.inputs.convergence_threshold = 1e-11
-			n4.inputs.output_image = 'ss_n4_{}_ofM{}.nii.gz'.format(participant,i)
+			n4.inputs.output_image = 'ss_n4_{}_ofM{}.nii.gz'.format(*subject_participant.values())
 			n4_res = n4.run()
 
 			_n4 = ants.N4BiasFieldCorrection()
@@ -188,7 +200,7 @@ def structural_to_functional_per_participant_test(participant, conditions=["","_
 			_n4.inputs.shrink_factor = 2
 			_n4.inputs.n_iterations = [500,500,500,500]
 			_n4.inputs.convergence_threshold = 1e-14
-			_n4.inputs.output_image = 'ss__n4_{}_ofM{}.nii.gz'.format(participant,i)
+			_n4.inputs.output_image = 'ss__n4_{}_ofM{}.nii.gz'.format(*subject_participant.values())
 			_n4_res = _n4.run()
 
 			#we do this on a separate bias-corrected image to remove hyperintensities which we have to create in order to prevent brain regions being caught by the negative threshold
@@ -240,7 +252,7 @@ def structural_to_functional_per_participant_test(participant, conditions=["","_
 			struct_registration.inputs.num_threads = 6
 
 			struct_registration.inputs.moving_image = struct_mask_res.outputs.out_file
-			struct_registration.inputs.output_warped_image = 's_{}_ofM{}.nii.gz'.format(participant,i)
+			struct_registration.inputs.output_warped_image = 's_{}_ofM{}.nii.gz'.format(*subject_participant.values())
 			struct_registration_res = struct_registration.run()
 
 			warp = ants.ApplyTransforms()
@@ -249,28 +261,35 @@ def structural_to_functional_per_participant_test(participant, conditions=["","_
 			warp.inputs.interpolation = 'Linear'
 			warp.inputs.invert_transform_flags = [False]
 			warp.inputs.terminal_output = 'file'
-			warp.inputs.output_image = '{}_ofM{}.nii.gz'.format(participant,i)
+			warp.inputs.output_image = '{}_ofM{}.nii.gz'.format(*subject_participant.values())
 			warp.num_threads = 6
 
 			warp.inputs.input_image = func_image
 			warp.inputs.transforms = struct_registration_res.outputs.composite_transform
 			warp.run()
 
-def canonical_(participant, conditions=["","_aF","_cF1","_cF2","_pF"],template = "/home/chymera/NIdata/templates/ds_QBI_chr.nii.gz"):
+def canonical_(subjects_participants = [{'subject' : 11, 'session': 'rstFMRI_with_medetadomine'}],
+	conditions=["","_aF","_cF1","_cF2","_pF"],
+	template = "~/GitHub/mriPipeline/templates/waxholm/WHS_SD_rat_T2star_v1.01_downsample3.nii.gz",
+	f_file_format = "~/GitHub/mripipeline/base/preprocessing/generic_work/_subject_session_{subject}.{session}/_scan_type_SE_EPI/f_bru2nii/",
+	s_file_format = "~/GitHub/mripipeline/base/preprocessing/generic_work/_subject_session_{subject}.{session}/_scan_type_T2_TurboRARE/s_bru2nii/",
+	):
+
 	"""Warp a functional image based on the functional-to-structural and the structural-to-template registrations.
 	Currently this approach is failing because the functiona-to-structural registration pushes the brain stem too far down.
 	This may be
 
 	"""
-	for i in conditions:
-		func_image_dir = "/home/chymera/NIdata/ofM.dr/preprocessing/generic_work/_subject_session_{}.ofM{}/_scan_type_7_EPI_CBV/temporal_mean/".format(participant,i)
-		struct_image_dir = "/home/chymera/NIdata/ofM.dr/preprocessing/generic_work/_subject_session_{}.ofM{}/_scan_type_T2_TurboRARE/s_bru2nii/".format(participant,i)
+	template = os.path.expanduser(template)
+	for subject_participant in subjects_participants:
+		func_image_dir = os.path.expanduser(f_file_format.format(**subject_participant))
+		struct_image_dir = os.path.expanduser(s_file_format.format(**subject_participant))
 		try:
 			for myfile in os.listdir(func_image_dir):
-				if myfile.endswith(".nii.gz"):
+				if myfile.endswith((".nii.gz", ".nii")):
 					func_image = os.path.join(func_image_dir,myfile)
 			for myfile in os.listdir(struct_image_dir):
-				if myfile.endswith(".nii"):
+				if myfile.endswith((".nii.gz", ".nii")):
 					struct_image = os.path.join(struct_image_dir,myfile)
 		except FileNotFoundError:
 			pass
@@ -404,21 +423,31 @@ def canonical_(participant, conditions=["","_aF","_cF1","_cF2","_pF"],template =
 			warp.inputs.transforms = [func_registration_res.outputs.composite_transform, struct_registration_res.outputs.composite_transform]
 			warp.run()
 
-def canonical(participant, regdir, f2s, conditions=["","_aF","_cF1","_cF2","_pF"],template = "/home/chymera/NIdata/templates/ds_QBI_chr.nii.gz"):
+
+def canonical_(subjects_participants = [{'subject' : 11, 'session': 'rstFMRI_with_medetadomine'}],
+	conditions=["","_aF","_cF1","_cF2","_pF"],
+	template = "~/GitHub/mriPipeline/templates/waxholm/WHS_SD_rat_T2star_v1.01_downsample3.nii.gz",
+	f_file_format = "~/GitHub/mripipeline/base/preprocessing/generic_work/_subject_session_{subject}.{session}/_scan_type_SE_EPI/f_bru2nii/",
+	s_file_format = "~/GitHub/mripipeline/base/preprocessing/generic_work/_subject_session_{subject}.{session}/_scan_type_T2_TurboRARE/s_bru2nii/",
+	regdir,
+	f2s,
+	):
+
 	"""Warp a functional image based on the functional-to-structural and the structural-to-template registrations.
 	Currently this approach is failing because the functiona-to-structural registration pushes the brain stem too far down.
 	This may be
 
 	"""
-	for i in conditions:
-		func_image_dir = "/home/chymera/NIdata/ofM.dr/preprocessing/composite_work/_subject_session_{}.ofM{}/_scan_type_7_EPI_CBV/temporal_mean/".format(participant,i)
-		struct_image_dir = "/home/chymera/NIdata/ofM.dr/preprocessing/composite_work/_subject_session_{}.ofM{}/_scan_type_T2_TurboRARE/s_bru2nii/".format(participant,i)
+	template = os.path.expanduser(template)
+	for subject_participant in subjects_participants:
+		func_image_dir = os.path.expanduser(f_file_format.format(**subject_participant))
+		struct_image_dir = os.path.expanduser(s_file_format.format(**subject_participant))
 		try:
 			for myfile in os.listdir(func_image_dir):
-				if myfile.endswith(".nii.gz"):
+				if myfile.endswith((".nii.gz", ".nii")):
 					func_image = os.path.join(func_image_dir,myfile)
 			for myfile in os.listdir(struct_image_dir):
-				if myfile.endswith(".nii"):
+				if myfile.endswith((".nii.gz", ".nii")):
 					struct_image = os.path.join(struct_image_dir,myfile)
 		except FileNotFoundError:
 			pass
@@ -566,8 +595,8 @@ if __name__ == '__main__':
 	# structural_to_functional_per_participant_test("4009")
 	# structural_to_functional_per_participant_test("4011")
 	# structural_to_functional_per_participant_test("4007",["_cF2"])
-	canonical("4007","transl","Translation")
-	canonical("4007","rig","Rigid")
+	# canonical("4007","transl","Translation")
+	# canonical("4007","rig","Rigid")
 	# canonical("4007",["_cF2"])
 	# canonical("4001")
 	# structural_per_participant_test("4007",["_cF2"])
@@ -575,3 +604,4 @@ if __name__ == '__main__':
 	# canonical("4009")
 	# canonical("4011")
 	# canonical("4012")
+	structural_to_functional_per_participant_test()

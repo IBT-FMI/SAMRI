@@ -160,17 +160,16 @@ def functional_per_participant_test():
 			registration.inputs.output_warped_image = '{}_ofM{}.nii.gz'.format(participant,i)
 			res = registration.run()
 
-def structural_to_functional_per_participant_test(subjects_participants = [{'subject' : 11, 'session': 'rstFMRI_with_medetadomine'}],
-	conditions=["","_aF","_cF1","_cF2","_pF"],
+def structural_to_functional_per_participant_test(subjects_sessions,
 	template = "~/GitHub/mriPipeline/templates/waxholm/WHS_SD_rat_T2star_v1.01_downsample3.nii.gz",
 	f_file_format = "~/GitHub/mripipeline/base/preprocessing/generic_work/_subject_session_{subject}.{session}/_scan_type_SE_EPI/f_bru2nii/",
 	s_file_format = "~/GitHub/mripipeline/base/preprocessing/generic_work/_subject_session_{subject}.{session}/_scan_type_T2_TurboRARE/s_bru2nii/",
 	):
 
 	template = os.path.expanduser(template)
-	for subject_participant in subjects_participants:
-		func_image_dir = os.path.expanduser(f_file_format.format(**subject_participant))
-		struct_image_dir = os.path.expanduser(s_file_format.format(**subject_participant))
+	for subject_session in subjects_sessions:
+		func_image_dir = os.path.expanduser(f_file_format.format(**subject_session))
+		struct_image_dir = os.path.expanduser(s_file_format.format(**subject_session))
 		try:
 			for myfile in os.listdir(func_image_dir):
 				if myfile.endswith((".nii.gz", ".nii")):
@@ -189,7 +188,7 @@ def structural_to_functional_per_participant_test(subjects_participants = [{'sub
 			n4.inputs.shrink_factor = 2
 			n4.inputs.n_iterations = [200,200,200,200]
 			n4.inputs.convergence_threshold = 1e-11
-			n4.inputs.output_image = 'ss_n4_{}_ofM{}.nii.gz'.format(*subject_participant.values())
+			n4.inputs.output_image = 'ss_n4_{}_ofM{}.nii.gz'.format(*subject_session.values())
 			n4_res = n4.run()
 
 			_n4 = ants.N4BiasFieldCorrection()
@@ -200,7 +199,7 @@ def structural_to_functional_per_participant_test(subjects_participants = [{'sub
 			_n4.inputs.shrink_factor = 2
 			_n4.inputs.n_iterations = [500,500,500,500]
 			_n4.inputs.convergence_threshold = 1e-14
-			_n4.inputs.output_image = 'ss__n4_{}_ofM{}.nii.gz'.format(*subject_participant.values())
+			_n4.inputs.output_image = 'ss__n4_{}_ofM{}.nii.gz'.format(*subject_session.values())
 			_n4_res = _n4.run()
 
 			#we do this on a separate bias-corrected image to remove hyperintensities which we have to create in order to prevent brain regions being caught by the negative threshold
@@ -252,7 +251,7 @@ def structural_to_functional_per_participant_test(subjects_participants = [{'sub
 			struct_registration.inputs.num_threads = 6
 
 			struct_registration.inputs.moving_image = struct_mask_res.outputs.out_file
-			struct_registration.inputs.output_warped_image = 's_{}_ofM{}.nii.gz'.format(*subject_participant.values())
+			struct_registration.inputs.output_warped_image = 's_{}_ofM{}.nii.gz'.format(*subject_session.values())
 			struct_registration_res = struct_registration.run()
 
 			warp = ants.ApplyTransforms()
@@ -261,14 +260,14 @@ def structural_to_functional_per_participant_test(subjects_participants = [{'sub
 			warp.inputs.interpolation = 'Linear'
 			warp.inputs.invert_transform_flags = [False]
 			warp.inputs.terminal_output = 'file'
-			warp.inputs.output_image = '{}_ofM{}.nii.gz'.format(*subject_participant.values())
+			warp.inputs.output_image = '{}_ofM{}.nii.gz'.format(*subject_session.values())
 			warp.num_threads = 6
 
 			warp.inputs.input_image = func_image
 			warp.inputs.transforms = struct_registration_res.outputs.composite_transform
 			warp.run()
 
-def canonical_(subjects_participants = [{'subject' : 11, 'session': 'rstFMRI_with_medetadomine'}],
+def canonical_(subjects_participants,
 	conditions=["","_aF","_cF1","_cF2","_pF"],
 	template = "~/GitHub/mriPipeline/templates/waxholm/WHS_SD_rat_T2star_v1.01_downsample3.nii.gz",
 	f_file_format = "~/GitHub/mripipeline/base/preprocessing/generic_work/_subject_session_{subject}.{session}/_scan_type_SE_EPI/f_bru2nii/",
@@ -424,13 +423,10 @@ def canonical_(subjects_participants = [{'subject' : 11, 'session': 'rstFMRI_wit
 			warp.run()
 
 
-def canonical_(subjects_participants = [{'subject' : 11, 'session': 'rstFMRI_with_medetadomine'}],
-	conditions=["","_aF","_cF1","_cF2","_pF"],
+def canonical(subjects_participants, regdir, f2s,
 	template = "~/GitHub/mriPipeline/templates/waxholm/WHS_SD_rat_T2star_v1.01_downsample3.nii.gz",
 	f_file_format = "~/GitHub/mripipeline/base/preprocessing/generic_work/_subject_session_{subject}.{session}/_scan_type_SE_EPI/f_bru2nii/",
 	s_file_format = "~/GitHub/mripipeline/base/preprocessing/generic_work/_subject_session_{subject}.{session}/_scan_type_T2_TurboRARE/s_bru2nii/",
-	regdir,
-	f2s,
 	):
 
 	"""Warp a functional image based on the functional-to-structural and the structural-to-template registrations.
@@ -604,4 +600,15 @@ if __name__ == '__main__':
 	# canonical("4009")
 	# canonical("4011")
 	# canonical("4012")
-	structural_to_functional_per_participant_test()
+	structural_to_functional_per_participant_test(
+		subjects_sessions = [{'subject' : 4007, 'session': 'ofM_cF2'}],
+		template = "~/NIdata/templates/ds_QBI_chr.nii.gz",
+		f_file_format = "~/NIdata/ofM.dr/preprocessing/composite_work/_subject_session_{subject}.{session}/_scan_type_7_EPI_CBV/f_bru2nii/",
+		s_file_format = "~/NIdata/ofM.dr/preprocessing/composite_work/_subject_session_{subject}.{session}/_scan_type_T2_TurboRARE/s_bru2nii/",
+		)
+	# structural_to_functional_per_participant_test(
+	# 	subjects_participants = [{'subjfect' : 11, 'session': 'rstFMRI_with_medetadomine'}],
+	# 	template = "~/GitHub/mriPipeline/templates/waxholm/WHS_SD_rat_T2star_v1.01_downsample3.nii.gz",
+	# 	f_file_format = "~/GitHub/mripipeline/base/preprocessing/generic_work/_subject_session_{subject}.{session}/_scan_type_SE_EPI/f_bru2nii/",
+	# 	s_file_format = "~/GitHub/mripipeline/base/preprocessing/generic_work/_subject_session_{subject}.{session}/_scan_type_T2_TurboRARE/s_bru2nii/",
+	# 	)

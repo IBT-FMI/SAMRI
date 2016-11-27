@@ -264,7 +264,7 @@ def structural_to_functional_per_participant_test(subjects_sessions,
 			warp.inputs.invert_transform_flags = [False]
 			warp.inputs.terminal_output = 'file'
 			warp.inputs.output_image = '{}_{}_5_functionalWarp.nii.gz'.format(*subject_session.values())
-			warp.num_threads = 6
+			warp.num_threads = num_threads
 
 			warp.inputs.input_image = func_image
 			warp.inputs.transforms = struct_registration_res.outputs.composite_transform

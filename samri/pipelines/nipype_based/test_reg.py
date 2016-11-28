@@ -189,7 +189,7 @@ def structural_to_functional_per_participant_test(subjects_sessions,
 			n4.inputs.shrink_factor = 2
 			n4.inputs.n_iterations = [200,200,200,200]
 			n4.inputs.convergence_threshold = 1e-11
-			n4.inputs.output_image = '{}_{}_1_biasCorrection_fast.nii.gz'.format(*subject_session.values())
+			n4.inputs.output_image = '{}_{}_1_biasCorrection_forRegistration.nii.gz'.format(*subject_session.values())
 			n4_res = n4.run()
 
 			_n4 = ants.N4BiasFieldCorrection()
@@ -200,7 +200,7 @@ def structural_to_functional_per_participant_test(subjects_sessions,
 			_n4.inputs.shrink_factor = 2
 			_n4.inputs.n_iterations = [500,500,500,500]
 			_n4.inputs.convergence_threshold = 1e-14
-			_n4.inputs.output_image = '{}_{}_1_biasCorrection_slow.nii.gz'.format(*subject_session.values())
+			_n4.inputs.output_image = '{}_{}_1_biasCorrection_forMasking.nii.gz'.format(*subject_session.values())
 			_n4_res = _n4.run()
 
 			#we do this on a separate bias-corrected image to remove hyperintensities which we have to create in order to prevent brain regions being caught by the negative threshold

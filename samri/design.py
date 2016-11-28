@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 import numpy as np
 from scipy import stats, signal
 import matplotlib.pyplot as plt
@@ -63,16 +65,20 @@ def plot_design(
 
 	ax[0,0].plot(range(len(irf)), irf, irfcolor, lw=3, alpha=0.8, label='gamma pdf')
 	ax[0,0].yaxis.get_major_formatter().set_powerlimits((0, 1))
+	ax[0,0].set_xlabel("time [s]")
+	ax[0,0].set_title("IRF", color=irfcolor)
 
 	ax[0,1].plot(x, design, stimcolor, lw=3, alpha=0.8, label='gamma pdf')
 	plt.setp(ax[0,1].xaxis.get_majorticklabels(), rotation=30, ha="right")
+	ax[0,1].set_title("Stimulaton", color=stimcolor)
 
 	ax[0,2].plot(x, convoluted, regressorcolor, lw=3, alpha=0.8, label='gamma pdf')
 	plt.setp(ax[0,2].xaxis.get_majorticklabels(), rotation=30, ha="right")
+	ax[0,2].set_title(u"Stimulation × IRF", color=regressorcolor)
 
 	ax[0,3].plot(x, filtered, regressorcolor, lw=3, alpha=0.8, label='gamma pdf')
 	plt.setp(ax[0,3].xaxis.get_majorticklabels(), rotation=30, ha="right")
-	ax[0,3].annotate('[s]', xy=(1,0), xytext=(3, -mpl.rcParams['xtick.major.pad']+15), ha='left', va='top', xycoords='axes fraction', textcoords='offset points')
+	ax[0,3].set_title(u"Stimulation × IRF × highpass", color=regressorcolor)
 
 	f_design, Pxx_den_design = signal.periodogram(design, 1, "barthann")
 	ax[1,1].plot(f_design, Pxx_den_design, stimcolor, lw=2, alpha=0.5, label='gamma pdf')
@@ -84,6 +90,7 @@ def plot_design(
 	ax[1,0].set_xscale("log")
 	ax[1,0].yaxis.get_major_formatter().set_powerlimits((0, 1))
 	ax[1,0].set_xlim(ax[1,1].get_xlim())
+	ax[1,0].set_xlabel("frequency [Hz]")
 
 	f_convoluted, Pxx_den_convoluted = signal.periodogram(convoluted, 1, "barthann")
 	ax[1,2].plot(f_convoluted, Pxx_den_convoluted, regressorcolor, lw=2, alpha=0.5, label='gamma pdf')
@@ -92,7 +99,6 @@ def plot_design(
 	f_filtered, Pxx_den_filtered = signal.periodogram(filtered, 1, "barthann")
 	ax[1,3].plot(f_filtered, Pxx_den_filtered, regressorcolor, lw=2, alpha=0.5, label='gamma pdf')
 	ax[1,3].set_xscale("log")
-	ax[1,3].annotate('[Hz]', xy=(1,0), xytext=(3, -mpl.rcParams['xtick.major.pad']+15), ha='left', va='top', xycoords='axes fraction', textcoords='offset points')
 
 	resulting_power = get_power(Pxx_den_convoluted, f_convoluted, highpass)
 	print(initial_power, resulting_power, initial_power-resulting_power)

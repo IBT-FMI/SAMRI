@@ -120,9 +120,3 @@ def get_power(Pxx_den, f, highpass=0):
 			break
 	power = np.sum(Pxx_den[highpass_ix:])
 	return power
-
-if __name__ == '__main__':
-	irf = get_irf()
-	print(period_padded_period_filtered(irf, 8, 20, 150))
-	# print(period_padded_period_filtered(irf, 6, 20, 180))
-	plt.show()

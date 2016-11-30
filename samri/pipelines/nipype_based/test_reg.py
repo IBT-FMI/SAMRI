@@ -161,9 +161,10 @@ def functional_per_participant_test():
 			res = registration.run()
 
 def structural_to_functional_per_participant_test(subjects_sessions,
-	template = "~/GitHub/mriPipeline/templates/waxholm/WHS_SD_rat_T2star_v1.01_downsample3.nii.gz",
+	template = "~/GitHub/mriPipeline/templates/waxholm/new/WHS_SD_masked.nii.gz",
 	f_file_format = "~/GitHub/mripipeline/base/preprocessing/generic_work/_subject_session_{subject}.{session}/_scan_type_SE_EPI/f_bru2nii/",
 	s_file_format = "~/GitHub/mripipeline/base/preprocessing/generic_work/_subject_session_{subject}.{session}/_scan_type_T2_TurboRARE/s_bru2nii/",
+	num_threads = 3,
 	):
 
 	template = os.path.expanduser(template)
@@ -188,7 +189,7 @@ def structural_to_functional_per_participant_test(subjects_sessions,
 			n4.inputs.shrink_factor = 2
 			n4.inputs.n_iterations = [200,200,200,200]
 			n4.inputs.convergence_threshold = 1e-11
-			n4.inputs.output_image = 'ss_n4_{}_ofM{}.nii.gz'.format(*subject_session.values())
+			n4.inputs.output_image = '{}_{}_1_biasCorrection_forRegistration.nii.gz'.format(*subject_session.values())
 			n4_res = n4.run()
 
 			_n4 = ants.N4BiasFieldCorrection()
@@ -199,7 +200,7 @@ def structural_to_functional_per_participant_test(subjects_sessions,
 			_n4.inputs.shrink_factor = 2
 			_n4.inputs.n_iterations = [500,500,500,500]
 			_n4.inputs.convergence_threshold = 1e-14
-			_n4.inputs.output_image = 'ss__n4_{}_ofM{}.nii.gz'.format(*subject_session.values())
+			_n4.inputs.output_image = '{}_{}_1_biasCorrection_forMasking.nii.gz'.format(*subject_session.values())
 			_n4_res = _n4.run()
 
 			#we do this on a separate bias-corrected image to remove hyperintensities which we have to create in order to prevent brain regions being caught by the negative threshold
@@ -213,12 +214,14 @@ def structural_to_functional_per_participant_test(subjects_sessions,
 			struct_BET.inputs.frac = 0.3
 			struct_BET.inputs.robust = True
 			struct_BET.inputs.in_file = struct_cutoff_res.outputs.out_file
+			struct_BET.inputs.out_file = '{}_{}_2_brainExtraction.nii.gz'.format(*subject_session.values())
 			struct_BET_res = struct_BET.run()
 
 			# we need/can not apply a fill, because the "holes" if any, will be at the rostral edge (touching it, and thus not counting as holes)
 			struct_mask = ApplyMask()
 			struct_mask.inputs.in_file = n4_res.outputs.output_image
 			struct_mask.inputs.mask_file = struct_BET_res.outputs.mask_file
+			struct_mask.inputs.out_file = '{}_{}_3_brainMasked.nii.gz'.format(*subject_session.values())
 			struct_mask_res = struct_mask.run()
 
 			struct_registration = ants.Registration()
@@ -248,10 +251,10 @@ def structural_to_functional_per_participant_test(subjects_sessions,
 			struct_registration.inputs.winsorize_lower_quantile = 0.005
 			struct_registration.inputs.winsorize_upper_quantile = 0.98
 			struct_registration.inputs.args = '--float'
-			struct_registration.inputs.num_threads = 6
+			struct_registration.inputs.num_threads = num_threads
 
 			struct_registration.inputs.moving_image = struct_mask_res.outputs.out_file
-			struct_registration.inputs.output_warped_image = 's_{}_ofM{}.nii.gz'.format(*subject_session.values())
+			struct_registration.inputs.output_warped_image = '{}_{}_4_structuralRegistration.nii.gz'.format(*subject_session.values())
 			struct_registration_res = struct_registration.run()
 
 			warp = ants.ApplyTransforms()
@@ -260,8 +263,8 @@ def structural_to_functional_per_participant_test(subjects_sessions,
 			warp.inputs.interpolation = 'Linear'
 			warp.inputs.invert_transform_flags = [False]
 			warp.inputs.terminal_output = 'file'
-			warp.inputs.output_image = '{}_ofM{}.nii.gz'.format(*subject_session.values())
-			warp.num_threads = 6
+			warp.inputs.output_image = '{}_{}_5_functionalWarp.nii.gz'.format(*subject_session.values())
+			warp.num_threads = num_threads
 
 			warp.inputs.input_image = func_image
 			warp.inputs.transforms = struct_registration_res.outputs.composite_transform
@@ -600,12 +603,13 @@ if __name__ == '__main__':
 	# canonical("4009")
 	# canonical("4011")
 	# canonical("4012")
-	structural_to_functional_per_participant_test(
-		subjects_sessions = [{'subject' : 4007, 'session': 'ofM_cF2'}],
-		template = "~/NIdata/templates/ds_QBI_chr.nii.gz",
-		f_file_format = "~/NIdata/ofM.dr/preprocessing/composite_work/_subject_session_{subject}.{session}/_scan_type_7_EPI_CBV/f_bru2nii/",
-		s_file_format = "~/NIdata/ofM.dr/preprocessing/composite_work/_subject_session_{subject}.{session}/_scan_type_T2_TurboRARE/s_bru2nii/",
-		)
+	# structural_to_functional_per_participant_test(
+	# 	subjects_sessions = [{'subject' : 4007, 'session': 'ofM_cF2'}],
+	# 	template = "~/NIdata/templates/ds_QBI_chr.nii.gz",
+	# 	f_file_format = "~/NIdata/ofM.dr/preprocessing/composite_work/_subject_session_{subject}.{session}/_scan_type_7_EPI_CBV/f_bru2nii/",
+	# 	s_file_format = "~/NIdata/ofM.dr/preprocessing/composite_work/_subject_session_{subject}.{session}/_scan_type_T2_TurboRARE/s_bru2nii/",
+	# 	)
+	structural_to_functional_per_participant_test(subjects_sessions = [{'subject' : 11, 'session': 'rstFMRI_with_medetadomine'}])
 	# structural_to_functional_per_participant_test(
 	# 	subjects_participants = [{'subjfect' : 11, 'session': 'rstFMRI_with_medetadomine'}],
 	# 	template = "~/GitHub/mriPipeline/templates/waxholm/WHS_SD_rat_T2star_v1.01_downsample3.nii.gz",

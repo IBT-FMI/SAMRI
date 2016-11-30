@@ -20,21 +20,27 @@ def get_irf():
 
 	return irf/irf.sum()
 
-def bandpass_firwin(ntaps, lowcut, highcut, fs, window='hamming'):
-	nyq = 0.5 * fs
-	taps = signal.firwin(ntaps, [lowcut, highcut], nyq=nyq, pass_zero=False,
-				  window=window, scale=False)
-	return taps
-
 def butter_highpass(cutoff, fs, order=5):
 	nyq = 0.5 * fs
 	normal_cutoff = cutoff / nyq
 	b, a = signal.butter(order, normal_cutoff, btype='high', analog=False)
+
 	return b, a
+
 def butter_highpass_filter(data, cutoff, fs, order=5):
 	b, a = butter_highpass(cutoff, fs, order=order)
 	y = signal.filtfilt(b, a, data)
+
 	return y
+
+def period_padded_period_filtered(irf, reps=8, stim=20, period=150, extra_padding=[42,0]):
+	initial_power, resulting_power, power_loss, percent_loss = plot_design(irf, reps, stim, period,
+		period+extra_padding[0],
+		period+extra_padding[1],
+		highpass=1./(2*period),
+		)
+
+	return initial_power, resulting_power, power_loss, percent_loss
 
 def plot_design(
 	irf,
@@ -63,27 +69,26 @@ def plot_design(
 
 	fig, ax = plt.subplots(2, 4, figsize=(15,8))
 
-	ax[0,0].plot(range(len(irf)), irf, irfcolor, lw=3, alpha=0.8, label='gamma pdf')
+	ax[0,0].plot(range(len(irf)), irf, irfcolor, lw=2, alpha=0.8, label='gamma pdf')
 	ax[0,0].yaxis.get_major_formatter().set_powerlimits((0, 1))
 	ax[0,0].set_xlabel("time [s]")
 	ax[0,0].set_title("IRF", color=irfcolor)
 
-	ax[0,1].plot(x, design, stimcolor, lw=3, alpha=0.8, label='gamma pdf')
+	ax[0,1].plot(x, design, stimcolor, lw=2, alpha=0.8, label='gamma pdf')
 	plt.setp(ax[0,1].xaxis.get_majorticklabels(), rotation=30, ha="right")
 	ax[0,1].set_title("Stimulaton", color=stimcolor)
 
-	ax[0,2].plot(x, convoluted, regressorcolor, lw=3, alpha=0.8, label='gamma pdf')
+	ax[0,2].plot(x, convoluted, regressorcolor, lw=2, alpha=0.8, label='gamma pdf')
 	plt.setp(ax[0,2].xaxis.get_majorticklabels(), rotation=30, ha="right")
 	ax[0,2].set_title(u"Stimulation × IRF", color=regressorcolor)
 
-	ax[0,3].plot(x, filtered, regressorcolor, lw=3, alpha=0.8, label='gamma pdf')
+	ax[0,3].plot(x, filtered, regressorcolor, lw=2, alpha=0.8, label='gamma pdf')
 	plt.setp(ax[0,3].xaxis.get_majorticklabels(), rotation=30, ha="right")
 	ax[0,3].set_title(u"Stimulation × IRF × highpass", color=regressorcolor)
 
 	f_design, Pxx_den_design = signal.periodogram(design, 1, "barthann")
 	ax[1,1].plot(f_design, Pxx_den_design, stimcolor, lw=2, alpha=0.5, label='gamma pdf')
 	ax[1,1].set_xscale("log")
-	initial_power = get_power(Pxx_den_design, f_design, highpass)
 
 	f_irf, Pxx_den_irf = signal.periodogram(irf, 1, "barthann")
 	ax[1,0].plot(f_irf, Pxx_den_irf, irfcolor, lw=2, alpha=0.5, label='gamma pdf')
@@ -100,8 +105,12 @@ def plot_design(
 	ax[1,3].plot(f_filtered, Pxx_den_filtered, regressorcolor, lw=2, alpha=0.5, label='gamma pdf')
 	ax[1,3].set_xscale("log")
 
-	resulting_power = get_power(Pxx_den_convoluted, f_convoluted, highpass)
-	print(initial_power, resulting_power, initial_power-resulting_power)
+	initial_power = get_power(Pxx_den_design, f_design)
+	resulting_power = get_power(Pxx_den_filtered, f_filtered)
+	power_loss = initial_power-resulting_power
+	percent_loss = power_loss/initial_power
+
+	return initial_power, resulting_power, power_loss, percent_loss
 
 def get_power(Pxx_den, f, highpass=0):
 	highpass_ix = 0
@@ -114,5 +123,6 @@ def get_power(Pxx_den, f, highpass=0):
 
 if __name__ == '__main__':
 	irf = get_irf()
-	plot_design(irf)
+	print(period_padded_period_filtered(irf, 8, 20, 150))
+	# print(period_padded_period_filtered(irf, 6, 20, 180))
 	plt.show()

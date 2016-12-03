@@ -6,9 +6,14 @@ import numpy as np
 from nilearn.input_data import NiftiLabelsMasker, NiftiMapsMasker
 import nipype.interfaces.io as nio
 
+from matplotlib import rcParams
+
 import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
+
+plt.style.use(u"seaborn-darkgrid")
 plt.style.use('ggplot')
+
 
 def plot_timecourses(parcellation="/home/chymera/NIdata/templates/roi/ds_QBI_vze_chr.nii.gz", condition=["ERC_ofM"], subject=["5502"], scan_type=["EPI_CBV_alej"]):
 	datasource = nio.DataGrabber(infields=["condition","subject","scan_type"], outfields=["nii_data", "delay_file", "stimulation_file"], sort_filelist = True)
@@ -80,11 +85,20 @@ def plot_stim_design(file_path,stim):
 	plt.tick_params(axis='x', which='both', bottom='off', top='off', left='off', right='off')
 	plt.tick_params(axis='y', which='both', bottom='off', top='off', left='off', right='off')
 
-def roi_based(roi="/home/chymera/NIdata/templates/roi/ctx_chr.nii.gz", subject=4007, session="ofM_cF2", scan="7_EPI_CBV", workflows=["generic"], warp_name="", melodic_hit=""):
+def roi_based(
+	roi="/home/chymera/NIdata/templates/roi/ctx_chr.nii.gz",
+	roi_parcel=0,
+	subject=4007,
+	session="ofM_cF2",
+	scan="7_EPI_CBV",
+	workflows=["generic"],
+	warp_name="",
+	melodic_hit="",
+	):
 
 	roi = "/home/chymera/NIdata/templates/roi/{}_chr.nii.gz".format(roi)
 	masker = NiftiLabelsMasker(labels_img=roi, standardize=True, memory='nilearn_cache', verbose=5)
-	parcel=0
+	roi_parcel=0
 
 	events_file = "/home/chymera/NIdata/ofM.dr/preprocessing/{0}/sub-{1}/ses-{2}/func/sub-{1}_ses-{2}_trial-{3}_events.tsv".format(workflows[0], subject, session, scan)
 
@@ -104,11 +118,11 @@ def roi_based(roi="/home/chymera/NIdata/templates/roi/ctx_chr.nii.gz", subject=4
 	for workflow in workflows:
 		final_timecourse_file = "/home/chymera/NIdata/ofM.dr/preprocessing/{0}/sub-{1}/ses-{2}/func/sub-{1}_ses-{2}_trial-{3}.nii.gz".format(workflow, subject, session, scan)
 		final_time_series = masker.fit_transform(final_timecourse_file).T
-		plt.plot(final_time_series[parcel])
+		plt.plot(final_time_series[roi_parcel])
 	if warp_name:
 		timecourse_file = "/home/chymera/NIdata/ofM.dr/preprocessing/{4}_work/_subject_condition_{0}.{1}/_scan_type_T2_TurboRARE/_scan_type_{2}/f_warp/{3}".format(subject, session, scan, warp_name, workflow)
 		time_series = masker.fit_transform(timecourse_file).T
-		plt.plot(time_series[parcel])
+		plt.plot(time_series[roi_parcel])
 	fsl_design = "/home/chymera/NIdata/ofM.dr/l1/{0}_work/_subject_session_scan_{1}.{2}.7_EPI_CBV/modelgen/run0.mat".format(workflow,subject,session)
 	# fsl_design = "/home/chymera/NIdata/ofM.dr/l1/generic_work/_subject_session_scan_{0}.{1}.{2}/modelgen/run0.mat".format(subject, session, scan)
 	fsl_design_df = pd.read_csv(fsl_design, skiprows=5, sep="\t", header=None, index_col=False)
@@ -119,7 +133,6 @@ def roi_based(roi="/home/chymera/NIdata/templates/roi/ctx_chr.nii.gz", subject=4
 	# plt.show()
 
 if __name__ == '__main__':
-	# plot_nii("/home/chymera/FSL_GLM_work/GLM/_measurement_id_20151103_213035_4001_1_1/functional_cutoff/6_restore_maths.nii.gz", (-50,20))
 	# plot_fsl_design("/home/chymera/NIdata/ofM.dr/level1/first_level/_condition_ofM_subject_4001/modelgen/run0.mat")
 	# stim = {"durations":[[20.0], [20.0], [20.0], [20.0], [20.0], [20.0]], "onsets":[[172.44299999999998], [352.443], [532.443], [712.443], [892.443], [1072.443]]}
 	# plot_stim_design("/home/chymera/level1/first_level/_condition_ERC_ofM_subject_5503/_scan_type_T2_TurboRARE/_scan_type_EPI_CBV_alej/modelgen/run0.mat",stim)
@@ -128,19 +141,10 @@ if __name__ == '__main__':
 		# "/home/chymera/report_dg.rst"
 		# )
 
-	# from itertools import product
-	# for i,j in product(["level2_dgamma_blurxy56","level2_dgamma_blurxy56n"],["ofM","ofM_aF","ofM_cF1","ofM_cF2","ofM_pF"]):
-	# 	plot_stat_map(stat_map="/home/chymera/NIdata/ofM.dr/GLM/"+i+"/_category_multi_"+j+"/flameo/mapflow/_flameo0/stats/tstat1.nii.gz", cbv=True, save_as="/home/chymera/"+i+"_"+j+".png", cut_coords=(-50,8,45))
-
-	# for i in ["ofM","ofM_aF","ofM_cF1","ofM_cF2","ofM_pF"]:
-	# 	plot_stat_map(stat_map="/home/chymera/NIdata/ofM.dr/GLM/level2_dgamma_blurxy56/_category_multi_"+i+"/flameo/mapflow/_flameo0/stats/tstat1.nii.gz", cbv=True, save_as="/home/chymera/"+i+".pdf", cut_coords=(-49,8,43), threshold=3)
-
-	# plot_stat_map("/home/chymera/NIdata/ofM.dr/GLM/level2_dgamma_blurxy56/_category_multi_ofM_cF2/flameo/mapflow/_flameo0/stats/tstat1.nii.gz", cbv=True, save_as="/home/chymera/ofM_cF2.pdf", cut_coords=(-49,8,43), threshold=3, interpolation="gaussian")
-
+	roi_based(subject=4007, roi="f_dr", workflows=["composite"])
 	# roi_based(subject=4007, warp_name="corr_10_trans.nii.gz", melodic_hit=5)
 	# roi_based(subject=4007, roi="dr", workflows=["generic"], melodic_hit=5)
 	# roi_based(subject=4001, roi="dr", workflows=["generic"])
-	roi_based(subject=4007, roi="f_dr", workflows=["composite"])
 	# roi_based(subject=4007, workflows=["norealign"], melodic_hit=5, warp_name="10_trans.nii")
 	# roi_based(subject=4012, workflows=["norealign","generic"], melodic_hit=5)
 	# roi_based(subject=4012, session="ofM_cF1", workflows=["norealign","generic"])

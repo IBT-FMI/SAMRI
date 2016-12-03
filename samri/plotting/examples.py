@@ -1,6 +1,6 @@
 import matplotlib.pyplot as plt
 
-import maps, timeseries, summary, network
+import maps, timeseries, summary
 
 def responder_overview(workflow="subjectwise",cut_coords=[None], threshold=2.5):
 	"""Test te per-animal signal across sessions. 4001 is a negative control (transgene but no injection)"""
@@ -57,6 +57,6 @@ if __name__ == '__main__':
 	# session_overview("responders")
 	# network.simple_dr(output="~/ntw1.png", graphsize=800)
 	# roi_per_session("composite", "ctx", "#56B4E9")
-	roi_per_session("composite", "f_dr", "#E69F00")
-	# p_clusters()
+	# roi_per_session("composite", "f_dr", "#E69F00")
+	p_clusters()
 	# check_responders()

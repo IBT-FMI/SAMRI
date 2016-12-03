@@ -38,7 +38,9 @@ def roi_per_session(l1_dir, roi, color):
 	plt.show()
 
 def p_clusters():
-	summary.fc_per_session(["ofM","ofM_aF","ofM_cF1","ofM_cF2","ofM_pF"],[4007,4008,4009,4011,4012],"composite", l1_dir="composite_dr", l1_workdir="composite_work", p_level=0.05, figure="timecourses")
+	substitutions = summary.bids_substitution_iterator(["ofM","ofM_aF","ofM_cF1","ofM_cF2","ofM_pF"],[4007,4008,4009,4011,4012],["7_EPI_CBV"],"composite", l1_dir="composite_dr", l1_workdir="composite_work")
+	timecourses, designs, stat_maps, subplot_titles = summary.p_filtered_ts(substitutions, p_level=0.05)
+	timeseries.multi(timecourses, designs, stat_maps, subplot_titles, figure="timecourses")
 	plt.show()
 
 def check_responders():

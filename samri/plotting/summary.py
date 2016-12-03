@@ -9,6 +9,9 @@ import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
 from nilearn.input_data import NiftiMasker
+
+import matplotlib.gridspec as gridspec
+
 sns.set_style("white", {'legend.frameon': True})
 plt.style.use('ggplot')
 
@@ -161,76 +164,92 @@ def responders(l2_dir,
 			df_ = pd.DataFrame(voxel_data, index=[None])
 			voxeldf = pd.concat([voxeldf,df_])
 
-def fc_per_session(sessions, subjects, preprocessing_dir,
-	l1_dir = None,
-	l1_workdir = None,
-	legend_loc="best",
-	roi="f_dr",
-	figure="maps",
-	p_level=0.1,
+def bids_substitution_iterator(sessions, subjects, scans, preproc_dir,
+	l1_dir=None,
+	l1_workdir=None,
 	):
-
+	"""A convenience layer to the SAMRI data structure"""
 	if not l1_dir:
 		l1_dir = preprocessing_dir
 	if not l1_workdir:
 		l1_workdir = l1_dir+"_work"
+	substitutions=[]
+	for subject, session, scan in product(subjects, sessions, scans):
+		substitution={}
+		substitution["subject"] = subject
+		substitution["session"] = session
+		substitution["scan"] = scan
+		substitution["preproc_dir"] = preproc_dir
+		substitution["l1_dir"] = l1_dir
+		substitution["l1_workdir"] = l1_workdir
+		substitutions.append(substitution)
+	return substitutions
+
+def p_filtering(substitution, ts_file_template, beta_file_template, p_file_template, design_file_template, p_level):
+	ts_file = os.path.expanduser(ts_file_template.format(**substitution))
+	beta_file = os.path.expanduser(beta_file_template.format(**substitution))
+	p_file = os.path.expanduser(p_file_template.format(**substitution))
+	design_file = os.path.expanduser(design_file_template.format(**substitution))
+	try:
+		img = nib.load(p_file)
+	except (FileNotFoundError, nib.py3k.FileNotFoundError):
+		return None,None,None,None
+	data = img.get_data()
+	header = img.header
+	affine = img.affine
+	shape = data.shape
+	data = data.flatten()
+	# print(np.count_nonzero(data))
+	nonzeros = np.nonzero(data)
+	_, nonzero_data, _, _ = multipletests(data[nonzeros], p_level, method="fdr_bh")
+	nonzero_mask = deepcopy(nonzero_data)
+	nonzero_mask[nonzero_data <= p_level] = 1
+	nonzero_mask[nonzero_data > p_level] = 0
+	data[nonzeros] = nonzero_mask
+	data = data.reshape(shape)
+	# print(np.count_nonzero(data))
+	img = nib.Nifti1Image(data, affine, header)
+	p_masker = NiftiMasker(mask_img=img)
+	try:
+		timecourse = p_masker.fit_transform(ts_file).T
+		betas = p_masker.fit_transform(beta_file).T
+	except ValueError:
+		return None,None,None,None
+	subplot_title = "\n ".join([str(substitution["subject"]),str(substitution["session"])])
+	timecourse = np.mean(timecourse, axis=0)
+	design = pd.read_csv(design_file, skiprows=5, sep="\t", header=None, index_col=False)
+	design = design*np.mean(betas)
+	return timecourse, design, img, subplot_title
+
+def p_filtered_ts(substitutions,
+	legend_loc="best",
+	ts_file_template="~/NIdata/ofM.dr/preprocessing/{preproc_dir}/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_trial-{scan}.nii.gz",
+	beta_file_template="~/NIdata/ofM.dr/l1/{l1_dir}/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_trial-{scan}_cope.nii.gz",
+	p_file_template="~/NIdata/ofM.dr/l1/{l1_dir}/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_trial-{scan}_pstat.nii.gz",
+	design_file_template="~/NIdata/ofM.dr/l1/{l1_workdir}/_subject_session_scan_{subject}.{session}.{scan}/modelgen/run0.mat",
+	p_level=0.1,
+	):
 
 	df = pd.DataFrame({})
 	timecourses = []
 	stat_maps = []
 	subplot_titles = []
 	designs = []
-	roi_path = "/home/chymera/NIdata/templates/roi/{}_chr.nii.gz".format(roi)
-	# masker = NiftiMasker(mask_img=roi_path, standardize=True)
-	for subject, session in product(subjects, sessions):
-		data={}
-		timecourse_file = "/home/chymera/NIdata/ofM.dr/preprocessing/{2}/sub-{0}/ses-{1}/func/sub-{0}_ses-{1}_trial-7_EPI_CBV.nii.gz".format(subject,session,preprocessing_dir)
-		cope_file = "/home/chymera/NIdata/ofM.dr/l1/{2}/sub-{0}/ses-{1}/sub-{0}_ses-{1}_trial-7_EPI_CBV_cope.nii.gz".format(subject,session,l1_dir)
-		session_participant_file = "/home/chymera/NIdata/ofM.dr/l1/{2}/sub-{0}/ses-{1}/sub-{0}_ses-{1}_trial-7_EPI_CBV_pstat.nii.gz".format(subject,session,l1_dir)
-		design_file = "/home/chymera/NIdata/ofM.dr/l1/{0}/_subject_session_scan_{1}.{2}.7_EPI_CBV/modelgen/run0.mat".format(l1_workdir,subject,session)
-		try:
-			img = nib.load(session_participant_file)
-		except (FileNotFoundError, nib.py3k.FileNotFoundError):
-			break
-		else:
-			data = img.get_data()
-			header = img.header
-			affine = img.affine
-			shape = data.shape
-			data = data.flatten()
-			print(np.count_nonzero(data))
-			nonzeros = np.nonzero(data)
-			_, nonzero_data, _, _ = multipletests(data[nonzeros], p_level, method="fdr_bh")
-			nonzero_mask = deepcopy(nonzero_data)
-			nonzero_mask[nonzero_data <= p_level] = 1
-			nonzero_mask[nonzero_data > p_level] = 0
-			data[nonzeros] = nonzero_mask
-			data = data.reshape(shape)
-			print(np.count_nonzero(data))
-			img = nib.Nifti1Image(data, affine, header)
-		p_masker = NiftiMasker(mask_img=img)
-		try:
-			timecourse = p_masker.fit_transform(timecourse_file).T
-			betas = p_masker.fit_transform(cope_file).T
-		except ValueError:
-			continue
-		subplot_titles.append(" ".join([str(subject),str(session)]))
-		timecourses.append(timecourse)
-		design = pd.read_csv(design_file, skiprows=5, sep="\t", header=None, index_col=False)
-		design = design*np.mean(betas)
-		designs.append(design)
-		stat_maps.append(img)
 
-	if figure == "maps":
-		maps.stat(stat_maps, template="~/NIdata/templates/ds_QBI_chr.nii.gz", threshold=0.1, interpolation="gaussian", subplot_titles=subplot_titles)
-	elif figure == "timecourses":
-		ncols = 2
-		#we use inverse floor division to get the ceiling
-		nrows = -(-len(timecourses)//2)
-		fig, axes = plt.subplots(figsize=(8*nrows,7*ncols), facecolor='#eeeeee', nrows=nrows, ncols=ncols)
-		for ix, timecourse in enumerate(timecourses):
-			row = -(-(ix+1) // 2)
-			col = (ix+1) // row
-			ax = axes[row-1][col-1]
-			ax.plot(np.mean(timecourses[ix], axis=0))
-			ax.plot(designs[ix][[0]])
+	n_jobs = mp.cpu_count()-2
+	substitutions_data = Parallel(n_jobs=n_jobs, verbose=0, backend="threading")(map(delayed(p_filtering),
+		substitutions,
+		[ts_file_template]*len(substitutions),
+		[beta_file_template]*len(substitutions),
+		[p_file_template]*len(substitutions),
+		[design_file_template]*len(substitutions),
+		[p_level]*len(substitutions),
+		))
+	timecourses, designs, stat_maps, subplot_titles = zip(*substitutions_data)
+
+	timecourses = [x for x in timecourses if x is not None]
+	designs = [x for x in designs if x is not None]
+	stat_maps = [x for x in stat_maps if x is not None]
+	subplot_titles = [x for x in subplot_titles if x is not None]
+
+	return timecourses, designs, stat_maps, subplot_titles

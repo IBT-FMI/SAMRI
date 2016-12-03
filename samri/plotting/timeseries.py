@@ -85,52 +85,56 @@ def plot_stim_design(file_path,stim):
 	plt.tick_params(axis='x', which='both', bottom='off', top='off', left='off', right='off')
 	plt.tick_params(axis='y', which='both', bottom='off', top='off', left='off', right='off')
 
-def roi_based(
-	roi="/home/chymera/NIdata/templates/roi/ctx_chr.nii.gz",
+def roi_based(substitutions,
+	beta_file_template=None,
+	events_file_template=None,
+	ts_file_template=None,
+	design_file_template=None,
+	roi=None,
 	roi_parcel=0,
 	subject=4007,
 	session="ofM_cF2",
 	scan="7_EPI_CBV",
 	workflows=["generic"],
-	warp_name="",
-	melodic_hit="",
+	melodic_hit=None,
 	):
 
-	roi = "/home/chymera/NIdata/templates/roi/{}_chr.nii.gz".format(roi)
-	masker = NiftiLabelsMasker(labels_img=roi, standardize=True, memory='nilearn_cache', verbose=5)
-	roi_parcel=0
-
-	events_file = "/home/chymera/NIdata/ofM.dr/preprocessing/{0}/sub-{1}/ses-{2}/func/sub-{1}_ses-{2}_trial-{3}_events.tsv".format(workflows[0], subject, session, scan)
-
-	events_df = pd.read_csv(events_file, sep="\t")
-
 	fig, ax = plt.subplots(figsize=(6,4) , facecolor='#eeeeee', tight_layout=True)
-	for d, o in zip(events_df["duration"], events_df["onset"]):
-		d = round(d)
-		o = round(o)
-		ax.axvspan(o,o+d, facecolor="cyan", alpha=0.15)
-		plt.hold(True)
+
+	if roi:
+		roi = os.path.expanduser(roi)
+		masker = NiftiLabelsMasker(labels_img=roi, standardize=True, memory='nilearn_cache', verbose=5)
+		if ts_file_template:
+			ts_file = os.path.expanduser(ts_file_template.format(**substitutions))
+			final_time_series = masker.fit_transform(ts_file).T
+			plt.plot(final_time_series[roi_parcel])
+
+	if design_file_template:
+		design_file = os.path.expanduser(design_file_template.format(**substitutions))
+		design_df = pd.read_csv(design_file, skiprows=5, sep="\t", header=None, index_col=False)
+		# design_df = design_df/design_df.max()
+		if beta_file_template:
+			beta_file = os.path.expanduser(beta_file_template.format(**substitutions))
+			roi_beta = masker.fit_transform(beta_file).T
+			design_df = design_df*roi_beta
+		print(design_df)
+		plt.plot(design_df[[0,1,2]], lw=2)
+
+	if events_file_template:
+		events_file = os.path.expanduser(events_file_template.format(**substitutions))
+		events_df = pd.read_csv(events_file, sep="\t")
+		for d, o in zip(events_df["duration"], events_df["onset"]):
+			d = round(d)
+			o = round(o)
+			ax.axvspan(o,o+d, facecolor="cyan", alpha=0.15)
+			plt.hold(True)
+
 	if melodic_hit:
 		melodic_file = "/home/chymera/NIdata/ofM.dr/20151208_182500_4007_1_4/melo10/report/t4.txt"
-		# melodic_file = "/home/chymera/NIdata/ofM.dr/DIAGNOSTIC/{1}/MELODIC_reports/_condition_ofM_cF2_subject_{0}/_scan_type_{2}/report/t{3}.txt".format(subject, session, scan, melodic_hit)
 		melodic = np.loadtxt(melodic_file)
 		plt.plot(melodic)
-	for workflow in workflows:
-		final_timecourse_file = "/home/chymera/NIdata/ofM.dr/preprocessing/{0}/sub-{1}/ses-{2}/func/sub-{1}_ses-{2}_trial-{3}.nii.gz".format(workflow, subject, session, scan)
-		final_time_series = masker.fit_transform(final_timecourse_file).T
-		plt.plot(final_time_series[roi_parcel])
-	if warp_name:
-		timecourse_file = "/home/chymera/NIdata/ofM.dr/preprocessing/{4}_work/_subject_condition_{0}.{1}/_scan_type_T2_TurboRARE/_scan_type_{2}/f_warp/{3}".format(subject, session, scan, warp_name, workflow)
-		time_series = masker.fit_transform(timecourse_file).T
-		plt.plot(time_series[roi_parcel])
-	fsl_design = "/home/chymera/NIdata/ofM.dr/l1/{0}_work/_subject_session_scan_{1}.{2}.7_EPI_CBV/modelgen/run0.mat".format(workflow,subject,session)
-	# fsl_design = "/home/chymera/NIdata/ofM.dr/l1/generic_work/_subject_session_scan_{0}.{1}.{2}/modelgen/run0.mat".format(subject, session, scan)
-	fsl_design_df = pd.read_csv(fsl_design, skiprows=5, sep="\t", header=None, index_col=False)
-	fsl_design_df = fsl_design_df/6
-	plt.plot(fsl_design_df[[0,1,2]])
-	plt.show()
 
-	# plt.show()
+	plt.show()
 
 if __name__ == '__main__':
 	# plot_fsl_design("/home/chymera/NIdata/ofM.dr/level1/first_level/_condition_ofM_subject_4001/modelgen/run0.mat")
@@ -141,10 +145,16 @@ if __name__ == '__main__':
 		# "/home/chymera/report_dg.rst"
 		# )
 
-	roi_based(subject=4007, roi="f_dr", workflows=["composite"])
-	# roi_based(subject=4007, warp_name="corr_10_trans.nii.gz", melodic_hit=5)
+	roi_based(subject=4007,
+		roi="~/NIdata/templates/roi/f_dr_chr.nii.gz",
+		events_file_template="~/NIdata/ofM.dr/preprocessing/{workflow}/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_trial-{scan}_events.tsv",
+		beta_file_template="~/NIdata/ofM.dr/l1/{workflow}/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_trial-{scan}_cope.nii.gz",
+		ts_file_template="~/NIdata/ofM.dr/preprocessing/{workflow}/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_trial-{scan}.nii.gz",
+		design_file_template="~/NIdata/ofM.dr/l1/{workflow}_work/_subject_session_scan_{subject}.{session}.{scan}/modelgen/run0.mat",
+		substitutions={"workflow":"composite","subject":4007,"session":"ofM_cF2","scan":"7_EPI_CBV"},
+		workflows=["composite"],
+		)
 	# roi_based(subject=4007, roi="dr", workflows=["generic"], melodic_hit=5)
 	# roi_based(subject=4001, roi="dr", workflows=["generic"])
-	# roi_based(subject=4007, workflows=["norealign"], melodic_hit=5, warp_name="10_trans.nii")
 	# roi_based(subject=4012, workflows=["norealign","generic"], melodic_hit=5)
 	# roi_based(subject=4012, session="ofM_cF1", workflows=["norealign","generic"])

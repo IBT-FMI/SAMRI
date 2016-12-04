@@ -138,6 +138,7 @@ def roi_based(substitutions,
 
 def multi(timecourses, designs, stat_maps, subplot_titles,
 	figure="maps",
+	matplotlibrc=False,
 	):
 	if figure == "maps":
 		maps.stat(stat_maps, template="~/NIdata/templates/ds_QBI_chr.nii.gz", threshold=0.1, interpolation="gaussian", subplot_titles=subplot_titles)
@@ -150,6 +151,10 @@ def multi(timecourses, designs, stat_maps, subplot_titles,
 		ylabel_positive = [(i*max_rows)-1 for i in range(1,ncols)]
 		ylabel_positive.append(len(timecourses)-1)
 		max_ylim = [0,0]
+
+		if matplotlibrc:
+			matplotlibrc.main()
+
 		for ix, timecourse in enumerate(timecourses):
 			col = ix // max_rows
 			row = ix % max_rows

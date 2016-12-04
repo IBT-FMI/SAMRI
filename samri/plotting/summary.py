@@ -164,7 +164,7 @@ def responders(l2_dir,
 			df_ = pd.DataFrame(voxel_data, index=[None])
 			voxeldf = pd.concat([voxeldf,df_])
 
-def bids_substitution_iterator(sessions, subjects, scans, preproc_dir,
+def bids_substitution_iterator(sessions, subjects, scans, preprocessing_dir,
 	l1_dir=None,
 	l1_workdir=None,
 	):
@@ -179,7 +179,7 @@ def bids_substitution_iterator(sessions, subjects, scans, preproc_dir,
 		substitution["subject"] = subject
 		substitution["session"] = session
 		substitution["scan"] = scan
-		substitution["preproc_dir"] = preproc_dir
+		substitution["preprocessing_dir"] = preprocessing_dir
 		substitution["l1_dir"] = l1_dir
 		substitution["l1_workdir"] = l1_workdir
 		substitutions.append(substitution)
@@ -208,8 +208,8 @@ def p_filtering(substitution, ts_file_template, beta_file_template, p_file_templ
 	data[nonzeros] = nonzero_mask
 	data = data.reshape(shape)
 	# print(np.count_nonzero(data))
-	img = nib.Nifti1Image(data, affine, header)
-	p_masker = NiftiMasker(mask_img=img)
+	mask_map = nib.Nifti1Image(data, affine, header)
+	p_masker = NiftiMasker(mask_img=mask_map)
 	try:
 		timecourse = p_masker.fit_transform(ts_file).T
 		betas = p_masker.fit_transform(beta_file).T
@@ -219,11 +219,61 @@ def p_filtering(substitution, ts_file_template, beta_file_template, p_file_templ
 	timecourse = np.mean(timecourse, axis=0)
 	design = pd.read_csv(design_file, skiprows=5, sep="\t", header=None, index_col=False)
 	design = design*np.mean(betas)
-	return timecourse, design, img, subplot_title
+	return timecourse, design, mask_map, subplot_title
+
+def roi_masking(substitution, ts_file_template, beta_file_template, design_file_template, roi_path):
+	ts_file = os.path.expanduser(ts_file_template.format(**substitution))
+	beta_file = os.path.expanduser(beta_file_template.format(**substitution))
+	design_file = os.path.expanduser(design_file_template.format(**substitution))
+
+	masker = NiftiMasker(mask_img=roi_path)
+	mask_map = nib.load(roi_path)
+	try:
+		timecourse = masker.fit_transform(ts_file).T
+		betas = masker.fit_transform(beta_file).T
+	except ValueError:
+		return None,None,None,None
+	subplot_title = "\n ".join([str(substitution["subject"]),str(substitution["session"])])
+	timecourse = np.mean(timecourse, axis=0)
+	design = pd.read_csv(design_file, skiprows=5, sep="\t", header=None, index_col=False)
+	design = design*np.mean(betas)
+	return timecourse, design, mask_map, subplot_title
+
+def roi_ts(substitutions,
+	legend_loc="best",
+	roi_path="~/NIdata/templates/roi/f_dr_chr.nii.gz",
+	ts_file_template="~/NIdata/ofM.dr/preprocessing/{preprocessing_dir}/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_trial-{scan}.nii.gz",
+	beta_file_template="~/NIdata/ofM.dr/l1/{l1_dir}/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_trial-{scan}_cope.nii.gz",
+	design_file_template="~/NIdata/ofM.dr/l1/{l1_workdir}/_subject_session_scan_{subject}.{session}.{scan}/modelgen/run0.mat",
+	):
+
+	df = pd.DataFrame({})
+	timecourses = []
+	stat_maps = []
+	subplot_titles = []
+	designs = []
+	roi_path = os.path.expanduser(roi_path)
+
+	n_jobs = mp.cpu_count()-2
+	substitutions_data = Parallel(n_jobs=n_jobs, verbose=0, backend="threading")(map(delayed(roi_masking),
+		substitutions,
+		[ts_file_template]*len(substitutions),
+		[beta_file_template]*len(substitutions),
+		[design_file_template]*len(substitutions),
+		[roi_path]*len(substitutions),
+		))
+	timecourses, designs, stat_maps, subplot_titles = zip(*substitutions_data)
+
+	timecourses = [x for x in timecourses if x is not None]
+	designs = [x for x in designs if x is not None]
+	stat_maps = [x for x in stat_maps if x is not None]
+	subplot_titles = [x for x in subplot_titles if x is not None]
+
+	return timecourses, designs, stat_maps, subplot_titles
 
 def p_filtered_ts(substitutions,
 	legend_loc="best",
-	ts_file_template="~/NIdata/ofM.dr/preprocessing/{preproc_dir}/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_trial-{scan}.nii.gz",
+	ts_file_template="~/NIdata/ofM.dr/preprocessing/{preprocessing_dir}/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_trial-{scan}.nii.gz",
 	beta_file_template="~/NIdata/ofM.dr/l1/{l1_dir}/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_trial-{scan}_cope.nii.gz",
 	p_file_template="~/NIdata/ofM.dr/l1/{l1_dir}/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_trial-{scan}_pstat.nii.gz",
 	design_file_template="~/NIdata/ofM.dr/l1/{l1_workdir}/_subject_session_scan_{subject}.{session}.{scan}/modelgen/run0.mat",

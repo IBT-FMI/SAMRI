@@ -1,6 +1,5 @@
 import os
 import nibabel
-from nilearn import image, plotting
 import pandas as pd
 import numpy as np
 from nilearn.input_data import NiftiLabelsMasker, NiftiMapsMasker, NiftiMasker
@@ -10,10 +9,6 @@ from matplotlib import rcParams
 
 import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
-
-plt.style.use(u"seaborn-darkgrid")
-plt.style.use('ggplot')
-
 
 def plot_timecourses(parcellation="/home/chymera/NIdata/templates/roi/ds_QBI_vze_chr.nii.gz", condition=["ERC_ofM"], subject=["5502"], scan_type=["EPI_CBV_alej"]):
 	datasource = nio.DataGrabber(infields=["condition","subject","scan_type"], outfields=["nii_data", "delay_file", "stimulation_file"], sort_filelist = True)
@@ -90,10 +85,6 @@ def roi_based(substitutions,
 	ts_file_template=None,
 	design_file_template=None,
 	roi=None,
-	subject=4007,
-	session="ofM_cF2",
-	scan="7_EPI_CBV",
-	workflows=["generic"],
 	melodic_hit=None,
 	):
 
@@ -106,19 +97,17 @@ def roi_based(substitutions,
 			ts_file = os.path.expanduser(ts_file_template.format(**substitutions))
 			final_time_series = masker.fit_transform(ts_file).T
 			final_time_series = np.mean(final_time_series, axis=0)
-			print(final_time_series)
-			print(np.shape(final_time_series))
 			plt.plot(final_time_series)
+			ax.set_xlim([0,len(final_time_series)])
 
 	if design_file_template:
 		design_file = os.path.expanduser(design_file_template.format(**substitutions))
 		design_df = pd.read_csv(design_file, skiprows=5, sep="\t", header=None, index_col=False)
-		# design_df = design_df/design_df.max()
 		if beta_file_template and roi:
 			beta_file = os.path.expanduser(beta_file_template.format(**substitutions))
 			roi_betas = masker.fit_transform(beta_file).T
 			design_df = design_df*np.mean(roi_betas)
-		plt.plot(design_df[[0,1,2]], lw=2)
+		plt.plot(design_df[[0,1,2]], lw=rcParams['lines.linewidth']*2)
 
 	if events_file_template:
 		events_file = os.path.expanduser(events_file_template.format(**substitutions))
@@ -134,11 +123,8 @@ def roi_based(substitutions,
 		melodic = np.loadtxt(melodic_file)
 		plt.plot(melodic)
 
-	plt.show()
-
 def multi(timecourses, designs, stat_maps, subplot_titles,
 	figure="maps",
-	matplotlibrc=False,
 	):
 	if figure == "maps":
 		maps.stat(stat_maps, template="~/NIdata/templates/ds_QBI_chr.nii.gz", threshold=0.1, interpolation="gaussian", subplot_titles=subplot_titles)
@@ -147,13 +133,10 @@ def multi(timecourses, designs, stat_maps, subplot_titles,
 		#we use inverse floor division to get the ceiling
 		max_rows = (len(timecourses) // ncols) + 1
 		min_rows = len(timecourses) % max_rows
-		fig, axes = plt.subplots(figsize=(10*max_rows,7*ncols), facecolor='#eeeeee', nrows=max_rows*min_rows, ncols=ncols, sharex="col")
-		ylabel_positive = [(i*max_rows)-1 for i in range(1,ncols)]
-		ylabel_positive.append(len(timecourses)-1)
+		fig, axes = plt.subplots(figsize=(10*max_rows,7*ncols), facecolor='#eeeeee', nrows=max_rows*min_rows, ncols=ncols)
+		xlabel_positive = [(i*max_rows)-1 for i in range(1,ncols)]
+		xlabel_positive.append(len(timecourses)-1)
 		max_ylim = [0,0]
-
-		if matplotlibrc:
-			matplotlibrc.main()
 
 		for ix, timecourse in enumerate(timecourses):
 			col = ix // max_rows
@@ -162,9 +145,9 @@ def multi(timecourses, designs, stat_maps, subplot_titles,
 				ax = plt.subplot2grid((max_rows*min_rows,ncols), (row*max_rows, col), rowspan=max_rows)
 			else:
 				ax = plt.subplot2grid((max_rows*min_rows,ncols), (row*min_rows, col), rowspan=min_rows)
-			ax.plot(timecourses[ix])
+			ax.plot(timecourses[ix], lw=rcParams['lines.linewidth']/4)
 			ax.plot(designs[ix][0])
-			if not ix in ylabel_positive:
+			if not ix in xlabel_positive:
 				plt.setp(ax.get_xticklabels(), visible=False)
 			current_ylim = ax.get_ylim()
 			ax.yaxis.grid(False)
@@ -182,14 +165,16 @@ if __name__ == '__main__':
 		# "/home/chymera/report_dg.rst"
 		# )
 
-	roi_based(subject=4007,
-		roi="~/NIdata/templates/roi/f_dr_chr.nii.gz",
+	plt.style.use(u'seaborn-darkgrid')
+	plt.style.use(u'ggplot')
+
+	roi_based(
+		roi="~/NIdata/templates/roi/ctx_chr.nii.gz",
 		events_file_template="~/NIdata/ofM.dr/preprocessing/{workflow}/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_trial-{scan}_events.tsv",
 		beta_file_template="~/NIdata/ofM.dr/l1/{workflow}/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_trial-{scan}_cope.nii.gz",
 		ts_file_template="~/NIdata/ofM.dr/preprocessing/{workflow}/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_trial-{scan}.nii.gz",
 		design_file_template="~/NIdata/ofM.dr/l1/{workflow}_work/_subject_session_scan_{subject}.{session}.{scan}/modelgen/run0.mat",
 		substitutions={"workflow":"composite","subject":4007,"session":"ofM_cF2","scan":"7_EPI_CBV"},
-		workflows=["composite"],
 		)
 	# roi_based(subject=4007, roi="dr", workflows=["generic"], melodic_hit=5)
 	# roi_based(subject=4001, roi="dr", workflows=["generic"])

@@ -6,15 +6,10 @@ from nipype.interfaces.io import DataFinder
 import nibabel as nib
 import numpy as np
 import pandas as pd
-import seaborn as sns
 import matplotlib.pyplot as plt
 from nilearn.input_data import NiftiMasker
 
 import matplotlib.gridspec as gridspec
-
-sns.set_style("white", {'legend.frameon': True})
-plt.style.use('ggplot')
-
 
 import statsmodels.api as sm
 import statsmodels.formula.api as smf
@@ -69,12 +64,11 @@ def roi_per_session(l1_dir, subjects, sessions,
 	tabref="tab",
 	xy_label=[],
 	obfuscate=False,
+	color="#E69F00",
 	matplotlibrc=False,
-	color="#E69F00"
 	):
 
-	if matplotlibrc:
-		matplotlibrc.main()
+	import seaborn as sns
 
 	roi_path = "/home/chymera/NIdata/templates/roi/{}_chr.nii.gz".format(roi)
 	masker = NiftiMasker(mask_img=roi_path)
@@ -113,9 +107,12 @@ def roi_per_session(l1_dir, subjects, sessions,
 	names_for_plotting = {"ofM":u"naïve", "ofM_aF":"acute", "ofM_cF1":"chronic (2w)", "ofM_cF2":"chronic (4w)", "ofM_pF":"post"}
 	voxeldf = voxeldf.replace({"session": names_for_plotting})
 	subjectdf = subjectdf.replace({"session": names_for_plotting})
+
+	if matplotlibrc:
+		matplotlibrc.main()
+
 	if figure == "per-voxel":
 		ax = sns.pointplot(x="session", y="t", hue="subject", data=voxeldf, ci=68.3, dodge=True, jitter=True, legend_out=False, units="subject")
-		# sns.violinplot(x="session", y="value", hue="subject", data=df, inner=None)
 		if xy_label:
 			ax.set(xlabel=xy_label[0], ylabel=xy_label[1])
 	elif figure == "per-participant":
@@ -239,9 +236,8 @@ def roi_masking(substitution, ts_file_template, beta_file_template, design_file_
 	design = design*np.mean(betas)
 	return timecourse, design, mask_map, subplot_title
 
-def roi_ts(substitutions,
+def roi_ts(substitutions,roi_path,
 	legend_loc="best",
-	roi_path="~/NIdata/templates/roi/f_dr_chr.nii.gz",
 	ts_file_template="~/NIdata/ofM.dr/preprocessing/{preprocessing_dir}/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_trial-{scan}.nii.gz",
 	beta_file_template="~/NIdata/ofM.dr/l1/{l1_dir}/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_trial-{scan}_cope.nii.gz",
 	design_file_template="~/NIdata/ofM.dr/l1/{l1_workdir}/_subject_session_scan_{subject}.{session}.{scan}/modelgen/run0.mat",

@@ -43,6 +43,12 @@ def p_clusters():
 	timeseries.multi(timecourses, designs, stat_maps, subplot_titles, figure="timecourses")
 	plt.show()
 
+def dr_roi(roi_path="~/NIdata/templates/roi/f_dr_chr.nii.gz"):
+	substitutions = summary.bids_substitution_iterator(["ofM","ofM_aF","ofM_cF1","ofM_cF2","ofM_pF"],[4007,4008,4009,4011,4012],["7_EPI_CBV"],"composite")
+	timecourses, designs, stat_maps, subplot_titles = summary.roi_ts(substitutions, roi_path=roi_path,)
+	timeseries.multi(timecourses, designs, stat_maps, subplot_titles, figure="timecourses")
+	plt.show()
+
 def check_responders():
 	summary.responders("subjectwise_composite")
 
@@ -60,5 +66,6 @@ if __name__ == '__main__':
 	# network.simple_dr(output="~/ntw1.png", graphsize=800)
 	# roi_per_session("composite", "ctx", "#56B4E9")
 	# roi_per_session("composite", "f_dr", "#E69F00")
-	p_clusters()
+	# p_clusters()
+	dr_roi(roi_path="~/NIdata/templates/roi/ctx_chr.nii.gz")
 	# check_responders()

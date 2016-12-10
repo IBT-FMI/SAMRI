@@ -4,6 +4,9 @@ import matplotlib.pyplot as plt
 import design
 import registration
 
+plt.style.use(u'seaborn-darkgrid')
+plt.style.use(u'ggplot')
+
 def opto_fmri(save_as=False):
 	irf = design.get_irf()
 	print(design.period_padded_period_filtered(irf, 8, 20, 150))

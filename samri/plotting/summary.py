@@ -1,33 +1,25 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 import os
+from itertools import product
+from copy import deepcopy
 
-from nilearn.input_data import NiftiLabelsMasker, NiftiMapsMasker
-from nipype.interfaces.io import DataFinder
 import nibabel as nib
 import numpy as np
+import multiprocessing as mp
 import pandas as pd
 import matplotlib.pyplot as plt
-from nilearn.input_data import NiftiMasker
-
-import matplotlib.gridspec as gridspec
-
-import statsmodels.api as sm
+import seaborn.apionly as sns
 import statsmodels.formula.api as smf
+from joblib import Parallel, delayed
+from nilearn.input_data import NiftiMasker
+from nipype.interfaces.io import DataFinder
+from statsmodels.sandbox.stats.multicomp import multipletests
+
 try:
 	import maps, timeseries
 except ImportError:
 	from ..plotting import maps, timeseries
-
-from statsmodels.sandbox.stats.multicomp import multipletests
-
-from joblib import Parallel, delayed
-import multiprocessing as mp
-
-import inspect
-
-from itertools import product
-from copy import deepcopy
 
 qualitative_colorset = ["#000000", "#E69F00", "#56B4E9", "#009E73","#F0E442", "#0072B2", "#D55E00", "#CC79A7"]
 
@@ -68,8 +60,6 @@ def roi_per_session(l1_dir, subjects, sessions,
 	color="#E69F00",
 	matplotlibrc=False,
 	):
-
-	import seaborn as sns
 
 	roi_path = "/home/chymera/NIdata/templates/roi/{}_chr.nii.gz".format(roi)
 	masker = NiftiMasker(mask_img=roi_path)

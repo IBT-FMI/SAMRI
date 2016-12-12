@@ -58,7 +58,6 @@ def roi_per_session(l1_dir, subjects, sessions,
 	xy_label=[],
 	obfuscate=False,
 	color="#E69F00",
-	matplotlibrc=False,
 	):
 
 	roi_path = "/home/chymera/NIdata/templates/roi/{}_chr.nii.gz".format(roi)
@@ -98,9 +97,6 @@ def roi_per_session(l1_dir, subjects, sessions,
 	names_for_plotting = {"ofM":u"naïve", "ofM_aF":"acute", "ofM_cF1":"chronic (2w)", "ofM_cF2":"chronic (4w)", "ofM_pF":"post"}
 	voxeldf = voxeldf.replace({"session": names_for_plotting})
 	subjectdf = subjectdf.replace({"session": names_for_plotting})
-
-	if matplotlibrc:
-		matplotlibrc.main()
 
 	if figure == "per-voxel":
 		ax = sns.pointplot(x="session", y="t", hue="subject", data=voxeldf, ci=68.3, dodge=True, jitter=True, legend_out=False, units="subject")

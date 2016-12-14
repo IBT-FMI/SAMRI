@@ -1,4 +1,5 @@
 scan_type,categories
+EPI_CBV,functional
 7_EPI_CBV_alej,functional
 7_EPI_CBV_jin6,functional
 7_EPI_CBV_jin10,functional
@@ -7,4 +8,5 @@ scan_type,categories
 7_EPI_CBV_jin60,functional
 7_EPI_CBV,functional
 T2_TurboRARE,structural
+TurboRARE,structural
 T1_FLASH_Anatomical_rsfMRI,structural

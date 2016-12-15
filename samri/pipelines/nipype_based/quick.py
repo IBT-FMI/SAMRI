@@ -64,9 +64,9 @@ def diagnostic(measurements_base,
 	#make measurements_base absolute (this has to be here to allow the check below)
 	measurements_base = path.abspath(path.expanduser(measurements_base))
 
-	#check if a bruker measurement directory was specified as the measurements_base. If so, set the root directories one level up and add the basename to include_measurements
+	#check if a bruker measurement directory was specified as the measurements_base. If so, set the root directories one level up and add the basename to `measurements`
 	if bruker_files.issubset(listdir(measurements_base)):
-		include_measurements = [path.basename(measurements_base)]
+		measurements = [path.basename(measurements_base)]
 		measurements_base += "/.."
 
 	#make workflow_base absolute (this has to be here to catch the measurements_base change that might have occured earlier)
@@ -119,11 +119,14 @@ def diagnostic(measurements_base,
 		except RuntimeError:
 			print("WARNING: Some expected scans have not been found (or another RuntimeError has occured).")
 		for f in listdir(getcwd()):
-			if re.search("crash.*?get_structural_scan|get_functional_scan.*", f):
+			if re.search("crash.*?get_s_scan|get_f_scan.*", f):
 				remove(path.join(getcwd(), f))
 	else:
 		pipeline.run(plugin="MultiProc",  plugin_args={'n_procs' : n_procs})
 
 	#delete all fles but final results
 	if not keep_work:
-		shutil.rmtree(path.join(workflow_base,workflow_denominator,"_work"))
+		shutil.rmtree(path.join(workflow_base,workflow_denominator+"_work"))
+
+	print(listdir(getcwd()))
+	print(loud)

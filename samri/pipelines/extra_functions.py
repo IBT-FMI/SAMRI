@@ -311,7 +311,7 @@ def get_data_selection(workflow_base, sessions=[], scan_types=[], subjects=[], e
 								try:
 									scan_program_file_path = os.path.join(workflow_base,sub_dir,"ScanProgram.scanProgram")
 									scan_program_file = open(scan_program_file_path, "r")
-									syntax_adjusted_scan_type = scan_type+" "
+									syntax_adjusted_scan_type = ">"+scan_type+" "
 									while True:
 										current_line = scan_program_file.readline()
 										if syntax_adjusted_scan_type in current_line:

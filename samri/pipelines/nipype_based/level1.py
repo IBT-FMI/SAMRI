@@ -90,7 +90,7 @@ def level1(measurements_base, functional_scan_types, structural_scan_types=[], t
 
 	pipeline.connect([
 		(preprocessing, first_level, [('timing_metadata.total_delay_s','get_subject_info.subject_delay')]),
-		(preprocessing, first_level, [('get_functional_scan.scan_type','get_subject_info.scan_type')]),
+		(preprocessing, first_level, [('get_f_scan.scan_type','get_subject_info.scan_type')]),
 		(preprocessing, first_level, [('functional_bandpass.out_file','specify_model.functional_runs')]),
 		(preprocessing, first_level, [('functional_bandpass.out_file','func_glm.in_file')]),
 		])
@@ -108,7 +108,7 @@ def level1(measurements_base, functional_scan_types, structural_scan_types=[], t
 			except RuntimeError:
 				print("WARNING: Some expected scans have not been found (or another RuntimeError has occured).")
 			for f in listdir(getcwd()):
-				if re.search("crash.*?get_structural_scan|get_functional_scan.*", f):
+				if re.search("crash.*?get_s_scan|get_f_scan.*", f):
 					remove(path.join(getcwd(), f))
 		else:
 			pipeline.run(plugin="MultiProc",  plugin_args={'n_procs' : 4})

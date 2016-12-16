@@ -173,7 +173,7 @@ def bruker(measurements_base,
 
 	realigner = pe.Node(interface=nipy.SpaceTimeRealigner(), name="realigner")
 	realigner.inputs.slice_times = "asc_alt_2"
-	realigner.inputs.tr = 1.
+	realigner.inputs.tr = tr
 	realigner.inputs.slice_info = 3 #3 for coronal slices (2 for horizontal, 1 for sagittal)
 
 	bandpass = pe.Node(interface=fsl.maths.TemporalFilter(), name="bandpass")

@@ -68,6 +68,7 @@ def diagnostic(measurements_base,
 	if bruker_files.issubset(listdir(measurements_base)):
 		measurements = [path.basename(measurements_base)]
 		measurements_base += "/.."
+		measurements_base = path.abspath(measurements_base)
 
 	#make workflow_base absolute (this has to be here to catch the measurements_base change that might have occured earlier)
 	if workflow_base:
@@ -127,6 +128,3 @@ def diagnostic(measurements_base,
 	#delete all fles but final results
 	if not keep_work:
 		shutil.rmtree(path.join(workflow_base,workflow_denominator+"_work"))
-
-	print(listdir(getcwd()))
-	print(loud)

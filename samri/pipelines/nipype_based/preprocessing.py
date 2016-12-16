@@ -376,7 +376,7 @@ def bruker(measurements_base,
 	else:
 		workflow.run(plugin="MultiProc",  plugin_args={'n_procs' : n_procs})
 	if not keep_work:
-		shutil.rmtree(path.join(l1_dir,workdir_name))
+		shutil.rmtree(path.join(workflow.base_dir,workdir_name))
 
 if __name__ == "__main__":
 	bruker("/home/chymera/NIdata/ofM.dr/",exclude_measurements=['20151027_121613_4013_1_1'], workflow_name="composite", very_nasty_bruker_delay_hack=True, negative_contrast_agent=True, functional_blur_xy=4, functional_registration_method="composite")

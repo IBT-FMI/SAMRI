@@ -332,7 +332,7 @@ def get_data_selection(workflow_base, sessions=[], scan_types=[], subjects=[], e
 									for sub_sub_dir in os.listdir(os.path.join(workflow_base,sub_dir)):
 										try:
 											acqp_file = os.path.join(workflow_base,sub_dir,sub_sub_dir,"acqp")
-											if scan_type in open(acqp_file).read():
+											if "<"+scan_type+">" in open(acqp_file).read():
 												scan_number = sub_sub_dir
 												measurement_copy.extend([scan_type, scan_number])
 												selected_measurements.append(measurement_copy)

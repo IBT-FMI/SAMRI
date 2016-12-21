@@ -1,5 +1,7 @@
 scan_type,categories
 EPI_CBV,functional
+EPI_CBV_jp_phasic,functional
+EPI_CBV_chr_longSOA,functional
 7_EPI_CBV_alej,functional
 7_EPI_CBV_jin6,functional
 7_EPI_CBV_jin10,functional

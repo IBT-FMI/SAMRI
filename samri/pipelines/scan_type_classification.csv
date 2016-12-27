@@ -10,6 +10,7 @@ EPI_CBV_chr_longSOA,functional
 7_EPI_CBV_jin60,functional
 7_EPI_CBV,functional
 T2_TurboRARE,structural
+4_T2_TurboRARE,structural
 TurboRARE,structural
 4_TurboRARE,structural
 T1_FLASH_Anatomical_rsfMRI,structural

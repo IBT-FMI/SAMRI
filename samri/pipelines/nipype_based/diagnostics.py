@@ -60,6 +60,8 @@ def diagnose(measurements_base,
 	workflow_name="diagnostic"
 	):
 
+	measurements_base = path.abspath(path.expanduser(measurements_base))
+
 	#select all functional/sturctural scan types unless specified
 	if not functional_scan_types or not structural_scan_types:
 		scan_classification = pd.read_csv(scan_classification_file_path)

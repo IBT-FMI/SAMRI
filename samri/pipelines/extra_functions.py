@@ -11,20 +11,25 @@ def read_bruker_timing(scan_directory):
 	from datetime import datetime
 	scan_directory = os.path.abspath(os.path.expanduser(scan_directory))
 	state_file_path = os.path.join(scan_directory,"AdjStatePerScan")
-	state_file = open(state_file_path, "r")
-
 	delay_seconds = dummy_scans = dummy_scans_ms = 0
 
-	while True:
-		current_line = state_file.readline()
-		if "AdjScanStateTime" in current_line:
-			delay_datetime_line = state_file.readline()
-			break
+	#Here we read the `AdjStatePerScan` file, which may be missing if no adjustments were run at the beginning of this scan
+	try:
+		state_file = open(state_file_path, "r")
+	except IOError:
+		pass
+	else:
+		while True:
+			current_line = state_file.readline()
+			if "AdjScanStateTime" in current_line:
+				delay_datetime_line = state_file.readline()
+				break
 
-	trigger_time, scanstart_time = [datetime.utcnow().strptime(i.split("+")[0], "<%Y-%m-%dT%H:%M:%S,%f") for i in delay_datetime_line.split(" ")]
-	delay = scanstart_time-trigger_time
-	delay_seconds=delay.total_seconds()
+		trigger_time, scanstart_time = [datetime.utcnow().strptime(i.split("+")[0], "<%Y-%m-%dT%H:%M:%S,%f") for i in delay_datetime_line.split(" ")]
+		delay = scanstart_time-trigger_time
+		delay_seconds=delay.total_seconds()
 
+	#Here we read the `method` file, which contains info about dummy scans
 	method_file_path = os.path.join(scan_directory,"method")
 	method_file = open(method_file_path, "r")
 

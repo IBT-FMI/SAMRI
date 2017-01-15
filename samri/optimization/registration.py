@@ -100,6 +100,10 @@ def structural_rigid(template="/Users/marksm/GitHub/mriPipeline/ants_test/templa
 	output_image = 'hard2_new_32_rigid_affine_more_rigid_CC.nii.gz',
 	):
 
+	template = os.path.abspath(os.path.expanduser(template))
+	input_image = os.path.abspath(os.path.expanduser(input_image))
+	output_image = os.path.abspath(os.path.expanduser(output_image))
+
 	n4 = ants.N4BiasFieldCorrection()
 	n4.inputs.dimension = 3
 	n4.inputs.input_image = input_image
@@ -116,23 +120,23 @@ def structural_rigid(template="/Users/marksm/GitHub/mriPipeline/ants_test/templa
 	struct_registration.inputs.fixed_image = template
 	struct_registration.inputs.output_transform_prefix = "output_"
 	struct_registration.inputs.transforms = ['Rigid','Affine'] ##
-	struct_registration.inputs.transform_parameters = [(.5,),(0.1,)] ##
-	struct_registration.inputs.number_of_iterations = [[1000,500,100], [2000, 1000, 500]] #
+	struct_registration.inputs.transform_parameters = [(.4,),(0.2,)] ##
+	struct_registration.inputs.number_of_iterations = [[500,250,100], [5000, 2500, 1000]] #
 	struct_registration.inputs.dimension = 3
 	struct_registration.inputs.write_composite_transform = True
 	struct_registration.inputs.collapse_output_transforms = True
 	struct_registration.inputs.initial_moving_transform_com = True
 	# Tested on Affine transform: CC takes too long; Demons does not tilt, but moves the slices too far caudally; GC tilts too much on
-	struct_registration.inputs.metric = ['CC', 'CC']
+	struct_registration.inputs.metric = ['Mattes', 'Mattes']
 	struct_registration.inputs.metric_weight = [1, 1]
-	struct_registration.inputs.radius_or_number_of_bins = [16, 16] #
+	struct_registration.inputs.radius_or_number_of_bins = [8, 8] #
 	struct_registration.inputs.sampling_strategy = ['Random','Random']
 	struct_registration.inputs.sampling_percentage = [0.3, 0.3]
-	struct_registration.inputs.convergence_threshold = [1.e-10, 1.e-8] #
-	struct_registration.inputs.convergence_window_size = [20, 20]
+	struct_registration.inputs.convergence_threshold = [1.e-12, 1.e-14] #
+	struct_registration.inputs.convergence_window_size = [8, 8]
 	struct_registration.inputs.smoothing_sigmas = [[4, 2, 1], [4, 2, 1]]
 	struct_registration.inputs.sigma_units = ['vox', 'vox']
-	struct_registration.inputs.shrink_factors = [[3, 2, 1],[3, 2, 1]]
+	struct_registration.inputs.shrink_factors = [[4, 2, 1],[3, 2, 1]]
 	struct_registration.inputs.use_estimate_learning_rate_once = [True, True]
 	# if the fixed_image is not acquired similarly to the moving_image (e.g. RARE to histological (e.g. AMBMC)) this should be False
 	struct_registration.inputs.use_histogram_matching = [False, False]

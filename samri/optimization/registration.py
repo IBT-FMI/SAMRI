@@ -98,6 +98,8 @@ def structural_per_participant_test(participant,
 def structural_rigid(participant,
 	conditions=["","_aF","_cF1","_cF2","_pF"],
 	template="/Users/marksm/GitHub/mriPipeline/ants_test/template4.nii.gz",
+	input_image = "/Users/marksm/GitHub/mriPipeline/ants_test/source.nii",
+	output_image = 'hard2_new_32_rigid_affine_more_rigid_CC.nii.gz',
 	):
 	#
 	# for i in conditions:
@@ -113,7 +115,7 @@ def structural_rigid(participant,
 	# 	else:
 			n4 = ants.N4BiasFieldCorrection()
 			n4.inputs.dimension = 3
-			n4.inputs.input_image = "/Users/marksm/GitHub/mriPipeline/ants_test/source.nii"
+			n4.inputs.input_image = input_image
 			# correction bias is introduced (along the z-axis) if the following value is set to under 85. This is likely contingent on resolution.
 			n4.inputs.bspline_fitting_distance = 100
 			n4.inputs.shrink_factor = 2
@@ -154,7 +156,7 @@ def structural_rigid(participant,
 
 			struct_registration.inputs.moving_image = n4_res.outputs.output_image
 			# struct_registration.inputs.output_warped_image = 'ss_{}_ofM{}.nii.gz'.format(participant,i)
-			struct_registration.inputs.output_warped_image = 'hard2_new_32_rigid_affine_more_rigid_CC.nii.gz'
+			struct_registration.inputs.output_warped_image = output_image
 			res = struct_registration.run()
 
 

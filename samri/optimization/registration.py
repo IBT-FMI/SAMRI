@@ -100,7 +100,6 @@ def structural_rigid(template="/Users/marksm/GitHub/mriPipeline/ants_test/templa
 	output_image = 'hard2_new_32_rigid_affine_more_rigid_CC.nii.gz',
 	):
 
-
 			n4 = ants.N4BiasFieldCorrection()
 			n4.inputs.dimension = 3
 			n4.inputs.input_image = input_image
@@ -662,7 +661,7 @@ if __name__ == '__main__':
 	# 	f_file_format = "~/NIdata/ofM.dr/preprocessing/composite_work/_subject_session_{subject}.{session}/_scan_type_7_EPI_CBV/f_bru2nii/",
 	# 	s_file_format = "~/NIdata/ofM.dr/preprocessing/composite_work/_subject_session_{subject}.{session}/_scan_type_T2_TurboRARE/s_bru2nii/",
 	# 	)
-	structural_rigid("void")
+	structural_rigid()
 	# structural_to_functional_per_participant_test(
 	# 	subjects_participants = [{'subjfect' : 11, 'session': 'rstFMRI_with_medetadomine'}],
 	# 	template = "~/GitHub/mriPipeline/templates/waxholm/WHS_SD_rat_T2star_v1.01_downsample3.nii.gz",

@@ -95,24 +95,12 @@ def structural_per_participant_test(participant,
 			struct_registration.inputs.output_warped_image = 'ss_{}_ofM{}.nii.gz'.format(participant,i)
 			res = struct_registration.run()
 
-def structural_rigid(participant,
-	conditions=["","_aF","_cF1","_cF2","_pF"],
-	template="/Users/marksm/GitHub/mriPipeline/ants_test/template4.nii.gz",
+def structural_rigid(template="/Users/marksm/GitHub/mriPipeline/ants_test/template4.nii.gz",
 	input_image = "/Users/marksm/GitHub/mriPipeline/ants_test/source.nii",
 	output_image = 'hard2_new_32_rigid_affine_more_rigid_CC.nii.gz',
 	):
-	#
-	# for i in conditions:
-	# 	# image_dir = "/home/chymera/NIdata/ofM.dr/preprocessing/generic_work/_subject_session_{}.ofM{}/_scan_type_T2_TurboRARE/s_bru2nii/".format(participant,i)
-	# 	image_dir = "/Users/marksm/GitHub/mriPipeline/ants_test/source.nii"
-	# 	print(image_dir)
-	# 	try:
-	# 		for myfile in os.listdir(image_dir):
-	# 			if myfile.endswith(".nii"):
-	# 				mimage = os.path.join(image_dir,myfile)
-	# 	except FileNotFoundError:
-	# 		pass
-	# 	else:
+
+
 			n4 = ants.N4BiasFieldCorrection()
 			n4.inputs.dimension = 3
 			n4.inputs.input_image = input_image

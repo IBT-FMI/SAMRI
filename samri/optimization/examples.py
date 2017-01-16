@@ -17,5 +17,6 @@ def opto_fmri(save_as=False):
 		plt.show()
 
 if __name__ == '__main__':
-	opto_fmri()
+	# opto_fmri()
 	# opto_fmri("~/design.png")
+	registration.structural_rigid(template="~/test_markus/template4.nii.gz", input_image="~/test_markus/source_add.nii.gz", output_image="~/test_markus/registered.nii.gz")

@@ -158,6 +158,68 @@ def structural_rigid_affine(template="/Users/marksm/GitHub/mriPipeline/ants_test
 	struct_registration.inputs.output_warped_image = output_image
 	res = struct_registration.run()
 
+def structural_flirt_affine(template="/Users/marksm/GitHub/mriPipeline/ants_test/template4.nii.gz",
+	input_image = "/Users/marksm/GitHub/mriPipeline/ants_test/source_add.nii.gz",
+	output_image = 'new_with_flirt_affine.nii.gz',
+	):
+
+	template = os.path.abspath(os.path.expanduser(template))
+	input_image = os.path.abspath(os.path.expanduser(input_image))
+	output_image = os.path.abspath(os.path.expanduser(output_image))
+
+	n4 = ants.N4BiasFieldCorrection()
+	n4.inputs.dimension = 3
+	n4.inputs.input_image = input_image
+	# correction bias is introduced (along the z-axis) if the following value is set to under 85. This is likely contingent on resolution.
+	n4.inputs.bspline_fitting_distance = 10
+	# n4.inputs.shrink_factor = 2
+	n4.inputs.n_iterations = [200,200,200,200]
+	n4.inputs.convergence_threshold = 1e-11
+	# n4.inputs.output_image = 'ss_n4_{}_ofM{}.nii.gz'.format(participant,i)
+	n4.inputs.output_image = 'hard_flirt.nii.gz'
+	n4_res = n4.run()
+
+	flt = fsl.FLIRT(cost_func='corratio', dof = 6, searchr_x = [-180,180], searchr_y = [-180,180], searchr_z = [-180,180], force_scaling = True)
+	flt.inputs.in_file = n4_res.outputs.output_image
+	flt.inputs.reference = template
+	flt.inputs.out_file = 'after_flirt.nii.gz'
+	flt.inputs.out_matrix_file = 'subject_to_template.mat'
+	flt_res = flt.run()
+
+	struct_registration = ants.Registration()
+	struct_registration.inputs.fixed_image = template
+	struct_registration.inputs.output_transform_prefix = "output_"
+	struct_registration.inputs.transforms = ['SyN'] ##
+	struct_registration.inputs.transform_parameters = [(3.0, 3.0, 5.0)] ##
+	struct_registration.inputs.number_of_iterations = [[1000, 500, 250]] #
+	struct_registration.inputs.dimension = 3
+	struct_registration.inputs.write_composite_transform = True
+	struct_registration.inputs.collapse_output_transforms = True
+	struct_registration.inputs.initial_moving_transform_com = True
+	# Tested on Affine transform: CC takes too long; Demons does not tilt, but moves the slices too far caudally; GC tilts too much on
+	struct_registration.inputs.metric = ['Mattes']
+	struct_registration.inputs.metric_weight = [1]
+	struct_registration.inputs.radius_or_number_of_bins = [8] #
+	struct_registration.inputs.sampling_strategy = ['Random']
+	struct_registration.inputs.sampling_percentage = [0.3]
+	struct_registration.inputs.convergence_threshold = [1.e-16] #
+	struct_registration.inputs.convergence_window_size = [4]
+	struct_registration.inputs.smoothing_sigmas = [[4, 2, 1]]
+	struct_registration.inputs.sigma_units = ['vox']
+	struct_registration.inputs.shrink_factors = [[4, 2, 1]]
+	struct_registration.inputs.use_estimate_learning_rate_once = [True]
+	# if the fixed_image is not acquired similarly to the moving_image (e.g. RARE to histological (e.g. AMBMC)) this should be False
+	struct_registration.inputs.use_histogram_matching = [False,]
+	struct_registration.inputs.winsorize_lower_quantile = 0.005
+	struct_registration.inputs.winsorize_upper_quantile = 0.98
+	struct_registration.inputs.args = '--float'
+	struct_registration.inputs.num_threads = 6
+
+	struct_registration.inputs.moving_image = flt_res.outputs.out_file
+	# struct_registration.inputs.output_warped_image = 'ss_{}_ofM{}.nii.gz'.format(participant,i)
+	struct_registration.inputs.output_warped_image = output_image
+	res = struct_registration.run()
+
 def structural_rigid(template="/Users/marksm/GitHub/mriPipeline/ants_test/template4.nii.gz",
 	input_image = "/Users/marksm/GitHub/mriPipeline/ants_test/source.nii",
 	output_image = 'hard2_new_32_rigid_affine_more_rigid_CC.nii.gz',
@@ -732,7 +794,7 @@ if __name__ == '__main__':
 	# 	input_image = "/Users/marksm/GitHub/mriPipeline/ants_test/source.nii",
 	# 	output_image = 'hard2_new_32_rigid_affine_more_rigid_CC.nii.gz',
 	# 	)
-	structural_rigid_affine()
+	structural_flirt_affine()
 	# structural_to_functional_per_participant_test(
 	# 	subjects_participants = [{'subjfect' : 11, 'session': 'rstFMRI_with_medetadomine'}],
 	# 	template = "~/GitHub/mriPipeline/templates/waxholm/WHS_SD_rat_T2star_v1.01_downsample3.nii.gz",

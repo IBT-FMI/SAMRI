@@ -236,6 +236,8 @@ STIM_PROTOCOL_DICTIONARY={
 	"7_EPI_CBV_alej":"alej",
 	"7_EPI_CBV":"6_20_jb",
 	"EPI_CBV":"chr_longSOA",
+	"EPI_CBV_chr_longSOA":"chr_longSOA",
+	"EPI_CBV_jp_phasic":"jp_phasic",
 	}
 
 def fslmaths_invert_values(img_path):

@@ -95,64 +95,114 @@ def structural_per_participant_test(participant,
 			struct_registration.inputs.output_warped_image = 'ss_{}_ofM{}.nii.gz'.format(participant,i)
 			res = struct_registration.run()
 
-def structural_rigid(participant,
-	conditions=["","_aF","_cF1","_cF2","_pF"],
-	template="/home/chymera/NIdata/templates/ds_QBI_chr.nii.gz",
+def structural_rigid_affine(template="/Users/marksm/GitHub/mriPipeline/ants_test/template4.nii.gz",
+	input_image = "/Users/marksm/GitHub/mriPipeline/ants_test/source.nii",
+	output_image = 'hard2_new_32_rigid_affine_more_rigid_CC.nii.gz',
 	):
 
-	for i in conditions:
-		image_dir = "/home/chymera/NIdata/ofM.dr/preprocessing/generic_work/_subject_session_{}.ofM{}/_scan_type_T2_TurboRARE/s_bru2nii/".format(participant,i)
-		print(image_dir)
-		try:
-			for myfile in os.listdir(image_dir):
-				if myfile.endswith(".nii"):
-					mimage = os.path.join(image_dir,myfile)
-		except FileNotFoundError:
-			pass
-		else:
-			n4 = ants.N4BiasFieldCorrection()
-			n4.inputs.dimension = 3
-			n4.inputs.input_image = mimage
-			# correction bias is introduced (along the z-axis) if the following value is set to under 85. This is likely contingent on resolution.
-			n4.inputs.bspline_fitting_distance = 100
-			n4.inputs.shrink_factor = 2
-			n4.inputs.n_iterations = [200,200,200,200]
-			n4.inputs.convergence_threshold = 1e-11
-			n4.inputs.output_image = 'ss_n4_{}_ofM{}.nii.gz'.format(participant,i)
-			n4_res = n4.run()
+	template = os.path.abspath(os.path.expanduser(template))
+	input_image = os.path.abspath(os.path.expanduser(input_image))
+	output_image = os.path.abspath(os.path.expanduser(output_image))
 
-			struct_registration = ants.Registration()
-			struct_registration.inputs.fixed_image = template
-			struct_registration.inputs.output_transform_prefix = "output_"
-			struct_registration.inputs.transforms = ['Rigid'] ##
-			struct_registration.inputs.transform_parameters = [(.1,)] ##
-			struct_registration.inputs.number_of_iterations = [[150,100,50]] #
-			struct_registration.inputs.dimension = 3
-			struct_registration.inputs.write_composite_transform = True
-			struct_registration.inputs.collapse_output_transforms = True
-			struct_registration.inputs.initial_moving_transform_com = True
-			# Tested on Affine transform: CC takes too long; Demons does not tilt, but moves the slices too far caudally; GC tilts too much on
-			struct_registration.inputs.metric = ['MeanSquares']
-			struct_registration.inputs.metric_weight = [1]
-			struct_registration.inputs.radius_or_number_of_bins = [16] #
-			struct_registration.inputs.sampling_strategy = ['Random']
-			struct_registration.inputs.sampling_percentage = [0.3]
-			struct_registration.inputs.convergence_threshold = [1.e-10] #
-			struct_registration.inputs.convergence_window_size = [20]
-			struct_registration.inputs.smoothing_sigmas = [[4, 2, 1]]
-			struct_registration.inputs.sigma_units = ['vox']
-			struct_registration.inputs.shrink_factors = [[3, 2, 1]]
-			struct_registration.inputs.use_estimate_learning_rate_once = [True]
-			# if the fixed_image is not acquired similarly to the moving_image (e.g. RARE to histological (e.g. AMBMC)) this should be False
-			struct_registration.inputs.use_histogram_matching = [False]
-			struct_registration.inputs.winsorize_lower_quantile = 0.005
-			struct_registration.inputs.winsorize_upper_quantile = 0.98
-			struct_registration.inputs.args = '--float'
-			struct_registration.inputs.num_threads = 6
+	n4 = ants.N4BiasFieldCorrection()
+	n4.inputs.dimension = 3
+	n4.inputs.input_image = input_image
+	# correction bias is introduced (along the z-axis) if the following value is set to under 85. This is likely contingent on resolution.
+	n4.inputs.bspline_fitting_distance = 100
+	n4.inputs.shrink_factor = 2
+	n4.inputs.n_iterations = [200,200,200,200]
+	n4.inputs.convergence_threshold = 1e-11
+	# n4.inputs.output_image = 'ss_n4_{}_ofM{}.nii.gz'.format(participant,i)
+	n4.inputs.output_image = 'hard.nii.gz'
+	n4_res = n4.run()
 
-			struct_registration.inputs.moving_image = n4_res.outputs.output_image
-			struct_registration.inputs.output_warped_image = 'ss_{}_ofM{}.nii.gz'.format(participant,i)
-			res = struct_registration.run()
+	struct_registration = ants.Registration()
+	struct_registration.inputs.fixed_image = template
+	struct_registration.inputs.output_transform_prefix = "output_"
+	struct_registration.inputs.transforms = ['Similarity','Affine'] ##
+	struct_registration.inputs.transform_parameters = [(5.,),(0.2,)] ##
+	struct_registration.inputs.number_of_iterations = [[1000,1000,200], [5000, 2500, 1000]] #
+	struct_registration.inputs.dimension = 3
+	struct_registration.inputs.write_composite_transform = True
+	struct_registration.inputs.collapse_output_transforms = True
+	struct_registration.inputs.initial_moving_transform_com = True
+	# Tested on Affine transform: CC takes too long; Demons does not tilt, but moves the slices too far caudally; GC tilts too much on
+	struct_registration.inputs.metric = ['MI', 'MI']
+	struct_registration.inputs.metric_weight = [1, 1]
+	struct_registration.inputs.radius_or_number_of_bins = [10, 10] #
+	struct_registration.inputs.sampling_strategy = ['Random','Random']
+	struct_registration.inputs.sampling_percentage = [0.3, 0.3]
+	struct_registration.inputs.convergence_threshold = [1.e-16, 1.e-18] #
+	struct_registration.inputs.convergence_window_size = [10, 10]
+	struct_registration.inputs.smoothing_sigmas = [[4, 2, 1], [4, 2, 1]]
+	struct_registration.inputs.sigma_units = ['vox', 'vox']
+	struct_registration.inputs.shrink_factors = [[4, 2, 1],[3, 2, 1]]
+	struct_registration.inputs.use_estimate_learning_rate_once = [True, True]
+	# if the fixed_image is not acquired similarly to the moving_image (e.g. RARE to histological (e.g. AMBMC)) this should be False
+	struct_registration.inputs.use_histogram_matching = [False, False]
+	struct_registration.inputs.winsorize_lower_quantile = 0.005
+	struct_registration.inputs.winsorize_upper_quantile = 0.98
+	struct_registration.inputs.args = '--float'
+	struct_registration.inputs.num_threads = 6
+
+	struct_registration.inputs.moving_image = n4_res.outputs.output_image
+	# struct_registration.inputs.output_warped_image = 'ss_{}_ofM{}.nii.gz'.format(participant,i)
+	struct_registration.inputs.output_warped_image = output_image
+	res = struct_registration.run()
+def structural_rigid(template="/Users/marksm/GitHub/mriPipeline/ants_test/template4.nii.gz",
+	input_image = "/Users/marksm/GitHub/mriPipeline/ants_test/source.nii",
+	output_image = 'hard2_new_32_rigid_affine_more_rigid_CC.nii.gz',
+	):
+
+	template = os.path.abspath(os.path.expanduser(template))
+	input_image = os.path.abspath(os.path.expanduser(input_image))
+	output_image = os.path.abspath(os.path.expanduser(output_image))
+
+	n4 = ants.N4BiasFieldCorrection()
+	n4.inputs.dimension = 3
+	n4.inputs.input_image = input_image
+	# correction bias is introduced (along the z-axis) if the following value is set to under 85. This is likely contingent on resolution.
+	n4.inputs.bspline_fitting_distance = 100
+	n4.inputs.shrink_factor = 2
+	n4.inputs.n_iterations = [200,200,200,200]
+	n4.inputs.convergence_threshold = 1e-11
+	# n4.inputs.output_image = 'ss_n4_{}_ofM{}.nii.gz'.format(participant,i)
+	n4.inputs.output_image = 'hard.nii.gz'
+	n4_res = n4.run()
+
+	struct_registration = ants.Registration()
+	struct_registration.inputs.fixed_image = template
+	struct_registration.inputs.output_transform_prefix = "output_"
+	struct_registration.inputs.transforms = ['Similarity'] ##
+	struct_registration.inputs.transform_parameters = [(60.,),] ##
+	struct_registration.inputs.number_of_iterations = [[1000,1000,200],] #
+	struct_registration.inputs.dimension = 3
+	struct_registration.inputs.write_composite_transform = True
+	struct_registration.inputs.collapse_output_transforms = True
+	struct_registration.inputs.initial_moving_transform_com = True
+	# Tested on Affine transform: CC takes too long; Demons does not tilt, but moves the slices too far caudally; GC tilts too much on
+	struct_registration.inputs.metric = ['MI',]
+	struct_registration.inputs.metric_weight = [1,]
+	struct_registration.inputs.radius_or_number_of_bins = [10,] #
+	struct_registration.inputs.sampling_strategy = ['Random',]
+	struct_registration.inputs.sampling_percentage = [0.3,]
+	struct_registration.inputs.convergence_threshold = [1.e-16,] #
+	struct_registration.inputs.convergence_window_size = [10,]
+	struct_registration.inputs.smoothing_sigmas = [[4, 2, 1],]
+	struct_registration.inputs.sigma_units = ['vox',]
+	struct_registration.inputs.shrink_factors = [[4, 2, 1],]
+	struct_registration.inputs.use_estimate_learning_rate_once = [True,]
+	# if the fixed_image is not acquired similarly to the moving_image (e.g. RARE to histological (e.g. AMBMC)) this should be False
+	struct_registration.inputs.use_histogram_matching = [False,]
+	struct_registration.inputs.winsorize_lower_quantile = 0.005
+	struct_registration.inputs.winsorize_upper_quantile = 0.98
+	struct_registration.inputs.args = '--float'
+	struct_registration.inputs.num_threads = 6
+
+	struct_registration.inputs.moving_image = n4_res.outputs.output_image
+	# struct_registration.inputs.output_warped_image = 'ss_{}_ofM{}.nii.gz'.format(participant,i)
+	struct_registration.inputs.output_warped_image = output_image
+	res = struct_registration.run()
 
 
 def functional_per_participant_test():
@@ -669,7 +719,10 @@ if __name__ == '__main__':
 	# 	f_file_format = "~/NIdata/ofM.dr/preprocessing/composite_work/_subject_session_{subject}.{session}/_scan_type_7_EPI_CBV/f_bru2nii/",
 	# 	s_file_format = "~/NIdata/ofM.dr/preprocessing/composite_work/_subject_session_{subject}.{session}/_scan_type_T2_TurboRARE/s_bru2nii/",
 	# 	)
-	structural_to_functional_per_participant_test(subjects_sessions = [{'subject' : 11, 'session': 'rstFMRI_with_medetadomine'}])
+	structural_rigid(template="/Users/marksm/GitHub/mriPipeline/ants_test/template4.nii.gz",
+		input_image = "/Users/marksm/GitHub/mriPipeline/ants_test/source.nii",
+		output_image = 'hard2_new_32_rigid_affine_more_rigid_CC.nii.gz',
+		)
 	# structural_to_functional_per_participant_test(
 	# 	subjects_participants = [{'subjfect' : 11, 'session': 'rstFMRI_with_medetadomine'}],
 	# 	template = "~/GitHub/mriPipeline/templates/waxholm/WHS_SD_rat_T2star_v1.01_downsample3.nii.gz",

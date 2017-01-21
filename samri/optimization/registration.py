@@ -163,6 +163,11 @@ def structural_rigid_flirt_nonlin_syn(template="/Users/marksm/GitHub/mriPipeline
 	output_image = 'final_test.nii.gz',
 	):
 
+	 """Experimental Registration. Performs Rigid body transformation using FSL's FLIRT,
+	 including transformations of the coordinate systems. Subsequently ANTs' SyN performes
+	 the non-linear part of the Registration process.
+	 """
+
 	template = os.path.abspath(os.path.expanduser(template))
 	input_image = os.path.abspath(os.path.expanduser(input_image))
 	output_image = os.path.abspath(os.path.expanduser(output_image))

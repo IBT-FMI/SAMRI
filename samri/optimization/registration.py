@@ -413,9 +413,9 @@ def structural_to_functional_per_participant_test(subjects_sessions,
 			struct_registration = ants.Registration()
 			struct_registration.inputs.fixed_image = template
 			struct_registration.inputs.output_transform_prefix = "output_"
-			struct_registration.inputs.transforms = ['Affine', 'SyN'] ##
-			struct_registration.inputs.transform_parameters = [(1.0,), (1.0, 3.0, 5.0)] ##
-			struct_registration.inputs.number_of_iterations = [[2000, 1000, 500], [100, 100, 100]] #
+			struct_registration.inputs.transforms = ['Rigid','Affine', 'SyN'] ##
+			struct_registration.inputs.transform_parameters = [(1.0),(1.0,), (1.0, 3.0, 5.0)] ##
+			struct_registration.inputs.number_of_iterations = [[200,100,50],[2000, 1000, 500], [100, 100, 100]] #
 			struct_registration.inputs.dimension = 3
 			struct_registration.inputs.write_composite_transform = True
 			struct_registration.inputs.collapse_output_transforms = True

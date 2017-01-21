@@ -158,9 +158,9 @@ def structural_rigid_affine(template="/Users/marksm/GitHub/mriPipeline/ants_test
 	struct_registration.inputs.output_warped_image = output_image
 	res = struct_registration.run()
 
-def structural_flirt_affine(template="/Users/marksm/GitHub/mriPipeline/ants_test/template4.nii.gz",
+def structural_rigid_flirt_nonlin_syn(template="/Users/marksm/GitHub/mriPipeline/ants_test/template4.nii.gz",
 	input_image = "/Users/marksm/GitHub/mriPipeline/ants_test/source_add.nii.gz",
-	output_image = 'new_with_flirt_affine.nii.gz',
+	output_image = 'final_test.nii.gz',
 	):
 
 	template = os.path.abspath(os.path.expanduser(template))
@@ -190,8 +190,8 @@ def structural_flirt_affine(template="/Users/marksm/GitHub/mriPipeline/ants_test
 	struct_registration.inputs.fixed_image = template
 	struct_registration.inputs.output_transform_prefix = "output_"
 	struct_registration.inputs.transforms = ['SyN'] ##
-	struct_registration.inputs.transform_parameters = [(3.0, 3.0, 5.0)] ##
-	struct_registration.inputs.number_of_iterations = [[1000, 500, 250]] #
+	struct_registration.inputs.transform_parameters = [(0.1, 3.0, 0.0)] ##
+	struct_registration.inputs.number_of_iterations = [[2000, 1000, 500]] #
 	struct_registration.inputs.dimension = 3
 	struct_registration.inputs.write_composite_transform = True
 	struct_registration.inputs.collapse_output_transforms = True
@@ -202,7 +202,7 @@ def structural_flirt_affine(template="/Users/marksm/GitHub/mriPipeline/ants_test
 	struct_registration.inputs.radius_or_number_of_bins = [8] #
 	struct_registration.inputs.sampling_strategy = ['Random']
 	struct_registration.inputs.sampling_percentage = [0.3]
-	struct_registration.inputs.convergence_threshold = [1.e-16] #
+	struct_registration.inputs.convergence_threshold = [1.e-10] #
 	struct_registration.inputs.convergence_window_size = [4]
 	struct_registration.inputs.smoothing_sigmas = [[4, 2, 1]]
 	struct_registration.inputs.sigma_units = ['vox']
@@ -794,7 +794,7 @@ if __name__ == '__main__':
 	# 	input_image = "/Users/marksm/GitHub/mriPipeline/ants_test/source.nii",
 	# 	output_image = 'hard2_new_32_rigid_affine_more_rigid_CC.nii.gz',
 	# 	)
-	structural_flirt_affine()
+	structural_rigid_flirt_nonlin_syn()
 	# structural_to_functional_per_participant_test(
 	# 	subjects_participants = [{'subjfect' : 11, 'session': 'rstFMRI_with_medetadomine'}],
 	# 	template = "~/GitHub/mriPipeline/templates/waxholm/WHS_SD_rat_T2star_v1.01_downsample3.nii.gz",

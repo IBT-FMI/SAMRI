@@ -10,43 +10,6 @@ from matplotlib import rcParams
 import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
 
-def plot_timecourses(parcellation="/home/chymera/NIdata/templates/roi/ds_QBI_vze_chr.nii.gz", condition=["ERC_ofM"], subject=["5502"], scan_type=["EPI_CBV_alej"]):
-	datasource = nio.DataGrabber(infields=["condition","subject","scan_type"], outfields=["nii_data", "delay_file", "stimulation_file"], sort_filelist = True)
-	datasource.inputs.base_directory = "/home/chymera/NIdata/ofM.erc/level1"
-	datasource.inputs.template = '*'
-	datasource.inputs.field_template = dict(
-		nii_data='bruker_preprocessing/_condition_%s_subject_%s/_scan_type_%s/functional_bandpass/*.nii.gz',
-		delay_file='bruker_preprocessing/_condition_%s_subject_%s/_scan_type_%s/timing_metadata/_report/report.rst',
-		stimulation_file='first_level/_condition_%s_subject_%s/_scan_type_%s/specify_model/_report/report.rst'
-		)
-	datasource.inputs.template_args = dict(
-		nii_data=[
-			['condition','subject','scan_type']
-			],
-		delay_file=[
-			['condition','subject','scan_type']
-			],
-		stimulation_file=[
-			['condition','subject','scan_type']
-			]
-		)
-	datasource.inputs.condition = ['ERC_ofM']
-	datasource.inputs.subject = ['5502']
-	datasource.inputs.scan_type = ['EPI_CBV_alej']
-
-	results = datasource.run()
-	nii_data = results.outputs.stimulation_file
-
-	masker = NiftiLabelsMasker(labels_img=parcellation, standardize=True, memory='nilearn_cache', verbose=5)
-
-	time_series = masker.fit_transform("/home/chymera/NIdata/ofM.erc/level1/bruker_preprocessing/_condition_ERC_ofM_subject_5502/_scan_type_EPI_CBV_alej/functional_bandpass/corr_7_trans_filt.nii.gz").T
-
-	region_assignments = pd.read_csv("/home/chymera/NIdata/templates/roi/QBI_vze_chr.csv", index_col=["ID"])
-
-	for i in [10,11]:
-		plt.plot(time_series[i], label=region_assignments.get_value(i, "acronym"))
-	plt.legend()
-
 def plot_fsl_design(file_path):
 	df = pd.read_csv(file_path, skiprows=5, sep="\t", header=None, names=[1,2,3,4,5,6], index_col=False)
 	df.plot()

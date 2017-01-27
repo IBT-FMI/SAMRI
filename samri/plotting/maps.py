@@ -27,7 +27,7 @@ def stat(stat_maps,
 	show_plot=True,
 	dim="auto",
 	orientation="landscape"):
-	
+
 	"""Plot a list of statistical maps.
 	This Function acts as a wrapper of nilearn.plotting.plot_stat_map, adding support for multiple axes, using a prettier default and allowing intelligent text and crosshair scaling.
 

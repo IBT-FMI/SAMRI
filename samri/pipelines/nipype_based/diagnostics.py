@@ -51,7 +51,7 @@ def diagnose(measurements_base,
 	exclude_subjects=[],
 	exclude_measurements=[],
 	actual_size=False,
-	components=8,
+	components=None,
 	keep_work=False,
 	loud=False,
 	n_procs=8,
@@ -107,7 +107,8 @@ def diagnose(measurements_base,
 	melodic = pe.Node(interface=MELODIC(), name="melodic")
 	melodic.inputs.tr_sec = tr
 	melodic.inputs.report = True
-	melodic.inputs.dim = components
+	if components:
+		melodic.inputs.dim = components
 
 	workflow_connections = [
 		(infosource, get_f_scan, [('subject_session', 'selector')]),

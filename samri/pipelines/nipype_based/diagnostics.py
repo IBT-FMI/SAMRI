@@ -108,7 +108,7 @@ def diagnose(measurements_base,
 	melodic.inputs.tr_sec = tr
 	melodic.inputs.report = True
 	if components:
-		melodic.inputs.dim = components
+		melodic.inputs.dim = int(components)
 
 	workflow_connections = [
 		(infosource, get_f_scan, [('subject_session', 'selector')]),

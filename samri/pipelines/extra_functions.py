@@ -7,10 +7,11 @@ import nibabel as nb
 import pandas as pd
 from nipype_based.utils import STIM_PROTOCOL_DICTIONARY
 
-def read_bruker_timing(scan_directory):
+
+def read_bruker_timing(scan_dir):
 	from datetime import datetime
-	scan_directory = os.path.abspath(os.path.expanduser(scan_directory))
-	state_file_path = os.path.join(scan_directory,"AdjStatePerScan")
+	scan_dir = os.path.abspath(os.path.expanduser(scan_dir))
+	state_file_path = os.path.join(scan_dir,"AdjStatePerScan")
 	delay_seconds = dummy_scans = dummy_scans_ms = 0
 
 	#Here we read the `AdjStatePerScan` file, which may be missing if no adjustments were run at the beginning of this scan
@@ -30,7 +31,7 @@ def read_bruker_timing(scan_directory):
 		delay_seconds=delay.total_seconds()
 
 	#Here we read the `method` file, which contains info about dummy scans
-	method_file_path = os.path.join(scan_directory,"method")
+	method_file_path = os.path.join(scan_dir,"method")
 	method_file = open(method_file_path, "r")
 
 	read_variables=0 #count variables so that breaking takes place after both have been read
@@ -70,7 +71,7 @@ def write_events_file(scan_type, stim_protocol_dictionary,
 	db_path="~/syncdata/meta.db",
 	out_file="~/events.tsv",
 	subject_delay=False,
-	scan_directory=False,
+	scan_dir=False,
 	very_nasty_bruker_delay_hack=False,
 	):
 	import csv
@@ -86,8 +87,8 @@ def write_events_file(scan_type, stim_protocol_dictionary,
 	out_file = os.path.abspath(os.path.expanduser(out_file))
 
 	if not subject_delay:
-		scan_directory = os.path.abspath(os.path.expanduser(scan_directory))
-		state_file_path = os.path.join(scan_directory,"AdjStatePerScan")
+		scan_dir = os.path.abspath(os.path.expanduser(scan_dir))
+		state_file_path = os.path.join(scan_dir,"AdjStatePerScan")
 		delay_seconds = dummy_scans = dummy_scans_ms = 0
 
 		#Here we read the `AdjStatePerScan` file, which may be missing if no adjustments were run at the beginning of this scan
@@ -107,7 +108,7 @@ def write_events_file(scan_type, stim_protocol_dictionary,
 			delay_seconds=delay.total_seconds()
 
 		#Here we read the `method` file, which contains info about dummy scans
-		method_file_path = os.path.join(scan_directory,"method")
+		method_file_path = os.path.join(scan_dir,"method")
 		method_file = open(method_file_path, "r")
 
 		read_variables=0 #count variables so that breaking takes place after both have been read
@@ -337,7 +338,7 @@ def get_data_selection(workflow_base, sessions=[], scan_types=[], subjects=[], e
 								#If the ScanProgram.scanProgram file is small in size and the scan_type could not be matched, that may be because ParaVision failed
 								#to write all the information into the file. This happens occasionally.
 								#Thus we scan the individual acquisition protocols as well. These are a suboptimal and second choice, because acqp scans **also**
-								#keep the original names the sequences had on import (ans may thus be misdetected, if the name was changed by the user after import).
+								#keep the original names the sequences had on import (and may thus be misleading, if the name was changed by the user after import).
 								if os.stat(scan_program_file_path).st_size <= 700 and not scan_number:
 									for sub_sub_dir in os.listdir(os.path.join(workflow_base,sub_dir)):
 										try:
@@ -363,4 +364,4 @@ def get_data_selection(workflow_base, sessions=[], scan_types=[], subjects=[], e
 	return data_selection
 
 if __name__ == '__main__':
-	write_events_file("7_EPI_CBV", STIM_PROTOCOL_DICTIONARY, scan_directory="~/NIdata/ofM.dr/20151208_182500_4007_1_4/10")
+	write_events_file("7_EPI_CBV", STIM_PROTOCOL_DICTIONARY, scan_dir="~/NIdata/ofM.dr/20151208_182500_4007_1_4/10")

@@ -7,6 +7,40 @@ import nibabel as nb
 import pandas as pd
 from nipype_based.utils import STIM_PROTOCOL_DICTIONARY
 
+def force_dummy_scans(in_file, scan_dir,
+	desired_dummy_scans=10,
+	):
+	"""Take a scan and crop initial timepoints depending upon the number of dummy scans (determined from a Bruker scan directory) and the desired number of dummy scans.
+
+	in_file : string
+	Path to the 4D NIfTI file for which to force dummy scans.
+
+	scan_dir : string
+	Path to the corresponding Bruker directory of the scan_dir.
+
+	desired_dummy_scans : int , optional
+	Desired timepoints dummy scans.
+	"""
+
+	import nibabel as nib
+
+	method_file_path = os.path.join(scan_dir,"method")
+
+	dummy_scans = 0
+	while True:
+		current_line = method_file.readline()
+		if "##$PVM_DummyScans=" in current_line:
+			dummy_scans = int(current_line.split("=")[1])
+			break
+
+	delete_scans = desired_dummy_scans - dummy_scans
+
+	if delete_scans <= 0:
+		out_file = in_file
+	else:
+		out_file = in_file
+
+	return out_file
 
 def read_bruker_timing(scan_dir):
 	from datetime import datetime

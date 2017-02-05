@@ -8,6 +8,7 @@ import pandas as pd
 from nipype_based.utils import STIM_PROTOCOL_DICTIONARY
 
 def force_dummy_scans(in_file, scan_dir,
+	out_file="forced_dummy_scans_file.nii.gz",
 	desired_dummy_scans=10,
 	):
 	"""Take a scan and crop initial timepoints depending upon the number of dummy scans (determined from a Bruker scan directory) and the desired number of dummy scans.
@@ -38,7 +39,9 @@ def force_dummy_scans(in_file, scan_dir,
 	if delete_scans <= 0:
 		out_file = in_file
 	else:
-		out_file = in_file
+		img = nib.load(in_file)
+		img_ = nib.Nifti1Image(img.get_data()[...,delete_scans:], img.affine, img.header)
+		nib.save(img_,out_file)
 
 	return out_file
 

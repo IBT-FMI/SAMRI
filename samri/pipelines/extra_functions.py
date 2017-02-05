@@ -8,8 +8,8 @@ import pandas as pd
 from nipype_based.utils import STIM_PROTOCOL_DICTIONARY
 
 def force_dummy_scans(in_file, scan_dir,
-	out_file="forced_dummy_scans_file.nii.gz",
 	desired_dummy_scans=10,
+	out_file="forced_dummy_scans_file.nii.gz",
 	):
 	"""Take a scan and crop initial timepoints depending upon the number of dummy scans (determined from a Bruker scan directory) and the desired number of dummy scans.
 
@@ -23,10 +23,13 @@ def force_dummy_scans(in_file, scan_dir,
 	Desired timepoints dummy scans.
 	"""
 
+	import os
 	import nibabel as nib
 
-	method_file_path = os.path.join(scan_dir,"method")
+	out_file = os.path.abspath(os.path.expanduser(out_file))
 
+	method_file_path = os.path.join(scan_dir,"method")
+	method_file = open(method_file_path, "r")
 	dummy_scans = 0
 	while True:
 		current_line = method_file.readline()

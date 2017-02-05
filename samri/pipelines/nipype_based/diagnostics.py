@@ -4,9 +4,9 @@ if not __package__:
 	pkg_root = path.abspath(path.join(path.dirname(path.realpath(__file__)),"../../.."))
 	sys.path.insert(0, pkg_root)
 try:
-	from ..extra_functions import get_data_selection, get_scan, write_events_file
+	from ..extra_functions import get_data_selection, get_scan, write_events_file, force_dummy_scans
 except ValueError:
-	from samri.pipelines.extra_functions import get_data_selection, get_scan, write_events_file
+	from samri.pipelines.extra_functions import get_data_selection, get_scan, write_events_file, force_dummy_scans
 
 import inspect
 import re
@@ -96,6 +96,9 @@ def diagnose(measurements_base,
 	f_bru2nii = pe.Node(interface=Bru2(), name="f_bru2nii")
 	f_bru2nii.inputs.actual_size=actual_size
 
+	dummy_scans = pe.Node(name='dummy_scans', interface=util.Function(function=force_dummy_scans,input_names=inspect.getargspec(force_dummy_scans)[0], output_names=['out_file']))
+	dummy_scans.inputs.desired_dummy_scans = 10
+
 	bids_filename = pe.Node(name='bids_filename', interface=util.Function(function=sss_filename,input_names=inspect.getargspec(sss_filename)[0], output_names=['filename']))
 	bids_filename.inputs.suffix = "MELODIC"
 	bids_filename.inputs.extension = ""
@@ -113,6 +116,8 @@ def diagnose(measurements_base,
 	workflow_connections = [
 		(infosource, get_f_scan, [('subject_session', 'selector')]),
 		(get_f_scan, f_bru2nii, [('scan_path', 'input_dir')]),
+		(f_bru2nii, dummy_scans, [('nii_file', 'in_file')]),
+		(get_f_scan, dummy_scans, [('scan_path', 'scan_dir')]),
 		(infosource, datasink, [(('subject_session',ss_to_path), 'container')]),
 		(infosource, bids_filename, [('subject_session', 'subject_session')]),
 		(get_f_scan, bids_filename, [('scan_type', 'scan')]),
@@ -150,12 +155,12 @@ def diagnose(measurements_base,
 		realigner.inputs.tr = tr
 		realigner.inputs.slice_info = 3 #3 for coronal slices (2 for horizontal, 1 for sagittal)
 		workflow_connections.extend([
-			(f_bru2nii, realigner, [('nii_file', 'in_file')]),
+			(dummy_scans, realigner, [('out_file', 'in_file')]),
 			(realigner, melodic, [('out_file', 'in_files')]),
 			])
 	else:
 		workflow_connections.extend([
-			(f_bru2nii, melodic, [('nii_file', 'in_files')]),
+			(dummy_scans, melodic, [('out_file', 'in_files')]),
 			])
 
 	workdir_name = workflow_name+"_work"

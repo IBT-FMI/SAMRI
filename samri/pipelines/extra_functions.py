@@ -109,7 +109,7 @@ def write_function_call(frame, target_path):
 
 def write_events_file(scan_type, stim_protocol_dictionary,
 	db_path="~/syncdata/meta.db",
-	out_file="~/events.tsv",
+	out_file="events.tsv",
 	subject_delay=False,
 	scan_dir=False,
 	very_nasty_bruker_delay_hack=False,

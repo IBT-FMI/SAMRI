@@ -1,5 +1,6 @@
 scan_type,categories
 EPI_CBV,functional
+EPI_BOLD,functional
 EPI_CBV_jp_phasic,functional
 EPI_CBV_chr_longSOA,functional
 EPI_CBV_alej,functional

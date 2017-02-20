@@ -53,6 +53,7 @@ def roi_based(substitutions,
 	flip=False,
 	design_len=None,
 	color="r",
+	scale_design=1,
 	):
 
 	fig, ax = plt.subplots(figsize=(6,4) , facecolor='#eeeeee', tight_layout=True)
@@ -81,9 +82,9 @@ def roi_based(substitutions,
 		for i in plot_design_regressors:
 			regressor = design_df[[i]].values.flatten()
 			if flip:
-				ax.plot(regressor.T, np.arange(len(regressor)), lw=rcParams['lines.linewidth']*2, color=color)
+				ax.plot(regressor.T*scale_design, np.arange(len(regressor)), lw=rcParams['lines.linewidth']*2, color=color)
 			else:
-				ax.plot(regressor, lw=rcParams['lines.linewidth']*2, color=color)
+				ax.plot(regressor*scale_design, lw=rcParams['lines.linewidth']*2, color=color)
 		if flip:
 			ax.set_ylim([0,len(regressor)])
 		else:
@@ -156,7 +157,7 @@ def multi(timecourses, designs, stat_maps, subplot_titles,
 			ax.set_ylabel(subplot_titles[ix])
 
 
-# if __name__ == '__main__':
+if __name__ == '__main__':
 	# plot_fsl_design("/home/chymera/NIdata/ofM.dr/level1/first_level/_condition_ofM_subject_4001/modelgen/run0.mat")
 	# stim = {"durations":[[20.0], [20.0], [20.0], [20.0], [20.0], [20.0]], "onsets":[[172.44299999999998], [352.443], [532.443], [712.443], [892.443], [1072.443]]}
 	# plot_stim_design("/home/chymera/level1/first_level/_condition_ERC_ofM_subject_5503/_scan_type_T2_TurboRARE/_scan_type_EPI_CBV_alej/modelgen/run0.mat",stim)
@@ -168,16 +169,18 @@ def multi(timecourses, designs, stat_maps, subplot_titles,
 	# plt.style.use(u'seaborn-darkgrid')
 	# plt.style.use(u'ggplot')
 	#
-	# roi_based(
-	# 	roi="~/NIdata/templates/roi/ctx_chr.nii.gz",
-	# 	events_file_template="~/NIdata/ofM.dr/preprocessing/{workflow}/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_trial-{scan}_events.tsv",
-	# 	beta_file_template="~/NIdata/ofM.dr/l1/{workflow}/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_trial-{scan}_cope.nii.gz",
-	# 	ts_file_template="~/NIdata/ofM.dr/preprocessing/{workflow}/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_trial-{scan}.nii.gz",
-	# 	design_file_template="~/NIdata/ofM.dr/l1/{workflow}_work/_subject_session_scan_{subject}.{session}.{scan}/modelgen/run0.mat",
-	# 	substitutions={"workflow":"composite","subject":4007,"session":"ofM_cF2","scan":"7_EPI_CBV"},
-	# 	)
+	roi_based(
+		roi="~/NIdata/templates/roi/ctx_chr.nii.gz",
+		events_file_template="~/NIdata/ofM.dr/preprocessing/{workflow}/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_trial-{scan}_events.tsv",
+		beta_file_template="~/NIdata/ofM.dr/_l1/{workflow}/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_trial-{scan}_cope.nii.gz",
+		ts_file_template="~/NIdata/ofM.dr/preprocessing/{workflow}/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_trial-{scan}.nii.gz",
+		design_file_template="~/NIdata/ofM.dr/_l1/{workflow}_work/_subject_session_scan_{subject}.{session}.{scan}/level1design/run0.mat",
+		substitutions={"workflow":"composite","subject":4007,"session":"ofM_cF2","scan":"7_EPI_CBV"},
+		scale_design=3,
+		)
 
 	# roi_based(subject=4007, roi="dr", workflows=["generic"], melodic_hit=5)
 	# roi_based(subject=4001, roi="dr", workflows=["generic"])
 	# roi_based(subject=4012, workflows=["norealign","generic"], melodic_hit=5)
 	# roi_based(subject=4012, session="ofM_cF1", workflows=["norealign","generic"])
+	plt.show()

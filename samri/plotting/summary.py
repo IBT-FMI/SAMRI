@@ -206,6 +206,42 @@ def p_filtering(substitution, ts_file_template, beta_file_template, p_file_templ
 	return timecourse, design, mask_map, subplot_title
 
 def roi_masking(substitution, ts_file_template, beta_file_template, design_file_template, roi_path):
+	"""Apply a substitution pattern to timecourse, beta, and design file templates - and mask the data of the former two according to a roi. Subsequently scale the design by the mean beta.
+
+	Parameters
+	----------
+
+	substitution : dict
+	A dictionary containing the template replacement fields as keys and identifiers as values.
+
+	ts_file_template : string
+	Timecourse file template with replacement fields. The file should be in NIfTI format.
+
+	beta_file_template : string
+	Beta file template with replacement fields. The file should be in NIfTI format.
+
+	design_file_template : string
+	Design file template with replacement fields. The file should be in CSV format.
+
+	roi_path : string
+	Path to the region of interest file based on which to create a mask for the time course and beta files. The file should be in NIfTI format.
+
+	Returns
+	-------
+
+	timecourse : array_like
+	Numpy array containing the mean timecourse in the region of interest.
+
+	design : array_like
+	Numpy array containing the regressor scaled by the mean beta value of the region of interest..
+
+	mask_map : data
+	Nibabel image of the mask
+
+	subplot_title : string
+	Title for the subplot, computed from the substitution fields.
+	"""
+
 	ts_file = os.path.expanduser(ts_file_template.format(**substitution))
 	beta_file = os.path.expanduser(beta_file_template.format(**substitution))
 	design_file = os.path.expanduser(design_file_template.format(**substitution))

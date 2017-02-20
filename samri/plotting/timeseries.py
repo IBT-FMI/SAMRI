@@ -55,6 +55,7 @@ def roi_based(substitutions,
 	color="r",
 	scale_design=1,
 	):
+	"""Plot timecourses and design for measurements. should be deprecated in favour of multi"""
 
 	fig, ax = plt.subplots(figsize=(6,4) , facecolor='#eeeeee', tight_layout=True)
 

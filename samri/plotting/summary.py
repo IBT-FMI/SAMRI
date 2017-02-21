@@ -289,7 +289,6 @@ def roi_ts(substitutions, roi_path,
 	return timecourses, designs, stat_maps, subplot_titles
 
 def p_filtered_ts(substitutions,
-	legend_loc="best",
 	ts_file_template="~/NIdata/ofM.dr/preprocessing/{preprocessing_dir}/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_trial-{scan}.nii.gz",
 	beta_file_template="~/NIdata/ofM.dr/l1/{l1_dir}/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_trial-{scan}_cope.nii.gz",
 	p_file_template="~/NIdata/ofM.dr/l1/{l1_dir}/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_trial-{scan}_pstat.nii.gz",

@@ -259,13 +259,12 @@ def roi_masking(substitution, ts_file_template, beta_file_template, design_file_
 	design = design*np.mean(betas)
 	return timecourse, design, mask_map, subplot_title
 
-def roi_ts(substitutions,roi_path,
+def roi_ts(substitutions, roi_path,
 	ts_file_template="~/NIdata/ofM.dr/preprocessing/{preprocessing_dir}/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_trial-{scan}.nii.gz",
 	beta_file_template="~/NIdata/ofM.dr/l1/{l1_dir}/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_trial-{scan}_cope.nii.gz",
 	design_file_template="~/NIdata/ofM.dr/l1/{l1_workdir}/_subject_session_scan_{subject}.{session}.{scan}/modelgen/run0.mat",
 	):
 
-	df = pd.DataFrame({})
 	timecourses = []
 	stat_maps = []
 	subplot_titles = []
@@ -298,7 +297,6 @@ def p_filtered_ts(substitutions,
 	p_level=0.1,
 	):
 
-	df = pd.DataFrame({})
 	timecourses = []
 	stat_maps = []
 	subplot_titles = []

@@ -49,11 +49,6 @@ def roi(roi_path="~/NIdata/templates/roi/f_dr_chr.nii.gz"):
 	timeseries.multi(timecourses, designs, stat_maps, subplot_titles, figure="timecourses")
 	plt.show()
 
-# def roi_teaching(roi_path="~/NIdata/templates/roi/f_dr_chr.nii.gz"):
-# 	events_file_template="~/NIdata/ofM.dr/preprocessing/{preprocessing_dir}/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_trial-{scan}_events.tsv"
-# 	substitutions = summary.bids_substitution_iterator(["ofM_cF2"],[4008],["7_EPI_CBV"],"composite")
-# 	ax = timeseries.roi_based(substitutions[0], events_file_template=events_file_template, flip=True, roi=roi_path)
-# 	plt.show()
 def roi_teaching(roi_path="~/NIdata/templates/roi/f_dr_chr.nii.gz"):
 	design_file_template="~/NIdata/ofM.dr/l1/{l1_workdir}/_subject_session_scan_{subject}.{session}.{scan}/modelgen/run0.mat"
 	substitutions = summary.bids_substitution_iterator(["ofM_cF2"],[4008],["7_EPI_CBV"],"composite")
@@ -77,6 +72,6 @@ if __name__ == '__main__':
 	# roi_per_session("composite", "ctx", "#56B4E9")
 	# roi_per_session("composite", "f_dr", "#E69F00")
 	# p_clusters()
-	# roi(roi_path="~/NIdata/templates/roi/ctx_chr.nii.gz")
-	roi_teaching()
+	roi(roi_path="~/NIdata/templates/roi/ctx_chr.nii.gz")
+	# roi_teaching()
 	# check_responders()

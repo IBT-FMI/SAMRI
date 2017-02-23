@@ -4,11 +4,15 @@ import numpy as np
 from scipy import stats, signal
 import matplotlib.pyplot as plt
 
-def get_irf():
-	my_x = np.linspace(0,100,100)
-	my_y = stats.beta.pdf(my_x/100, 2, 5)
-	my_z = np.linspace(0,0,100)
-	my_z[:20]=1
+def get_irf(
+	a=2,
+	b=10,
+	resolution=1,
+	):
+	my_x = np.linspace(0,100,100*resolution)
+	my_y = stats.beta.pdf(my_x/100, a, b)
+	my_z = np.linspace(0,0,100*resolution)
+	my_z[:20*resolution]=1
 
 	irf = signal.deconvolve(my_y, my_z)[1]
 	block_response = signal.convolve(irf,my_z)

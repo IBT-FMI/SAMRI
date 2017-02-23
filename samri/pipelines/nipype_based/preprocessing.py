@@ -199,7 +199,7 @@ def bruker(measurements_base,
 		(get_f_scan, f_bru2nii, [('scan_path', 'input_dir')]),
 		(get_f_scan, events_file, [
 			('scan_type', 'scan_type'),
-			('scan_path', 'scan_directory')
+			('scan_path', 'scan_dir')
 			]),
 		(events_file, datasink, [('out_file', 'func.@events')]),
 		(bids_stim_filename, events_file, [('filename', 'out_file')]),

@@ -222,21 +222,23 @@ class Bru2(CommandLine):
 			return outfile
 
 STIM_PROTOCOL_DICTIONARY={
-	"EPI_CBV_jin6":"jin6",
-	"EPI_CBV_jin10":"jin10",
-	"EPI_CBV_jin20":"jin20",
-	"EPI_CBV_jin40":"jin40",
-	"EPI_CBV_jin60":"jin60",
-	"EPI_CBV_alej":"alej",
 	"7_EPI_CBV_jin6":"jin6",
 	"7_EPI_CBV_jin10":"jin10",
 	"7_EPI_CBV_jin20":"jin20",
 	"7_EPI_CBV_jin40":"jin40",
 	"7_EPI_CBV_jin60":"jin60",
 	"7_EPI_CBV_alej":"alej",
-	"7_EPI_CBV":"6_20_jb",
-	"EPI_CBV":"chr_longSOA",
+	"EPI_BOLD_chr_longSOA":"chr_longSOA",
+	"EPI_BOLD_jb_long":"jb_long",
+	"EPI_CBV_alej":"alej",
 	"EPI_CBV_chr_longSOA":"chr_longSOA",
+	"EPI_CBV_chr_vlongSOA":"chr_vlongSOA",
+	"EPI_CBV_jb_long":"jb_long",
+	"EPI_CBV_jin6":"jin6",
+	"EPI_CBV_jin10":"jin10",
+	"EPI_CBV_jin20":"jin20",
+	"EPI_CBV_jin40":"jin40",
+	"EPI_CBV_jin60":"jin60",
 	"EPI_CBV_jp_phasic":"jp_phasic",
 	}
 

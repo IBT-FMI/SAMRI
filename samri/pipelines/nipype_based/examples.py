@@ -1,7 +1,31 @@
 import preprocessing, glm
 
 def wb_composite():
-	preprocessing.bruker("/home/chymera/NIdata/ofM.dr/",exclude_measurements=['20151027_121613_4013_1_1'], workflow_name="composite", very_nasty_bruker_delay_hack=True, negative_contrast_agent=True, functional_blur_xy=4, functional_registration_method="composite", keep_work=True)
+	preprocessing.bruker("/home/chymera/NIdata/ofM.dr/",
+		exclude_measurements=['20151027_121613_4013_1_1'],
+		# subjects=["4001","4002","4009"],
+		workflow_name="composite",
+		very_nasty_bruker_delay_hack=True,
+		negative_contrast_agent=True,
+		functional_blur_xy=4,
+		functional_registration_method="composite",
+		keep_work=True,
+		)
+	glm.l1("~/NIdata/ofM.dr/preprocessing/composite",
+		workflow_name="composite",
+		# include={"subjects":["4001","4002","4009"]},
+		habituation="confound",
+		mask="/home/chymera/NIdata/templates/ds_QBI_chr_bin.nii.gz",
+		keep_work=True,
+		)
+	glm.l2_common_effect("~/NIdata/ofM.dr/l1/composite",
+		workflow_name="composite_subjects",
+		groupby="subject",
+		)
+	glm.l2_common_effect("~/NIdata/ofM.dr/l1/composite",
+		workflow_name="composite_sessions",
+		groupby="session",
+		)
 
 def dr_composite():
 	preprocessing.bruker("/home/chymera/NIdata/ofM.dr/",exclude_measurements=['20151027_121613_4013_1_1'], workflow_name="composite", very_nasty_bruker_delay_hack=True, negative_contrast_agent=True, functional_blur_xy=4, functional_registration_method="composite")

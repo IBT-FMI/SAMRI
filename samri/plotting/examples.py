@@ -32,7 +32,7 @@ def p_clusters():
 	plt.show()
 
 def roi(roi_path="~/NIdata/templates/roi/f_dr_chr.nii.gz"):
-	substitutions = summary.bids_substitution_iterator(["ofM","ofM_aF","ofM_cF1","ofM_cF2","ofM_pF"],[4007,4008,4009,4011,4012],["7_EPI_CBV"],"composite")
+	substitutions = summary.bids_substitution_iterator(["ofM","ofM_aF","ofM_cF1","ofM_cF2","ofM_pF"],[4007,4008,4009,4011,4012],["EPI_CBV_jb_long"],"composite")
 	timecourses, designs, stat_maps, subplot_titles = summary.roi_ts(substitutions, roi_path=roi_path,)
 	timeseries.multi(timecourses, designs, stat_maps, subplot_titles, figure="timecourses")
 	plt.show()
@@ -48,7 +48,7 @@ def check_responders():
 
 if __name__ == '__main__':
 	# responder_overview("composite_sessions", ["4001","4005","4007","4008","4009","4011","4012","5689","5690","5691","5703","5704","5706"])
-	overview("composite_sessions", ["ofM","ofM_aF","ofM_cF1","ofM_cF2","ofM_pF"])
+	# overview("composite_sessions", ["ofM","ofM_aF","ofM_cF1","ofM_cF2","ofM_pF"])
 	# overview("composite_subjects", ["4001","4005","4007","4008","4009","4011","4012"]) #4001 is a negative control (transgene but no injection
 	# overview("subjectwise_blur", ["4001","4005","4007","4008","4009","4011","4012"])
 
@@ -56,6 +56,6 @@ if __name__ == '__main__':
 	# roi_per_session("composite", "ctx", "#56B4E9")
 	# roi_per_session("composite", "f_dr", "#E69F00")
 	# p_clusters()
-	# roi(roi_path="~/NIdata/templates/roi/ctx_chr.nii.gz")
+	roi(roi_path="~/NIdata/templates/roi/f_dr_chr_bin.nii.gz")
 	# roi_teaching()
 	# check_responders()

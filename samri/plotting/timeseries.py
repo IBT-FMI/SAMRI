@@ -125,7 +125,7 @@ def roi_based(substitutions,
 
 	return ax
 
-def multi(timecourses, designs, stat_maps, subplot_titles,
+def multi(timecourses, designs, stat_maps, events_dfs, subplot_titles,
 	figure="maps",
 	):
 	if figure == "maps":
@@ -141,21 +141,31 @@ def multi(timecourses, designs, stat_maps, subplot_titles,
 		max_ylim = [0,0]
 
 		for ix, timecourse in enumerate(timecourses):
+			timecourse = timecourses[ix]
+			design = designs[ix]
+			events_df = events_dfs[ix]
+			subplot_title = subplot_titles[ix]
+
 			col = ix // max_rows
 			row = ix % max_rows
 			if col+1 == ncols:
 				ax = plt.subplot2grid((max_rows*min_rows,ncols), (row*max_rows, col), rowspan=max_rows)
 			else:
 				ax = plt.subplot2grid((max_rows*min_rows,ncols), (row*min_rows, col), rowspan=min_rows)
-			ax.plot(timecourses[ix], lw=rcParams['lines.linewidth']/4)
-			ax.plot(designs[ix][0])
+			for d, o in zip(events_df["duration"], events_df["onset"]):
+				d = round(d)
+				o = round(o)
+				ax.axvspan(o,o+d, facecolor="cyan", alpha=0.15)
+				plt.hold(True)
+			ax.plot(timecourse, lw=rcParams['lines.linewidth']/4)
+			ax.plot(design[0])
 			if not ix in xlabel_positive:
 				plt.setp(ax.get_xticklabels(), visible=False)
 			current_ylim = ax.get_ylim()
 			ax.yaxis.grid(False)
-			ax.set_xlim([0,len(timecourses[ix])])
+			ax.set_xlim([0,len(timecourse)])
 			ax.set_yticks([])
-			ax.set_ylabel(subplot_titles[ix])
+			ax.set_ylabel(subplot_title)
 
 
 if __name__ == '__main__':

@@ -181,12 +181,12 @@ if __name__ == '__main__':
 	# plt.style.use(u'ggplot')
 	#
 	roi_based(
-		roi="~/NIdata/templates/roi/ctx_chr.nii.gz",
+		roi="~/NIdata/templates/roi/f_dr_chr_bin.nii.gz",
 		events_file_template="~/NIdata/ofM.dr/preprocessing/{workflow}/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_trial-{scan}_events.tsv",
-		beta_file_template="~/NIdata/ofM.dr/_l1/{workflow}/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_trial-{scan}_cope.nii.gz",
+		beta_file_template="~/NIdata/ofM.dr/l1/{workflow}/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_trial-{scan}_cope.nii.gz",
 		ts_file_template="~/NIdata/ofM.dr/preprocessing/{workflow}/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_trial-{scan}.nii.gz",
-		design_file_template="~/NIdata/ofM.dr/_l1/{workflow}_work/_subject_session_scan_{subject}.{session}.{scan}/level1design/run0.mat",
-		substitutions={"workflow":"composite","subject":4007,"session":"ofM_cF2","scan":"7_EPI_CBV"},
+		design_file_template="~/NIdata/ofM.dr/l1/{workflow}_work/_subject_session_scan_{subject}.{session}.{scan}/modelgen/run0.mat",
+		substitutions={"workflow":"composite","subject":4007,"session":"ofM_cF2","scan":"EPI_CBV_jb_long"},
 		scale_design=3,
 		)
 

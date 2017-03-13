@@ -45,8 +45,8 @@ def p_clusters():
 
 def roi(roi_path="~/NIdata/templates/roi/f_dr_chr.nii.gz"):
 	substitutions = summary.bids_substitution_iterator(["ofM","ofM_aF","ofM_cF1","ofM_cF2","ofM_pF"],[4007,4008,4009,4011,4012],["7_EPI_CBV"],"composite")
-	timecourses, designs, stat_maps, subplot_titles = summary.roi_ts(substitutions, roi_path=roi_path,)
-	timeseries.multi(timecourses, designs, stat_maps, subplot_titles, figure="timecourses")
+	timecourses, designs, stat_maps, events_dfs, subplot_titles = summary.ts_overviews(substitutions, roi_path=roi_path,)
+	timeseries.multi(timecourses, designs, stat_maps, events_dfs, subplot_titles, figure="timecourses")
 	plt.show()
 
 def roi_teaching(roi_path="~/NIdata/templates/roi/f_dr_chr.nii.gz"):

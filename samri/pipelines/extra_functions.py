@@ -107,11 +107,10 @@ def write_function_call(frame, target_path):
 	target.write(function_call)
 	target.close()
 
-def write_events_file(scan_type, stim_protocol_dictionary,
+def write_events_file(scan_dir, scan_type, stim_protocol_dictionary,
 	db_path="~/syncdata/meta.db",
 	out_file="events.tsv",
 	subject_delay=False,
-	scan_dir=False,
 	very_nasty_bruker_delay_hack=False,
 	):
 	import csv
@@ -180,7 +179,7 @@ def write_events_file(scan_type, stim_protocol_dictionary,
 	names=[]
 	with open(out_file, 'w') as tsvfile:
 		field_names =["onset","duration","stimulation_frequency"]
-		writer = csv.DictWriter(tsvfile, fieldnames=field_names, delimiter="\t")
+		writer = csv.DictWriter(tsvfile, fieldnames=field_names, delimiter=str("\t")) #we use str() to avoid `TypeError: "delimiter" must be string, not unicode`
 
 		writer.writeheader()
 		for i in range(stimulus_repetitions):

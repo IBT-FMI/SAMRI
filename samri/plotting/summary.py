@@ -205,7 +205,7 @@ def p_filtering(substitution, ts_file_template, beta_file_template, p_file_templ
 	design = design*np.mean(betas)
 	return timecourse, design, mask_map, subplot_title
 
-def roi_masking(substitution, ts_file_template, beta_file_template, design_file_template, roi_path):
+def roi_masking(substitution, ts_file_template, beta_file_template, design_file_template, event_file_template, roi_path):
 	"""Apply a substitution pattern to timecourse, beta, and design file templates - and mask the data of the former two according to a roi. Subsequently scale the design by the mean beta.
 
 	Parameters
@@ -245,6 +245,7 @@ def roi_masking(substitution, ts_file_template, beta_file_template, design_file_
 	ts_file = os.path.expanduser(ts_file_template.format(**substitution))
 	beta_file = os.path.expanduser(beta_file_template.format(**substitution))
 	design_file = os.path.expanduser(design_file_template.format(**substitution))
+	event_file = os.path.expanduser(event_file_template.format(**substitution))
 
 	masker = NiftiMasker(mask_img=roi_path)
 	mask_map = nib.load(roi_path)
@@ -252,17 +253,19 @@ def roi_masking(substitution, ts_file_template, beta_file_template, design_file_
 		timecourse = masker.fit_transform(ts_file).T
 		betas = masker.fit_transform(beta_file).T
 	except ValueError:
-		return None,None,None,None
+		return None,None,None,None,None
 	subplot_title = "\n ".join([str(substitution["subject"]),str(substitution["session"])])
 	timecourse = np.mean(timecourse, axis=0)
 	design = pd.read_csv(design_file, skiprows=5, sep="\t", header=None, index_col=False)
 	design = design*np.mean(betas)
-	return timecourse, design, mask_map, subplot_title
+	event_df = pd.read_csv(event_file, sep="\t")
+	return timecourse, design, mask_map, event_df, subplot_title
 
-def roi_ts(substitutions, roi_path,
+def ts_overviews(substitutions, roi_path,
 	ts_file_template="~/NIdata/ofM.dr/preprocessing/{preprocessing_dir}/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_trial-{scan}.nii.gz",
 	beta_file_template="~/NIdata/ofM.dr/l1/{l1_dir}/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_trial-{scan}_cope.nii.gz",
 	design_file_template="~/NIdata/ofM.dr/l1/{l1_workdir}/_subject_session_scan_{subject}.{session}.{scan}/modelgen/run0.mat",
+	event_file_template="~/NIdata/ofM.dr/preprocessing/{preprocessing_dir}/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_trial-{scan}_events.tsv",
 	):
 
 	timecourses = []
@@ -277,16 +280,20 @@ def roi_ts(substitutions, roi_path,
 		[ts_file_template]*len(substitutions),
 		[beta_file_template]*len(substitutions),
 		[design_file_template]*len(substitutions),
+		[event_file_template]*len(substitutions),
 		[roi_path]*len(substitutions),
 		))
-	timecourses, designs, stat_maps, subplot_titles = zip(*substitutions_data)
+	print(len([i for i in zip(*substitutions_data)]))
+	print([len(i) for i in substitutions_data])
+	timecourses, designs, stat_maps, event_dfs, subplot_titles = zip(*substitutions_data)
 
 	timecourses = [x for x in timecourses if x is not None]
 	designs = [x for x in designs if x is not None]
 	stat_maps = [x for x in stat_maps if x is not None]
+	event_dfs = [x for x in event_dfs if x is not None]
 	subplot_titles = [x for x in subplot_titles if x is not None]
 
-	return timecourses, designs, stat_maps, subplot_titles
+	return timecourses, designs, stat_maps, event_dfs, subplot_titles
 
 def p_filtered_ts(substitutions,
 	ts_file_template="~/NIdata/ofM.dr/preprocessing/{preprocessing_dir}/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_trial-{scan}.nii.gz",

@@ -25,7 +25,7 @@ def l1(preprocessing_dir,
 	keep_work=False,
 	l1_dir="",
 	nprocs=10,
-	mask="/home/chymera/NIdata/templates/ds_QBI_chr_bin.nii.gz",
+	mask="/home/chymera/ni_data/templates/ds_QBI_chr_bin.nii.gz",
 	per_stimulus_contrast=False,
 	habituation="",
 	tr=1,
@@ -214,7 +214,7 @@ def l2_common_effect(l1_dir,
 	level2model = pe.Node(interface=fsl.L2Model(),name='level2model')
 
 	flameo = pe.Node(interface=fsl.FLAMEO(), name="flameo")
-	flameo.inputs.mask_file="/home/chymera/NIdata/templates/ds_QBI_chr_bin.nii.gz"
+	flameo.inputs.mask_file="/home/chymera/ni_data/templates/ds_QBI_chr_bin.nii.gz"
 	flameo.inputs.run_mode="ols"
 
 	datasink = pe.Node(nio.DataSink(), name='datasink')

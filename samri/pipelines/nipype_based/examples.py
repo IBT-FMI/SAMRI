@@ -3,7 +3,7 @@ import preprocessing, glm
 def wb_composite():
 	preprocessing.bruker("/home/chymera/NIdata/ofM.dr/",
 		exclude_measurements=['20151027_121613_4013_1_1'],
-		# subjects=["4001","4002","4009"],
+		subjects=["4007","4008","4011","4012"],
 		workflow_name="composite",
 		very_nasty_bruker_delay_hack=True,
 		negative_contrast_agent=True,
@@ -13,7 +13,7 @@ def wb_composite():
 		)
 	glm.l1("~/NIdata/ofM.dr/preprocessing/composite",
 		workflow_name="composite",
-		# include={"subjects":["4001","4002","4009"]},
+		# include={"subjects":["5689","5690","5691"]},
 		habituation="confound",
 		mask="/home/chymera/NIdata/templates/ds_QBI_chr_bin.nii.gz",
 		keep_work=True,

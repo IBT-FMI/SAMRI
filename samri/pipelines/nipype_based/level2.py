@@ -65,7 +65,7 @@ def l2_common_effect(l1_dir,
 	level2model = pe.Node(interface=fsl.L2Model(),name='level2model')
 
 	flameo = pe.Node(interface=fsl.FLAMEO(), name="flameo")
-	flameo.inputs.mask_file="/home/chymera/NIdata/templates/ds_QBI_chr_bin.nii.gz"
+	flameo.inputs.mask_file="/home/chymera/ni_data/templates/ds_QBI_chr_bin.nii.gz"
 	flameo.inputs.run_mode="ols"
 
 	datasink = pe.Node(nio.DataSink(), name='datasink')
@@ -156,7 +156,7 @@ def level2(level1_directory, categories=["ofM","ofM_aF"], participants=["4008","
 	level2model.inputs.subjects=participants
 
 	flameo = pe.MapNode(interface=FLAMEO(), name="flameo", iterfield=['cope_file','var_cope_file'])
-	flameo.inputs.mask_file="/home/chymera/NIdata/templates/ds_QBI_chr_bin.nii.gz"
+	flameo.inputs.mask_file="/home/chymera/ni_data/templates/ds_QBI_chr_bin.nii.gz"
 	flameo.inputs.run_mode="ols"
 
 	second_level = pe.Workflow(name=denominator)
@@ -174,22 +174,22 @@ def level2(level1_directory, categories=["ofM","ofM_aF"], participants=["4008","
 	second_level.run(plugin="MultiProc",  plugin_args={'n_procs' : 6})
 
 if __name__ == "__main__":
-	# level1("~/NIdata/ofM.dr/", {"7_EPI_CBV":"6_20_jb"}, structural_scan_types=-1, conditions=["ofM","ofM_aF","ofM_cF1","ofM_cF2","ofM_pF"], exclude_measurements=["20151027_121613_4013_1_1"], pipeline_denominator="level1_dgamma_blurxy56n", blur_xy=5.6)
-	# level1("~/NIdata/ofM.erc/", {"EPI_CBV_jin6":"jin6","EPI_CBV_jin10":"jin10","EPI_CBV_jin20":"jin20","EPI_CBV_jin40":"jin40","EPI_CBV_jin60":"jin60","EPI_CBV_alej":"alej",}, structural_scan_types=-1, actual_size=False, pipeline_denominator="level1_dgamma")
-	# level2_common_effect("~/NIdata/ofM.erc/GLM/level1_dgamma", categories=[], scan_types=[["EPI_CBV_jin6"],["EPI_CBV_jin10"],["EPI_CBV_jin20"],["EPI_CBV_jin40"],["EPI_CBV_jin60"],["EPI_CBV_alej"]], participants=["5502","5503"], denominator="level2_dgamma")
+	# level1("~/ni_data/ofM.dr/", {"7_EPI_CBV":"6_20_jb"}, structural_scan_types=-1, conditions=["ofM","ofM_aF","ofM_cF1","ofM_cF2","ofM_pF"], exclude_measurements=["20151027_121613_4013_1_1"], pipeline_denominator="level1_dgamma_blurxy56n", blur_xy=5.6)
+	# level1("~/ni_data/ofM.erc/", {"EPI_CBV_jin6":"jin6","EPI_CBV_jin10":"jin10","EPI_CBV_jin20":"jin20","EPI_CBV_jin40":"jin40","EPI_CBV_jin60":"jin60","EPI_CBV_alej":"alej",}, structural_scan_types=-1, actual_size=False, pipeline_denominator="level1_dgamma")
+	# level2_common_effect("~/ni_data/ofM.erc/GLM/level1_dgamma", categories=[], scan_types=[["EPI_CBV_jin6"],["EPI_CBV_jin10"],["EPI_CBV_jin20"],["EPI_CBV_jin40"],["EPI_CBV_jin60"],["EPI_CBV_alej"]], participants=["5502","5503"], denominator="level2_dgamma")
 	# for i in range(4,8):
-	# 	level1("~/NIdata/ofM.erc/", {"EPI_CBV_jin6":"jin6","EPI_CBV_jin10":"jin10","EPI_CBV_jin20":"jin20","EPI_CBV_jin40":"jin40","EPI_CBV_jin60":"jin60","EPI_CBV_alej":"alej",}, structural_scan_types=-1, actual_size=False, pipeline_denominator="level1_dgamma_blurxy"+str(i), blur_xy=i)
+	# 	level1("~/ni_data/ofM.erc/", {"EPI_CBV_jin6":"jin6","EPI_CBV_jin10":"jin10","EPI_CBV_jin20":"jin20","EPI_CBV_jin40":"jin40","EPI_CBV_jin60":"jin60","EPI_CBV_alej":"alej",}, structural_scan_types=-1, actual_size=False, pipeline_denominator="level1_dgamma_blurxy"+str(i), blur_xy=i)
 
-	# l2_common_effect("~/NIdata/ofM.dr/l1/generic", workflow_name="subjectwise", groupby="subject")
-	# l2_common_effect("~/NIdata/ofM.dr/l1/generic", workflow_name="sessionwise_responders", groupby="session", exclude={"subjects":["4001","4008"]})
-	# l2_common_effect("~/NIdata/ofM.dr/l1/generic", workflow_name="sessionwise_all", groupby="session")
+	# l2_common_effect("~/ni_data/ofM.dr/l1/generic", workflow_name="subjectwise", groupby="subject")
+	# l2_common_effect("~/ni_data/ofM.dr/l1/generic", workflow_name="sessionwise_responders", groupby="session", exclude={"subjects":["4001","4008"]})
+	# l2_common_effect("~/ni_data/ofM.dr/l1/generic", workflow_name="sessionwise_all", groupby="session")
 
-	# l2_common_effect("~/NIdata/ofM.dr/l1/generic_funcreg", workflow_name="subjectwise_funcreg", groupby="subject")
-	# l2_common_effect("~/NIdata/ofM.dr/l1/norealign", workflow_name="subjectwise_norealign", groupby="subject")
-	# l2_common_effect("~/NIdata/ofM.dr/l1/generic", workflow_name="sessionwise_generic", groupby="session", exclude={"subjects":["4001","4002","4003","4004","4005","4006","4009"]})
-	# l2_common_effect("~/NIdata/ofM.dr/l1/withhabituation", workflow_name="subjectwise_withhabituation", groupby="subject")
-	# l2_common_effect("~/NIdata/ofM.dr/l1/generic", workflow_name="subjectwise_generic", groupby="subject")
-	# l2_common_effect("~/NIdata/ofM.dr/l1/withhabituation", workflow_name="subjectwise_withhabituation", groupby="subject")
+	# l2_common_effect("~/ni_data/ofM.dr/l1/generic_funcreg", workflow_name="subjectwise_funcreg", groupby="subject")
+	# l2_common_effect("~/ni_data/ofM.dr/l1/norealign", workflow_name="subjectwise_norealign", groupby="subject")
+	# l2_common_effect("~/ni_data/ofM.dr/l1/generic", workflow_name="sessionwise_generic", groupby="session", exclude={"subjects":["4001","4002","4003","4004","4005","4006","4009"]})
+	# l2_common_effect("~/ni_data/ofM.dr/l1/withhabituation", workflow_name="subjectwise_withhabituation", groupby="subject")
+	# l2_common_effect("~/ni_data/ofM.dr/l1/generic", workflow_name="subjectwise_generic", groupby="subject")
+	# l2_common_effect("~/ni_data/ofM.dr/l1/withhabituation", workflow_name="subjectwise_withhabituation", groupby="subject")
 
-	l2_common_effect("~/NIdata/ofM.dr/l1/blur", workflow_name="subjectwise_blur", groupby="subject")
-	l2_common_effect("~/NIdata/ofM.dr/l1/blur", workflow_name="sessionwise_blur", groupby="session", exclude={"subjects":["4001","4002","4003","4004","4005","4006","4009","4013"]})
+	l2_common_effect("~/ni_data/ofM.dr/l1/blur", workflow_name="subjectwise_blur", groupby="subject")
+	l2_common_effect("~/ni_data/ofM.dr/l1/blur", workflow_name="sessionwise_blur", groupby="session", exclude={"subjects":["4001","4002","4003","4004","4005","4006","4009","4013"]})

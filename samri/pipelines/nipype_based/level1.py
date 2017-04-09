@@ -18,7 +18,7 @@ from extra_interfaces import GenL2Model, SpecifyModel, Level1Design
 from preprocessing import bruker
 from utils import sss_to_source, ss_to_path, iterfield_selector
 
-def level1(measurements_base, functional_scan_types, structural_scan_types=[], tr=1, conditions=[], subjects=[], exclude_subjects=[], measurements=[], exclude_measurements=[], actual_size=False, pipeline_denominator="level1", template="/home/chymera/NIdata/templates/ds_QBI_chr.nii.gz", standalone_execute=True, compare_experiment_types=[], quiet=True, blur_xy=False):
+def level1(measurements_base, functional_scan_types, structural_scan_types=[], tr=1, conditions=[], subjects=[], exclude_subjects=[], measurements=[], exclude_measurements=[], actual_size=False, pipeline_denominator="level1", template="/home/chymera/ni_data/templates/ds_QBI_chr.nii.gz", standalone_execute=True, compare_experiment_types=[], quiet=True, blur_xy=False):
 	"""First-level analysis pipeiline which calls the bru_preproc workflow for preprocessing
 
 	Mandatory Arguments:

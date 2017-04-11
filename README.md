@@ -13,3 +13,4 @@ The package is compatible with small rodent data acquired via Bruker systems.
 * [FSL](http://fsl.fmrib.ox.ac.uk/fsl/fslwiki/) - in Portage as sci-biology/fsl
 * [nipy](https://github.com/nipy/nipy) - in Portage as sci-libs/nipy
 * [nipype](https://github.com/nipy/nipype) - in Portage as sci-libs/nipype
+* [nilearn](https://github.com/IBT-FMI/SAMRI.git) - in Portage as sci-biology/nilearn

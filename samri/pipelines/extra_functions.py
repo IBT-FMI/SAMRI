@@ -2,7 +2,6 @@ import csv
 import inspect
 import os
 import re
-import dcmstack
 
 import nibabel as nb
 import pandas as pd

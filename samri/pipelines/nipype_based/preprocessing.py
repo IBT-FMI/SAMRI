@@ -124,7 +124,8 @@ def bruker(measurements_base,
 	highpass_sigma=270,
 	negative_contrast_agent=False,
 	n_procs=8,
-	template="/home/chymera/NIdata/templates/ds_QBI_chr.nii.gz",
+	realign=True,
+	template="/home/chymera/ni_data/templates/ds_QBI_chr.nii.gz",
 	tr=1,
 	very_nasty_bruker_delay_hack=False,
 	workflow_name="generic",
@@ -173,10 +174,11 @@ def bruker(measurements_base,
 	events_file.inputs.stim_protocol_dictionary = STIM_PROTOCOL_DICTIONARY
 	events_file.inputs.very_nasty_bruker_delay_hack = very_nasty_bruker_delay_hack
 
-	realigner = pe.Node(interface=nipy.SpaceTimeRealigner(), name="realigner")
-	realigner.inputs.slice_times = "asc_alt_2"
-	realigner.inputs.tr = tr
-	realigner.inputs.slice_info = 3 #3 for coronal slices (2 for horizontal, 1 for sagittal)
+	if realign:
+		realigner = pe.Node(interface=nipy.SpaceTimeRealigner(), name="realigner")
+		realigner.inputs.slice_times = "asc_alt_2"
+		realigner.inputs.tr = tr
+		realigner.inputs.slice_info = 3 #3 for coronal slices (2 for horizontal, 1 for sagittal)
 
 	bandpass = pe.Node(interface=fsl.maths.TemporalFilter(), name="bandpass")
 	bandpass.inputs.highpass_sigma = highpass_sigma
@@ -203,13 +205,17 @@ def bruker(measurements_base,
 			]),
 		(events_file, datasink, [('out_file', 'func.@events')]),
 		(bids_stim_filename, events_file, [('filename', 'out_file')]),
-		(f_bru2nii, realigner, [('nii_file', 'in_file')]),
 		(infosource, datasink, [(('subject_session',ss_to_path), 'container')]),
 		(infosource, bids_filename, [('subject_session', 'subject_session')]),
 		(get_f_scan, bids_filename, [('scan_type', 'scan')]),
 		(bids_filename, bandpass, [('filename', 'out_file')]),
 		(bandpass, datasink, [('out_file', 'func')]),
 		]
+
+	if realign:
+		workflow_connections.extend([
+			(f_bru2nii, realigner, [('nii_file', 'in_file')]),
+			])
 
 	#ADDING SELECTABLE NODES AND EXTENDING WORKFLOW AS APPROPRIATE:
 	if structural_scan_types:
@@ -274,8 +280,17 @@ def bruker(measurements_base,
 			raise ValueError('The option `registration="structural"` requires there to be a structural scan type.')
 		workflow_connections.extend([
 			(s_register, f_warp, [('composite_transform', 'transforms')]),
-			(realigner, f_warp, [('out_file', 'input_image')]),
 			])
+		if realign:
+			workflow_connections.extend([
+				(realigner, f_warp, [('out_file', 'input_image')]),
+				])
+		else:
+			workflow_connections.extend([
+				(f_bru2nii, f_warp, [('nii_file', 'input_image')]),
+				])
+
+
 	if functional_registration_method == "composite":
 		if not structural_scan_types:
 			raise ValueError('The option `registration="composite"` requires there to be a structural scan type.')
@@ -293,15 +308,24 @@ def bruker(measurements_base,
 		merge = pe.Node(util.Merge(2), name='merge')
 
 		workflow_connections.extend([
-			(realigner, temporal_mean, [('out_file', 'in_file')]),
 			(temporal_mean, f_biascorrect, [('out_file', 'input_image')]),
 			(f_biascorrect, f_register, [('output_image', 'moving_image')]),
 			(s_biascorrect, f_register, [('output_image', 'fixed_image')]),
 			(f_register, merge, [('composite_transform', 'in1')]),
 			(s_register, merge, [('composite_transform', 'in2')]),
 			(merge, f_warp, [('out', 'transforms')]),
-			(realigner, f_warp, [('out_file', 'input_image')]),
 			])
+		if realign:
+			workflow_connections.extend([
+				(realigner, temporal_mean, [('out_file', 'in_file')]),
+				(realigner, f_warp, [('out_file', 'input_image')]),
+				])
+		else:
+			workflow_connections.extend([
+				(f_bru2nii, temporal_mean, [('nii_file', 'input_image')]),
+				(f_bru2nii, f_warp, [('nii_file', 'input_image')]),
+				])
+
 	elif functional_registration_method == "functional":
 		f_register, f_warp = functional_registration(template)
 
@@ -322,14 +346,22 @@ def bruker(measurements_base,
 		f_BET.inputs.frac = 0.5
 
 		workflow_connections.extend([
-			(realigner, temporal_mean, [('out_file', 'in_file')]),
 			(temporal_mean, f_biascorrect, [('out_file', 'input_image')]),
 			(f_biascorrect, f_cutoff, [('output_image', 'in_file')]),
 			(f_cutoff, f_BET, [('out_file', 'in_file')]),
 			(f_BET, register, [('out_file', 'moving_image')]),
 			(register, f_warp, [('composite_transform', 'transforms')]),
-			(realigner, f_warp, [('out_file', 'input_image')]),
 			])
+		if realign:
+			workflow_connections.extend([
+				(realigner, temporal_mean, [('out_file', 'in_file')]),
+				(realigner, f_warp, [('out_file', 'input_image')]),
+				])
+		else:
+			workflow_connections.extend([
+				(f_bru2nii, temporal_mean, [('nii_file', 'input_image')]),
+				(f_bru2nii, f_warp, [('nii_file', 'input_image')]),
+				])
 
 
 	invert = pe.Node(interface=fsl.ImageMaths(), name="invert")
@@ -382,4 +414,4 @@ def bruker(measurements_base,
 		shutil.rmtree(path.join(workflow.base_dir,workdir_name))
 
 if __name__ == "__main__":
-	bruker("/home/chymera/NIdata/ofM.dr/",exclude_measurements=['20151027_121613_4013_1_1'], workflow_name="composite", very_nasty_bruker_delay_hack=True, negative_contrast_agent=True, functional_blur_xy=4, functional_registration_method="composite")
+	bruker("/home/chymera/ni_data/ofM.dr/",exclude_measurements=['20151027_121613_4013_1_1'], workflow_name="composite", very_nasty_bruker_delay_hack=True, negative_contrast_agent=True, functional_blur_xy=4, functional_registration_method="composite")

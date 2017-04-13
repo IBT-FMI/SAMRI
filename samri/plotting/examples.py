@@ -52,7 +52,6 @@ if __name__ == '__main__':
 	# overview("composite_subjects", ["4001","4005","4007","4008","4009","4011","4012"]) #4001 is a negative control (transgene but no injection
 	# overview("subjectwise_blur", ["4001","4005","4007","4008","4009","4011","4012"])
 
-	# network.simple_dr(output="~/ntw1.png", graphsize=800)
 	# roi_per_session("composite", "ctx", "#56B4E9")
 	# roi_per_session("composite", "f_dr", "#E69F00")
 	# p_clusters()

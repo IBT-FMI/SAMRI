@@ -135,6 +135,3 @@ def from_multi_contrast(session_participant_file, template="/home/chymera/ni_dat
 	img = nib.load(session_participant_file)
 	print(img.__dict__)
 	plotting.plot_stat_map(img, bg_img=template,threshold=threshold, black_bg=False, vmax=40)
-
-if __name__ == '__main__':
-	from_multi_contrast("/home/chymera/generic_separateh/sub-4007/ses-ofM_cF2/sub-4007_ses-ofM_cF2_trial-7_EPI_CBV_tstat.nii.gz")

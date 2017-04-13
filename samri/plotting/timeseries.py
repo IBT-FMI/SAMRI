@@ -109,7 +109,7 @@ def roi_based(substitutions,
 				ax.set_xlim([0,design_len])
 
 	if melodic_hit:
-		melodic_file = "/home/chymera/NIdata/ofM.dr/20151208_182500_4007_1_4/melo10/report/t4.txt"
+		melodic_file = "/home/chymera/ni_data/ofM.dr/20151208_182500_4007_1_4/melo10/report/t4.txt"
 		melodic = np.loadtxt(melodic_file)
 		if flip:
 			melodic = melodic.T
@@ -129,7 +129,7 @@ def multi(timecourses, designs, stat_maps, events_dfs, subplot_titles,
 	figure="maps",
 	):
 	if figure == "maps":
-		maps.stat(stat_maps, template="~/NIdata/templates/ds_QBI_chr.nii.gz", threshold=0.1, interpolation="gaussian", subplot_titles=subplot_titles)
+		maps.stat(stat_maps, template="~/ni_data/templates/ds_QBI_chr.nii.gz", threshold=0.1, interpolation="gaussian", subplot_titles=subplot_titles)
 	elif figure == "timecourses":
 		ncols = 2
 		#we use inverse floor division to get the ceiling
@@ -169,7 +169,7 @@ def multi(timecourses, designs, stat_maps, events_dfs, subplot_titles,
 
 
 if __name__ == '__main__':
-	# plot_fsl_design("/home/chymera/NIdata/ofM.dr/level1/first_level/_condition_ofM_subject_4001/modelgen/run0.mat")
+	# plot_fsl_design("/home/chymera/ni_data/ofM.dr/level1/first_level/_condition_ofM_subject_4001/modelgen/run0.mat")
 	# stim = {"durations":[[20.0], [20.0], [20.0], [20.0], [20.0], [20.0]], "onsets":[[172.44299999999998], [352.443], [532.443], [712.443], [892.443], [1072.443]]}
 	# plot_stim_design("/home/chymera/level1/first_level/_condition_ERC_ofM_subject_5503/_scan_type_T2_TurboRARE/_scan_type_EPI_CBV_alej/modelgen/run0.mat",stim)
 	# plot_stim_design(
@@ -181,11 +181,11 @@ if __name__ == '__main__':
 	# plt.style.use(u'ggplot')
 	#
 	roi_based(
-		roi="~/NIdata/templates/roi/f_dr_chr_bin.nii.gz",
-		events_file_template="~/NIdata/ofM.dr/preprocessing/{workflow}/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_trial-{scan}_events.tsv",
-		beta_file_template="~/NIdata/ofM.dr/l1/{workflow}/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_trial-{scan}_cope.nii.gz",
-		ts_file_template="~/NIdata/ofM.dr/preprocessing/{workflow}/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_trial-{scan}.nii.gz",
-		design_file_template="~/NIdata/ofM.dr/l1/{workflow}_work/_subject_session_scan_{subject}.{session}.{scan}/modelgen/run0.mat",
+		roi="~/ni_data/templates/roi/f_dr_chr_bin.nii.gz",
+		events_file_template="~/ni_data/ofM.dr/preprocessing/{workflow}/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_trial-{scan}_events.tsv",
+		beta_file_template="~/ni_data/ofM.dr/l1/{workflow}/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_trial-{scan}_cope.nii.gz",
+		ts_file_template="~/ni_data/ofM.dr/preprocessing/{workflow}/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_trial-{scan}.nii.gz",
+		design_file_template="~/ni_data/ofM.dr/l1/{workflow}_work/_subject_session_scan_{subject}.{session}.{scan}/modelgen/run0.mat",
 		substitutions={"workflow":"composite","subject":4007,"session":"ofM_cF2","scan":"EPI_CBV_jb_long"},
 		scale_design=3,
 		)

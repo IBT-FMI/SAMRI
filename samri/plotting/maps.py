@@ -15,7 +15,7 @@ colors_minus = plt.cm.winter(np.linspace(0, 1, 128))
 def stat(stat_maps,
 	figure_title="",
 	interpolation="hermite",
-	template="~/NIdata/templates/ds_QBI_chr.nii.gz",
+	template="~/ni_data/templates/ds_QBI_chr.nii.gz",
 	save_as="",
 	scale=1.,
 	subplot_titles=[],
@@ -125,13 +125,13 @@ def stat(stat_maps,
 
 	return display
 
-def plot_myanat(anat="/home/chymera/NIdata/templates/hires_QBI_chr.nii.gz"):
+def plot_myanat(anat="/home/chymera/ni_data/templates/hires_QBI_chr.nii.gz"):
 	plotting.plot_anat(anat, cut_coords=[0, 0, 0],title='Anatomy image')
 
 def plot_nii(file_path, slices):
 	plotting.plot_anat(file_path, cut_coords=slices, display_mode="y", annotate=False, draw_cross=False)
 
-def from_multi_contrast(session_participant_file, template="/home/chymera/NIdata/templates/ds_QBI_chr.nii.gz", threshold="2"):
+def from_multi_contrast(session_participant_file, template="/home/chymera/ni_data/templates/ds_QBI_chr.nii.gz", threshold="2"):
 	img = nib.load(session_participant_file)
 	print(img.__dict__)
 	plotting.plot_stat_map(img, bg_img=template,threshold=threshold, black_bg=False, vmax=40)

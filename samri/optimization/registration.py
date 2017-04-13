@@ -10,11 +10,11 @@ except NameError:
 
 def structural_per_participant_test(participant,
 	conditions=["","_aF","_cF1","_cF2","_pF"],
-	template="/home/chymera/NIdata/templates/ds_QBI_chr.nii.gz",
+	template="/home/chymera/ni_data/templates/ds_QBI_chr.nii.gz",
 	):
 
 	for i in conditions:
-		image_dir = "/home/chymera/NIdata/ofM.dr/preprocessing/generic_work/_subject_session_{}.ofM{}/_scan_type_T2_TurboRARE/s_bru2nii/".format(participant,i)
+		image_dir = "/home/chymera/ni_data/ofM.dr/preprocessing/generic_work/_subject_session_{}.ofM{}/_scan_type_T2_TurboRARE/s_bru2nii/".format(participant,i)
 		print(image_dir)
 		try:
 			for myfile in os.listdir(image_dir):
@@ -283,9 +283,9 @@ def structural_rigid(template="/Users/marksm/GitHub/mriPipeline/ants_test/templa
 
 def functional_per_participant_test():
 	for i in ["","_aF","_cF1","_cF2","_pF"]:
-		template = "/home/chymera/NIdata/templates/ds_QBI_chr.nii.gz"
+		template = "/home/chymera/ni_data/templates/ds_QBI_chr.nii.gz"
 		participant = "4008"
-		image_dir = "/home/chymera/NIdata/ofM.dr/preprocessing/generic_work/_subject_session_{}.ofM{}/_scan_type_7_EPI_CBV/temporal_mean/".format(participant,i)
+		image_dir = "/home/chymera/ni_data/ofM.dr/preprocessing/generic_work/_subject_session_{}.ofM{}/_scan_type_7_EPI_CBV/temporal_mean/".format(participant,i)
 		try:
 			for myfile in os.listdir(image_dir):
 				if myfile.endswith(".nii.gz"):
@@ -791,9 +791,9 @@ if __name__ == '__main__':
 	# canonical("4012")
 	# structural_to_functional_per_participant_test(
 	# 	subjects_sessions = [{'subject' : 4007, 'session': 'ofM_cF2'}],
-	# 	template = "~/NIdata/templates/ds_QBI_chr.nii.gz",
-	# 	f_file_format = "~/NIdata/ofM.dr/preprocessing/composite_work/_subject_session_{subject}.{session}/_scan_type_7_EPI_CBV/f_bru2nii/",
-	# 	s_file_format = "~/NIdata/ofM.dr/preprocessing/composite_work/_subject_session_{subject}.{session}/_scan_type_T2_TurboRARE/s_bru2nii/",
+	# 	template = "~/ni_data/templates/ds_QBI_chr.nii.gz",
+	# 	f_file_format = "~/ni_data/ofM.dr/preprocessing/composite_work/_subject_session_{subject}.{session}/_scan_type_7_EPI_CBV/f_bru2nii/",
+	# 	s_file_format = "~/ni_data/ofM.dr/preprocessing/composite_work/_subject_session_{subject}.{session}/_scan_type_T2_TurboRARE/s_bru2nii/",
 	# 	)
 	# structural_rigid(template="/Users/marksm/GitHub/mriPipeline/ants_test/template4.nii.gz",
 	# 	input_image = "/Users/marksm/GitHub/mriPipeline/ants_test/source.nii",

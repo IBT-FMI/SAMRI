@@ -29,7 +29,7 @@ except NameError:
 		pass
 
 def add_roi_data(l1_dir,subject,session,masker):
-	session_participant_format = "/home/chymera/NIdata/ofM.dr/l1/{0}/sub-{1}/ses-{2}/sub-{1}_ses-{2}_trial-7_EPI_CBV_tstat.nii.gz"
+	session_participant_format = "/home/chymera/ni_data/ofM.dr/l1/{0}/sub-{1}/ses-{2}/sub-{1}_ses-{2}_trial-7_EPI_CBV_tstat.nii.gz"
 	subject_data={}
 	try:
 		session_participant_file = session_participant_format.format(l1_dir,subject,session)
@@ -60,7 +60,7 @@ def roi_per_session(l1_dir, subjects, sessions,
 	color="#E69F00",
 	):
 
-	roi_path = "/home/chymera/NIdata/templates/roi/{}_chr.nii.gz".format(roi)
+	roi_path = "/home/chymera/ni_data/templates/roi/{}_chr.nii.gz".format(roi)
 	masker = NiftiMasker(mask_img=roi_path)
 
 	iter_product = product(subjects, sessions)
@@ -118,8 +118,8 @@ def roi_per_session(l1_dir, subjects, sessions,
 
 def responders(l2_dir,
 	roi="ctx_chr",
-	data_root="~/NIdata/ofM.dr",
-	roi_root="~/NIdata/templates/roi"
+	data_root="~/ni_data/ofM.dr",
+	roi_root="~/ni_data/templates/roi"
 	):
 
 	data_regex = "(?P<subject>.+)/tstat1.nii.gz"
@@ -262,10 +262,10 @@ def roi_masking(substitution, ts_file_template, beta_file_template, design_file_
 	return timecourse, design, mask_map, event_df, subplot_title
 
 def ts_overviews(substitutions, roi_path,
-	ts_file_template="~/NIdata/ofM.dr/preprocessing/{preprocessing_dir}/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_trial-{scan}.nii.gz",
-	beta_file_template="~/NIdata/ofM.dr/l1/{l1_dir}/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_trial-{scan}_cope.nii.gz",
-	design_file_template="~/NIdata/ofM.dr/l1/{l1_workdir}/_subject_session_scan_{subject}.{session}.{scan}/modelgen/run0.mat",
-	event_file_template="~/NIdata/ofM.dr/preprocessing/{preprocessing_dir}/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_trial-{scan}_events.tsv",
+	ts_file_template="~/ni_data/ofM.dr/preprocessing/{preprocessing_dir}/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_trial-{scan}.nii.gz",
+	beta_file_template="~/ni_data/ofM.dr/l1/{l1_dir}/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_trial-{scan}_cope.nii.gz",
+	design_file_template="~/ni_data/ofM.dr/l1/{l1_workdir}/_subject_session_scan_{subject}.{session}.{scan}/modelgen/run0.mat",
+	event_file_template="~/ni_data/ofM.dr/preprocessing/{preprocessing_dir}/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_trial-{scan}_events.tsv",
 	):
 
 	timecourses = []
@@ -296,10 +296,10 @@ def ts_overviews(substitutions, roi_path,
 	return timecourses, designs, stat_maps, event_dfs, subplot_titles
 
 def p_filtered_ts(substitutions,
-	ts_file_template="~/NIdata/ofM.dr/preprocessing/{preprocessing_dir}/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_trial-{scan}.nii.gz",
-	beta_file_template="~/NIdata/ofM.dr/l1/{l1_dir}/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_trial-{scan}_cope.nii.gz",
-	p_file_template="~/NIdata/ofM.dr/l1/{l1_dir}/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_trial-{scan}_pstat.nii.gz",
-	design_file_template="~/NIdata/ofM.dr/l1/{l1_workdir}/_subject_session_scan_{subject}.{session}.{scan}/modelgen/run0.mat",
+	ts_file_template="~/ni_data/ofM.dr/preprocessing/{preprocessing_dir}/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_trial-{scan}.nii.gz",
+	beta_file_template="~/ni_data/ofM.dr/l1/{l1_dir}/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_trial-{scan}_cope.nii.gz",
+	p_file_template="~/ni_data/ofM.dr/l1/{l1_dir}/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_trial-{scan}_pstat.nii.gz",
+	design_file_template="~/ni_data/ofM.dr/l1/{l1_workdir}/_subject_session_scan_{subject}.{session}.{scan}/modelgen/run0.mat",
 	p_level=0.1,
 	):
 

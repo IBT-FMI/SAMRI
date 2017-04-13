@@ -368,4 +368,4 @@ def get_data_selection(workflow_base, sessions=[], scan_types=[], subjects=[], e
 	return data_selection
 
 if __name__ == '__main__':
-	write_events_file("7_EPI_CBV", STIM_PROTOCOL_DICTIONARY, scan_dir="~/NIdata/ofM.dr/20151208_182500_4007_1_4/10")
+	write_events_file("7_EPI_CBV", STIM_PROTOCOL_DICTIONARY, scan_dir="~/ni_data/ofM.dr/20151208_182500_4007_1_4/10")

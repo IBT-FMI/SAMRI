@@ -2,6 +2,7 @@ import csv
 import inspect
 import os
 import re
+import dcmstack
 
 import nibabel as nb
 import pandas as pd
@@ -273,42 +274,6 @@ def get_scan(measurements_base, data_selection, scan_type, selector=None, subjec
 	scan_subdir = filtered_data["scan"].tolist()[0]
 	scan_path = os.path.join(measurements_base,measurement_path,scan_subdir)
 	return scan_path, scan_type
-
-def dcm_to_nii(dcm_dir, group_by="EchoTime", node=False):
-	if node:
-		nii_dir = os.getcwd()
-	else:
-		nii_dir = dcm_dir.replace("dicom", "nii")
-		if not os.path.exists(nii_dir):
-			os.makedirs(nii_dir)
-	dcm_dir = dcm_dir+"/"
-	stacker = dcmstack.DcmStack()
-
-	results=[]
-	if group_by:
-		dicom_files = os.listdir(dcm_dir)
-		echo_times=[]
-		for dicom_file in dicom_files:
-			meta = minimal_extractor(read_file(dcm_dir+dicom_file, stop_before_pixels=True, force=True))
-			echo_times += [float(meta[group_by])]
-
-		echo_time_set = list(set(echo_times))
-		for echo_time in echo_time_set:
-			echo_indices = [i for i, j in enumerate(echo_times) if j == echo_time]
-			stacker.inputs.embed_meta = True
-			stacker.inputs.dicom_files = [dcm_dir+dicom_files[index] for index in echo_indices]
-			stacker.inputs.out_path = nii_dir+"/"
-			stacker.inputs.out_format = "EPI"+str(echo_time)[:2]
-			result = stacker.run()
-			results += [result.outputs.out_file]
-
-	else:
-		stacker.inputs.dicom_files = dcm_dir
-		stacker.inputs.out_path = nii_dir+"/"
-		result = stacker.run()
-		results += [result.outputs.out_file]
-
-	return results, echo_time_set
 
 def get_data_selection(workflow_base, sessions=[], scan_types=[], subjects=[], exclude_subjects=[], measurements=[], exclude_measurements=[]):
 	import os

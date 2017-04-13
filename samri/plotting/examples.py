@@ -56,5 +56,5 @@ if __name__ == '__main__':
 	# roi_per_session("composite", "f_dr", "#E69F00")
 	# p_clusters()
 	# roi(roi_path="~/ni_data/templates/roi/f_dr_chr_bin.nii.gz")
-	# roi_teaching()
+	roi_teaching()
 	# check_responders()

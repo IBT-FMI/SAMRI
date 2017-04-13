@@ -26,7 +26,7 @@ def roi_per_session(l1_dir, roi, color):
 	plt.show()
 
 def p_clusters():
-	substitutions = summary.bids_substitution_iterator(["ofM","ofM_aF","ofM_cF1","ofM_cF2","ofM_pF"],[4007,4008,4009,4011,4012],["7_EPI_CBV"],"composite", l1_dir="composite_dr", l1_workdir="composite_work")
+	substitutions = summary.bids_substitution_iterator(["ofM","ofM_aF","ofM_cF1","ofM_cF2","ofM_pF"],[4007,4008,4009,4011,4012],["EPI_CBV_jb_long"],"composite", l1_dir="composite_dr", l1_workdir="composite_work")
 	timecourses, designs, stat_maps, subplot_titles = summary.p_filtered_ts(substitutions, p_level=0.05)
 	timeseries.multi(timecourses, designs, stat_maps, subplot_titles, figure="timecourses")
 	plt.show()
@@ -39,7 +39,7 @@ def roi(roi_path="~/ni_data/templates/roi/f_dr_chr.nii.gz"):
 
 def roi_teaching(roi_path="~/ni_data/templates/roi/f_dr_chr.nii.gz"):
 	design_file_template="~/ni_data/ofM.dr/l1/{l1_workdir}/_subject_session_scan_{subject}.{session}.{scan}/modelgen/run0.mat"
-	substitutions = summary.bids_substitution_iterator(["ofM_cF2"],[4008],["7_EPI_CBV"],"composite")
+	substitutions = summary.bids_substitution_iterator(["ofM_cF2"],[4008],["EPI_CBV_jb_long"],"composite")
 	timeseries.roi_based(substitutions[0], design_file_template=design_file_template, flip=True, plot_design_regressors=[0])
 	plt.show()
 
@@ -56,5 +56,5 @@ if __name__ == '__main__':
 	# roi_per_session("composite", "f_dr", "#E69F00")
 	# p_clusters()
 	# roi(roi_path="~/ni_data/templates/roi/f_dr_chr_bin.nii.gz")
-	roi_teaching()
+	# roi_teaching()
 	# check_responders()

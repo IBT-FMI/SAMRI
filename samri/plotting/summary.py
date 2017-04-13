@@ -29,7 +29,7 @@ except NameError:
 		pass
 
 def add_roi_data(l1_dir,subject,session,masker):
-	session_participant_format = "/home/chymera/ni_data/ofM.dr/l1/{0}/sub-{1}/ses-{2}/sub-{1}_ses-{2}_trial-7_EPI_CBV_tstat.nii.gz"
+	session_participant_format = "/home/chymera/ni_data/ofM.dr/l1/{0}/sub-{1}/ses-{2}/sub-{1}_ses-{2}_trial-EPI_CBV_tstat.nii.gz"
 	subject_data={}
 	try:
 		session_participant_file = session_participant_format.format(l1_dir,subject,session)

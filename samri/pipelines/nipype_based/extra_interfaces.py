@@ -464,31 +464,6 @@ class Bru2(CommandLine):
 			outfile = os.getcwd()+"/"+os.path.basename(os.path.normpath(self.inputs.input_dir))
 			return outfile
 
-class DcmToNiiInputSpec(BaseInterfaceInputSpec):
-	dcm_dir = Directory(exists=True, mandatory=True)
-	group_by = traits.Str(desc='everything below this value will be set to zero', mandatory=False)
-
-class DcmToNiiOutputSpec(TraitedSpec):
-	nii_files = traits.List(File(exists=True))
-	echo_times = traits.List(traits.Float(exists=True))
-
-class DcmToNii(BaseInterface):
-	input_spec = DcmToNiiInputSpec
-	output_spec = DcmToNiiOutputSpec
-
-	def _run_interface(self, runtime):
-		from extra_functions import dcm_to_nii
-		dcm_dir = self.inputs.dcm_dir
-		group_by = self.inputs.group_by
-		self.result = dcm_to_nii(dcm_dir, group_by, node=True)
-		return runtime
-
-	def _list_outputs(self):
-		outputs = self._outputs().get()
-		outputs["nii_files"] = self.result[0]
-		outputs["echo_times"] = self.result[1]
-		return outputs
-
 class SubjectInfoInputSpec(BaseInterfaceInputSpec):
 	conditions = traits.List(traits.Str(exists=True))
 	durations = traits.List(traits.List(traits.Float(exists=True)))

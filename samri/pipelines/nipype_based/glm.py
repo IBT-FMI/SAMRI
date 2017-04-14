@@ -230,7 +230,7 @@ def l2_common_effect(l1_dir,
 			(infosource, varcopemerge, [(('iterable',add_suffix,"_varcb.nii.gz"), 'merged_file')]),
 			]
 	if groupby == "subject_scan":
-		merge = util.Merge(2)
+		merge = pe.Node(interface=util.Merge(2), name="merge")
 		infosource = pe.Node(interface=util.IdentityInterface(fields=['subject','scan']), name="infosource")
 		infosource.iterables = [('subject', subjects),('scan', scans)]
 		datasource = pe.Node(interface=nio.DataGrabber(infields=["subject","scan",], outfields=["copes", "varcbs"]), name="datasource")

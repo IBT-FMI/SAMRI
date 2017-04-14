@@ -75,6 +75,9 @@ def bruker_lite(measurements_base,
 	f_bru2nii = pe.Node(interface=bru2nii.Bru2(), name="f_bru2nii")
 	f_bru2nii.inputs.actual_size=actual_size
 
+	dummy_scans = pe.Node(name='dummy_scans', interface=util.Function(function=force_dummy_scans,input_names=inspect.getargspec(force_dummy_scans)[0], output_names=['out_file']))
+	dummy_scans.inputs.desired_dummy_scans = 10
+
 	if structural_scan_types:
 		get_s_scan = pe.Node(name='get_s_scan',  interface=util.Function(function=get_scan,input_names=inspect.getargspec(get_scan)[0], output_names=['scan_path','scan_type']))
 		get_s_scan.inputs.data_selection = data_selection
@@ -95,10 +98,12 @@ def bruker_lite(measurements_base,
 	workflow_connections = [
 		(infosource, get_f_scan, [('session', 'session'),('subject', 'subject')]),
 		(get_f_scan, f_bru2nii, [('scan_path', 'input_dir')]),
+		(f_bru2nii, dummy_scans, [('nii_file', 'in_file')]),
+		(get_f_scan, dummy_scans, [('scan_path', 'scan_dir')]),
 		]
 	if realign:
 		workflow_connections.extend([
-			(f_bru2nii, realigner, [('nii_file', 'in_file')]),
+			(dummy_scans, realigner, [('out_file', 'in_file')]),
 			])
 	if structural_scan_types:
 		workflow_connections.extend([
@@ -170,6 +175,9 @@ def bruker(measurements_base,
 	f_bru2nii = pe.Node(interface=bru2nii.Bru2(), name="f_bru2nii")
 	f_bru2nii.inputs.actual_size=actual_size
 
+	dummy_scans = pe.Node(name='dummy_scans', interface=util.Function(function=force_dummy_scans,input_names=inspect.getargspec(force_dummy_scans)[0], output_names=['out_file']))
+	dummy_scans.inputs.desired_dummy_scans = 10
+
 	events_file = pe.Node(name='events_file', interface=util.Function(function=write_events_file,input_names=inspect.getargspec(write_events_file)[0], output_names=['out_file']))
 	events_file.inputs.stim_protocol_dictionary = STIM_PROTOCOL_DICTIONARY
 	events_file.inputs.very_nasty_bruker_delay_hack = very_nasty_bruker_delay_hack
@@ -199,6 +207,8 @@ def bruker(measurements_base,
 		(infosource, bids_stim_filename, [('subject_session', 'subject_session')]),
 		(get_f_scan, bids_stim_filename, [('scan_type', 'scan')]),
 		(get_f_scan, f_bru2nii, [('scan_path', 'input_dir')]),
+		(f_bru2nii, dummy_scans, [('nii_file', 'in_file')]),
+		(get_f_scan, dummy_scans, [('scan_path', 'scan_dir')]),
 		(get_f_scan, events_file, [
 			('scan_type', 'scan_type'),
 			('scan_path', 'scan_dir')
@@ -214,7 +224,7 @@ def bruker(measurements_base,
 
 	if realign:
 		workflow_connections.extend([
-			(f_bru2nii, realigner, [('nii_file', 'in_file')]),
+			(dummy_scans, realigner, [('out_file', 'in_file')]),
 			])
 
 	#ADDING SELECTABLE NODES AND EXTENDING WORKFLOW AS APPROPRIATE:
@@ -287,7 +297,7 @@ def bruker(measurements_base,
 				])
 		else:
 			workflow_connections.extend([
-				(f_bru2nii, f_warp, [('nii_file', 'input_image')]),
+				(dummy_scans, f_warp, [('out_file', 'input_image')]),
 				])
 
 
@@ -322,8 +332,8 @@ def bruker(measurements_base,
 				])
 		else:
 			workflow_connections.extend([
-				(f_bru2nii, temporal_mean, [('nii_file', 'input_image')]),
-				(f_bru2nii, f_warp, [('nii_file', 'input_image')]),
+				(dummy_scans, temporal_mean, [('out_file', 'input_image')]),
+				(dummy_scans, f_warp, [('out_file', 'input_image')]),
 				])
 
 	elif functional_registration_method == "functional":
@@ -359,8 +369,8 @@ def bruker(measurements_base,
 				])
 		else:
 			workflow_connections.extend([
-				(f_bru2nii, temporal_mean, [('nii_file', 'input_image')]),
-				(f_bru2nii, f_warp, [('nii_file', 'input_image')]),
+				(dummy_scans, temporal_mean, [('out_file', 'input_image')]),
+				(dummy_scans, f_warp, [('out_file', 'input_image')]),
 				])
 
 

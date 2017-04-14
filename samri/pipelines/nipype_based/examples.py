@@ -21,13 +21,13 @@ def wb_composite():
 		)
 	glm.l2_common_effect("~/ni_data/ofM.dr/l1/composite",
 		workflow_name="composite_subjects",
-		exclude={"scans":["EPI_BOLD_"]}
+		exclude={"scans":["EPI_BOLD_"]},
 		groupby="subject",
 		keep_work=True,
 		)
 	glm.l2_common_effect("~/ni_data/ofM.dr/l1/composite",
 		workflow_name="composite_sessions",
-		exclude={"scans":["EPI_BOLD_"]}
+		exclude={"scans":["EPI_BOLD_"]},
 		groupby="session",
 		keep_work=True,
 		)

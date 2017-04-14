@@ -304,6 +304,7 @@ def l2_common_effect(l1_dir,
 	workdir_name = workflow_name+"_work"
 	workflow = pe.Workflow(name=workdir_name)
 	workflow.connect(workflow_connections)
+	workflow.config = {"execution": {"crashdump_dir": path.join(l2_dir,"crashdump")}}
 	workflow.base_dir = l2_dir
 	workflow.write_graph(dotfilename=path.join(workflow.base_dir,workdir_name,"graph.dot"), graph2use="hierarchical", format="png")
 

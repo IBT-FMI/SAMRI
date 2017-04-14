@@ -58,3 +58,13 @@ if __name__ == '__main__':
 	# roi(roi_path="~/ni_data/templates/roi/f_dr_chr_bin.nii.gz")
 	# roi_teaching()
 	# check_responders()
+	substitutions = summary.bids_substitution_iterator(["ofM","ofM_aF","ofM_cF1","ofM_cF2","ofM_pF"],["4007","4008","4011","4012"],["EPI_CBV_jb_long"],"composite")
+	timecourses, designs, stat_maps, events_dfs, subplot_titles = summary.ts_overviews(substitutions, "~/ni_data/templates/roi/ctx_chr.nii.gz",
+		ts_file_template="~/ni_data/ofM.dr/preprocessing/{preprocessing_dir}/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_trial-{scan}.nii.gz",
+		beta_file_template="~/ni_data/ofM.dr/l1/{l1_dir}/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_trial-{scan}_cope.nii.gz",
+		design_file_template="~/ni_data/ofM.dr/l1/{l1_workdir}/_subject_session_scan_{subject}.{session}.{scan}/modelgen/run0.mat",
+		event_file_template="~/ni_data/ofM.dr/preprocessing/{preprocessing_dir}/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_trial-{scan}_events.tsv",
+		)
+	print(events_dfs)
+	timeseries.multi(timecourses, designs, stat_maps, events_dfs, subplot_titles, figure="timecourses")
+	plt.show()

@@ -46,18 +46,7 @@ def roi_teaching(roi_path="~/ni_data/templates/roi/f_dr_chr.nii.gz"):
 def check_responders():
 	summary.responders("subjectwise_composite")
 
-if __name__ == '__main__':
-	# overview("composite_sessions", ["ofM","ofM_aF","ofM_cF1","ofM_cF2","ofM_pF"])
-	# overview("composite_subjects", ["4007","4008","4011","4012","5689","5690","5691"]) #4001 is a negative control (transgene but no injection
-	# overview("composite_subjects", ["4001","4005","4007","4008","4009","4011","4012"]) #4001 is a negative control (transgene but no injection
-	# overview("subjectwise_blur", ["4001","4005","4007","4008","4009","4011","4012"])
-
-	# roi_per_session("composite", "ctx", "#56B4E9")
-	# roi_per_session("composite", "f_dr", "#E69F00")
-	# p_clusters()
-	# roi(roi_path="~/ni_data/templates/roi/f_dr_chr_bin.nii.gz")
-	# roi_teaching()
-	# check_responders()
+def qc_regressor():
 	substitutions = summary.bids_substitution_iterator(["ofM","ofM_aF","ofM_cF1","ofM_cF2","ofM_pF"],["4007","4008","4011","4012"],["EPI_CBV_jb_long"],"composite")
 	timecourses, designs, stat_maps, events_dfs, subplot_titles = summary.ts_overviews(substitutions, "~/ni_data/templates/roi/ctx_chr.nii.gz",
 		ts_file_template="~/ni_data/ofM.dr/preprocessing/{preprocessing_dir}/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_trial-{scan}.nii.gz",
@@ -68,3 +57,16 @@ if __name__ == '__main__':
 	print(events_dfs)
 	timeseries.multi(timecourses, designs, stat_maps, events_dfs, subplot_titles, figure="timecourses")
 	plt.show()
+
+if __name__ == '__main__':
+	overview("composite_sessions", ["ofM","ofM_aF","ofM_cF1","ofM_cF2","ofM_pF"])
+	# overview("composite_subjects", ["4007","4008","4011","4012","5689","5690","5691"]) #4001 is a negative control (transgene but no injection
+	# overview("composite_subjects", ["4001","4005","4007","4008","4009","4011","4012"]) #4001 is a negative control (transgene but no injection
+	# overview("subjectwise_blur", ["4001","4005","4007","4008","4009","4011","4012"])
+
+	# roi_per_session("composite", "ctx", "#56B4E9")
+	# roi_per_session("composite", "f_dr", "#E69F00")
+	# p_clusters()
+	# roi(roi_path="~/ni_data/templates/roi/f_dr_chr_bin.nii.gz")
+	# roi_teaching()
+	# check_responders()

@@ -4,9 +4,9 @@ if not __package__:
 	pkg_root = path.abspath(path.join(path.dirname(path.realpath(__file__)),"../../.."))
 	sys.path.insert(0, pkg_root)
 try:
-	from ..extra_functions import get_data_selection, get_scan, write_events_file
+	from ..extra_functions import get_data_selection, get_scan, write_events_file, force_dummy_scans
 except ValueError:
-	from samri.pipelines.extra_functions import get_data_selection, get_scan, write_events_file
+	from samri.pipelines.extra_functions import get_data_selection, get_scan, write_events_file, force_dummy_scans
 
 import re
 import inspect

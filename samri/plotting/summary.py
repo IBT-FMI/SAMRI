@@ -293,7 +293,7 @@ def ts_overviews(substitutions, roi_path,
 	event_dfs = [x for x in event_dfs if x is not None]
 	subplot_titles = [x for x in subplot_titles if x is not None]
 
-	return timecourses, designs, stat_maps, event_dfs, subplot_titles
+	return timecourses, designs, stat_maps, events_dfs, subplot_titles
 
 def p_filtered_ts(substitutions,
 	ts_file_template="~/ni_data/ofM.dr/preprocessing/{preprocessing_dir}/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_trial-{scan}.nii.gz",

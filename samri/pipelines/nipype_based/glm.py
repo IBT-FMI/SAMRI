@@ -173,7 +173,7 @@ def getlen(a):
 	return len(a)
 def add_suffix(name, suffix):
 	if type(name) is list:
-		name = "".join(name)
+		name = "".join([str(i) for i in name])
 	return str(name)+str(suffix)
 
 def l2_common_effect(l1_dir,

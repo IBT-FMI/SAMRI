@@ -172,6 +172,8 @@ def l1(preprocessing_dir,
 def getlen(a):
 	return len(a)
 def add_suffix(name, suffix):
+	if type(name) is list:
+		name = "".join(name)
 	return str(name)+str(suffix)
 
 def l2_common_effect(l1_dir,
@@ -228,6 +230,7 @@ def l2_common_effect(l1_dir,
 			(infosource, varcopemerge, [(('iterable',add_suffix,"_varcb.nii.gz"), 'merged_file')]),
 			]
 	if groupby == "subject_scan":
+		merge = util.Merge(2)
 		infosource = pe.Node(interface=util.IdentityInterface(fields=['subject','scan']), name="infosource")
 		infosource.iterables = [('subject', subjects),('scan', scans)]
 		datasource = pe.Node(interface=nio.DataGrabber(infields=["subject","scan",], outfields=["copes", "varcbs"]), name="datasource")
@@ -239,7 +242,12 @@ def l2_common_effect(l1_dir,
 			copes="sub-%s/ses-*/sub-%s_ses-*_trial-%s_cope.nii.gz",
 			varcbs="sub-%s/ses-*/sub-%s_ses-*_trial-%s_varcb.nii.gz",
 			)
-		workflow_connections = [(infosource, datasource, [('subject', 'subject'),('scan','scan')]),]
+		workflow_connections = [
+			(infosource, datasource, [('subject', 'subject'),('scan','scan')]),
+			(infosource, merge, [('subject', 'in1'),('scan','in2')]),
+			(merge, copemerge, [(('out',add_suffix,"_cope.nii.gz"), 'merged_file')]),
+			(merge, varcopemerge, [(('out',add_suffix,"_varcb.nii.gz"), 'merged_file')]),
+			]
 	elif groupby == "session":
 		infosource = pe.Node(interface=util.IdentityInterface(fields=['iterable']), name="infosource")
 		infosource.iterables = [('iterable', sessions)]

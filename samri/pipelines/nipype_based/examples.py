@@ -20,15 +20,20 @@ def wb_composite():
 		keep_work=True,
 		)
 	glm.l2_common_effect("~/ni_data/ofM.dr/l1/composite",
-		workflow_name="composite_subjects",
-		groupby="subject",
+		workflow_name="composite_subjects_scans",
+		groupby="subject_scan",
 		keep_work=True,
 		)
-	glm.l2_common_effect("~/ni_data/ofM.dr/l1/composite",
-		workflow_name="composite_sessions",
-		groupby="session",
-		keep_work=True,
-		)
+	# glm.l2_common_effect("~/ni_data/ofM.dr/l1/composite",
+	# 	workflow_name="composite_subjects",
+	# 	groupby="subject",
+	# 	keep_work=True,
+	# 	)
+	# glm.l2_common_effect("~/ni_data/ofM.dr/l1/composite",
+		# workflow_name="composite_sessions",
+		# groupby="session",
+		# keep_work=True,
+		# )
 
 def dr_composite():
 	preprocessing.bruker("/home/chymera/ni_data/ofM.dr/",exclude_measurements=['20151027_121613_4013_1_1'], workflow_name="composite", very_nasty_bruker_delay_hack=True, negative_contrast_agent=True, functional_blur_xy=4, functional_registration_method="composite")

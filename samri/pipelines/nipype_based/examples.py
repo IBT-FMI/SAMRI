@@ -22,6 +22,7 @@ def wb_composite():
 	glm.l2_common_effect("~/ni_data/ofM.dr/l1/composite",
 		workflow_name="composite_subjects_scans",
 		groupby="subject_scan",
+		exclude={"scans":["EPI_BOLD_"]}
 		keep_work=True,
 		)
 	# glm.l2_common_effect("~/ni_data/ofM.dr/l1/composite",

@@ -1,5 +1,23 @@
 import nipype.pipeline.engine as pe				# pypeline engine
 import nipype.interfaces.ants as ants
+from nipype.interfaces import fsl
+
+
+
+def autorotate(template):
+	flt = fsl.FLIRT(bins=640, cost_func='mutualinfo')
+	flt.inputs.in_file = 'structural.nii'
+	flt.inputs.reference = template
+	flt.inputs.output_type = "NIFTI_GZ"
+	flt.inputs.dof = 6
+	flt.input.searchr_x = [-180,180]
+	flt.input.searchr_y = [-180,180]
+	flt.input.searchr_z = [-180,180]
+	flt.input.force_scaling = True
+	flt.cmdline
+	rotated = flt.run()
+	return rotated
+
 
 def structural_registration(template, num_threads=4):
 	registration = pe.Node(ants.Registration(), name="s_register")

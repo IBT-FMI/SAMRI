@@ -229,7 +229,8 @@ def l2_common_effect(l1_dir,
 			(infosource, copemerge, [(('iterable',add_suffix,"_cope.nii.gz"), 'merged_file')]),
 			(infosource, varcopemerge, [(('iterable',add_suffix,"_varcb.nii.gz"), 'merged_file')]),
 			]
-	if groupby == "subject_scan":
+	elif groupby == "subject_scan":
+		#does not currently work, due to missing iterator combinations (same issue as preprocessing)
 		merge = pe.Node(interface=util.Merge(2), name="merge")
 		infosource = pe.Node(interface=util.IdentityInterface(fields=['subject','scan']), name="infosource")
 		infosource.iterables = [('subject', subjects),('scan', scans)]

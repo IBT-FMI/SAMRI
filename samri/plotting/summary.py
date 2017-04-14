@@ -283,14 +283,12 @@ def ts_overviews(substitutions, roi_path,
 		[event_file_template]*len(substitutions),
 		[roi_path]*len(substitutions),
 		))
-	print(len([i for i in zip(*substitutions_data)]))
-	print([len(i) for i in substitutions_data])
 	timecourses, designs, stat_maps, event_dfs, subplot_titles = zip(*substitutions_data)
 
 	timecourses = [x for x in timecourses if x is not None]
 	designs = [x for x in designs if x is not None]
 	stat_maps = [x for x in stat_maps if x is not None]
-	event_dfs = [x for x in event_dfs if x is not None]
+	events_dfs = [x for x in event_dfs if x is not None]
 	subplot_titles = [x for x in subplot_titles if x is not None]
 
 	return timecourses, designs, stat_maps, events_dfs, subplot_titles

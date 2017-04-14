@@ -197,8 +197,6 @@ def l2_common_effect(l1_dir,
 	sessions = set(datafind_res.outputs.ses)
 	scans = set(datafind_res.outputs.scan)
 
-	infosource = pe.Node(interface=util.IdentityInterface(fields=['iterable']), name="infosource")
-
 	copemerge = pe.Node(interface=fsl.Merge(dimension='t'),name="copemerge")
 	varcopemerge = pe.Node(interface=fsl.Merge(dimension='t'),name="varcopemerge")
 
@@ -213,8 +211,9 @@ def l2_common_effect(l1_dir,
 	datasink.inputs.substitutions = [('_iterable_', ''),]
 
 	if groupby == "subject":
-		datasource = pe.Node(interface=nio.DataGrabber(infields=["group",], outfields=["copes", "varcbs"]), name="datasource")
+		infosource = pe.Node(interface=util.IdentityInterface(fields=['iterable']), name="infosource")
 		infosource.iterables = [('iterable', subjects)]
+		datasource = pe.Node(interface=nio.DataGrabber(infields=["group",], outfields=["copes", "varcbs"]), name="datasource")
 		datasource.inputs.template_args = dict(
 			copes=[['group','group']],
 			varcbs=[['group','group']]
@@ -223,22 +222,28 @@ def l2_common_effect(l1_dir,
 			copes="sub-%s/ses-*/sub-%s_ses-*_trial-*_cope.nii.gz",
 			varcbs="sub-%s/ses-*/sub-%s_ses-*_trial-*_varcb.nii.gz",
 			)
-		workflow_connections = [(infosource, datasource, [('iterable', 'group')]),]
+		workflow_connections = [
+			(infosource, datasource, [('iterable', 'group')]),
+			(infosource, copemerge, [(('iterable',add_suffix,"_cope.nii.gz"), 'merged_file')]),
+			(infosource, varcopemerge, [(('iterable',add_suffix,"_varcb.nii.gz"), 'merged_file')]),
+			]
 	if groupby == "subject_scan":
-		datasource = pe.Node(interface=nio.DataGrabber(infields=["group",], outfields=["copes", "varcbs"]), name="datasource")
-		infosource.iterables = [('iterable', subjects)]
+		infosource = pe.Node(interface=util.IdentityInterface(fields=['subject','scan']), name="infosource")
+		infosource.iterables = [('subject', subjects),('scan', scans)]
+		datasource = pe.Node(interface=nio.DataGrabber(infields=["subject","scan",], outfields=["copes", "varcbs"]), name="datasource")
 		datasource.inputs.template_args = dict(
-			copes=[['group','group']],
-			varcbs=[['group','group']]
+			copes=[["subject","subject","scan",]],
+			varcbs=[["subject","subject","scan",]]
 			)
 		datasource.inputs.field_template = dict(
-			copes="sub-%s/ses-*/sub-%s_ses-*_trial-*_cope.nii.gz",
-			varcbs="sub-%s/ses-*/sub-%s_ses-*_trial-*_varcb.nii.gz",
+			copes="sub-%s/ses-*/sub-%s_ses-*_trial-%s_cope.nii.gz",
+			varcbs="sub-%s/ses-*/sub-%s_ses-*_trial-%s_varcb.nii.gz",
 			)
-		workflow_connections = [(infosource, datasource, [('iterable', 'group')]),]
+		workflow_connections = [(infosource, datasource, [('subject', 'subject'),('scan','scan')]),]
 	elif groupby == "session":
-		datasource = pe.Node(interface=nio.DataGrabber(infields=["group",], outfields=["copes", "varcbs"]), name="datasource")
+		infosource = pe.Node(interface=util.IdentityInterface(fields=['iterable']), name="infosource")
 		infosource.iterables = [('iterable', sessions)]
+		datasource = pe.Node(interface=nio.DataGrabber(infields=["group",], outfields=["copes", "varcbs"]), name="datasource")
 		datasource.inputs.template_args = dict(
 			copes=[['group','group']],
 			varcbs=[['group','group']]
@@ -247,10 +252,15 @@ def l2_common_effect(l1_dir,
 			copes="sub-*/ses-%s/sub-*_ses-%s_trial-*_cope.nii.gz",
 			varcbs="sub-*/ses-%s/sub-*_ses-%s_trial-*_varcb.nii.gz",
 			)
-		workflow_connections = [(infosource, datasource, [('iterable', 'group')]),]
+		workflow_connections = [
+			(infosource, datasource, [('iterable', 'group')]),
+			(infosource, copemerge, [(('iterable',add_suffix,"_cope.nii.gz"), 'merged_file')]),
+			(infosource, varcopemerge, [(('iterable',add_suffix,"_varcb.nii.gz"), 'merged_file')]),
+			]
 	elif groupby == "scan":
-		datasource = pe.Node(interface=nio.DataGrabber(infields=["group",], outfields=["copes", "varcbs"]), name="datasource")
+		infosource = pe.Node(interface=util.IdentityInterface(fields=['iterable']), name="infosource")
 		infosource.iterables = [('iterable', scans)]
+		datasource = pe.Node(interface=nio.DataGrabber(infields=["group",], outfields=["copes", "varcbs"]), name="datasource")
 		datasource.inputs.template_args = dict(
 			copes=[['group']],
 			varcbs=[['group']]
@@ -259,15 +269,16 @@ def l2_common_effect(l1_dir,
 			copes="sub-*/ses-*/sub-*_ses-*_trial-%s_cope.nii.gz ",
 			varcbs="sub-*/ses-*/sub-*_ses-*_trial-%s_varcb.nii.gz ",
 			)
-		workflow_connections = [(infosource, datasource, [('iterable', 'group')]),]
+		workflow_connections = [
+			(infosource, datasource, [('iterable', 'group')]),
+			(infosource, copemerge, [(('iterable',add_suffix,"_cope.nii.gz"), 'merged_file')]),
+			(infosource, varcopemerge, [(('iterable',add_suffix,"_varcb.nii.gz"), 'merged_file')]),
+			]
 	datasource.inputs.base_directory = l1_dir
 	datasource.inputs.sort_filelist = True
 	datasource.inputs.template = "*"
 
 	workflow_connections.extend([
-		(infosource, datasource, [('iterable', 'group')]),
-		(infosource, copemerge, [(('iterable',add_suffix,"_cope.nii.gz"), 'merged_file')]),
-		(infosource, varcopemerge, [(('iterable',add_suffix,"_varcb.nii.gz"), 'merged_file')]),
 		(datasource, copemerge, [(('copes',datasource_exclude,exclude), 'in_files')]),
 		(datasource, varcopemerge, [(('varcbs',datasource_exclude,exclude), 'in_files')]),
 		(datasource, level2model, [(('copes',datasource_exclude,exclude,"len"), 'num_copes')]),

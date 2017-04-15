@@ -49,48 +49,6 @@ def force_dummy_scans(in_file, scan_dir,
 
 	return out_file
 
-def read_bruker_timing(scan_dir):
-	from datetime import datetime
-	scan_dir = os.path.abspath(os.path.expanduser(scan_dir))
-	state_file_path = os.path.join(scan_dir,"AdjStatePerScan")
-	delay_seconds = dummy_scans = dummy_scans_ms = 0
-
-	#Here we read the `AdjStatePerScan` file, which may be missing if no adjustments were run at the beginning of this scan
-	try:
-		state_file = open(state_file_path, "r")
-	except IOError:
-		pass
-	else:
-		while True:
-			current_line = state_file.readline()
-			if "AdjScanStateTime" in current_line:
-				delay_datetime_line = state_file.readline()
-				break
-
-		trigger_time, scanstart_time = [datetime.utcnow().strptime(i.split("+")[0], "<%Y-%m-%dT%H:%M:%S,%f") for i in delay_datetime_line.split(" ")]
-		delay = scanstart_time-trigger_time
-		delay_seconds=delay.total_seconds()
-
-	#Here we read the `method` file, which contains info about dummy scans
-	method_file_path = os.path.join(scan_dir,"method")
-	method_file = open(method_file_path, "r")
-
-	read_variables=0 #count variables so that breaking takes place after both have been read
-	while True:
-		current_line = method_file.readline()
-		if "##$PVM_DummyScans=" in current_line:
-			dummy_scans = int(current_line.split("=")[1])
-			read_variables +=1 #count variables
-		if "##$PVM_DummyScansDur=" in current_line:
-			dummy_scans_ms = int(current_line.split("=")[1])
-			read_variables +=1 #count variables
-		if read_variables == 2:
-			break #prevent loop from going on forever
-
-	total_delay_s = delay_seconds + dummy_scans_ms/1000
-
-	return delay_seconds, dummy_scans, dummy_scans_ms, total_delay_s
-
 def write_function_call(frame, target_path):
 	args, _, _, values = inspect.getargvalues(frame)
 	function_name = inspect.getframeinfo(frame)[2]

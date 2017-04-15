@@ -20,7 +20,7 @@ import nipype.pipeline.engine as pe				# pypeline engine
 import pandas as pd
 from nipype.interfaces import afni, bru2nii, fsl, nipy
 
-from nodes import functional_registration, structural_registration, composite_registration
+from nodes import functional_registration, structural_registration, composite_registration, autorotate
 from utils import ss_to_path, sss_filename, fslmaths_invert_values
 from utils import STIM_PROTOCOL_DICTIONARY
 
@@ -131,6 +131,8 @@ def bruker(measurements_base,
 	workflow_name="generic",
 	loud=False,
 	keep_work=False,
+	autorotate=False,
+	spacetime,
 	):
 
 	#select all functional/sturctural scan types unless specified
@@ -252,6 +254,9 @@ def bruker(measurements_base,
 
 		s_mask = pe.Node(interface=fsl.ApplyMask(), name="s_mask")
 
+		if(autorotate):
+			s_rotated = autorotate(template)
+
 		s_register, s_warp, f_warp = structural_registration(template)
 
 		s_bids_filename = pe.Node(name='s_bids_filename', interface=util.Function(function=sss_filename,input_names=inspect.getargspec(sss_filename)[0], output_names=['filename']))
@@ -269,11 +274,21 @@ def bruker(measurements_base,
 			(s_cutoff, s_BET, [('out_file', 'in_file')]),
 			(s_biascorrect, s_mask, [('output_image', 'in_file')]),
 			(s_BET, s_mask, [('mask_file', 'mask_file')]),
-			(s_mask, s_register, [('out_file', 'moving_image')]),
-			(s_register, s_warp, [('composite_transform', 'transforms')]),
-			(s_bru2nii, s_warp, [('nii_file', 'input_image')]),
-			(s_warp, datasink, [('output_image', 'anat')]),
 			])
+
+		#TODO: incl. in func registration
+		if(autorotate):
+			workflow_connections.extend([
+				(s_mask, s_rotated, [('out_file', 'out_file')]),
+				(s_rotated, s_register, [('out_file', 'moving_image')]),
+				])
+		else:
+			workflow_connections.extend([
+				(s_mask, s_register, [('out_file', 'moving_image')]),
+				(s_register, s_warp, [('composite_transform', 'transforms')]),
+				(s_bru2nii, s_warp, [('nii_file', 'input_image')]),
+				(s_warp, datasink, [('output_image', 'anat')]),
+				])
 
 	if functional_registration_method == "structural":
 		if not structural_scan_types:

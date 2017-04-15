@@ -132,7 +132,6 @@ def bruker(measurements_base,
 	loud=False,
 	keep_work=False,
 	autorotate=False,
-	spacetime,
 	):
 
 	#select all functional/sturctural scan types unless specified

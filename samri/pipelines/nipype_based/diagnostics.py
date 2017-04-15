@@ -154,7 +154,7 @@ def diagnose(measurements_base,
 			(realigner, melodic, [('out_file', 'in_files')]),
 			])
 
-	elif realign == "spacetime"
+	elif realign == "spacetime":
 		realigner = pe.Node(interface=nipy.SpaceTimeRealigner(), name="realigner")
 		realigner.inputs.slice_times = "asc_alt_2"
 		realigner.inputs.tr = tr

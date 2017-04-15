@@ -69,7 +69,7 @@ def write_function_call(frame, target_path):
 def write_events_file(scan_dir, scan_type, stim_protocol_dictionary,
 	db_path="~/syncdata/meta.db",
 	out_file="events.tsv",
-	dummy_scans_ms=False,
+	dummy_scans_ms="determine",
 	subject_delay=False,
 	very_nasty_bruker_delay_hack=False,
 	):
@@ -89,13 +89,12 @@ def write_events_file(scan_dir, scan_type, stim_protocol_dictionary,
 	if not subject_delay:
 		scan_dir = os.path.abspath(os.path.expanduser(scan_dir))
 		state_file_path = os.path.join(scan_dir,"AdjStatePerScan")
-		delay_seconds = dummy_scans = dummy_scans_ms = 0
 
 		#Here we read the `AdjStatePerScan` file, which may be missing if no adjustments were run at the beginning of this scan
 		try:
 			state_file = open(state_file_path, "r")
 		except IOError:
-			pass
+			delay_seconds = 0
 		else:
 			while True:
 				current_line = state_file.readline()
@@ -113,7 +112,7 @@ def write_events_file(scan_dir, scan_type, stim_protocol_dictionary,
 
 		read_variables=0 #count variables so that breaking takes place after both have been read
 
-		if not dummy_scans_ms:
+		if dummy_scans_ms = "determine":
 			while True:
 				current_line = method_file.readline()
 				if "##$PVM_DummyScans=" in current_line:

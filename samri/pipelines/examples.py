@@ -4,7 +4,7 @@ def cbv_composite():
 	preprocessing.bruker("/home/chymera/ni_data/ofM.dr/",
 		exclude_measurements=['20151027_121613_4013_1_1'],
 		functional_scan_types=["EPI_CBV_chr_longSOA","EPI_CBV_jb_long"],
-                #subjects=["4007","4008",],
+		#subjects=["4007","4008",],
 		subjects=["4007","4008","4011","4012","5689","5690","5691"],
 		workflow_name="composite",
 		very_nasty_bruker_delay_hack=True,

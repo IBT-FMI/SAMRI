@@ -57,7 +57,8 @@ def diagnose(measurements_base,
 	n_procs=8,
 	realign=False,
 	tr=1,
-	workflow_name="diagnostic"
+	workflow_name="diagnostic",
+	spacetime=False,
 	):
 
 	measurements_base = path.abspath(path.expanduser(measurements_base))
@@ -149,15 +150,25 @@ def diagnose(measurements_base,
 			(s_bru2nii, datasink, [('nii_file', 'anat')]),
 			])
 
+	#TODO: realigner  optional / als flag (wenn spm) ansonsten mandatory, slicetiming nicht spm
+	#TODO: realign vs. not realign, ICA geht verloren auf neurostars posten
 	if realign:
-		realigner = pe.Node(interface=nipy.SpaceTimeRealigner(), name="realigner")
-		realigner.inputs.slice_times = "asc_alt_2"
-		realigner.inputs.tr = tr
-		realigner.inputs.slice_info = 3 #3 for coronal slices (2 for horizontal, 1 for sagittal)
+		if spacetime:
+			realigner = pe.Node(interface=nipy.SpaceTimeRealigner(), name="realigner")
+			realigner.inputs.slice_times = "asc_alt_2"
+			realigner.inputs.tr = tr
+			realigner.inputs.slice_info = 3 #3 for coronal slices (2 for horizontal, 1 for sagittal)
+
+		else:
+			realigner = pe.Node(interface=spm.Realign(), name="realigner")
+			realigner.inputs.register_to_mean = True
+
+
 		workflow_connections.extend([
 			(dummy_scans, realigner, [('out_file', 'in_file')]),
 			(realigner, melodic, [('out_file', 'in_files')]),
 			])
+
 	else:
 		workflow_connections.extend([
 			(dummy_scans, melodic, [('out_file', 'in_files')]),

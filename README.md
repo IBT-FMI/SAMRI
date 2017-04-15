@@ -31,7 +31,7 @@ python setup.py install --user
 Python's `setuptools` allows you to install Python packages independently of your distribution (or operating system, even);
 it also allows you to install a "live" version of the package - dynamically linking back to the source code.
 This permits you to test code (with real module functionality) as you develop it.
-This method is sub-par for dependency management (see above notice), but as a developer, you should be able to manually ensure that your package manager provides the needed packages.
+This method is sub-par for dependency management (see above notice), but - as a developer - you should be able to manually ensure that your package manager provides the needed packages.
 
 ````
 git clone git@github.com:IBT-FMI/SAMRI.git

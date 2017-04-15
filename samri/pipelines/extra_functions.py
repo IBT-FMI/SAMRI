@@ -112,7 +112,7 @@ def write_events_file(scan_dir, scan_type, stim_protocol_dictionary,
 
 		read_variables=0 #count variables so that breaking takes place after both have been read
 
-		if dummy_scans_ms = "determine":
+		if dummy_scans_ms == "determine":
 			while True:
 				current_line = method_file.readline()
 				if "##$PVM_DummyScans=" in current_line:

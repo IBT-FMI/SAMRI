@@ -1,8 +1,4 @@
 from os import path, listdir, getcwd, remove
-if not __package__:
-	import sys
-	pkg_root = path.abspath(path.join(path.dirname(path.realpath(__file__)),"../../.."))
-	sys.path.insert(0, pkg_root)
 from samri.pipelines.extra_functions import get_level2_inputs, get_subjectinfo, write_function_call, bids_inputs
 
 import inspect

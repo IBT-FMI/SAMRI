@@ -1,9 +1,4 @@
 from os import path, listdir, getcwd, remove
-if not __package__:
-	import sys
-	pkg_root = path.abspath(path.join(path.dirname(path.realpath(__file__)),"../../.."))
-	sys.path.insert(0, pkg_root)
-
 import nipype.interfaces.io as nio
 
 from nilearn.input_data import NiftiLabelsMasker

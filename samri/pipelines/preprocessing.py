@@ -6,6 +6,7 @@ except ValueError:
 
 import re
 import inspect
+import shutil
 from copy import deepcopy
 from itertools import product
 
@@ -20,7 +21,6 @@ from nodes import functional_registration, structural_registration, composite_re
 from utils import ss_to_path, sss_filename, fslmaths_invert_values
 from utils import STIM_PROTOCOL_DICTIONARY
 
-import shutil
 
 DUMMY_SCANS=10
 

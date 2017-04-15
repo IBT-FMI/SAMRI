@@ -1,7 +1,7 @@
 __author__ = "Horea Christian"
 
 import argh
-from pipelines.nipype_based.diagnostics import diagnose
+from pipelines.diagnostics import diagnose
 
 def main():
 	argh.dispatch_commands([diagnose])

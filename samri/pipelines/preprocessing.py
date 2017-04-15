@@ -30,7 +30,7 @@ fsl.FSLCommand.set_default_output_type('NIFTI_GZ')
 
 #relative paths
 thisscriptspath = path.dirname(path.realpath(__file__))
-scan_classification_file_path = path.join(thisscriptspath,"..","scan_type_classification.csv")
+scan_classification_file_path = path.join(thisscriptspath,"scan_type_classification.csv")
 
 def bruker_lite(measurements_base,
 	functional_scan_types=[],

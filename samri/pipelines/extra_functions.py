@@ -111,9 +111,11 @@ def write_function_call(frame, target_path):
 def write_events_file(scan_dir, scan_type, stim_protocol_dictionary,
 	db_path="~/syncdata/meta.db",
 	out_file="events.tsv",
+	dummy_scans_ms=False,
 	subject_delay=False,
 	very_nasty_bruker_delay_hack=False,
 	):
+
 	import csv
 	import os
 	import sys
@@ -152,20 +154,22 @@ def write_events_file(scan_dir, scan_type, stim_protocol_dictionary,
 		method_file = open(method_file_path, "r")
 
 		read_variables=0 #count variables so that breaking takes place after both have been read
-		while True:
-			current_line = method_file.readline()
-			if "##$PVM_DummyScans=" in current_line:
-				dummy_scans = int(current_line.split("=")[1])
-				read_variables +=1 #count variables
-			if "##$PVM_DummyScansDur=" in current_line:
-				dummy_scans_ms = int(current_line.split("=")[1])
-				read_variables +=1 #count variables
-			if read_variables == 2:
-				break #prevent loop from going on forever
+
+		if not dummy_scans_ms:
+			while True:
+				current_line = method_file.readline()
+				if "##$PVM_DummyScans=" in current_line:
+					dummy_scans = int(current_line.split("=")[1])
+					read_variables +=1 #count variables
+				if "##$PVM_DummyScansDur=" in current_line:
+					dummy_scans_ms = int(current_line.split("=")[1])
+					read_variables +=1 #count variables
+				if read_variables == 2:
+					break #prevent loop from going on forever
 
 		subject_delay = delay_seconds + dummy_scans_ms/1000
 		if very_nasty_bruker_delay_hack:
-			subject_delay += 12
+			subject_delay += 10
 
 	session, engine = loadSession(db_path)
 	sql_query=session.query(LaserStimulationProtocol).filter(LaserStimulationProtocol.code==stim_protocol_dictionary[scan_type])

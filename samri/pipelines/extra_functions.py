@@ -6,7 +6,7 @@ import dcmstack
 
 import nibabel as nb
 import pandas as pd
-from nipype_based.utils import STIM_PROTOCOL_DICTIONARY
+from utils import STIM_PROTOCOL_DICTIONARY
 
 def force_dummy_scans(in_file, scan_dir,
 	desired_dummy_scans=10,

@@ -105,6 +105,8 @@ def write_events_file(scan_dir, scan_type, stim_protocol_dictionary,
 			trigger_time, scanstart_time = [datetime.utcnow().strptime(i.split("+")[0], "<%Y-%m-%dT%H:%M:%S,%f") for i in delay_datetime_line.split(" ")]
 			delay = scanstart_time-trigger_time
 			delay_seconds=delay.total_seconds()
+			if very_nasty_bruker_delay_hack:
+				delay_seconds += 11
 
 		#Here we read the `method` file, which contains info about dummy scans
 		method_file_path = os.path.join(scan_dir,"method")
@@ -125,8 +127,6 @@ def write_events_file(scan_dir, scan_type, stim_protocol_dictionary,
 					break #prevent loop from going on forever
 
 		subject_delay = delay_seconds + dummy_scans_ms/1000
-		if very_nasty_bruker_delay_hack:
-			subject_delay += 10
 
 	session, engine = loadSession(db_path)
 	sql_query=session.query(LaserStimulationProtocol).filter(LaserStimulationProtocol.code==stim_protocol_dictionary[scan_type])

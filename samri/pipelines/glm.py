@@ -9,8 +9,9 @@ import nipype.interfaces.utility as util
 import nipype.pipeline.engine as pe
 from itertools import product
 from nipype.interfaces import fsl
+from nipype.interfaces.fsl.model import Level1Design
 
-from extra_interfaces import GenL2Model, SpecifyModel, Level1Design
+from extra_interfaces import SpecifyModel
 from preprocessing import bruker
 from utils import sss_to_source, ss_to_path, iterfield_selector, datasource_exclude
 
@@ -80,7 +81,7 @@ def l1(preprocessing_dir,
 
 	level1design = pe.Node(interface=Level1Design(), name="level1design")
 	level1design.inputs.interscan_interval = tr
-	level1design.inputs.bases = {'custom': {'bfcustompath':"/mnt/data/ni_data/irfs/chr_beta1.txt"}}
+	level1design.inputs.bases = {"custom": {"bfcustompath":"/mnt/data/ni_data/irfs/chr_beta1.txt"}}
 	# level1design.inputs.bases = {'gamma': {'derivs':False, 'gammasigma':10, 'gammadelay':5}}
 	level1design.inputs.orthogonalization = {1: {0:0,1:0,2:0}, 2: {0:1,1:1,2:0}}
 	level1design.inputs.model_serial_correlations = True
@@ -160,6 +161,7 @@ def l1(preprocessing_dir,
 	workflow = pe.Workflow(name=workdir_name)
 	workflow.connect(workflow_connections)
 	workflow.base_dir = l1_dir
+        workflow.config = {"execution": {"crashdump_dir": path.join(l1_dir,"crashdump")}}
 	workflow.write_graph(dotfilename=path.join(workflow.base_dir,workdir_name,"graph.dot"), graph2use="hierarchical", format="png")
 
 	workflow.run(plugin="MultiProc",  plugin_args={'n_procs' : nprocs})

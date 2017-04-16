@@ -1,5 +1,6 @@
 import matplotlib.pyplot as plt
 
+from samri.utilities import bids_substitution_iterator
 import maps, timeseries, summary
 
 def overview(workflow, identifiers,
@@ -26,20 +27,20 @@ def roi_per_session(l1_dir, roi, color):
 	plt.show()
 
 def p_clusters():
-	substitutions = summary.bids_substitution_iterator(["ofM","ofM_aF","ofM_cF1","ofM_cF2","ofM_pF"],[4007,4008,4009,4011,4012],["EPI_CBV_jb_long"],"composite", l1_dir="composite_dr", l1_workdir="composite_work")
+	substitutions = bids_substitution_iterator(["ofM","ofM_aF","ofM_cF1","ofM_cF2","ofM_pF"],[4007,4008,4009,4011,4012],["EPI_CBV_jb_long"],"composite", l1_dir="composite_dr", l1_workdir="composite_work")
 	timecourses, designs, stat_maps, subplot_titles = summary.p_filtered_ts(substitutions, p_level=0.05)
 	timeseries.multi(timecourses, designs, stat_maps, subplot_titles, figure="timecourses")
 	plt.show()
 
 def roi(roi_path="~/ni_data/templates/roi/f_dr_chr.nii.gz"):
-	substitutions = summary.bids_substitution_iterator(["ofM","ofM_aF","ofM_cF1","ofM_cF2","ofM_pF"],[4007,4008,4009,4011,4012],["EPI_CBV_jb_long"],"composite")
+	substitutions = bids_substitution_iterator(["ofM","ofM_aF","ofM_cF1","ofM_cF2","ofM_pF"],[4007,4008,4009,4011,4012],["EPI_CBV_jb_long"],"composite")
 	timecourses, designs, stat_maps, subplot_titles = summary.roi_ts(substitutions, roi_path=roi_path,)
 	timeseries.multi(timecourses, designs, stat_maps, subplot_titles, figure="timecourses")
 	plt.show()
 
 def roi_teaching(roi_path="~/ni_data/templates/roi/f_dr_chr.nii.gz"):
 	design_file_template="~/ni_data/ofM.dr/l1/{l1_workdir}/_subject_session_scan_{subject}.{session}.{scan}/modelgen/run0.mat"
-	substitutions = summary.bids_substitution_iterator(["ofM_cF2"],[4008],["EPI_CBV_jb_long"],"composite")
+	substitutions = bids_substitution_iterator(["ofM_cF2"],[4008],["EPI_CBV_jb_long"],"composite")
 	timeseries.roi_based(substitutions[0], design_file_template=design_file_template, flip=True, plot_design_regressors=[0])
 	plt.show()
 
@@ -47,7 +48,7 @@ def check_responders():
 	summary.responders("subjectwise_composite")
 
 def qc_regressor(mask):
-	substitutions = summary.bids_substitution_iterator(
+	substitutions = bids_substitution_iterator(
 		["ofM","ofM_aF","ofM_cF1","ofM_cF2","ofM_pF"],
 		["4011","4012","5689","5690","5691"],
 		# ["4007","4008","4011","4012","5689","5690","5691"],
@@ -64,7 +65,7 @@ def qc_regressor(mask):
 
 if __name__ == '__main__':
 	# overview("composite_subjects", ["4007","4008","4011","4012","5689","5690","5691"]) #4001 is a negative control (transgene but no injection
-	# overview("composite_sessions", ["ofM","ofM_aF","ofM_cF1","ofM_cF2","ofM_pF"])
+	overview("composite_sessions", ["ofM","ofM_aF","ofM_cF1","ofM_cF2","ofM_pF"])
 	# overview("composite_subjects", ["4001","4005","4007","4008","4009","4011","4012"]) #4001 is a negative control (transgene but no injection
 	# overview("subjectwise_blur", ["4001","4005","4007","4008","4009","4011","4012"])
 
@@ -75,4 +76,4 @@ if __name__ == '__main__':
 	# roi_teaching()
 	# check_responders()
 	# qc_regressor("~/ni_data/templates/roi/f_dr_chr.nii.gz")
-	qc_regressor("~/ni_data/templates/roi/ctx_chr.nii.gz")
+	# qc_regressor("~/ni_data/templates/roi/ctx_chr.nii.gz")

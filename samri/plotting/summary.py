@@ -148,27 +148,6 @@ def responders(l2_dir,
 			df_ = pd.DataFrame(voxel_data, index=[None])
 			voxeldf = pd.concat([voxeldf,df_])
 
-def bids_substitution_iterator(sessions, subjects, scans, preprocessing_dir,
-	l1_dir=None,
-	l1_workdir=None,
-	):
-	"""A convenience layer to the SAMRI data structure"""
-	if not l1_dir:
-		l1_dir = preprocessing_dir
-	if not l1_workdir:
-		l1_workdir = l1_dir+"_work"
-	substitutions=[]
-	for subject, session, scan in product(subjects, sessions, scans):
-		substitution={}
-		substitution["subject"] = subject
-		substitution["session"] = session
-		substitution["scan"] = scan
-		substitution["preprocessing_dir"] = preprocessing_dir
-		substitution["l1_dir"] = l1_dir
-		substitution["l1_workdir"] = l1_workdir
-		substitutions.append(substitution)
-	return substitutions
-
 def p_filtering(substitution, ts_file_template, beta_file_template, p_file_template, design_file_template, p_level):
 	ts_file = os.path.expanduser(ts_file_template.format(**substitution))
 	beta_file = os.path.expanduser(beta_file_template.format(**substitution))

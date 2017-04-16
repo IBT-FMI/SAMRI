@@ -46,14 +46,14 @@ def roi_teaching(roi_path="~/ni_data/templates/roi/f_dr_chr.nii.gz"):
 def check_responders():
 	summary.responders("subjectwise_composite")
 
-def qc_regressor():
+def qc_regressor(mask):
 	substitutions = summary.bids_substitution_iterator(
 		["ofM","ofM_aF","ofM_cF1","ofM_cF2","ofM_pF"],
 		["4012","5689","5690","5691"],
 		# ["4007","4008","4011","4012","5689","5690","5691"],
 		["EPI_CBV_jb_long","EPI_CBV_chr_longSOA"],
 		"composite")
-	timecourses, designs, stat_maps, events_dfs, subplot_titles = summary.ts_overviews(substitutions, "~/ni_data/templates/roi/ctx_chr.nii.gz",
+	timecourses, designs, stat_maps, events_dfs, subplot_titles = summary.ts_overviews(substitutions, mask,
 		ts_file_template="~/ni_data/ofM.dr/preprocessing/{preprocessing_dir}/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_trial-{scan}.nii.gz",
 		beta_file_template="~/ni_data/ofM.dr/l1/{l1_dir}/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_trial-{scan}_cope.nii.gz",
 		design_file_template="~/ni_data/ofM.dr/l1/{l1_workdir}/_subject_session_scan_{subject}.{session}.{scan}/modelgen/run0.mat",
@@ -74,4 +74,5 @@ if __name__ == '__main__':
 	# roi(roi_path="~/ni_data/templates/roi/f_dr_chr_bin.nii.gz")
 	# roi_teaching()
 	# check_responders()
-	qc_regressor()
+	qc_regressor("~/ni_data/templates/roi/f_dr_chr.nii.gz")
+	# qc_regressor("~/ni_data/templates/roi/ctx_chr.nii.gz")

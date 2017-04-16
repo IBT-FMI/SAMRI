@@ -4,7 +4,7 @@ import maps, timeseries, summary
 
 def overview(workflow, identifiers,
 	cut_coords=[None],
-	threshold=2,
+	threshold=2.5,
 	):
 	"""Plot the statistical maps per-factor from a 2nd level GLM workflow result directory."""
 	stat_maps = ["/home/chymera/ni_data/ofM.dr/l2/{0}/{1}/tstat1.nii.gz".format(workflow, i) for i in identifiers]
@@ -49,7 +49,7 @@ def check_responders():
 def qc_regressor(mask):
 	substitutions = summary.bids_substitution_iterator(
 		["ofM","ofM_aF","ofM_cF1","ofM_cF2","ofM_pF"],
-		["4012","5689","5690","5691"],
+		["4011","4012","5689","5690","5691"],
 		# ["4007","4008","4011","4012","5689","5690","5691"],
 		["EPI_CBV_jb_long","EPI_CBV_chr_longSOA"],
 		"composite")
@@ -74,5 +74,5 @@ if __name__ == '__main__':
 	# roi(roi_path="~/ni_data/templates/roi/f_dr_chr_bin.nii.gz")
 	# roi_teaching()
 	# check_responders()
-	qc_regressor("~/ni_data/templates/roi/f_dr_chr.nii.gz")
-	# qc_regressor("~/ni_data/templates/roi/ctx_chr.nii.gz")
+	# qc_regressor("~/ni_data/templates/roi/f_dr_chr.nii.gz")
+	qc_regressor("~/ni_data/templates/roi/ctx_chr.nii.gz")

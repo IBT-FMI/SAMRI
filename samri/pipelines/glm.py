@@ -80,7 +80,8 @@ def l1(preprocessing_dir,
 
 	level1design = pe.Node(interface=Level1Design(), name="level1design")
 	level1design.inputs.interscan_interval = tr
-	level1design.inputs.bases = {'gamma': {'derivs':False, 'gammasigma':10, 'gammadelay':5}}
+	level1design.inputs.bases = {'custom': {'bfcustompath':"/mnt/data/ni_data/irfs/chr_beta1.txt"}}
+	# level1design.inputs.bases = {'gamma': {'derivs':False, 'gammasigma':10, 'gammadelay':5}}
 	level1design.inputs.orthogonalization = {1: {0:0,1:0,2:0}, 2: {0:1,1:1,2:0}}
 	level1design.inputs.model_serial_correlations = True
 	if per_stimulus_contrast:

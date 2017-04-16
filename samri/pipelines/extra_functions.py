@@ -106,7 +106,7 @@ def write_events_file(scan_dir, scan_type, stim_protocol_dictionary,
 			delay = scanstart_time-trigger_time
 			delay_seconds=delay.total_seconds()
 			if very_nasty_bruker_delay_hack:
-				delay_seconds += 11
+				delay_seconds += 12
 
 		#Here we read the `method` file, which contains info about dummy scans
 		method_file_path = os.path.join(scan_dir,"method")

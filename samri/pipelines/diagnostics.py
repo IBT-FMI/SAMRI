@@ -1,8 +1,8 @@
 from os import path, listdir, getcwd, remove
 try:
 	from extra_functions import get_data_selection, get_scan, write_events_file, force_dummy_scans
-except ValueError:
-	from samri.pipelines.extra_functions import get_data_selection, get_scan, write_events_file, force_dummy_scans
+except ImportError:
+	from .extra_functions import get_data_selection, get_scan, write_events_file, force_dummy_scans
 
 import inspect
 import re
@@ -18,10 +18,17 @@ import nipype.pipeline.engine as pe				# pypeline engine
 import pandas as pd
 from nipype.interfaces import afni, fsl, nipy
 
-from nodes import functional_registration, structural_registration, composite_registration
-from utils import ss_to_path, sss_filename, fslmaths_invert_values
-from utils import STIM_PROTOCOL_DICTIONARY
-from utils import Bru2, MELODIC
+try:
+	from nodes import functional_registration, structural_registration, composite_registration
+	from utils import ss_to_path, sss_filename, fslmaths_invert_values
+	from utils import STIM_PROTOCOL_DICTIONARY
+	from utils import Bru2, MELODIC
+except ImportError:
+	from .nodes import functional_registration, structural_registration, composite_registration
+	from .utils import ss_to_path, sss_filename, fslmaths_invert_values
+	from .utils import STIM_PROTOCOL_DICTIONARY
+	from .utils import Bru2, MELODIC
+
 
 #set all outputs to compressed NIfTI
 afni.base.AFNICommand.set_default_output_type('NIFTI_GZ')

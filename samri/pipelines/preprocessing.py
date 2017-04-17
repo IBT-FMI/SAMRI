@@ -17,7 +17,7 @@ import nipype.pipeline.engine as pe				# pypeline engine
 import pandas as pd
 from nipype.interfaces import afni, bru2nii, fsl, nipy
 
-from nodes import functional_registration, structural_registration, composite_registration, autorotate
+from nodes import *
 from utils import ss_to_path, sss_filename, fslmaths_invert_values
 from utils import STIM_PROTOCOL_DICTIONARY
 
@@ -31,87 +31,6 @@ fsl.FSLCommand.set_default_output_type('NIFTI_GZ')
 #relative paths
 thisscriptspath = path.dirname(path.realpath(__file__))
 scan_classification_file_path = path.join(thisscriptspath,"scan_type_classification.csv")
-
-def bruker_lite(measurements_base,
-	functional_scan_types=[],
-	structural_scan_types=[],
-	tr=1,
-	sessions=[],
-	subjects=[],
-	exclude_subjects=[],
-	measurements=[],
-	exclude_measurements=[],
-	actual_size=False,
-	realign=False,
-	):
-
-	#select all functional/sturctural scan types unless specified
-	if not functional_scan_types or not structural_scan_types:
-		 scan_classification = pd.read_csv(scan_classification_file_path)
-		 if not functional_scan_types:
-			 functional_scan_types = list(scan_classification[(scan_classification["categories"] == "functional")]["scan_type"])
-		 if not structural_scan_types:
-			 structural_scan_types = list(scan_classification[(scan_classification["categories"] == "structural")]["scan_type"])
-
-	# define measurement directories to be processed, and populate the list either with the given include_measurements, or with an intelligent selection
-	scan_types = functional_scan_types[:]
-	scan_types.extend(structural_scan_types)
-	data_selection=get_data_selection(measurements_base, sessions, scan_types=scan_types, subjects=subjects, exclude_subjects=exclude_subjects, measurements=measurements, exclude_measurements=exclude_measurements)
-	if not subjects:
-		subjects = set(list(data_selection["subject"]))
-	if not sessions:
-		sessions = set(list(data_selection["session"]))
-
-	infosource = pe.Node(interface=util.IdentityInterface(fields=['session','subject']), name="infosource")
-	infosource.iterables = [('subject',subjects),('session',sessions)]
-
-	get_f_scan = pe.Node(name='get_f_scan',  interface=util.Function(function=get_scan,input_names=inspect.getargspec(get_scan)[0], output_names=['scan_path','scan_type']))
-	get_f_scan.inputs.data_selection = data_selection
-	get_f_scan.inputs.measurements_base = measurements_base
-	get_f_scan.iterables = ("scan_type", functional_scan_types)
-
-	f_bru2nii = pe.Node(interface=bru2nii.Bru2(), name="f_bru2nii")
-	f_bru2nii.inputs.actual_size=actual_size
-
-	dummy_scans = pe.Node(name='dummy_scans', interface=util.Function(function=force_dummy_scans,input_names=inspect.getargspec(force_dummy_scans)[0], output_names=['out_file']))
-	dummy_scans.inputs.desired_dummy_scans = 10
-
-	if structural_scan_types:
-		get_s_scan = pe.Node(name='get_s_scan',  interface=util.Function(function=get_scan,input_names=inspect.getargspec(get_scan)[0], output_names=['scan_path','scan_type']))
-		get_s_scan.inputs.data_selection = data_selection
-		get_s_scan.inputs.measurements_base = measurements_base
-		get_s_scan.iterables = ("scan_type", structural_scan_types)
-
-		s_bru2nii = pe.Node(interface=bru2nii.Bru2(), name="s_bru2nii")
-		s_bru2nii.inputs.force_conversion=True
-		s_bru2nii.inputs.actual_size=actual_size
-
-	realigner = pe.Node(interface=nipy.SpaceTimeRealigner(), name="realigner")
-	realigner.inputs.slice_times = "asc_alt_2"
-	realigner.inputs.tr = tr
-	realigner.inputs.slice_info = 3 #3 for coronal slices (2 for horizontal, 1 for sagittal)
-
-	workflow = pe.Workflow(name="PreprocessingLite")
-
-	workflow_connections = [
-		(infosource, get_f_scan, [('session', 'session'),('subject', 'subject')]),
-		(get_f_scan, f_bru2nii, [('scan_path', 'input_dir')]),
-		(f_bru2nii, dummy_scans, [('nii_file', 'in_file')]),
-		(get_f_scan, dummy_scans, [('scan_path', 'scan_dir')]),
-		]
-	if realign:
-		workflow_connections.extend([
-			(dummy_scans, realigner, [('out_file', 'in_file')]),
-			])
-	if structural_scan_types:
-		workflow_connections.extend([
-			(infosource, get_s_scan, [('session', 'session'),('subject', 'subject')]),
-			(get_s_scan, s_bru2nii, [('scan_path','input_dir')]),
-			])
-
-	workflow.connect(workflow_connections)
-	# workflow.run(plugin="MultiProc")
-	return workflow
 
 def bruker(measurements_base,
 	functional_scan_types=[],
@@ -238,34 +157,82 @@ def bruker(measurements_base,
 		s_bru2nii.inputs.force_conversion=True
 		s_bru2nii.inputs.actual_size=actual_size
 
-		s_biascorrect = pe.Node(interface=ants.N4BiasFieldCorrection(), name="s_biascorrect")
-		s_biascorrect.inputs.dimension = 3
-		s_biascorrect.inputs.bspline_fitting_distance = 100
-		s_biascorrect.inputs.shrink_factor = 2
-		s_biascorrect.inputs.n_iterations = [200,200,200,200]
-		s_biascorrect.inputs.convergence_threshold = 1e-11
+		if "DSURQEc" in template:
+			s_biascorrect = pe.Node(interface=ants.N4BiasFieldCorrection(), name="s_biascorrect")
+			s_biascorrect.inputs.dimension = 3
+			s_biascorrect.inputs.input_image = image_path
+			s_biascorrect.inputs.bspline_fitting_distance = 10
+			s_biascorrect.inputs.bspline_order = 4
+			s_biascorrect.inputs.shrink_factor = 2
+			s_biascorrect.inputs.n_iterations = [150,100,50,30]
+			s_biascorrect.inputs.convergence_threshold = 1e-16
+			s_biascorrect.inputs.num_threads = threads
+			s_biascorrect.inputs.output_image = n4_out
+			s_register, s_warp, f_warp = DSURQEc_structural_registration(template)
+			#TODO: incl. in func registration
+			if autorotate:
+				workflow_connections.extend([
+					(s_biascorrect, s_rotated, [('out_file', 'out_file')]),
+					(s_rotated, s_register, [('out_file', 'moving_image')]),
+					])
+			else:
+				workflow_connections.extend([
+					(s_biascorrect, s_register, [('out_file', 'moving_image')]),
+					(s_register, s_warp, [('composite_transform', 'transforms')]),
+					(s_bru2nii, s_warp, [('nii_file', 'input_image')]),
+					(s_warp, datasink, [('output_image', 'anat')]),
+					])
+		else:
+			s_biascorrect = pe.Node(interface=ants.N4BiasFieldCorrection(), name="s_biascorrect")
+			s_biascorrect.inputs.dimension = 3
+			s_biascorrect.inputs.bspline_fitting_distance = 100
+			s_biascorrect.inputs.shrink_factor = 2
+			s_biascorrect.inputs.n_iterations = [200,200,200,200]
+			s_biascorrect.inputs.convergence_threshold = 1e-11
 
-		s_reg_biascorrect = pe.Node(interface=ants.N4BiasFieldCorrection(), name="s_reg_biascorrect")
-		s_reg_biascorrect.inputs.dimension = 3
-		s_reg_biascorrect.inputs.bspline_fitting_distance = 95
-		s_reg_biascorrect.inputs.shrink_factor = 2
-		s_reg_biascorrect.inputs.n_iterations = [500,500,500,500]
-		s_reg_biascorrect.inputs.convergence_threshold = 1e-14
+			s_reg_biascorrect = pe.Node(interface=ants.N4BiasFieldCorrection(), name="s_reg_biascorrect")
+			s_reg_biascorrect.inputs.dimension = 3
+			s_reg_biascorrect.inputs.bspline_fitting_distance = 95
+			s_reg_biascorrect.inputs.shrink_factor = 2
+			s_reg_biascorrect.inputs.n_iterations = [500,500,500,500]
+			s_reg_biascorrect.inputs.convergence_threshold = 1e-14
 
-		s_cutoff = pe.Node(interface=fsl.ImageMaths(), name="s_cutoff")
-		s_cutoff.inputs.op_string = "-thrP 20 -uthrp 98"
+			s_cutoff = pe.Node(interface=fsl.ImageMaths(), name="s_cutoff")
+			s_cutoff.inputs.op_string = "-thrP 20 -uthrp 98"
 
-		s_BET = pe.Node(interface=fsl.BET(), name="s_BET")
-		s_BET.inputs.mask = True
-		s_BET.inputs.frac = 0.3
-		s_BET.inputs.robust = True
+			s_BET = pe.Node(interface=fsl.BET(), name="s_BET")
+			s_BET.inputs.mask = True
+			s_BET.inputs.frac = 0.3
+			s_BET.inputs.robust = True
 
-		s_mask = pe.Node(interface=fsl.ApplyMask(), name="s_mask")
+			s_mask = pe.Node(interface=fsl.ApplyMask(), name="s_mask")
+			s_register, s_warp, f_warp = structural_registration(template)
+
+			workflow_connections.extend([
+				(s_bru2nii, s_reg_biascorrect, [('nii_file', 'input_image')]),
+				(s_reg_biascorrect, s_cutoff, [('output_image', 'in_file')]),
+				(s_cutoff, s_BET, [('out_file', 'in_file')]),
+				(s_biascorrect, s_mask, [('output_image', 'in_file')]),
+				(s_BET, s_mask, [('mask_file', 'mask_file')]),
+				])
+
+			#TODO: incl. in func registration
+			if autorotate:
+				workflow_connections.extend([
+					(s_mask, s_rotated, [('out_file', 'out_file')]),
+					(s_rotated, s_register, [('out_file', 'moving_image')]),
+					])
+			else:
+				workflow_connections.extend([
+					(s_mask, s_register, [('out_file', 'moving_image')]),
+					(s_register, s_warp, [('composite_transform', 'transforms')]),
+					(s_bru2nii, s_warp, [('nii_file', 'input_image')]),
+					(s_warp, datasink, [('output_image', 'anat')]),
+					])
+
 
 		if(autorotate):
 			s_rotated = autorotate(template)
-
-		s_register, s_warp, f_warp = structural_registration(template)
 
 		s_bids_filename = pe.Node(name='s_bids_filename', interface=util.Function(function=sss_filename,input_names=inspect.getargspec(sss_filename)[0], output_names=['filename']))
 		s_bids_filename.inputs.scan_prefix = False
@@ -277,26 +244,9 @@ def bruker(measurements_base,
 			(get_s_scan, s_bids_filename, [('scan_type', 'scan')]),
 			(s_bids_filename, s_warp, [('filename','output_image')]),
 			(s_bru2nii, s_biascorrect, [('nii_file', 'input_image')]),
-			(s_bru2nii, s_reg_biascorrect, [('nii_file', 'input_image')]),
-			(s_reg_biascorrect, s_cutoff, [('output_image', 'in_file')]),
-			(s_cutoff, s_BET, [('out_file', 'in_file')]),
-			(s_biascorrect, s_mask, [('output_image', 'in_file')]),
-			(s_BET, s_mask, [('mask_file', 'mask_file')]),
 			])
 
-		#TODO: incl. in func registration
-		if(autorotate):
-			workflow_connections.extend([
-				(s_mask, s_rotated, [('out_file', 'out_file')]),
-				(s_rotated, s_register, [('out_file', 'moving_image')]),
-				])
-		else:
-			workflow_connections.extend([
-				(s_mask, s_register, [('out_file', 'moving_image')]),
-				(s_register, s_warp, [('composite_transform', 'transforms')]),
-				(s_bru2nii, s_warp, [('nii_file', 'input_image')]),
-				(s_warp, datasink, [('output_image', 'anat')]),
-				])
+
 
 	if functional_registration_method == "structural":
 		if not structural_scan_types:

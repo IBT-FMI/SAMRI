@@ -1,7 +1,11 @@
 __author__ = "Horea Christian"
 
 import argh
-from pipelines.diagnostics import diagnose
+try:
+	from pipelines.diagnostics import diagnose
+except ImportError:
+	from .pipelines.diagnostics import diagnose
+
 
 def main():
 	argh.dispatch_commands([diagnose])

@@ -2,11 +2,13 @@ import csv
 import inspect
 import os
 import re
-import dcmstack
 
 import nibabel as nb
 import pandas as pd
-from utils import STIM_PROTOCOL_DICTIONARY
+try:
+	from utils import STIM_PROTOCOL_DICTIONARY
+except ImportError:
+	from .utils import STIM_PROTOCOL_DICTIONARY
 
 def force_dummy_scans(in_file, scan_dir,
 	desired_dummy_scans=10,

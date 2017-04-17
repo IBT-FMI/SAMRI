@@ -161,7 +161,7 @@ def l1(preprocessing_dir,
 	workflow = pe.Workflow(name=workdir_name)
 	workflow.connect(workflow_connections)
 	workflow.base_dir = l1_dir
-        workflow.config = {"execution": {"crashdump_dir": path.join(l1_dir,"crashdump")}}
+	workflow.config = {"execution": {"crashdump_dir": path.join(l1_dir,"crashdump")}}
 	workflow.write_graph(dotfilename=path.join(workflow.base_dir,workdir_name,"graph.dot"), graph2use="hierarchical", format="png")
 
 	workflow.run(plugin="MultiProc",  plugin_args={'n_procs' : nprocs})
@@ -185,7 +185,7 @@ def l2_common_effect(l1_dir,
 	nprocs=6,
 	workflow_name="generic",
 	mask="/home/chymera/ni_data/templates/ds_QBI_chr_bin.nii.gz",
-        ):
+	):
 
 	l1_dir = path.expanduser(l1_dir)
 	if not l2_dir:

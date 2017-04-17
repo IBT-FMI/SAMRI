@@ -184,7 +184,8 @@ def l2_common_effect(l1_dir,
 	tr=1,
 	nprocs=6,
 	workflow_name="generic",
-	):
+	mask="/home/chymera/ni_data/templates/ds_QBI_chr_bin.nii.gz",
+        ):
 
 	l1_dir = path.expanduser(l1_dir)
 	if not l2_dir:
@@ -204,8 +205,8 @@ def l2_common_effect(l1_dir,
 	level2model = pe.Node(interface=fsl.L2Model(),name='level2model')
 
 	flameo = pe.Node(interface=fsl.FLAMEO(), name="flameo")
-	flameo.inputs.mask_file="/home/chymera/ni_data/templates/ds_QBI_chr_bin.nii.gz"
-	flameo.inputs.run_mode="ols"
+	flameo.inputs.mask_file = mask
+	flameo.inputs.run_mode = "ols"
 
 	datasink = pe.Node(nio.DataSink(), name='datasink')
 	datasink.inputs.base_directory = path.join(l2_dir,workflow_name)

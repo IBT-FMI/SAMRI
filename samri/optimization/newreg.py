@@ -69,7 +69,6 @@ def structural(substitutions, parameters,
 	reference="~/ni_data/templates/DSURQEc_200micron_average.nii",
 	structural_file_template="~/ni_data/ofM.dr/preprocessing/{preprocessing_workdir}/_subject_session_{subject}.{session}/_scan_type_{scan}/s_bru2nii/",
 	workdir="~/samri_optimize/structural",
-	run=True,
 	threads=6,
 	prefix="_",
 	):
@@ -105,6 +104,7 @@ def structural(substitutions, parameters,
 			n4.inputs.convergence_threshold = 1e-16
 			n4.inputs.num_threads = threads
 			n4.inputs.output_image = n4_out
+			print("Running bias field correction:\n{}".format(n4.cmdline))
 
 			struct_registration = ants.Registration()
 			struct_registration.inputs.fixed_image = reference
@@ -143,17 +143,9 @@ def structural(substitutions, parameters,
 			struct_registration.inputs.args = '--float'
 			struct_registration.inputs.fixed_image_mask = "/home/chymera/ni_data/templates/DSURQEc_200micron_mask.nii"
 			struct_registration.inputs.num_threads = threads
-
 			struct_registration.inputs.output_warped_image = os.path.join(workdir,'{subject}_{session}.nii.gz'.format(**substitution))
-
-			#node linking is only done if and after the interfaces are run. If they are not to be run, all inputs are set to the preexisting `mimage` file.
-			if run:
-				struct_registration.inputs.moving_image = n4_out
-				res = struct_registration.run()
-			else:
-				struct_registration.inputs.moving_image = n4_out
-				print(n4.cmdline)
-				print(struct_registration.cmdline)
+			struct_registration.inputs.moving_image = n4_out
+			print("Running registration:\n{}".format(struct_registration.cmdline))
 
 if __name__ == '__main__':
 	# substitutions = bids_substitution_iterator(
@@ -163,14 +155,11 @@ if __name__ == '__main__':
 	# 	"composite")
 	substitutions = bids_substitution_iterator(
 		["ofM","ofM_aF","ofM_cF1","ofM_cF2","ofM_pF"],
-		["4011"],
+		["4012"],
 		["TurboRARE"],
 		"composite")
-	structural(substitutions, [PHASES["rigid"],PHASES["affine"],],
-	# structural(substitutions, [PHASES["rigid"]],
-		# structural_file_template="~/X8P18.nii",
+	structural(substitutions, [PHASES["rigid"],PHASES["affine"],PHASES["syn"]],
 		structural_file_template="~/ni_data/ofM.dr/preprocessing/{preprocessing_workdir}/_subject_session_{subject}.{session}/_scan_type_{scan}/s_bru2nii/",
-		# run=False,
 		)
 
 	# structural_to_functional_per_participant_test(

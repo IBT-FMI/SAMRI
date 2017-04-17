@@ -70,7 +70,7 @@ def structural(substitutions, parameters,
 	structural_file_template="~/ni_data/ofM.dr/preprocessing/{preprocessing_workdir}/_subject_session_{subject}.{session}/_scan_type_{scan}/s_bru2nii/",
 	workdir="~/samri_optimize/structural",
 	threads=6,
-	prefix="_",
+	prefix="",
 	):
 
 	reference=os.path.abspath(os.path.expanduser(reference))
@@ -89,7 +89,8 @@ def structural(substitutions, parameters,
 			except FileNotFoundError:
 				pass
 		if not os.path.isfile(image_path):
-			return
+			print("{} not found!".format(image_path))
+			pass
 		else:
 			n4_out = os.path.join(workdir,'n4_{subject}_{session}.nii.gz'.format(**substitution))
 			n4 = ants.N4BiasFieldCorrection()
@@ -105,6 +106,7 @@ def structural(substitutions, parameters,
 			n4.inputs.num_threads = threads
 			n4.inputs.output_image = n4_out
 			print("Running bias field correction:\n{}".format(n4.cmdline))
+			n4_run = n4.run()
 
 			struct_registration = ants.Registration()
 			struct_registration.inputs.fixed_image = reference
@@ -146,6 +148,7 @@ def structural(substitutions, parameters,
 			struct_registration.inputs.output_warped_image = os.path.join(workdir,'{subject}_{session}.nii.gz'.format(**substitution))
 			struct_registration.inputs.moving_image = n4_out
 			print("Running registration:\n{}".format(struct_registration.cmdline))
+			struct_registration_run = struct_registration.run()
 
 if __name__ == '__main__':
 	# substitutions = bids_substitution_iterator(
@@ -155,7 +158,7 @@ if __name__ == '__main__':
 	# 	"composite")
 	substitutions = bids_substitution_iterator(
 		["ofM","ofM_aF","ofM_cF1","ofM_cF2","ofM_pF"],
-		["4012"],
+		["4008"],
 		["TurboRARE"],
 		"composite")
 	structural(substitutions, [PHASES["rigid"],PHASES["affine"],PHASES["syn"]],

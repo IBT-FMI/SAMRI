@@ -70,7 +70,7 @@ def structural(substitutions, parameters,
 	structural_file_template="~/ni_data/ofM.dr/preprocessing/{preprocessing_workdir}/_subject_session_{subject}.{session}/_scan_type_{scan}/s_bru2nii/",
 	workdir="~/samri_optimize/structural",
 	threads=6,
-	prefix="",
+	prefix="_",
 	):
 
 	reference=os.path.abspath(os.path.expanduser(reference))
@@ -158,7 +158,7 @@ if __name__ == '__main__':
 	# 	"composite")
 	substitutions = bids_substitution_iterator(
 		["ofM","ofM_aF","ofM_cF1","ofM_cF2","ofM_pF"],
-		["4008"],
+		["5690"],
 		["TurboRARE"],
 		"composite")
 	structural(substitutions, [PHASES["rigid"],PHASES["affine"],PHASES["syn"]],

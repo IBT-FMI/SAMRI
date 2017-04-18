@@ -160,24 +160,21 @@ def bruker(measurements_base,
 		if "DSURQEc" in template:
 			s_biascorrect = pe.Node(interface=ants.N4BiasFieldCorrection(), name="s_biascorrect")
 			s_biascorrect.inputs.dimension = 3
-			s_biascorrect.inputs.input_image = image_path
 			s_biascorrect.inputs.bspline_fitting_distance = 10
 			s_biascorrect.inputs.bspline_order = 4
 			s_biascorrect.inputs.shrink_factor = 2
 			s_biascorrect.inputs.n_iterations = [150,100,50,30]
 			s_biascorrect.inputs.convergence_threshold = 1e-16
-			s_biascorrect.inputs.num_threads = threads
-			s_biascorrect.inputs.output_image = n4_out
 			s_register, s_warp, f_warp = DSURQEc_structural_registration(template)
 			#TODO: incl. in func registration
 			if autorotate:
 				workflow_connections.extend([
-					(s_biascorrect, s_rotated, [('out_file', 'out_file')]),
+					(s_biascorrect, s_rotated, [('output_image', 'out_file')]),
 					(s_rotated, s_register, [('out_file', 'moving_image')]),
 					])
 			else:
 				workflow_connections.extend([
-					(s_biascorrect, s_register, [('out_file', 'moving_image')]),
+					(s_biascorrect, s_register, [('output_image', 'moving_image')]),
 					(s_register, s_warp, [('composite_transform', 'transforms')]),
 					(s_bru2nii, s_warp, [('nii_file', 'input_image')]),
 					(s_warp, datasink, [('output_image', 'anat')]),

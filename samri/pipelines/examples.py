@@ -13,8 +13,12 @@ def cbv_composite():
 		functional_registration_method="composite",
 		keep_work=True,
 		template="~/ni_data/templates/DSURQEc_200micron_average.nii",
+<<<<<<< HEAD
                 actual_size=True,
                 )
+=======
+		)
+>>>>>>> b595efbc16f90894f28e01a3fee637ac085f940f
 	glm.l1("~/ni_data/ofM.dr/preprocessing/composite",
 		workflow_name="composite",
 		# include={"subjects":["5689","5690","5691"]},
@@ -28,13 +32,13 @@ def cbv_composite():
 		groupby="subject",
 		keep_work=True,
 		mask="/home/chymera/ni_data/templates/DSURQEc_200micron_mask.nii",
-                )
+		)
 	glm.l2_common_effect("~/ni_data/ofM.dr/l1/composite",
 		workflow_name="composite_sessions",
 		exclude={"scans":["EPI_BOLD_"]},
 		groupby="session",
 		keep_work=True,
-                mask="/home/chymera/ni_data/templates/DSURQEc_200micron_mask.nii",
+		mask="/home/chymera/ni_data/templates/DSURQEc_200micron_mask.nii",
 		)
 
 def dr_composite():

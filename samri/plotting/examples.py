@@ -26,10 +26,26 @@ def roi_per_session(l1_dir, roi, color):
 	fit, anova = summary.roi_per_session(l1_dir, [4007,4008,4009,4011,4012], ["ofM","ofM_aF","ofM_cF1","ofM_cF2","ofM_pF"], legend_loc=2, figure="per-participant",roi=roi, color=color)
 	plt.show()
 
-def p_clusters():
-	substitutions = bids_substitution_iterator(["ofM","ofM_aF","ofM_cF1","ofM_cF2","ofM_pF"],[4007,4008,4009,4011,4012],["EPI_CBV_jb_long"],"composite", l1_dir="composite_dr", l1_workdir="composite_work")
-	timecourses, designs, stat_maps, subplot_titles = summary.p_filtered_ts(substitutions, p_level=0.05)
-	timeseries.multi(timecourses, designs, stat_maps, subplot_titles, figure="timecourses")
+def p_clusters(mask):
+	substitutions = bids_substitution_iterator(
+		["ofM","ofM_aF","ofM_cF1","ofM_cF2","ofM_pF"],
+		["4011","4012","5689","5690","5691"],
+		# ["4007","4008","4011","4012","5689","5690","5691"],
+		["EPI_CBV_jb_long","EPI_CBV_chr_longSOA"],
+		"composite",
+		l1_dir="dr",
+		)
+	timecourses, designs, stat_maps, events_dfs, subplot_titles = summary.p_filtered_ts(substitutions,
+		ts_file_template="~/ni_data/ofM.dr/preprocessing/{preprocessing_dir}/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_trial-{scan}.nii.gz",
+		beta_file_template="~/ni_data/ofM.dr/l1/{l1_dir}/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_trial-{scan}_cope.nii.gz",
+		# p_file_template="~/ni_data/ofM.dr/l1/{l1_dir}/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_trial-{scan}_pstat.nii.gz",
+		p_file_template="~/ni_data/ofM.dr/l1/{l1_dir}/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_trial-{scan}_pfstat.nii.gz",
+		design_file_template="~/ni_data/ofM.dr/l1/{l1_workdir}/_subject_session_scan_{subject}.{session}.{scan}/modelgen/run0.mat",
+		event_file_template="~/ni_data/ofM.dr/preprocessing/{preprocessing_dir}/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_trial-{scan}_events.tsv",
+		brain_mask=mask,
+		p_level=0.05,
+		)
+	timeseries.multi(timecourses, designs, stat_maps, events_dfs, subplot_titles, figure="timecourses")
 	plt.show()
 
 def roi(roi_path="~/ni_data/templates/roi/f_dr_chr.nii.gz"):
@@ -65,13 +81,14 @@ def qc_regressor(mask):
 
 if __name__ == '__main__':
 	# overview("composite_subjects", ["4007","4008","4011","4012","5689","5690","5691"]) #4001 is a negative control (transgene but no injection
-	overview("composite_sessions", ["ofM","ofM_aF","ofM_cF1","ofM_cF2","ofM_pF"])
+	# overview("composite_sessions", ["ofM","ofM_aF","ofM_cF1","ofM_cF2","ofM_pF"])
 	# overview("composite_subjects", ["4001","4005","4007","4008","4009","4011","4012"]) #4001 is a negative control (transgene but no injection
 	# overview("subjectwise_blur", ["4001","4005","4007","4008","4009","4011","4012"])
 
 	# roi_per_session("composite", "ctx", "#56B4E9")
 	# roi_per_session("composite", "f_dr", "#E69F00")
-	# p_clusters()
+	p_clusters("~/ni_data/templates/roi/f_dr_chr.nii.gz")
+	# p_clusters("~/ni_data/templates/ds_QBI_chr_bin.nii.gz")
 	# roi(roi_path="~/ni_data/templates/roi/f_dr_chr_bin.nii.gz")
 	# roi_teaching()
 	# check_responders()

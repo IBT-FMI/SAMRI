@@ -10,6 +10,8 @@ from matplotlib import rcParams
 import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
 
+import maps
+
 def plot_fsl_design(file_path):
 	df = pd.read_csv(file_path, skiprows=5, sep="\t", header=None, names=[1,2,3,4,5,6], index_col=False)
 	df.plot()
@@ -166,6 +168,8 @@ def multi(timecourses, designs, stat_maps, events_dfs, subplot_titles,
 			ax.set_xlim([0,len(timecourse)])
 			ax.set_yticks([])
 			ax.set_ylabel(subplot_title)
+	else:
+		print("WARNING: you must specify either 'maps' or 'timecourses'")
 
 
 if __name__ == '__main__':

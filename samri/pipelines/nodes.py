@@ -1,3 +1,5 @@
+import os
+
 import nipype.pipeline.engine as pe				# pypeline engine
 import nipype.interfaces.ants as ants
 from nipype.interfaces import fsl
@@ -126,7 +128,7 @@ def DSURQEc_structural_registration(template,
 	parameters = [PHASES[selection] for selection in select_phases]
 
 	registration = pe.Node(ants.Registration(), name="s_register")
-	registration.inputs.fixed_image = template
+	registration.inputs.fixed_image = os.path.abspath(os.path.expanduser(template))
 	registration.inputs.output_transform_prefix = "output_"
 	registration.inputs.transforms = [i["transforms"] for i in parameters] ##
 	registration.inputs.transform_parameters = [i["transform_parameters"] for i in parameters] ##
@@ -150,11 +152,11 @@ def DSURQEc_structural_registration(template,
 	registration.inputs.winsorize_lower_quantile = 0.05
 	registration.inputs.winsorize_upper_quantile = 0.95
 	registration.inputs.args = '--float'
-	registration.inputs.fixed_image_mask = "/home/chymera/ni_data/templates/DSURQEc_200micron_mask.nii"
+	registration.inputs.fixed_image_mask = os.path.abspath(os.path.expanduser("~/ni_data/templates/DSURQEc_200micron_mask.nii"))
 	registration.inputs.num_threads = num_threads
 
 	f_warp = pe.Node(ants.ApplyTransforms(), name="f_warp")
-	f_warp.inputs.reference_image = template
+	f_warp.inputs.reference_image = os.path.abspath(os.path.expanduser(template))
 	f_warp.inputs.input_image_type = 3
 	f_warp.inputs.interpolation = 'Linear'
 	f_warp.inputs.invert_transform_flags = [False]
@@ -162,7 +164,7 @@ def DSURQEc_structural_registration(template,
 	f_warp.num_threads = num_threads
 
 	s_warp = pe.Node(ants.ApplyTransforms(), name="s_warp")
-	s_warp.inputs.reference_image = template
+	s_warp.inputs.reference_image = os.path.abspath(os.path.expanduser(template))
 	s_warp.inputs.input_image_type = 3
 	s_warp.inputs.interpolation = 'Linear'
 	s_warp.inputs.invert_transform_flags = [False]
@@ -199,7 +201,7 @@ def composite_registration(template, num_threads=4):
 	f_registration.inputs.num_threads = num_threads
 
 	f_warp = pe.Node(ants.ApplyTransforms(), name="f_warp")
-	f_warp.inputs.reference_image = template
+	f_warp.inputs.reference_image = os.path.abspath(os.path.expanduser(template))
 	f_warp.inputs.input_image_type = 3
 	f_warp.inputs.interpolation = 'Linear'
 	f_warp.inputs.invert_transform_flags = [False, False]

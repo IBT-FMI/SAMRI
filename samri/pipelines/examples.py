@@ -13,6 +13,7 @@ def cbv_composite():
 		functional_registration_method="composite",
 		keep_work=True,
 		template="~/ni_data/templates/DSURQEc_200micron_average.nii",
+                actual_size=True,
                 )
 	glm.l1("~/ni_data/ofM.dr/preprocessing/composite",
 		workflow_name="composite",

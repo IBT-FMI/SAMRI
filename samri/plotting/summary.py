@@ -148,41 +148,84 @@ def responders(l2_dir,
 			df_ = pd.DataFrame(voxel_data, index=[None])
 			voxeldf = pd.concat([voxeldf,df_])
 
-def p_filtering(substitution, ts_file_template, beta_file_template, p_file_template, design_file_template, p_level):
-	ts_file = os.path.expanduser(ts_file_template.format(**substitution))
-	beta_file = os.path.expanduser(beta_file_template.format(**substitution))
-	p_file = os.path.expanduser(p_file_template.format(**substitution))
-	design_file = os.path.expanduser(design_file_template.format(**substitution))
+def p_roi_masking(substitution, ts_file_template, beta_file_template, p_file_template, design_file_template, event_file_template, p_level, brain_mask):
+	"""Apply a substitution pattern to timecourse, beta, and design file templates - and mask the data of the former two according to a roi. Subsequently scale the design by the mean beta.
+
+	Parameters
+	----------
+
+	substitution : dict
+	A dictionary containing the template replacement fields as keys and identifiers as values.
+
+	ts_file_template : string
+	Timecourse file template with replacement fields. The file should be in NIfTI format.
+
+	beta_file_template : string
+	Beta file template with replacement fields. The file should be in NIfTI format.
+
+	design_file_template : string
+	Design file template with replacement fields. The file should be in CSV format.
+
+	roi_path : string
+	Path to the region of interest file based on which to create a mask for the time course and beta files. The file should be in NIfTI format.
+
+	brain_mask : string
+	Path to the a mask file in the *exact same* coordinate space as the input image. This is very important, as the mask is needed to crop out artefactual p=0 values. These cannot just be filtered out nummerically, since it is possible that the GLM resturns p=0 for the most significant results.
+
+	Returns
+	-------
+
+	timecourse : array_like
+	Numpy array containing the mean timecourse in the region of interest.
+
+	design : array_like
+	Numpy array containing the regressor scaled by the mean beta value of the region of interest..
+
+	mask_map : data
+	Nibabel image of the mask
+
+	subplot_title : string
+	Title for the subplot, computed from the substitution fields.
+	"""
+
+	ts_file = os.path.abspath(os.path.expanduser(ts_file_template.format(**substitution)))
+	beta_file = os.path.abspath(os.path.expanduser(beta_file_template.format(**substitution)))
+	p_file = os.path.abspath(os.path.expanduser(p_file_template.format(**substitution)))
+	design_file = os.path.abspath(os.path.expanduser(design_file_template.format(**substitution)))
+	event_file = os.path.abspath(os.path.expanduser(event_file_template.format(**substitution)))
+	brain_mask = os.path.abspath(os.path.expanduser(brain_mask))
 	try:
 		img = nib.load(p_file)
+		brain_mask = nib.load(brain_mask)
 	except (FileNotFoundError, nib.py3k.FileNotFoundError):
-		return None,None,None,None
+		return None,None,None,None,None
 	data = img.get_data()
+	brain_mask = brain_mask.get_data()
 	header = img.header
 	affine = img.affine
 	shape = data.shape
 	data = data.flatten()
-	# print(np.count_nonzero(data))
-	nonzeros = np.nonzero(data)
-	_, nonzero_data, _, _ = multipletests(data[nonzeros], p_level, method="fdr_bh")
-	nonzero_mask = deepcopy(nonzero_data)
-	nonzero_mask[nonzero_data <= p_level] = 1
-	nonzero_mask[nonzero_data > p_level] = 0
-	data[nonzeros] = nonzero_mask
-	data = data.reshape(shape)
-	# print(np.count_nonzero(data))
-	mask_map = nib.Nifti1Image(data, affine, header)
-	p_masker = NiftiMasker(mask_img=mask_map)
+	brain_mask = brain_mask.flatten()
+	brain_mask = brain_mask.astype(bool)
+	brain_data = data[brain_mask]
+	reject, nonzero_data, _, _ = multipletests(brain_data, p_level, method="fdr_bh")
+	brain_mask[brain_mask]=reject
+	brain_mask = brain_mask.astype(int)
+	mask = brain_mask.reshape(shape)
+	mask_map = nib.Nifti1Image(mask, affine, header)
+	masker = NiftiMasker(mask_img=mask_map)
 	try:
-		timecourse = p_masker.fit_transform(ts_file).T
-		betas = p_masker.fit_transform(beta_file).T
+		timecourse = masker.fit_transform(ts_file).T
+		betas = masker.fit_transform(beta_file).T
 	except ValueError:
-		return None,None,None,None
+		return None,None,None,None,None
 	subplot_title = "\n ".join([str(substitution["subject"]),str(substitution["session"])])
 	timecourse = np.mean(timecourse, axis=0)
 	design = pd.read_csv(design_file, skiprows=5, sep="\t", header=None, index_col=False)
 	design = design*np.mean(betas)
-	return timecourse, design, mask_map, subplot_title
+	event_df = pd.read_csv(event_file, sep="\t")
+
+	return timecourse, design, mask_map, event_df, subplot_title
 
 def roi_masking(substitution, ts_file_template, beta_file_template, design_file_template, event_file_template, roi_path):
 	"""Apply a substitution pattern to timecourse, beta, and design file templates - and mask the data of the former two according to a roi. Subsequently scale the design by the mean beta.
@@ -238,6 +281,7 @@ def roi_masking(substitution, ts_file_template, beta_file_template, design_file_
 	design = pd.read_csv(design_file, skiprows=5, sep="\t", header=None, index_col=False)
 	design = design*np.mean(betas)
 	event_df = pd.read_csv(event_file, sep="\t")
+
 	return timecourse, design, mask_map, event_df, subplot_title
 
 def ts_overviews(substitutions, roi_path,
@@ -277,7 +321,9 @@ def p_filtered_ts(substitutions,
 	beta_file_template="~/ni_data/ofM.dr/l1/{l1_dir}/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_trial-{scan}_cope.nii.gz",
 	p_file_template="~/ni_data/ofM.dr/l1/{l1_dir}/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_trial-{scan}_pstat.nii.gz",
 	design_file_template="~/ni_data/ofM.dr/l1/{l1_workdir}/_subject_session_scan_{subject}.{session}.{scan}/modelgen/run0.mat",
+	event_file_template="~/ni_data/ofM.dr/preprocessing/{preprocessing_dir}/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_trial-{scan}_events.tsv",
 	p_level=0.1,
+	brain_mask="~/ni_data/templates/DSURQEc_200micron_average.niis"
 	):
 
 	timecourses = []
@@ -286,19 +332,22 @@ def p_filtered_ts(substitutions,
 	designs = []
 
 	n_jobs = mp.cpu_count()-2
-	substitutions_data = Parallel(n_jobs=n_jobs, verbose=0, backend="threading")(map(delayed(p_filtering),
+	substitutions_data = Parallel(n_jobs=n_jobs, verbose=0, backend="threading")(map(delayed(p_roi_masking),
 		substitutions,
 		[ts_file_template]*len(substitutions),
 		[beta_file_template]*len(substitutions),
 		[p_file_template]*len(substitutions),
 		[design_file_template]*len(substitutions),
+		[event_file_template]*len(substitutions),
 		[p_level]*len(substitutions),
+		[brain_mask]*len(substitutions),
 		))
-	timecourses, designs, stat_maps, subplot_titles = zip(*substitutions_data)
+	timecourses, designs, stat_maps, event_dfs, subplot_titles = zip(*substitutions_data)
 
 	timecourses = [x for x in timecourses if x is not None]
 	designs = [x for x in designs if x is not None]
 	stat_maps = [x for x in stat_maps if x is not None]
+	events_dfs = [x for x in event_dfs if x is not None]
 	subplot_titles = [x for x in subplot_titles if x is not None]
 
-	return timecourses, designs, stat_maps, subplot_titles
+	return timecourses, designs, stat_maps, events_dfs, subplot_titles

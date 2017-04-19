@@ -12,14 +12,14 @@ def cbv_composite():
 		functional_blur_xy=4,
 		functional_registration_method="composite",
 		keep_work=True,
-		template="~/ni_data/templates/ds_QBI_chr.nii",
+		template="~/ni_data/templates/ds_QBI_chr.nii.gz",
 		n_procs=16,
 		)
 	glm.l1("~/ni_data/ofM.dr/preprocessing/composite",
 		workflow_name="composite",
 		# include={"subjects":["5689","5690","5691"]},
 		habituation="confound",
-		mask="/home/chymera/ni_data/templates/ds_QBI_chr_binii",
+		mask="/home/chymera/ni_data/templates/ds_QBI_chr_bin.nii.gz",
 		keep_work=True,
 		)
 	glm.l2_common_effect("~/ni_data/ofM.dr/l1/composite",
@@ -27,14 +27,14 @@ def cbv_composite():
 		exclude={"scans":["EPI_BOLD_"]},
 		groupby="subject",
 		keep_work=True,
-		mask="/home/chymera/ni_data/templates/ds_QBI_chr_binii",
+		mask="/home/chymera/ni_data/templates/ds_QBI_chr_bin.nii.gz",
 		)
 	glm.l2_common_effect("~/ni_data/ofM.dr/l1/composite",
 		workflow_name="composite_sessions",
 		exclude={"scans":["EPI_BOLD_"],"subjects":["5703","5704","5706"]},
 		groupby="session",
 		keep_work=True,
-		mask="/home/chymera/ni_data/templates/ds_QBI_chr_binii",
+		mask="/home/chymera/ni_data/templates/ds_QBI_chr_bin.nii.gz",
 		)
 
 def as_cbv_composite():

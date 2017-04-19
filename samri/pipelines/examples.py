@@ -47,7 +47,7 @@ def as_cbv_composite():
 		very_nasty_bruker_delay_hack=True,
 		negative_contrast_agent=True,
 		functional_blur_xy=.4,
-		functional_registration_method="as_composite",
+		functional_registration_method="composite",
 		keep_work=True,
 		template="~/ni_data/templates/DSURQEc_200micron_average.nii",
 		actual_size=True,

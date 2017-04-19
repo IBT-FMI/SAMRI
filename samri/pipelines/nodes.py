@@ -74,7 +74,7 @@ def autorotate(template):
 
 def structural_registration(template, num_threads=4):
 	registration = pe.Node(ants.Registration(), name="s_register")
-	registration.inputs.fixed_image = template
+	registration.inputs.fixed_image = os.path.abspath(os.path.expanduser(template))
 	registration.inputs.output_transform_prefix = "output_"
 	registration.inputs.transforms = ['Affine', 'SyN'] ##
 	registration.inputs.transform_parameters = [(1.0,), (1.0, 3.0, 5.0)] ##
@@ -103,7 +103,7 @@ def structural_registration(template, num_threads=4):
 	registration.inputs.num_threads = num_threads
 
 	f_warp = pe.Node(ants.ApplyTransforms(), name="f_warp")
-	f_warp.inputs.reference_image = template
+	f_warp.inputs.reference_image = os.path.abspath(os.path.expanduser(template))
 	f_warp.inputs.input_image_type = 3
 	f_warp.inputs.interpolation = 'Linear'
 	f_warp.inputs.invert_transform_flags = [False]
@@ -111,7 +111,7 @@ def structural_registration(template, num_threads=4):
 	f_warp.num_threads = num_threads
 
 	s_warp = pe.Node(ants.ApplyTransforms(), name="s_warp")
-	s_warp.inputs.reference_image = template
+	s_warp.inputs.reference_image = os.path.abspath(os.path.expanduser(template))
 	s_warp.inputs.input_image_type = 3
 	s_warp.inputs.interpolation = 'Linear'
 	s_warp.inputs.invert_transform_flags = [False]

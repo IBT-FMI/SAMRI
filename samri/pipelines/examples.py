@@ -84,8 +84,6 @@ def dr_only():
 		keep_work=True,
 		)
 
-
-
 def dr_composite():
 	preprocessing.bruker("/home/chymera/ni_data/ofM.dr/",exclude_measurements=['20151027_121613_4013_1_1'], workflow_name="composite", very_nasty_bruker_delay_hack=True, negative_contrast_agent=True, functional_blur_xy=4, functional_registration_method="composite")
 	glm.l1("~/ni_data/ofM.dr/preprocessing/composite", workflow_name="composite", include={"subjects":[i for i in range(4001,4010)]+[4011,4012]}, habituation="confound",mask="/home/chymera/ni_data/templates/ds_QBI_chr_bin.nii.gz",keep_work=True)
@@ -96,7 +94,7 @@ def dr_composite():
 def vta_composite():
 	preprocessing.bruker("/home/chymera/ni_data/ofM.vta/",workflow_name="composite", very_nasty_bruker_delay_hack=False, negative_contrast_agent=True, functional_blur_xy=4, functional_registration_method="composite")
 
-if __name__ == '__main__':
-	# vta_composite()
-	#cbv_composite()
-	# dr_only()
+# if __name__ == '__main__':
+#	vta_composite()
+#	cbv_composite()
+#	dr_only()

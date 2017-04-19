@@ -28,7 +28,7 @@ def roi_per_session(l1_dir, roi_mask, color,
 	substitutions = bids_substitution_iterator(
 		["ofM","ofM_aF","ofM_cF1","ofM_cF2","ofM_pF"],
 		# ["5689","5690","5691"],
-		["4011","4012","5689","5690","5691"],
+		["4007","4008","4011","4012","5689","5690","5691"],
 		# ["4011","4012",],
 		["EPI_CBV_jb_long","EPI_CBV_chr_longSOA"],
 		"",
@@ -37,8 +37,8 @@ def roi_per_session(l1_dir, roi_mask, color,
 	fit, anova = summary.roi_per_session(substitutions,
 		t_file_template="~/ni_data/ofM.dr/l1/{l1_dir}/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_trial-{scan}_tstat.nii.gz",
 		legend_loc=2,
+		# figure="per-voxel",
 		figure="per-participant",
-		# figure="per-participant",
 		roi_mask=roi_mask,
 		roi_mask_normalize=roi_mask_normalize,
 		color=color)
@@ -103,10 +103,10 @@ if __name__ == '__main__':
 	# overview("composite_subjects", ["4001","4005","4007","4008","4009","4011","4012"]) #4001 is a negative control (transgene but no injection
 	# overview("subjectwise_blur", ["4001","4005","4007","4008","4009","4011","4012"])
 
-	# roi_per_session("composite", "~/ni_data/templates/roi/ctx_chr_bin.nii.gz", "#56B4E9")
-	roi_per_session("composite", "~/ni_data/templates/roi/ctx_chr_bin.nii.gz", "#56B4E9",
-		roi_mask_normalize="~/ni_data/templates/roi/f_dr_chr_bin.nii.gz",
-		)
+	roi_per_session("composite", "~/ni_data/templates/roi/ctx_chr_bin.nii.gz", "#56B4E9")
+	# roi_per_session("composite", "~/ni_data/templates/roi/ctx_chr_bin.nii.gz", "#56B4E9",
+	# 	roi_mask_normalize="~/ni_data/templates/roi/f_dr_chr_bin.nii.gz",
+	# 	)
 	# roi_per_session("composite", "~/ni_data/templates/roi/f_dr_chr_bin.nii.gz", "#E69F00")
 	# p_clusters("~/ni_data/templates/roi/f_dr_chr.nii.gz")
 	# p_clusters("~/ni_data/templates/ds_QBI_chr_bin.nii.gz")

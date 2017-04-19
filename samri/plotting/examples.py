@@ -22,8 +22,26 @@ def blur_kernel_compare_dr(conditions=["ofM","ofM_aF","ofM_cF1","ofM_cF2","ofM_p
 		maps.stat(stat_maps, cut_coords=(-49,8,43), threshold=threshold, interpolation="none", template="~/ni_data/templates/hires_QBI_chr.nii.gz", save_as=pp, figure_title=condition, subplot_titles=parameters)
 	pp.close()
 
-def roi_per_session(l1_dir, roi, color):
-	fit, anova = summary.roi_per_session(l1_dir, [4007,4008,4009,4011,4012], ["ofM","ofM_aF","ofM_cF1","ofM_cF2","ofM_pF"], legend_loc=2, figure="per-participant",roi=roi, color=color)
+def roi_per_session(l1_dir, roi_mask, color,
+	roi_mask_normalize="",
+	):
+	substitutions = bids_substitution_iterator(
+		["ofM","ofM_aF","ofM_cF1","ofM_cF2","ofM_pF"],
+		# ["5689","5690","5691"],
+		["4011","4012","5689","5690","5691"],
+		# ["4011","4012",],
+		["EPI_CBV_jb_long","EPI_CBV_chr_longSOA"],
+		"",
+		l1_dir=l1_dir,
+		)
+	fit, anova = summary.roi_per_session(substitutions,
+		t_file_template="~/ni_data/ofM.dr/l1/{l1_dir}/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_trial-{scan}_tstat.nii.gz",
+		legend_loc=2,
+		figure="per-participant",
+		# figure="per-participant",
+		roi_mask=roi_mask,
+		roi_mask_normalize=roi_mask_normalize,
+		color=color)
 	plt.show()
 
 def p_clusters(mask):
@@ -85,9 +103,12 @@ if __name__ == '__main__':
 	# overview("composite_subjects", ["4001","4005","4007","4008","4009","4011","4012"]) #4001 is a negative control (transgene but no injection
 	# overview("subjectwise_blur", ["4001","4005","4007","4008","4009","4011","4012"])
 
-	# roi_per_session("composite", "ctx", "#56B4E9")
-	# roi_per_session("composite", "f_dr", "#E69F00")
-	p_clusters("~/ni_data/templates/roi/f_dr_chr.nii.gz")
+	# roi_per_session("composite", "~/ni_data/templates/roi/ctx_chr_bin.nii.gz", "#56B4E9")
+	roi_per_session("composite", "~/ni_data/templates/roi/ctx_chr_bin.nii.gz", "#56B4E9",
+		roi_mask_normalize="~/ni_data/templates/roi/f_dr_chr_bin.nii.gz",
+		)
+	# roi_per_session("composite", "~/ni_data/templates/roi/f_dr_chr_bin.nii.gz", "#E69F00")
+	# p_clusters("~/ni_data/templates/roi/f_dr_chr.nii.gz")
 	# p_clusters("~/ni_data/templates/ds_QBI_chr_bin.nii.gz")
 	# roi(roi_path="~/ni_data/templates/roi/f_dr_chr_bin.nii.gz")
 	# roi_teaching()

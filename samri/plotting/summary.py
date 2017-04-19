@@ -28,31 +28,37 @@ except NameError:
 	class FileNotFoundError(OSError):
 		pass
 
-def add_roi_data(l1_dir,subject,session,masker):
-	session_participant_format = "/home/chymera/ni_data/ofM.dr/l1/{0}/sub-{1}/ses-{2}/sub-{1}_ses-{2}_trial-EPI_CBV_tstat.nii.gz"
+def add_roi_data(substitution,t_file_format,masker):
 	subject_data={}
 	try:
-		session_participant_file = session_participant_format.format(l1_dir,subject,session)
-		img = nib.load(session_participant_file)
+		t_file = t_file_format.format(**substitution)
+		t_file = os.path.abspath(os.path.expanduser(t_file))
+		img = nib.load(t_file)
 		img = masker.fit_transform(img)
 		img = img.flatten()
 		mean = np.nanmean(img)
 	except (FileNotFoundError, nib.py3k.FileNotFoundError):
 		return pd.DataFrame({}), pd.DataFrame({})
 	else:
-		subject_data["session"]=session
-		subject_data["subject"]=subject
-		for i in img:
+		subject_data["session"]=substitution["session"]
+		subject_data["subject"]=substitution["subject"]
+		voxel_datas=[]
+		for ix, i in enumerate(img):
 			voxel_data = deepcopy(subject_data)
+			voxel_data["voxel"]=ix
 			voxel_data["t"]=i
-			vdf = pd.DataFrame(voxel_data, index=[None])
+			voxel_data = pd.DataFrame(voxel_data, index=[None])
+			voxel_datas.append(voxel_data)
+		vdf = pd.concat(voxel_datas)
 		subject_data["t"]=mean
 		sdf = pd.DataFrame(subject_data, index=[None])
 		return sdf, vdf
 
-def roi_per_session(l1_dir, subjects, sessions,
+def roi_per_session(substitutions,
 	legend_loc="best",
-	roi="f_dr",
+	t_file_template="~/ni_data/ofM.dr/l1/{l1_dir}/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_trial-{scan}_tstat.nii.gz",
+	roi_mask="",
+	roi_mask_normalize="",
 	figure="per-participant",
 	tabref="tab",
 	xy_label=[],
@@ -60,26 +66,31 @@ def roi_per_session(l1_dir, subjects, sessions,
 	color="#E69F00",
 	):
 
-	roi_path = "/home/chymera/ni_data/templates/roi/{}_chr.nii.gz".format(roi)
-	masker = NiftiMasker(mask_img=roi_path)
+	roi_mask = os.path.abspath(os.path.expanduser(roi_mask))
+	masker = NiftiMasker(mask_img=roi_mask)
 
-	iter_product = product(subjects, sessions)
-	iter_subjects = []
-	iter_sessions = []
-	for i in iter_product:
-		iter_subjects.append(i[0])
-		iter_sessions.append(i[1])
-	iter_len = len(iter_sessions)
 	n_jobs = mp.cpu_count()-2
 	roi_data = Parallel(n_jobs=n_jobs, verbose=0, backend="threading")(map(delayed(add_roi_data),
-		[l1_dir]*iter_len,
-		iter_subjects,
-		iter_sessions,
-		[masker]*iter_len,
+		substitutions,
+		[t_file_template]*len(substitutions),
+		[masker]*len(substitutions),
 		))
 	subject_dfs, voxel_dfs = zip(*roi_data)
 	subjectdf = pd.concat(subject_dfs)
 	voxeldf = pd.concat(voxel_dfs)
+	if roi_mask_normalize:
+		figure="per-participant"
+		mask_normalize = os.path.abspath(os.path.expanduser(roi_mask_normalize))
+		masker_normalize = NiftiMasker(mask_img=mask_normalize)
+		roi_data = Parallel(n_jobs=n_jobs, verbose=0, backend="threading")(map(delayed(add_roi_data),
+			substitutions,
+			[t_file_template]*len(substitutions),
+			[masker_normalize]*len(substitutions),
+			))
+		subject_dfs_normalize, _ = zip(*roi_data)
+		subjectdf_normalize = pd.concat(subject_dfs_normalize)
+
+		subjectdf['t'] = subjectdf['t']/subjectdf_normalize['t']
 
 	if obfuscate:
 		obf_session = {"ofM":"_pre","ofM_aF":"t1","ofM_cF1":"t2","ofM_cF2":"t3","ofM_pF":"post"}
@@ -99,7 +110,7 @@ def roi_per_session(l1_dir, subjects, sessions,
 	subjectdf = subjectdf.replace({"session": names_for_plotting})
 
 	if figure == "per-voxel":
-		ax = sns.pointplot(x="session", y="t", hue="subject", data=voxeldf, ci=68.3, dodge=True, jitter=True, legend_out=False, units="subject")
+		ax = sns.pointplot(x="session", y="t", hue="subject", data=voxeldf, ci=90, dodge=True, jitter=True, legend_out=False, units="voxel")
 		if xy_label:
 			ax.set(xlabel=xy_label[0], ylabel=xy_label[1])
 	elif figure == "per-participant":

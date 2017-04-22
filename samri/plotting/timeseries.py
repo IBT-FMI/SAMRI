@@ -10,7 +10,10 @@ from matplotlib import rcParams
 import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
 
-import maps
+try:
+	from samri.plotting import maps
+except ImportError:
+	from ..plotting import maps
 
 def plot_fsl_design(file_path):
 	df = pd.read_csv(file_path, skiprows=5, sep="\t", header=None, names=[1,2,3,4,5,6], index_col=False)
@@ -133,44 +136,70 @@ def multi(timecourses, designs, stat_maps, events_dfs, subplot_titles,
 	if figure == "maps":
 		maps.stat(stat_maps, template="~/ni_data/templates/ds_QBI_chr.nii.gz", threshold=0.1, interpolation="gaussian", subplot_titles=subplot_titles)
 	elif figure == "timecourses":
-		ncols = 2
-		#we use inverse floor division to get the ceiling
-		max_rows = (len(timecourses) // ncols) + 1
-		min_rows = len(timecourses) % max_rows
-		fig, axes = plt.subplots(figsize=(10*max_rows,7*ncols), facecolor='#eeeeee', nrows=max_rows*min_rows, ncols=ncols)
-		xlabel_positive = [(i*max_rows)-1 for i in range(1,ncols)]
-		xlabel_positive.append(len(timecourses)-1)
-		max_ylim = [0,0]
+		if len(timecourses) > 1:
+			ncols = 2
+			#we use inverse floor division to get the ceiling
+			max_rows = (len(timecourses) // ncols) + 1
+			min_rows = len(timecourses) % max_rows
+			fig, axes = plt.subplots(figsize=(10*max_rows,7*ncols), facecolor='#eeeeee', nrows=max_rows*min_rows, ncols=ncols)
+			xlabel_positive = [(i*max_rows)-1 for i in range(1,ncols)]
+			xlabel_positive.append(len(timecourses)-1)
+			max_ylim = [0,0]
 
-		for ix, timecourse in enumerate(timecourses):
-			timecourse = timecourses[ix]
-			design = designs[ix]
-			events_df = events_dfs[ix]
-			subplot_title = subplot_titles[ix]
+			for ix, timecourse in enumerate(timecourses):
+				timecourse = timecourses[ix]
+				design = designs[ix]
+				events_df = events_dfs[ix]
+				subplot_title = subplot_titles[ix]
 
-			col = ix // max_rows
-			row = ix % max_rows
-			if col+1 == ncols:
-				ax = plt.subplot2grid((max_rows*min_rows,ncols), (row*max_rows, col), rowspan=max_rows)
-			else:
-				ax = plt.subplot2grid((max_rows*min_rows,ncols), (row*min_rows, col), rowspan=min_rows)
+				col = ix // max_rows
+				row = ix % max_rows
+				if col+1 == ncols:
+					ax = plt.subplot2grid((max_rows*min_rows,ncols), (row*max_rows, col), rowspan=max_rows)
+				else:
+					ax = plt.subplot2grid((max_rows*min_rows,ncols), (row*min_rows, col), rowspan=min_rows)
+				for d, o in zip(events_df["duration"], events_df["onset"]):
+					d = round(d)
+					o = round(o)
+					ax.axvspan(o,o+d, facecolor="cyan", alpha=0.15)
+					plt.hold(True)
+				ax.plot(timecourse, lw=rcParams['lines.linewidth']/4)
+				ax.plot(design[0])
+				if not ix in xlabel_positive:
+					plt.setp(ax.get_xticklabels(), visible=False)
+				current_ylim = ax.get_ylim()
+				ax.yaxis.grid(False)
+				ax.set_xlim([0,len(timecourse)])
+				ax.set_yticks([])
+				ax.set_ylabel(subplot_title)
+		else:
+			fig, ax = plt.subplots(figsize=(10,2), facecolor='#eeeeee')
+			# xlabel_positive = [(i*max_rows)-1 for i in range(1,ncols)]
+			# xlabel_positive.append(len(timecourses)-1)
+
+			timecourse = timecourses[0]
+			design = designs[0]
+			events_df = events_dfs[0]
+			subplot_title = "normalized intensity"
+			# subplot_title = subplot_titles[0]
+
 			for d, o in zip(events_df["duration"], events_df["onset"]):
 				d = round(d)
 				o = round(o)
 				ax.axvspan(o,o+d, facecolor="cyan", alpha=0.15)
 				plt.hold(True)
-			ax.plot(timecourse, lw=rcParams['lines.linewidth']/4)
-			ax.plot(design[0])
-			if not ix in xlabel_positive:
-				plt.setp(ax.get_xticklabels(), visible=False)
+			ax.plot(timecourse, lw=rcParams['lines.linewidth']*1.5, color="#E69F00", alpha=1)
+			ax.plot(design[0], lw=rcParams['lines.linewidth']*2, color="#56B4E9", alpha=1)
+			# if not ix in xlabel_positive:
+			# 	plt.setp(ax.get_xticklabels(), visible=False)
 			current_ylim = ax.get_ylim()
 			ax.yaxis.grid(False)
 			ax.set_xlim([0,len(timecourse)])
 			ax.set_yticks([])
 			ax.set_ylabel(subplot_title)
+			ax.set_xlabel("TR[1s]")
 	else:
 		print("WARNING: you must specify either 'maps' or 'timecourses'")
-
 
 if __name__ == '__main__':
 	# plot_fsl_design("/home/chymera/ni_data/ofM.dr/level1/first_level/_condition_ofM_subject_4001/modelgen/run0.mat")

@@ -80,7 +80,7 @@ def stat(stat_maps,
 			display.draw_cross(linewidth=scale*1.6, alpha=0.3)
 		if annotate:
 			display.annotate(size=2+scale*18)
-		if subplot_titles:
+		if title:
 			display.title(title, size=2+scale*26)
 	else:
 		if len(cut_coords) == 1:

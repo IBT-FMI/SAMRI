@@ -124,9 +124,9 @@ if __name__ == '__main__':
 
 	# roi_per_session("as_composite", "~/ni_data/templates/roi/DSURQE_ctx.nii.gz", "#e66633")
 	# roi_per_session("as_composite", "~/ni_data/templates/roi/ctx_chr_bin.nii.gz", "#56B4E9")
-	roi_per_session("as_composite", "~/ni_data/templates/roi/DSURQE_ctx.nii.gz", "#56B4E9",
-		roi_mask_normalize="~/ni_data/templates/roi/DSURQE_dr_chr.nii.gz",
-		)
+	# roi_per_session("as_composite", "~/ni_data/templates/roi/DSURQE_ctx.nii.gz", "#56B4E9",
+	# 	roi_mask_normalize="~/ni_data/templates/roi/DSURQE_dr_chr.nii.gz",
+	# 	)
 	# roi_per_session("as_composite", "~/ni_data/templates/roi/DSURQE_dr_chr.nii.gz", "#E69F00")
 	# roi_per_session("as_composite", "~/ni_data/templates/roi/f_dr_chr_bin.nii.gz", "#E69F00")
 	# p_clusters("~/ni_data/templates/roi/f_dr_chr.nii.gz")

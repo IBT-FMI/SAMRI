@@ -11,9 +11,11 @@ import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
 
 try:
-	from samri.plotting import maps
+	from samri.plotting import maps, utilities
 except ImportError:
-	from ..plotting import maps
+	from ..plotting import maps, utilities
+
+from samri.plotting.utilities import QUALITATIVE_COLORSET
 
 def plot_fsl_design(file_path):
 	df = pd.read_csv(file_path, skiprows=5, sep="\t", header=None, names=[1,2,3,4,5,6], index_col=False)
@@ -131,6 +133,7 @@ def roi_based(substitutions,
 	return ax
 
 def multi(timecourses, designs, stat_maps, events_dfs, subplot_titles,
+	colors=QUALITATIVE_COLORSET,
 	figure="maps",
 	):
 	if figure == "maps":
@@ -188,8 +191,8 @@ def multi(timecourses, designs, stat_maps, events_dfs, subplot_titles,
 				o = round(o)
 				ax.axvspan(o,o+d, facecolor="cyan", alpha=0.15)
 				plt.hold(True)
-			ax.plot(timecourse, lw=rcParams['lines.linewidth']*1.5, color="#E69F00", alpha=1)
-			ax.plot(design[0], lw=rcParams['lines.linewidth']*2, color="#56B4E9", alpha=1)
+			ax.plot(timecourse, lw=rcParams['lines.linewidth']*1.5, color=colors[0], alpha=1)
+			ax.plot(design[0], lw=rcParams['lines.linewidth']*2, color=colors[1], alpha=1)
 			# if not ix in xlabel_positive:
 			# 	plt.setp(ax.get_xticklabels(), visible=False)
 			current_ylim = ax.get_ylim()

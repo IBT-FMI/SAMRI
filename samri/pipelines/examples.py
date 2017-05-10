@@ -96,7 +96,7 @@ def dr_composite():
 def vta_composite():
 	preprocessing.bruker("/home/chymera/ni_data/ofM.vta/",workflow_name="composite", very_nasty_bruker_delay_hack=False, negative_contrast_agent=True, functional_blur_xy=4, functional_registration_method="composite")
 
-def test_dual_regression():
+def test_dual_regression(group_level="migp"):
 	substitutions_a = bids_substitution_iterator(
 		["ofM",],
 		["5689","5690","5691"],
@@ -109,7 +109,9 @@ def test_dual_regression():
 		["EPI_CBV_chr_longSOA"],
 		"as_composite",
 		)
-	fc.dual_regression(substitutions_a,substitutions_b)
+	fc.dual_regression(substitutions_a,substitutions_b,
+            group_level=group_level,
+            )
 
 if __name__ == '__main__':
 	test_dual_regression()

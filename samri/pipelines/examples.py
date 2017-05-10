@@ -104,7 +104,7 @@ def test_dual_regression():
 		"as_composite",
 		)
 	substitutions_b = bids_substitution_iterator(
-		["ofM_aF",],
+		["ofM_cF2",],
 		["5689","5690","5691"],
 		["EPI_CBV_chr_longSOA"],
 		"as_composite",

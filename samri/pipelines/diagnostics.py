@@ -59,7 +59,7 @@ def diagnose(measurements_base,
 	keep_work=False,
 	loud=False,
 	n_procs=N_PROCS,
-	realign="space",
+	realign=False,
 	tr=1,
 	workflow_name="diagnostic",
 	):

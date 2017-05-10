@@ -29,6 +29,7 @@ except ImportError:
 	from .utils import STIM_PROTOCOL_DICTIONARY
 	from .utils import Bru2, MELODIC
 
+from samri.utilities import N_PROCS
 
 #set all outputs to compressed NIfTI
 afni.base.AFNICommand.set_default_output_type('NIFTI_GZ')
@@ -57,7 +58,7 @@ def diagnose(measurements_base,
 	components=None,
 	keep_work=False,
 	loud=False,
-	n_procs=8,
+	n_procs=N_PROCS,
 	realign="space",
 	tr=1,
 	workflow_name="diagnostic",

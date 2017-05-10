@@ -39,7 +39,7 @@ def dual_regression(substitutions_a, substitutions_b,
 	if group_level == "migp":
 		ica.inputs.in_files = ts_all
 		ica._cmd = 'melodic --migp'
-	elif group_level == concat:
+	elif group_level == "concat":
 		ica.inputs.approach = "concat"
 		ica.inputs.in_files = all_merged_path
 	ica_run = ica.run()

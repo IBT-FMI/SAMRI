@@ -16,18 +16,16 @@ import nipype.interfaces.io as nio
 import nipype.interfaces.utility as util		# utility
 import nipype.pipeline.engine as pe				# pypeline engine
 import pandas as pd
-from nipype.interfaces import afni, fsl, nipy
+from nipype.interfaces import afni, fsl, nipy, bru2nii
 
 try:
 	from nodes import functional_registration, structural_registration, composite_registration
 	from utils import ss_to_path, sss_filename, fslmaths_invert_values
 	from utils import STIM_PROTOCOL_DICTIONARY
-	from utils import Bru2, MELODIC
 except ImportError:
 	from .nodes import functional_registration, structural_registration, composite_registration
 	from .utils import ss_to_path, sss_filename, fslmaths_invert_values
 	from .utils import STIM_PROTOCOL_DICTIONARY
-	from .utils import Bru2, MELODIC
 
 from samri.utilities import N_PROCS
 
@@ -97,7 +95,7 @@ def diagnose(measurements_base,
 	get_f_scan.inputs.measurements_base = measurements_base
 	get_f_scan.iterables = ("scan_type", functional_scan_types)
 
-	f_bru2nii = pe.Node(interface=Bru2(), name="f_bru2nii")
+	f_bru2nii = pe.Node(interface=bru2nii.Bru2(), name="f_bru2nii")
 	f_bru2nii.inputs.actual_size=actual_size
 
 	dummy_scans = pe.Node(name='dummy_scans', interface=util.Function(function=force_dummy_scans,input_names=inspect.getargspec(force_dummy_scans)[0], output_names=['out_file']))
@@ -111,7 +109,7 @@ def diagnose(measurements_base,
 	datasink.inputs.base_directory = path.join(measurements_base,workflow_name)
 	datasink.inputs.parameterization = False
 
-	melodic = pe.Node(interface=MELODIC(), name="melodic")
+	melodic = pe.Node(interface=fsl.model.MELODIC(), name="melodic")
 	melodic.inputs.tr_sec = tr
 	melodic.inputs.report = True
 	if components:
@@ -136,7 +134,7 @@ def diagnose(measurements_base,
 		get_s_scan.inputs.measurements_base = measurements_base
 		get_s_scan.iterables = ("scan_type", structural_scan_types)
 
-		s_bru2nii = pe.Node(interface=Bru2(), name="s_bru2nii")
+		s_bru2nii = pe.Node(interface=bru2nii.Bru2(), name="s_bru2nii")
 		s_bru2nii.inputs.force_conversion=True
 		s_bru2nii.inputs.actual_size=actual_size
 

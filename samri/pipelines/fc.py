@@ -2,14 +2,14 @@ import nibabel
 import nipype.interfaces.io as nio
 from os import path, listdir, getcwd, remove
 
-from nilearn.input_data import NiftiLabelsMasker
-from nilearn.connectome import ConnectivityMeasure
+#from nilearn.input_data import NiftiLabelsMasker
+#from nilearn.connectome import ConnectivityMeasure
 from nipype.interfaces import fsl
 
 def dual_regression(substitutions_a, substitutions_b,
 	all_merged_path="~/all_merged.nii.gz",
 	components=9,
-	group_level="concat"
+	group_level="concat",
 	tr=1,
 	ts_file_template="~/ni_data/ofM.dr/preprocessing/{preprocessing_dir}/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_trial-{scan}.nii.gz",
 	):

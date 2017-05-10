@@ -9,7 +9,7 @@ The package is compatible with small rodent data acquired via Bruker systems.
 ## Installation
 
 ### Gentoo Linux
-SAMRI is available for Portage (the package manager of Gentoo Linux and derivative distributions, but also available on BSD) via the [Chymeric Overlay](https://github.com/TheChymera/overlay).
+SAMRI is available for Portage (the package manager of Gentoo Linux, derivative distributions, as well as BSD) via the [Chymeric Overlay](https://github.com/TheChymera/overlay).
 Upon enabling the overlay, the package can be emerged:
 
 ````

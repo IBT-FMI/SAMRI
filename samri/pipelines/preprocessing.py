@@ -1,7 +1,7 @@
 from os import path, listdir, getcwd, remove
 try:
 	from ..extra_functions import get_data_selection, get_scan, write_events_file, force_dummy_scans
-except ValueError:
+except (SystemError, ValueError):
 	from samri.pipelines.extra_functions import get_data_selection, get_scan, write_events_file, force_dummy_scans
 
 import re

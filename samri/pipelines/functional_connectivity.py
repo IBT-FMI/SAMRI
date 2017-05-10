@@ -4,7 +4,7 @@ import nipype.interfaces.io as nio
 from nilearn.input_data import NiftiLabelsMasker
 from nilearn.connectome import ConnectivityMeasure
 
-def functional_connectivity(func_data,
+def correlation_matrix(func_data,
 	mask="/home/chymera/NIdata/templates/ds_QBI_chr_bin.nii.gz",
 	labels = '',
 	loud = False,

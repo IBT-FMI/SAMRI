@@ -1,4 +1,7 @@
+import multiprocessing
 from itertools import product
+
+N_PROCS=max(multiprocessing.cpu_count()-2,2)
 
 def bids_substitution_iterator(sessions, subjects, scans, preprocessing_dir,
 	l1_dir=None,

@@ -17,7 +17,6 @@ def cbv_composite():
 		functional_registration_method="composite",
 		keep_work=True,
 		template="~/ni_data/templates/ds_QBI_chr.nii.gz",
-		n_procs=8,
 		)
 	glm.l1("~/ni_data/ofM.dr/preprocessing/composite",
 		workflow_name="composite",
@@ -55,7 +54,6 @@ def as_cbv_composite():
 		keep_work=True,
 		template="~/ni_data/templates/DSURQEc_200micron_average.nii",
 		actual_size=True,
-		n_procs=22,
 		)
 	glm.l1("~/ni_data/ofM.dr/preprocessing/as_composite",
 		workflow_name="as_composite",
@@ -98,7 +96,7 @@ def dr_composite():
 def vta_composite():
 	preprocessing.bruker("/home/chymera/ni_data/ofM.vta/",workflow_name="composite", very_nasty_bruker_delay_hack=False, negative_contrast_agent=True, functional_blur_xy=4, functional_registration_method="composite")
 
-def test_dual_regression():
+def test_dual_regression(group_level="migp"):
 	substitutions_a = bids_substitution_iterator(
 		["ofM",],
 		["5689","5690","5691"],

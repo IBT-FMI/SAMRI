@@ -1,9 +1,10 @@
 import nibabel
+import numpy as np
 import nipype.interfaces.io as nio
 from os import path, listdir, getcwd, remove
 
-#from nilearn.input_data import NiftiLabelsMasker
-#from nilearn.connectome import ConnectivityMeasure
+from nilearn.input_data import NiftiLabelsMasker, NiftiMasker
+from nilearn.connectome import ConnectivityMeasure
 from nipype.interfaces import fsl
 
 def dual_regression(substitutions_a, substitutions_b,
@@ -42,13 +43,44 @@ def dual_regression(substitutions_a, substitutions_b,
 	elif group_level == "concat":
 		ica.inputs.approach = "concat"
 		ica.inputs.in_files = all_merged_path
+	print(ica.cmdline)
 	ica_run = ica.run
 
-def get_signal(substitutions,
+def get_signal(substitutions_a, substitutions_b,
+	functional_file_template="~/ni_data/ofM.dr/preprocessing/{preprocessing_dir}/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_trial-{scan}.nii.gz",
 	mask="~/ni_data/templates/roi/DSURQE_ctx.nii.gz",
 	):
-	labels_masker = NiftiLabelsMasker(labels_img=mask, verbose=loud)
-	timeseries = labels_masker.fit_transform(func_data)
+
+	mask = path.abspath(path.expanduser(mask))
+
+	out_t_names = []
+	out_cope_names = []
+	out_varcb_names = []
+	for substitution in substitutions_a+substitutions_b:
+		ts_name = path.abspath(path.expanduser("{subject}_{session}.mat".format(**substitution)))
+		out_t_name = path.abspath(path.expanduser("{subject}_{session}_tstat.nii.gz".format(**substitution)))
+		out_cope_name = path.abspath(path.expanduser("{subject}_{session}_cope.nii.gz".format(**substitution)))
+		out_varcb_name = path.abspath(path.expanduser("{subject}_{session}_varcb.nii.gz".format(**substitution)))
+		out_t_names.append(out_t_name)
+		out_cope_names.append(out_cope_name)
+		out_varcb_names.append(out_varcb_name)
+		functional_file = path.abspath(path.expanduser(functional_file_template.format(**substitution)))
+		if not path.isfile(ts_name):
+			masker = NiftiMasker(mask_img=mask)
+			ts = masker.fit_transform(functional_file).T
+			ts = np.mean(ts, axis=0)
+			header = "/NumWaves 1\n/NumPoints 1490\n/PPheights 1.308540e+01 4.579890e+00\n\n/Matrix"
+			np.savetxt(ts_name, ts, delimiter="\n", header=header, comments="")
+		glm = fsl.GLM(in_file=functional_file, design=ts_name, output_type='NIFTI_GZ')
+		glm.inputs.contrasts = path.abspath(path.expanduser("run0.con"))
+		glm.inputs.out_t_name = out_t_name
+		glm.inputs.out_cope = out_cope_name
+		glm.inputs.out_varcb_name = out_varcb_name
+		print(glm.cmdline)
+		glm_run=glm.run()
+
+	copemerge = fsl.Merge(dimension='t')
+	varcopemerge = fsl.Merge(dimension='t')
 
 
 def correlation_matrix(func_data,

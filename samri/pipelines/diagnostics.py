@@ -72,7 +72,7 @@ def diagnose(measurements_base,
 		if not structural_scan_types:
 			structural_scan_types = list(scan_classification[(scan_classification["categories"] == "structural")]["scan_type"])
 
-	#hack to allow structural scan type disaling:
+	#hack to allow structural scan type disabling:
 	if structural_scan_types == -1:
 		structural_scan_types = []
 

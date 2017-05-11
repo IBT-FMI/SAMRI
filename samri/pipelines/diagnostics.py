@@ -38,7 +38,7 @@ thisscriptspath = path.dirname(path.realpath(__file__))
 scan_classification_file_path = path.join(thisscriptspath,"scan_type_classification.csv")
 
 @argh.arg('-f', '--functional_scan_types', nargs='+', type=str)
-@argh.arg('--structural_scan_types', nargs='+', type=str)
+@argh.arg('-s', '--structural_scan_types', nargs='+', type=str)
 @argh.arg('--sessions', nargs='+', type=str)
 @argh.arg('--subjects', nargs='+', type=str)
 @argh.arg('--exclude_subjects', nargs='+', type=str)
@@ -72,9 +72,9 @@ def diagnose(measurements_base,
 		if not structural_scan_types:
 			structural_scan_types = list(scan_classification[(scan_classification["categories"] == "structural")]["scan_type"])
 
-	#hack to allow structural scan type disaling:
-	if structural_scan_types == -1:
-		structural_scan_types = []
+	#hack to allow structural scan type disabling:
+        if structural_scan_types == ["none"]:
+            structural_scan_types = []
 
 	# define measurement directories to be processed, and populate the list either with the given include_measurements, or with an intelligent selection
 	scan_types = deepcopy(functional_scan_types)

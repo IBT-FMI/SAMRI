@@ -122,12 +122,12 @@ if __name__ == '__main__':
 	# overview("composite_subjects", ["4001","4005","4007","4008","4009","4011","4012"]) #4001 is a negative control (transgene but no injection
 	# overview("subjectwise_blur", ["4001","4005","4007","4008","4009","4011","4012"])
 
-	# roi_per_session("as_composite", "~/ni_data/templates/roi/DSURQE_ctx.nii.gz", "#e66633")
+	# roi_per_session("as_composite", "~/ni_data/templates/roi/DSURQEc_ctx.nii.gz", "#e66633")
 	# roi_per_session("as_composite", "~/ni_data/templates/roi/ctx_chr_bin.nii.gz", "#56B4E9")
-	# roi_per_session("as_composite", "~/ni_data/templates/roi/DSURQE_ctx.nii.gz", "#56B4E9",
-	# 	roi_mask_normalize="~/ni_data/templates/roi/DSURQE_dr.nii.gz",
+	# roi_per_session("as_composite", "~/ni_data/templates/roi/DSURQEc_ctx.nii.gz", "#56B4E9",
+	# 	roi_mask_normalize="~/ni_data/templates/roi/DSURQEc_dr.nii.gz",
 	# 	)
-	# roi_per_session("as_composite", "~/ni_data/templates/roi/DSURQE_dr.nii.gz", "#E69F00")
+	# roi_per_session("as_composite", "~/ni_data/templates/roi/DSURQEc_dr.nii.gz", "#E69F00")
 	# roi_per_session("as_composite", "~/ni_data/templates/roi/f_dr_chr_bin.nii.gz", "#E69F00")
 	# p_clusters("~/ni_data/templates/roi/f_dr_chr.nii.gz")
 	# p_clusters("~/ni_data/templates/ds_QBI_chr_bin.nii.gz")
@@ -136,5 +136,5 @@ if __name__ == '__main__':
 	# check_responders()
 	# qc_regressor_old("~/ni_data/templates/roi/f_dr_chr.nii.gz")
 	# qc_regressor_old("~/ni_data/templates/roi/ctx_chr.nii.gz")
-	# qc_regressor(["ofM_cF1"],["4011"],["EPI_CBV_jb_long"],"as_composite","~/ni_data/templates/roi/DSURQE_ctx.nii.gz")
+	# qc_regressor(["ofM_cF1"],["4011"],["EPI_CBV_jb_long"],"as_composite","~/ni_data/templates/roi/DSURQEc_ctx.nii.gz")
 	# network.simple_dr(output="~/ntw1.png", graphsize=800, scale=1.8)

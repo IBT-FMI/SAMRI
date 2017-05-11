@@ -3,6 +3,7 @@ import numpy as np
 import nipype.interfaces.io as nio
 from os import path, listdir, getcwd, remove
 
+
 from nilearn.input_data import NiftiLabelsMasker, NiftiMasker
 from nilearn.connectome import ConnectivityMeasure
 from nipype.interfaces import fsl
@@ -48,7 +49,7 @@ def dual_regression(substitutions_a, substitutions_b,
 
 def get_signal(substitutions_a, substitutions_b,
 	functional_file_template="~/ni_data/ofM.dr/preprocessing/{preprocessing_dir}/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_trial-{scan}.nii.gz",
-	mask="~/ni_data/templates/roi/DSURQE_ctx.nii.gz",
+	mask="~/ni_data/templates/DSURQEc_200micron_bin.nii.gz",
 	):
 
 	mask = path.abspath(path.expanduser(mask))

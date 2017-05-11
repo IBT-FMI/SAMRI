@@ -2,8 +2,8 @@ import nibabel
 import nipype.interfaces.io as nio
 from os import path, listdir, getcwd, remove
 
-#from nilearn.input_data import NiftiLabelsMasker
-#from nilearn.connectome import ConnectivityMeasure
+from nilearn.input_data import NiftiLabelsMasker
+from nilearn.connectome import ConnectivityMeasure
 from nipype.interfaces import fsl
 
 def dual_regression(substitutions_a, substitutions_b,

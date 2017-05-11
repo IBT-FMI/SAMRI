@@ -111,7 +111,10 @@ def test_dual_regression():
 		["EPI_CBV_chr_longSOA"],
 		"as_composite",
 		)
-	fc.dual_regression(substitutions_a,substitutions_b)
+	substitutions_all = substitutions_a.copy()
+	substitutions_all.update(substitutions_b)
+	# fc.dual_regression(substitutions_a,substitutions_b)
+	fc.get_signal(substitutions_all)
 
 if __name__ == '__main__':
 	test_dual_regression()

@@ -20,9 +20,10 @@ from nipype.interfaces import afni, bru2nii, fsl, nipy
 from nodes import *
 from utils import ss_to_path, sss_filename, fslmaths_invert_values
 from utils import STIM_PROTOCOL_DICTIONARY
-
+from samri.utilities import N_PROCS
 
 DUMMY_SCANS=10
+N_PROCS=max(N_PROCS-4, 2)
 
 #set all outputs to compressed NIfTI
 afni.base.AFNICommand.set_default_output_type('NIFTI_GZ')
@@ -45,7 +46,7 @@ def bruker(measurements_base,
 	functional_registration_method="structural",
 	highpass_sigma=270,
 	negative_contrast_agent=False,
-	n_procs=8,
+	n_procs=N_PROCS,
 	realign=True,
 	template="/home/chymera/ni_data/templates/ds_QBI_chr.nii.gz",
 	tr=1,

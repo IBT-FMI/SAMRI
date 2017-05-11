@@ -27,6 +27,7 @@ except ImportError:
 	from .utils import ss_to_path, sss_filename, fslmaths_invert_values
 	from .utils import STIM_PROTOCOL_DICTIONARY
 
+from samri.utilities import N_PROCS
 
 #set all outputs to compressed NIfTI
 afni.base.AFNICommand.set_default_output_type('NIFTI_GZ')
@@ -34,7 +35,7 @@ fsl.FSLCommand.set_default_output_type('NIFTI_GZ')
 
 #relative paths
 thisscriptspath = path.dirname(path.realpath(__file__))
-scan_classification_file_path = path.join(thisscriptspath,"..","scan_type_classification.csv")
+scan_classification_file_path = path.join(thisscriptspath,"scan_type_classification.csv")
 
 @argh.arg('-f', '--functional_scan_types', nargs='+', type=str)
 @argh.arg('--structural_scan_types', nargs='+', type=str)
@@ -55,8 +56,8 @@ def diagnose(measurements_base,
 	components=None,
 	keep_work=False,
 	loud=False,
-	n_procs=8,
-	realign="space",
+	n_procs=N_PROCS,
+	realign=False,
 	tr=1,
 	workflow_name="diagnostic",
 	):

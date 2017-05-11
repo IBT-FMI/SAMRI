@@ -42,7 +42,13 @@ def dual_regression(substitutions_a, substitutions_b,
 	elif group_level == "concat":
 		ica.inputs.approach = "concat"
 		ica.inputs.in_files = all_merged_path
-	ica_run = ica.run()
+	ica_run = ica.run
+
+def get_signal(substitutions,
+	mask="~/ni_data/templates/roi/DSURQE_ctx.nii.gz",
+	):
+	labels_masker = NiftiLabelsMasker(labels_img=mask, verbose=loud)
+	timeseries = labels_masker.fit_transform(func_data)
 
 
 def correlation_matrix(func_data,

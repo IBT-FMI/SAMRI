@@ -109,8 +109,10 @@ def test_dual_regression(group_level="migp"):
 		["EPI_CBV_chr_longSOA"],
 		"as_composite",
 		)
-	# fc.dual_regression(substitutions_a,substitutions_b)
-	fc.get_signal(substitutions_a,substitutions_b)
+	fc.dual_regression(substitutions_a,substitutions_b,
+            group_level=group_level,
+            )
+	#fc.get_signal(substitutions_a,substitutions_b)
 
 if __name__ == '__main__':
 	test_dual_regression()

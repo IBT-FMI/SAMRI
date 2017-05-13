@@ -45,7 +45,7 @@ def dual_regression(substitutions_a, substitutions_b,
 		ica.inputs.approach = "concat"
 		ica.inputs.in_files = all_merged_path
 	print(ica.cmdline)
-	ica_run = ica.run
+	ica_run = ica.run()
 
 def get_signal(substitutions_a, substitutions_b,
 	functional_file_template="~/ni_data/ofM.dr/preprocessing/{preprocessing_dir}/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_trial-{scan}.nii.gz",

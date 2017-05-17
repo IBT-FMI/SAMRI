@@ -73,8 +73,8 @@ def diagnose(measurements_base,
 			structural_scan_types = list(scan_classification[(scan_classification["categories"] == "structural")]["scan_type"])
 
 	#hack to allow structural scan type disabling:
-        if structural_scan_types == ["none"]:
-            structural_scan_types = []
+	if structural_scan_types == ["none"]:
+		structural_scan_types = []
 
 	# define measurement directories to be processed, and populate the list either with the given include_measurements, or with an intelligent selection
 	scan_types = deepcopy(functional_scan_types)

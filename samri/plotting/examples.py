@@ -113,6 +113,15 @@ def qc_regressor(sessions, subjects, scans, workflow_name, mask):
 	timeseries.multi(timecourses, designs, stat_maps, events_dfs, subplot_titles, figure="timecourses")
 	plt.show()
 
+def plot_my_roi():
+	from maps import plot_atlas_label
+	plot_atlas_label("~/ni_data/templates/roi/DSURQEc_40micron_labels.nii",
+		mapping="~/ni_data/templates/roi/DSURQE_mapping.csv",
+		label_names=["cortex"],
+		)
+	plt.show()
+
+
 if __name__ == '__main__':
 	# overview("as_composite_subjects", ["4005","4007","4008","4009","4011","4012","5687","5689","5690","5691","5703","5704","5706"],) #4001 is a negative control (transgene but no injection
 	# overview("as_composite_subjects", ["4007","4008","4009","4011","4012","5689","5690","5691"],) #4001 is a negative control (transgene but no injection
@@ -138,3 +147,4 @@ if __name__ == '__main__':
 	# qc_regressor_old("~/ni_data/templates/roi/ctx_chr.nii.gz")
 	# qc_regressor(["ofM_cF1"],["4011"],["EPI_CBV_jb_long"],"as_composite","~/ni_data/templates/roi/DSURQEc_ctx.nii.gz")
 	# network.simple_dr(output="~/ntw1.png", graphsize=800, scale=1.8)
+	plot_my_roi()

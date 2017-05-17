@@ -125,6 +125,45 @@ def stat(stat_maps,
 
 	return display
 
+def plot_atlas_label(atlas,
+	mapping=False,
+	label_names=False,
+	anat="~/ni_data/templates/DSURQEc_40micron_masked.nii.gz",
+	parser={
+		"textcolumn":"Structure",
+		"valuecolumn right":"right label",
+		"valuecolumn left":"left label",
+		},
+	bilateral=True,
+	black_bg=False,
+	):
+	"""Plot a region of interest based on an atlas and a label."""
+
+	anat = os.path.abspath(os.path.expanduser(anat))
+	mapping = os.path.abspath(os.path.expanduser(mapping))
+	atlas = os.path.abspath(os.path.expanduser(atlas))
+	atlas = nib.load(atlas)
+
+	if not (label_names and mapping):
+		roi = atlas
+	else:
+		mapping = pd.read_csv(mapping)
+		if bilateral and (parser["valuecolumn right"] and parser["valuecolumn left"]):
+			roi_values = []
+			for label_name in label_names:
+				roi_values.extend(mapping[mapping[parser["textcolumn"]].str.contains(label_name)][parser["valuecolumn right"]].values.tolist())
+				roi_values.extend(mapping[mapping[parser["textcolumn"]].str.contains(label_name)][parser["valuecolumn left"]].values.tolist())
+			print(roi_values)
+		header = atlas.header
+		affine = atlas.affine
+		data = atlas.get_data()
+		masked_data = np.in1d(data, roi_values).reshape(data.shape).astype(int)
+		roi = nib.Nifti1Image(masked_data, affine, header)
+		roi.to_filename("mask_.nii.gz")
+
+	plotting.plot_roi(roi, bg_img=anat, black_bg=black_bg)
+
+
 def plot_myanat(anat="/home/chymera/ni_data/templates/hires_QBI_chr.nii.gz"):
 	plotting.plot_anat(anat, cut_coords=[0, 0, 0],title='Anatomy image')
 

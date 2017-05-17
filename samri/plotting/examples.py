@@ -114,10 +114,10 @@ def qc_regressor(sessions, subjects, scans, workflow_name, mask):
 	plt.show()
 
 def plot_my_roi():
-	from maps import plot_atlas_label
-	plot_atlas_label("~/ni_data/templates/roi/DSURQEc_40micron_labels.nii",
+	from maps import atlas_label
+	atlas_label("~/ni_data/templates/roi/DSURQEc_40micron_labels.nii",
 		mapping="~/ni_data/templates/roi/DSURQE_mapping.csv",
-		label_names=["cortex"],
+		label_names=["Frontal","orbital","Orbital"],
 		)
 	plt.show()
 

@@ -9,6 +9,8 @@ import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
 plt.style.use('ggplot')
 
+from samri.fetch.local import roi_from_atlaslabel
+
 colors_plus = plt.cm.autumn(np.linspace(0., 1, 128))
 colors_minus = plt.cm.winter(np.linspace(0, 1, 128))
 
@@ -125,43 +127,29 @@ def stat(stat_maps,
 
 	return display
 
-def plot_atlas_label(atlas,
-	mapping=False,
-	label_names=False,
+def atlas_label(atlas, mapping, label_names,
 	anat="~/ni_data/templates/DSURQEc_40micron_masked.nii.gz",
-	parser={
-		"textcolumn":"Structure",
-		"valuecolumn right":"right label",
-		"valuecolumn left":"left label",
-		},
-	bilateral=True,
+	annotate=True,
 	black_bg=False,
+	draw_cross=True,
+	threshold=None,
+	subplot_title=[],
+	scale=1.,
+	**kwargs
 	):
 	"""Plot a region of interest based on an atlas and a label."""
 
 	anat = os.path.abspath(os.path.expanduser(anat))
-	mapping = os.path.abspath(os.path.expanduser(mapping))
-	atlas = os.path.abspath(os.path.expanduser(atlas))
-	atlas = nib.load(atlas)
 
-	if not (label_names and mapping):
-		roi = atlas
-	else:
-		mapping = pd.read_csv(mapping)
-		if bilateral and (parser["valuecolumn right"] and parser["valuecolumn left"]):
-			roi_values = []
-			for label_name in label_names:
-				roi_values.extend(mapping[mapping[parser["textcolumn"]].str.contains(label_name)][parser["valuecolumn right"]].values.tolist())
-				roi_values.extend(mapping[mapping[parser["textcolumn"]].str.contains(label_name)][parser["valuecolumn left"]].values.tolist())
-			print(roi_values)
-		header = atlas.header
-		affine = atlas.affine
-		data = atlas.get_data()
-		masked_data = np.in1d(data, roi_values).reshape(data.shape).astype(int)
-		roi = nib.Nifti1Image(masked_data, affine, header)
-		roi.to_filename("mask_.nii.gz")
+	roi = roi_from_atlaslabel(atlas, mapping=mapping, label_names=label_names, **kwargs)
 
-	plotting.plot_roi(roi, bg_img=anat, black_bg=black_bg)
+	plotting.plot_roi(roi, bg_img=anat, black_bg=black_bg, threshold=None)
+	if draw_cross:
+		display.draw_cross(linewidth=scale*1.6, alpha=0.4)
+	if annotate:
+		display.annotate(size=2+scale*18)
+	if subplot_titles:
+		display.title(title, size=2+scale*26)
 
 
 def plot_myanat(anat="/home/chymera/ni_data/templates/hires_QBI_chr.nii.gz"):

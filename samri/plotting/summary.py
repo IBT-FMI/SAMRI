@@ -52,10 +52,9 @@ def add_roi_data(substitution,t_file_format,masker):
 		sdf = pd.DataFrame(subject_data, index=[None])
 		return sdf, vdf
 
-def roi_per_session(substitutions,
+def roi_per_session(substitutions, roi_mask
 	legend_loc="best",
 	t_file_template="~/ni_data/ofM.dr/l1/{l1_dir}/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_trial-{scan}_tstat.nii.gz",
-	roi_mask="",
 	roi_mask_normalize="",
 	figure="per-participant",
 	tabref="tab",
@@ -63,6 +62,17 @@ def roi_per_session(substitutions,
 	obfuscate=False,
 	color="#E69F00",
 	):
+	"""Plot a ROI t-values over the session timecourse
+
+	roi_mask : str
+	Path to the ROI mask for which to select the t-values.
+
+	figure : {"per-participant", "per-voxel", "both"}
+	At what level to resolve the t-values. Per-participant compares participant means, per-voxel compares all voxel values, both creates two plots covering the aforementioned cases.
+
+	roi_mask_normalize : str
+	Path to a ROI mask by the mean of whose t-values to normalite the t-values in roi_mask.
+	"""
 
 	roi_mask = os.path.abspath(os.path.expanduser(roi_mask))
 	masker = NiftiMasker(mask_img=roi_mask)

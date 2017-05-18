@@ -185,7 +185,7 @@ def multi(timecourses, designs, stat_maps, events_dfs, subplot_titles,
 			timecourse = timecourses[0]
 			design = designs[0]
 			events_df = events_dfs[0]
-			subplot_title = "normalized intensity"
+			subplot_title = "Arbitrary Units"
 			# subplot_title = subplot_titles[0]
 
 			for d, o in zip(events_df["duration"], events_df["onset"]):

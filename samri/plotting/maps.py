@@ -127,13 +127,15 @@ def stat(stat_maps,
 
 	return display
 
-def atlas_label(atlas, mapping, label_names,
+def atlas_label(atlas, mapping,
+	label_names=[],
 	anat="~/ni_data/templates/DSURQEc_40micron_masked.nii.gz",
 	annotate=True,
 	black_bg=False,
 	draw_cross=True,
 	threshold=None,
-	subplot_title=[],
+	roi=False,
+	subplot_titles=[],
 	scale=1.,
 	**kwargs
 	):
@@ -141,9 +143,15 @@ def atlas_label(atlas, mapping, label_names,
 
 	anat = os.path.abspath(os.path.expanduser(anat))
 
-	roi = roi_from_atlaslabel(atlas, mapping=mapping, label_names=label_names, **kwargs)
+	if mapping and label_names:
+		roi = roi_from_atlaslabel(atlas, mapping=mapping, label_names=label_names, **kwargs)
+	elif isinstance(mapping, str):
+		mapping = os.path.abspath(os.path.expanduser(mapping))
+		roi = nib.load(mapping)
+	else:
+		roi = mapping
 
-	plotting.plot_roi(roi, bg_img=anat, black_bg=black_bg, threshold=None)
+	display = plotting.plot_roi(roi, bg_img=anat, black_bg=black_bg)
 	if draw_cross:
 		display.draw_cross(linewidth=scale*1.6, alpha=0.4)
 	if annotate:

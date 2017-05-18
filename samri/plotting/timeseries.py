@@ -67,7 +67,9 @@ def roi_based(substitutions,
 	fig, ax = plt.subplots(figsize=(6,4) , facecolor='#eeeeee', tight_layout=True)
 
 	if roi:
-		roi = os.path.expanduser(roi)
+		if isinstance(roi, str):
+			roi = os.path.abspath(os.path.expanduser(roi))
+			roi = nib.load(roi)
 		masker = NiftiMasker(mask_img=roi)
 		if ts_file_template:
 			ts_file = os.path.expanduser(ts_file_template.format(**substitutions))
@@ -192,7 +194,12 @@ def multi(timecourses, designs, stat_maps, events_dfs, subplot_titles,
 				ax.axvspan(o,o+d, facecolor="cyan", alpha=0.15)
 				plt.hold(True)
 			ax.plot(timecourse, lw=rcParams['lines.linewidth']*1.5, color=colors[0], alpha=1)
-			ax.plot(design[0], lw=rcParams['lines.linewidth']*2, color=colors[1], alpha=1)
+			for ix, i in enumerate(design):
+				try:
+					iteration_color=colors[ix+1]
+				except IndexError:
+					pass
+				ax.plot(design[ix], lw=rcParams['lines.linewidth']*2, color=iteration_color, alpha=1)
 			# if not ix in xlabel_positive:
 			# 	plt.setp(ax.get_xticklabels(), visible=False)
 			current_ylim = ax.get_ylim()

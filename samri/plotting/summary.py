@@ -52,7 +52,7 @@ def add_roi_data(substitution,t_file_format,masker):
 		sdf = pd.DataFrame(subject_data, index=[None])
 		return sdf, vdf
 
-def roi_per_session(substitutions, roi_mask
+def roi_per_session(substitutions, roi_mask,
 	legend_loc="best",
 	t_file_template="~/ni_data/ofM.dr/l1/{l1_dir}/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_trial-{scan}_tstat.nii.gz",
 	roi_mask_normalize="",
@@ -74,7 +74,8 @@ def roi_per_session(substitutions, roi_mask
 	Path to a ROI mask by the mean of whose t-values to normalite the t-values in roi_mask.
 	"""
 
-	roi_mask = os.path.abspath(os.path.expanduser(roi_mask))
+	if isinstance(roi_mask,str):
+		roi_mask = os.path.abspath(os.path.expanduser(roi_mask))
 	masker = NiftiMasker(mask_img=roi_mask)
 
 	n_jobs = mp.cpu_count()-2

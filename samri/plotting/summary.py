@@ -363,13 +363,13 @@ def roi_masking(substitution, ts_file_template, beta_file_template, design_file_
 	try:
 		timecourse = masker.fit_transform(ts_file).T
 		betas = masker.fit_transform(beta_file).T
+		design = pd.read_csv(design_file, skiprows=5, sep="\t", header=None, index_col=False)
+		event_df = pd.read_csv(event_file, sep="\t")
 	except ValueError:
 		return None,None,None,None,None
 	subplot_title = "\n ".join([str(substitution["subject"]),str(substitution["session"])])
 	timecourse = np.mean(timecourse, axis=0)
-	design = pd.read_csv(design_file, skiprows=5, sep="\t", header=None, index_col=False)
 	design = design*np.mean(betas)
-	event_df = pd.read_csv(event_file, sep="\t")
 
 	return timecourse, design, mask_map, event_df, subplot_title
 
@@ -397,6 +397,7 @@ def ts_overviews(substitutions, roi_path,
 		))
 	timecourses, designs, stat_maps, event_dfs, subplot_titles = zip(*substitutions_data)
 
+	#The following is safe because either all are None at a given position, or none of them is None
 	timecourses = [x for x in timecourses if x is not None]
 	designs = [x for x in designs if x is not None]
 	stat_maps = [x for x in stat_maps if x is not None]

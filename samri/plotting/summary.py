@@ -136,6 +136,75 @@ def roi_per_session(substitutions, roi_mask,
 
 	return fit, anova
 
+def analytic_pattern_per_session(substitutions, analytic_pattern,
+	legend_loc="best",
+	t_file_template="~/ni_data/ofM.dr/l1/{l1_dir}/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_trial-{scan}_tstat.nii.gz",
+	roi_mask_normalize="",
+	figure="per-participant",
+	tabref="tab",
+	xy_label=[],
+	obfuscate=False,
+	color="#E69F00",
+	):
+	"""Plot a ROI t-values over the session timecourse
+
+	analytic_pattern : str
+	Path to the analytic pattern by which to multiply the per-participant per-session t-statistic maps.
+
+		roi_mask_normalize : str
+	Path to a ROI mask by the mean of whose t-values to normalite the t-values in roi_mask.
+	"""
+
+	if isinstance(analytic_pattern,str):
+		analytic_pattern = os.path.abspath(os.path.expanduser(analytic_pattern))
+	masker = NiftiMasker(mask_img=roi_mask)
+
+	n_jobs = mp.cpu_count()-2
+	roi_data = Parallel(n_jobs=n_jobs, verbose=0, backend="threading")(map(delayed(add_roi_data),
+		substitutions,
+		[t_file_template]*len(substitutions),
+		[masker]*len(substitutions),
+		))
+	subject_dfs, voxel_dfs = zip(*roi_data)
+	subjectdf = pd.concat(subject_dfs)
+	voxeldf = pd.concat(voxel_dfs)
+	if roi_mask_normalize:
+		figure="per-participant"
+		mask_normalize = os.path.abspath(os.path.expanduser(roi_mask_normalize))
+		masker_normalize = NiftiMasker(mask_img=mask_normalize)
+		roi_data = Parallel(n_jobs=n_jobs, verbose=0, backend="threading")(map(delayed(add_roi_data),
+			substitutions,
+			[t_file_template]*len(substitutions),
+			[masker_normalize]*len(substitutions),
+			))
+		subject_dfs_normalize, _ = zip(*roi_data)
+		subjectdf_normalize = pd.concat(subject_dfs_normalize)
+
+		subjectdf['t'] = subjectdf['t']/subjectdf_normalize['t']
+
+	if obfuscate:
+		obf_session = {"ofM":"_pre","ofM_aF":"t1","ofM_cF1":"t2","ofM_cF2":"t3","ofM_pF":"post"}
+		subjectdf = subjectdf.replace({"session": obf_session})
+		subjectdf.to_csv("~/MixedLM_data.csv")
+
+	model = smf.mixedlm("t ~ session", subjectdf, groups=subjectdf["subject"])
+	fit = model.fit()
+	report = fit.summary()
+
+	# create a restriction for every regressor - except intercept (first) and random effects (last)
+	omnibus_tests = np.eye(len(fit.params))[1:-1]
+	anova = fit.f_test(omnibus_tests)
+
+	names_for_plotting = {"ofM":u"naïve", "ofM_aF":"acute", "ofM_cF1":"chronic (2w)", "ofM_cF2":"chronic (4w)", "ofM_pF":"post"}
+	voxeldf = voxeldf.replace({"session": names_for_plotting})
+	subjectdf = subjectdf.replace({"session": names_for_plotting})
+
+	ax = sns.pointplot(x="session", y="t", data=subjectdf, ci=68.3, dodge=True, jitter=True, legend_out=False, units="subject", color=color)
+	if xy_label:
+		ax.set(xlabel=xy_label[0], ylabel=xy_label[1])
+
+	return fit, anova
+
 def responders(l2_dir,
 	roi="ctx_chr",
 	data_root="~/ni_data/ofM.dr",

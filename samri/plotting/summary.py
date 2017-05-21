@@ -27,6 +27,7 @@ except NameError:
 		pass
 
 def add_roi_data(substitution,t_file_format,masker):
+	"""Return a per-subject and a per-voxel dataframe containing the mean and voxelwise ROI t-scores"""
 	subject_data={}
 	try:
 		t_file = t_file_format.format(**substitution)
@@ -49,6 +50,33 @@ def add_roi_data(substitution,t_file_format,masker):
 			voxel_datas.append(voxel_data)
 		vdf = pd.concat(voxel_datas)
 		subject_data["t"]=mean
+		sdf = pd.DataFrame(subject_data, index=[None])
+		return sdf, vdf
+
+def add_pattern_data(substitution,t_file_format,pattern):
+	"""Return a per-subject and a per-voxel dataframe containing the mean and voxelwise multivariate patern scores"""
+	subject_data={}
+	try:
+		t_file = t_file_format.format(**substitution)
+		t_file = os.path.abspath(os.path.expanduser(t_file))
+		img = nib.load(t_file)
+		img_data = img.get_data()
+	except (FileNotFoundError, nib.py3k.FileNotFoundError):
+		return pd.DataFrame({}), pd.DataFrame({})
+	else:
+		pattern_evaluation = img_data*pattern
+		pattern_score = np.mean(pattern_evaluation)
+		subject_data["session"]=substitution["session"]
+		subject_data["subject"]=substitution["subject"]
+		voxel_datas=[]
+		for ix, i in enumerate(pattern_evaluation):
+			voxel_data = deepcopy(subject_data)
+			voxel_data["voxel"]=ix
+			voxel_data["t"]=i
+			voxel_data = pd.DataFrame(voxel_data, index=[None])
+			voxel_datas.append(voxel_data)
+		vdf = pd.concat(voxel_datas)
+		subject_data["t"]=pattern_score
 		sdf = pd.DataFrame(subject_data, index=[None])
 		return sdf, vdf
 
@@ -157,7 +185,9 @@ def analytic_pattern_per_session(substitutions, analytic_pattern,
 
 	if isinstance(analytic_pattern,str):
 		analytic_pattern = os.path.abspath(os.path.expanduser(analytic_pattern))
-	masker = NiftiMasker(mask_img=roi_mask)
+	# masker = NiftiMasker(mask_img=roi_mask)
+	analytic_pattern = nib.load(analytic_pattern)
+	pattern_data = analytic_pattern.get_data()
 
 	n_jobs = mp.cpu_count()-2
 	roi_data = Parallel(n_jobs=n_jobs, verbose=0, backend="threading")(map(delayed(add_roi_data),

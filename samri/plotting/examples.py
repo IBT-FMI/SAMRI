@@ -116,11 +116,18 @@ def qc_regressor(sessions, subjects, scans, workflow_name, mask):
 	plt.show()
 
 def plot_my_roi():
-	atlas_label("~/ni_data/templates/roi/DSURQEc_40micron_labels.nii",
-		mapping="~/ni_data/templates/roi/DSURQE_mapping.csv",
-		label_names=["Frontal","orbital","Orbital"],
+	maps.atlas_label("~/ni_data/templates/roi/DSURQEc_dr.nii.gz",
 		)
 	plt.show()
+
+def plot_roi_by_label(label_names):
+	roi = roi_from_atlaslabel("~/ni_data/templates/roi/DSURQEc_200micron_labels.nii",
+		mapping="~/ni_data/templates/roi/DSURQE_mapping.csv",
+		label_names=label_names,
+		)
+	maps.atlas_label(roi)
+	plt.show()
+	# roi_per_session("as_composite", roi, "#e66633")
 
 
 if __name__ == '__main__':
@@ -132,14 +139,10 @@ if __name__ == '__main__':
 	# overview("composite_subjects", ["4001","4005","4007","4008","4009","4011","4012"]) #4001 is a negative control (transgene but no injection
 	# overview("subjectwise_blur", ["4001","4005","4007","4008","4009","4011","4012"])
 
-	roi = roi_from_atlaslabel("~/ni_data/templates/roi/DSURQEc_200micron_labels.nii",
-		mapping="~/ni_data/templates/roi/DSURQE_mapping.csv",
-		label_names=["Frontal","orbital","Orbital"],
-		)
-	maps.atlas_label("~/ni_data/templates/roi/DSURQEc_40micron_labels.nii",
-		mapping=roi,
-		)
-	roi_per_session("as_composite", roi, "#e66633")
+
+	plot_roi_by_label(["cortex"])
+	# plot_my_roi()
+
 	# roi_per_session("as_composite", "~/ni_data/templates/roi/DSURQEc_ctx.nii.gz", "#e66633")
 	# roi_per_session("as_composite", "~/ni_data/templates/roi/ctx_chr_bin.nii.gz", "#56B4E9")
 	# roi_per_session("as_composite", "~/ni_data/templates/roi/DSURQEc_ctx.nii.gz", "#56B4E9",
@@ -156,4 +159,3 @@ if __name__ == '__main__':
 	# qc_regressor_old("~/ni_data/templates/roi/ctx_chr.nii.gz")
 	# qc_regressor(["ofM_cF1"],["4011"],["EPI_CBV_jb_long"],"as_composite","~/ni_data/templates/roi/DSURQEc_ctx.nii.gz")
 	# network.simple_dr(output="~/ntw1.png", graphsize=800, scale=1.8)
-	# plot_my_roi()

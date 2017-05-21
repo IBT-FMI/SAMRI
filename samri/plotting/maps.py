@@ -10,9 +10,11 @@ import matplotlib.colors as mcolors
 plt.style.use('ggplot')
 
 from samri.fetch.local import roi_from_atlaslabel
+from samri.plotting.utilities import QUALITATIVE_COLORSET
 
 colors_plus = plt.cm.autumn(np.linspace(0., 1, 128))
 colors_minus = plt.cm.winter(np.linspace(0, 1, 128))
+
 
 def stat(stat_maps,
 	figure_title="",
@@ -27,7 +29,7 @@ def stat(stat_maps,
 	annotate=True,
 	draw_cross=True,
 	show_plot=True,
-	dim="auto",
+	dim=0,
 	orientation="landscape"):
 
 	"""Plot a list of statistical maps.
@@ -127,7 +129,8 @@ def stat(stat_maps,
 
 	return display
 
-def atlas_label(atlas, mapping,
+def atlas_label(atlas,
+	mapping="",
 	label_names=[],
 	anat="~/ni_data/templates/DSURQEc_40micron_masked.nii.gz",
 	annotate=True,
@@ -136,22 +139,28 @@ def atlas_label(atlas, mapping,
 	threshold=None,
 	roi=False,
 	subplot_titles=[],
+	color="#E69F00",
 	scale=1.,
+	dim=0,
 	**kwargs
 	):
 	"""Plot a region of interest based on an atlas and a label."""
+
+	from matplotlib.colors import LinearSegmentedColormap, ListedColormap
 
 	anat = os.path.abspath(os.path.expanduser(anat))
 
 	if mapping and label_names:
 		roi = roi_from_atlaslabel(atlas, mapping=mapping, label_names=label_names, **kwargs)
-	elif isinstance(mapping, str):
-		mapping = os.path.abspath(os.path.expanduser(mapping))
-		roi = nib.load(mapping)
+	elif isinstance(atlas, str):
+		atlas = os.path.abspath(os.path.expanduser(atlas))
+		roi = nib.load(atlas)
 	else:
-		roi = mapping
+		roi = atlas
 
-	display = plotting.plot_roi(roi, bg_img=anat, black_bg=black_bg)
+	cm = ListedColormap([color], name="my_atlas_label_cmap", N=None)
+
+	display = plotting.plot_roi(roi, bg_img=anat, black_bg=black_bg, annotate=False, draw_cross=False, cmap=cm, dim=dim)
 	if draw_cross:
 		display.draw_cross(linewidth=scale*1.6, alpha=0.4)
 	if annotate:

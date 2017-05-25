@@ -53,7 +53,9 @@ def add_roi_data(substitution,t_file_format,masker):
 		sdf = pd.DataFrame(subject_data, index=[None])
 		return sdf, vdf
 
-def add_pattern_data(substitution,t_file_format,pattern):
+def add_pattern_data(substitution,t_file_format,pattern,
+	voxels=False,
+	):
 	"""Return a per-subject and a per-voxel dataframe containing the mean and voxelwise multivariate patern scores"""
 	subject_data={}
 	try:
@@ -65,17 +67,21 @@ def add_pattern_data(substitution,t_file_format,pattern):
 		return pd.DataFrame({}), pd.DataFrame({})
 	else:
 		pattern_evaluation = img_data*pattern
-		pattern_score = np.mean(pattern_evaluation)
+		pattern_evaluation = pattern_evaluation.flatten()
+		pattern_score = np.nanmean(pattern_evaluation)
 		subject_data["session"]=substitution["session"]
 		subject_data["subject"]=substitution["subject"]
-		voxel_datas=[]
-		for ix, i in enumerate(pattern_evaluation):
-			voxel_data = deepcopy(subject_data)
-			voxel_data["voxel"]=ix
-			voxel_data["t"]=i
-			voxel_data = pd.DataFrame(voxel_data, index=[None])
-			voxel_datas.append(voxel_data)
-		vdf = pd.concat(voxel_datas)
+		if voxels:
+			voxel_datas=[]
+			for ix, i in enumerate(pattern_evaluation):
+				voxel_data = deepcopy(subject_data)
+				voxel_data["voxel"]=ix
+				voxel_data["t"]=i
+				voxel_data = pd.DataFrame(voxel_data, index=[None])
+				voxel_datas.append(voxel_data)
+			vdf = pd.concat(voxel_datas)
+		else:
+			vdf = False
 		subject_data["t"]=pattern_score
 		sdf = pd.DataFrame(subject_data, index=[None])
 		return sdf, vdf
@@ -117,7 +123,8 @@ def roi_per_session(substitutions, roi_mask,
 	voxeldf = pd.concat(voxel_dfs)
 	if roi_mask_normalize:
 		figure="per-participant"
-		mask_normalize = os.path.abspath(os.path.expanduser(roi_mask_normalize))
+		if isinstance(roi_mask_normalize,str):
+			mask_normalize = os.path.abspath(os.path.expanduser(roi_mask_normalize))
 		masker_normalize = NiftiMasker(mask_img=mask_normalize)
 		roi_data = Parallel(n_jobs=n_jobs, verbose=0, backend="threading")(map(delayed(add_roi_data),
 			substitutions,
@@ -128,6 +135,11 @@ def roi_per_session(substitutions, roi_mask,
 		subjectdf_normalize = pd.concat(subject_dfs_normalize)
 
 		subjectdf['t'] = subjectdf['t']/subjectdf_normalize['t']
+		#this is a nasty hack to mitigate +/-inf values appearing if the normalization ROI mean is close to 0
+		subjectdf_ = deepcopy(subjectdf)
+		subjectdf_= subjectdf_.replace([np.inf, -np.inf], np.nan).dropna(subset=["t"], how="all")
+		subjectdf=subjectdf.replace([-np.inf], subjectdf_[['t']].min(axis=0)[0])
+		subjectdf=subjectdf.replace([np.inf], subjectdf_[['t']].max(axis=0)[0])
 
 	if obfuscate:
 		obf_session = {"ofM":"_pre","ofM_aF":"t1","ofM_cF1":"t2","ofM_cF2":"t3","ofM_pF":"post"}
@@ -185,37 +197,30 @@ def analytic_pattern_per_session(substitutions, analytic_pattern,
 
 	if isinstance(analytic_pattern,str):
 		analytic_pattern = os.path.abspath(os.path.expanduser(analytic_pattern))
-	# masker = NiftiMasker(mask_img=roi_mask)
 	analytic_pattern = nib.load(analytic_pattern)
 	pattern_data = analytic_pattern.get_data()
 
+	if figure == "per-participant":
+		voxels = False
+	else:
+		voxels = True
+
 	n_jobs = mp.cpu_count()-2
-	roi_data = Parallel(n_jobs=n_jobs, verbose=0, backend="threading")(map(delayed(add_roi_data),
+	roi_data = Parallel(n_jobs=n_jobs, verbose=0, backend="threading")(map(delayed(add_pattern_data),
 		substitutions,
 		[t_file_template]*len(substitutions),
-		[masker]*len(substitutions),
+		[pattern_data]*len(substitutions),
+		[voxels]*len(substitutions),
 		))
 	subject_dfs, voxel_dfs = zip(*roi_data)
 	subjectdf = pd.concat(subject_dfs)
-	voxeldf = pd.concat(voxel_dfs)
-	if roi_mask_normalize:
-		figure="per-participant"
-		mask_normalize = os.path.abspath(os.path.expanduser(roi_mask_normalize))
-		masker_normalize = NiftiMasker(mask_img=mask_normalize)
-		roi_data = Parallel(n_jobs=n_jobs, verbose=0, backend="threading")(map(delayed(add_roi_data),
-			substitutions,
-			[t_file_template]*len(substitutions),
-			[masker_normalize]*len(substitutions),
-			))
-		subject_dfs_normalize, _ = zip(*roi_data)
-		subjectdf_normalize = pd.concat(subject_dfs_normalize)
-
-		subjectdf['t'] = subjectdf['t']/subjectdf_normalize['t']
 
 	if obfuscate:
 		obf_session = {"ofM":"_pre","ofM_aF":"t1","ofM_cF1":"t2","ofM_cF2":"t3","ofM_pF":"post"}
 		subjectdf = subjectdf.replace({"session": obf_session})
 		subjectdf.to_csv("~/MixedLM_data.csv")
+
+	print(subjectdf)
 
 	model = smf.mixedlm("t ~ session", subjectdf, groups=subjectdf["subject"])
 	fit = model.fit()
@@ -226,7 +231,9 @@ def analytic_pattern_per_session(substitutions, analytic_pattern,
 	anova = fit.f_test(omnibus_tests)
 
 	names_for_plotting = {"ofM":u"naïve", "ofM_aF":"acute", "ofM_cF1":"chronic (2w)", "ofM_cF2":"chronic (4w)", "ofM_pF":"post"}
-	voxeldf = voxeldf.replace({"session": names_for_plotting})
+	if voxels:
+		voxeldf = pd.concat(voxel_dfs)
+		voxeldf = voxeldf.replace({"session": names_for_plotting})
 	subjectdf = subjectdf.replace({"session": names_for_plotting})
 
 	ax = sns.pointplot(x="session", y="t", data=subjectdf, ci=68.3, dodge=True, jitter=True, legend_out=False, units="subject", color=color)

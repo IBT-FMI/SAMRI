@@ -30,6 +30,7 @@ def stat(stat_maps,
 	draw_cross=True,
 	show_plot=True,
 	dim=0,
+	colorbar=True,
 	orientation="landscape"):
 
 	"""Plot a list of statistical maps.
@@ -73,13 +74,15 @@ def stat(stat_maps,
 	colors = np.vstack((colors_minus, colors_plus[::-1]))
 	mymap = mcolors.LinearSegmentedColormap.from_list('my_colormap', colors)
 
+
 	if len(stat_maps) == 1:
+		title=False
 		fig, axes = plt.subplots(figsize=(14,5), facecolor='#eeeeee')
 		if figure_title:
 			fig.suptitle(figure_title, fontsize=scale*20, fontweight='bold')
 		if subplot_titles:
 			title = subplot_titles[0]
-		display = plotting.plot_stat_map(stat_maps[0], bg_img=template,threshold=threshold, figure=fig, axes=axes, black_bg=black_bg, vmax=40, cmap=mymap, cut_coords=cut_coords[0], annotate=False, title=None, draw_cross=False, interpolation=interpolation, dim=dim)
+		display = plotting.plot_stat_map(stat_maps[0], bg_img=template,threshold=threshold, figure=fig, axes=axes, black_bg=black_bg, vmax=40, cmap=mymap, cut_coords=cut_coords[0], annotate=False, title=None, draw_cross=False, interpolation=interpolation, dim=dim, colorbar=colorbar)
 		if draw_cross:
 			display.draw_cross(linewidth=scale*1.6, alpha=0.3)
 		if annotate:
@@ -106,7 +109,7 @@ def stat(stat_maps,
 			try:
 				if subplot_titles:
 					title = subplot_titles[ix]
-				display = plotting.plot_stat_map(stat_maps[ix], bg_img=template,threshold=threshold, figure=fig, axes=ax, black_bg=black_bg, vmax=40, cmap=mymap, cut_coords=cut_coords[ix], annotate=False, title=None, draw_cross=False, interpolation=interpolation,dim=dim)
+				display = plotting.plot_stat_map(stat_maps[ix], bg_img=template,threshold=threshold, figure=fig, axes=ax, black_bg=black_bg, vmax=40, cmap=mymap, cut_coords=cut_coords[ix], annotate=False, title=None, draw_cross=False, interpolation=interpolation,dim=dim, colorbar=colorbar)
 				if draw_cross:
 					display.draw_cross(linewidth=scale*1.6, alpha=0.4)
 				if annotate:

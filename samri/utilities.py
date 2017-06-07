@@ -1,5 +1,12 @@
+import os
 import multiprocessing
+import nibabel as nib
 from itertools import product
+
+try: FileNotFoundError
+except NameError:
+	class FileNotFoundError(OSError):
+		pass
 
 N_PROCS=max(multiprocessing.cpu_count()-2,2)
 

@@ -3,12 +3,15 @@ from itertools import product
 
 N_PROCS=max(multiprocessing.cpu_count()-2,2)
 
-def add_roi_data(substitution,img_path_format,masker):
+def add_roi_data(img_path,masker,
+	substitution=False,
+	):
 	"""Return a per-subject and a per-voxel dataframe containing the mean and voxelwise ROI t-scores"""
 	subject_data={}
+	if substitution:
+		img_path = img_path.format(**substitution)
+	img_path = os.path.abspath(os.path.expanduser(img_path))
 	try:
-		img_path = img_path_format.format(**substitution)
-		img_path = os.path.abspath(os.path.expanduser(img_path))
 		img = nib.load(img_path)
 		img = masker.fit_transform(img)
 		img = img.flatten()
@@ -30,14 +33,15 @@ def add_roi_data(substitution,img_path_format,masker):
 		sdf = pd.DataFrame(subject_data, index=[None])
 		return sdf, vdf
 
-def add_pattern_data(substitution,img_path_format,pattern,
+def add_pattern_data(substitution,img_path,pattern,
 	voxels=False,
 	):
 	"""Return a per-subject and a per-voxel dataframe containing the mean and voxelwise multivariate patern scores"""
 	subject_data={}
+	if substitution:
+		img_path = img_path.format(**substitution)
+	img_path = os.path.abspath(os.path.expanduser(img_path))
 	try:
-		img_path = img_path_format.format(**substitution)
-		img_path = os.path.abspath(os.path.expanduser(img_path))
 		img = nib.load(img_path)
 		img_data = img.get_data()
 	except (FileNotFoundError, nib.py3k.FileNotFoundError):

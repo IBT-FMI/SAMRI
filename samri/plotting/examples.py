@@ -121,10 +121,13 @@ def plot_my_roi():
 		)
 	plt.show()
 
-def plot_roi_by_label(label_names):
+def plot_roi_by_label(label_names,
+	save_as="",
+	):
 	roi = roi_from_atlaslabel("~/ni_data/templates/roi/DSURQEc_200micron_labels.nii",
 		mapping="~/ni_data/templates/roi/DSURQE_mapping.csv",
 		label_names=label_names,
+		save_as=save_as
 		)
 	maps.atlas_label(roi)
 	plt.show()
@@ -141,7 +144,7 @@ if __name__ == '__main__':
 	# overview("subjectwise_blur", ["4001","4005","4007","4008","4009","4011","4012"])
 
 
-	# plot_roi_by_label(["cortex"])
+	plot_roi_by_label(["medulla","midbrain","pons"],"chr_brainstem")
 	# plot_my_roi()
 
 	# roi_per_session("as_composite", "~/ni_data/templates/roi/DSURQEc_ctx.nii.gz", "#e66633")
@@ -168,21 +171,21 @@ if __name__ == '__main__':
 	# qc_regressor(["ofM_cF1"],["4011"],["EPI_CBV_jb_long"],"as_composite","~/ni_data/templates/roi/DSURQEc_ctx.nii.gz")
 	# network.simple_dr(output="~/ntw1.png", graphsize=800, scale=1.8)
 
-	substitutions = bids_substitution_iterator(
-		["ofM","ofM_aF","ofM_cF1","ofM_cF2","ofM_pF"],
-		["4005","5687","4007","4011","4012","5689","5690","5691"],
-		["EPI_CBV_jb_long","EPI_CBV_chr_longSOA"],
-		"",
-		l1_dir="as_composite",
-		)
-
-
-	fit, anova = summary.analytic_pattern_per_session(substitutions, '~/ni_data/ofM.dr/l2/as_composite_sessions_responders/ofM/tstat1.nii.gz',
-		t_file_template="~/ni_data/ofM.dr/l1/{l1_dir}/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_trial-{scan}_tstat.nii.gz",
-		legend_loc=2,
-		figure="per-participant",
-		color="#e66633",
-		xy_label=["Session","t-statistic"],
-		)
-	print(anova)
+	# substitutions = bids_substitution_iterator(
+	# 	["ofM","ofM_aF","ofM_cF1","ofM_cF2","ofM_pF"],
+	# 	["4005","5687","4007","4011","4012","5689","5690","5691"],
+	# 	["EPI_CBV_jb_long","EPI_CBV_chr_longSOA"],
+	# 	"",
+	# 	l1_dir="as_composite",
+	# 	)
+	#
+	#
+	# fit, anova = summary.analytic_pattern_per_session(substitutions, '~/ni_data/ofM.dr/l2/as_composite_sessions_responders/ofM/tstat1.nii.gz',
+	# 	t_file_template="~/ni_data/ofM.dr/l1/{l1_dir}/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_trial-{scan}_tstat.nii.gz",
+	# 	legend_loc=2,
+	# 	figure="per-participant",
+	# 	color="#e66633",
+	# 	xy_label=["Session","t-statistic"],
+	# 	)
+	# print(anova)
 	plt.show()

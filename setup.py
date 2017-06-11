@@ -11,7 +11,14 @@ setup(
 	classifiers = [],
 	install_requires = [],
 	provides = ["samri"],
-	packages = ["samri"],
+	packages = [
+		"samri",
+		"samri.fetch",
+		"samri.optimization",
+		"samri.pipelines",
+		"samri.plotting",
+		"samri.report",
+		],
 	include_package_data=True,
 	entry_points = {'console_scripts' : \
 			['SAMRI = samri.cli:main']

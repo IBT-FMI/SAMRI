@@ -8,7 +8,6 @@ from os import path
 
 import matplotlib.pyplot as plt
 import matplotlib
-matplotlib.style.use('ggplot')
 
 
 def get_subjectinfo(subject_delay, scan_type, scan_types):

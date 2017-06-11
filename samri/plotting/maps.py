@@ -7,7 +7,6 @@ from nilearn.input_data import NiftiLabelsMasker
 
 import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
-plt.style.use('ggplot')
 
 from samri.fetch.local import roi_from_atlaslabel
 from samri.plotting.utilities import QUALITATIVE_COLORSET

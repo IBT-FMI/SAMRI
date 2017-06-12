@@ -44,7 +44,8 @@ def bruker(measurements_base,
 	actual_size=False,
 	functional_blur_xy=False,
 	functional_registration_method="structural",
-	highpass_sigma=270,
+	highpass_sigma=225,
+	lowpass_sigma=None,
 	negative_contrast_agent=False,
 	n_procs=N_PROCS,
 	realign=True,
@@ -110,7 +111,10 @@ def bruker(measurements_base,
 
 	bandpass = pe.Node(interface=fsl.maths.TemporalFilter(), name="bandpass")
 	bandpass.inputs.highpass_sigma = highpass_sigma
-	bandpass.inputs.lowpass_sigma = tr
+	if lowpass_sigma:
+		bandpass.inputs.lowpass_sigma = lowpass_sigma
+	else:
+		bandpass.inputs.lowpass_sigma = tr
 
 	bids_filename = pe.Node(name='bids_filename', interface=util.Function(function=sss_filename,input_names=inspect.getargspec(sss_filename)[0], output_names=['filename']))
 

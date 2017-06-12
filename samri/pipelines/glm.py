@@ -16,7 +16,7 @@ from preprocessing import bruker
 from utils import sss_to_source, ss_to_path, iterfield_selector, datasource_exclude
 
 def l1(preprocessing_dir,
-	highpass_sigma=290,
+	highpass_sigma=225,
 	include={},
 	exclude={},
 	keep_work=False,

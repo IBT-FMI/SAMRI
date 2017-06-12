@@ -47,6 +47,7 @@ def as_cbv_composite():
 		subjects=["4007","4008","4011","4012","5687","5688","5695","5689","5690","5691","5703","5704","5706"],
 		#subjects=["4007","4008","4009","4011","4012","5689","5690","5691","5703","5704","5706"],
 		workflow_name="as_composite",
+		lowpass_sigma=2,
 		very_nasty_bruker_delay_hack=True,
 		negative_contrast_agent=True,
 		functional_blur_xy=.4,
@@ -112,7 +113,10 @@ def test_dual_regression(group_level="migp"):
 	fc.dual_regression(substitutions_a,substitutions_b,
             group_level=group_level,
             )
-	#fc.get_signal(substitutions_a,substitutions_b)
+	#fc.get_signal(substitutions_a,substitutions_b
+
+def test_seed_connectivity():
+
 
 if __name__ == '__main__':
 	test_dual_regression()

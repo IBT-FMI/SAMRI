@@ -83,6 +83,81 @@ def get_signal(substitutions_a, substitutions_b,
 	copemerge = fsl.Merge(dimension='t')
 	varcopemerge = fsl.Merge(dimension='t')
 
+def seed_to_voxel(
+	# func_path="~/ni_data/ofM.dr/preprocessing/as_composite/sub-5706/ses-ofM_aF/func/sub-5706_ses-ofM_aF_trial-EPI_CBV_chr_longSOA.nii.gz",
+	func_path="~/ni_data/ofM.dr/preprocessing/as_composite/sub-5706/ses-ofM/func/sub-5706_ses-ofM_trial-EPI_CBV_chr_longSOA.nii.gz",
+	seed_mask_path="~/ni_data/templates/roi/DSURQEc_dr.nii.gz",
+	anat_path="~/ni_data/templates/DSURQEc_40micron_masked.nii.gz",
+	brain_mask_path="~/ni_data/templates/DSURQEc_40micron_mask.nii",
+	coords=None,
+	# coords=[2.5,-0.5,-1.3],
+	# coords=[0,-4.5,-3.3],
+	):
+	from nilearn import input_data
+
+	anat_path = path.abspath(path.expanduser(anat_path))
+	brain_mask_path = path.abspath(path.expanduser(brain_mask_path))
+	func_path = path.abspath(path.expanduser(func_path))
+	seed_mask_path = path.abspath(path.expanduser(seed_mask_path))
+
+	seed_masker = input_data.NiftiMasker(
+		mask_img=seed_mask_path,
+		# smoothing_fwhm=6,
+		detrend=True, standardize=True,
+		low_pass=0.5, high_pass=0.004, t_r=1.,
+		memory='nilearn_cache', memory_level=1, verbose=0
+		)
+	brain_masker = input_data.NiftiMasker(
+		mask_img=brain_mask_path,
+		# smoothing_fwhm=6,
+		detrend=True, standardize=True,
+		low_pass=0.5, high_pass=0.004, t_r=1.,
+		memory='nilearn_cache', memory_level=5, verbose=0
+		)
+	seed_time_series = seed_masker.fit_transform(func_path,).T
+	seed_time_series = np.mean(seed_time_series, axis=0)
+	brain_time_series = brain_masker.fit_transform(func_path,)
+
+	try:
+		print("seed time series shape: (%s, %s)" % seed_time_series.shape)
+	except TypeError:
+		print("seed time series shape: (%s,)" % seed_time_series.shape)
+	print("brain time series shape: (%s, %s)" % brain_time_series.shape)
+
+	seed_based_correlations = np.dot(brain_time_series.T, seed_time_series) / seed_time_series.shape[0]
+	try:
+		print("seed-based correlation shape: (%s, %s)" % seed_based_correlations.shape)
+	except TypeError:
+		print("seed-based correlation shape: (%s, )" % seed_based_correlations.shape)
+	print("seed-based correlation: min = %.3f; max = %.3f" % (seed_based_correlations.min(), seed_based_correlations.max()))
+
+	seed_based_correlations_fisher_z = np.arctanh(seed_based_correlations)
+	print("seed-based correlation Fisher-z transformed: min = %.3f; max = %.3f" % (seed_based_correlations_fisher_z.min(),seed_based_correlations_fisher_z.max()))
+
+	# Finally, we can tranform the correlation array back to a Nifti image
+	# object, that we can save.
+	seed_based_correlation_img = brain_masker.inverse_transform(seed_based_correlations.T)
+	import matplotlib.pyplot as plt
+	from nilearn import plotting
+
+	display = plotting.plot_stat_map(seed_based_correlation_img, bg_img=anat_path, black_bg=False, threshold=0.05, cut_coords=coords)
+	try:
+		display.add_contours(seed_mask_path, threshold=.5)
+	except ValueError:
+		print("Cannot add contours, as they do not intersect cur coordinates")
+
+	# display.add_markers(marker_coords=pcc_coords, marker_color='g', marker_size=300)
+
+	#
+	# plt.plot(seed_time_series)
+	# plt.title('Seed time series (Posterior cingulate cortex)')
+	# plt.xlabel('Scan number')
+	# plt.ylabel('Normalized signal')
+	# plt.tight_layout()
+	# plt.show()
+	# At last, we save the plot as pdf.
+	display.savefig('~/sbc_z.pdf')
+
 
 def correlation_matrix(func_data,
 	mask="/home/chymera/NIdata/templates/ds_QBI_chr_bin.nii.gz",

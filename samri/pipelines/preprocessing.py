@@ -385,4 +385,16 @@ def bruker(measurements_base,
 		shutil.rmtree(path.join(workflow.base_dir,workdir_name))
 
 if __name__ == "__main__":
-	bruker("/home/chymera/ni_data/ofM.dr/",exclude_measurements=['20151027_121613_4013_1_1'], workflow_name="composite", very_nasty_bruker_delay_hack=True, negative_contrast_agent=True, functional_blur_xy=4, functional_registration_method="composite")
+	bruker("/home/chymera/ni_data/ofM.dr/",
+		exclude_measurements=['20151027_121613_4013_1_1'],
+		functional_scan_types=["EPI_CBV_chr_longSOA","EPI_CBV_jb_long"],
+		subjects=["5703","5704","5706",],
+		# subjects=["4007","4008","4011","4012","5689","5690","5691"],
+		workflow_name="composite",
+		very_nasty_bruker_delay_hack=True,
+		negative_contrast_agent=True,
+		functional_blur_xy=4,
+		functional_registration_method="composite",
+		keep_work=True,
+		template="~/ni_data/templates/ds_QBI_chr.nii.gz",
+		)

@@ -15,6 +15,7 @@ colors_minus = plt.cm.winter(np.linspace(0, 1, 128))
 
 
 def stat(stat_maps,
+	overlays=[],
 	figure_title="",
 	interpolation="hermite",
 	template="~/ni_data/templates/ds_QBI_chr.nii.gz",
@@ -29,6 +30,7 @@ def stat(stat_maps,
 	show_plot=True,
 	dim=0,
 	colorbar=True,
+	vmax=None,
 	orientation="landscape"):
 
 	"""Plot a list of statistical maps.
@@ -55,6 +57,9 @@ def stat(stat_maps,
 	scale : float, optional
 	Allows intelligent scaling of annotation, crosshairs, and title.
 
+	vmax : int or None, optional
+	Allows explicit specificaion of the maximum range of the color bar (the color bar will span +vmax to -vmax).
+
 	subplot_titles : list, optional
 	List of titles for sub plots. Must be empty list or strings list of the same length as the stats_maps list.
 	"""
@@ -62,6 +67,10 @@ def stat(stat_maps,
 	#make sure paths are absolute
 	try:
 		stat_maps = [os.path.abspath(os.path.expanduser(stat_map)) for stat_map in stat_maps]
+	except AttributeError:
+		pass
+	try:
+		overlays = [os.path.abspath(os.path.expanduser(overlay)) for overlay in overlays]
 	except AttributeError:
 		pass
 	try:
@@ -80,7 +89,12 @@ def stat(stat_maps,
 			fig.suptitle(figure_title, fontsize=scale*20, fontweight='bold')
 		if subplot_titles:
 			title = subplot_titles[0]
-		display = plotting.plot_stat_map(stat_maps[0], bg_img=template,threshold=threshold, figure=fig, axes=axes, black_bg=black_bg, vmax=40, cmap=mymap, cut_coords=cut_coords[0], annotate=False, title=None, draw_cross=False, interpolation=interpolation, dim=dim, colorbar=colorbar)
+		display = plotting.plot_stat_map(stat_maps[0], bg_img=template,threshold=threshold, figure=fig, axes=axes, black_bg=black_bg, vmax=vmax, cmap=mymap, cut_coords=cut_coords[0], annotate=False, title=None, draw_cross=False, interpolation=interpolation, dim=dim, colorbar=colorbar)
+		if overlays:
+			try:
+				display.add_contours(overlays[0], threshold=.5)
+			except ValueError:
+				pass
 		if draw_cross:
 			display.draw_cross(linewidth=scale*1.6, alpha=0.3)
 		if annotate:
@@ -88,6 +102,8 @@ def stat(stat_maps,
 		if title:
 			display.title(title, size=2+scale*26)
 	else:
+		if len(overlays) == 1:
+			overlays = overlays*len(stat_maps)
 		if len(cut_coords) == 1:
 			cut_coords = cut_coords*len(stat_maps)
 		if orientation == "landscape":
@@ -100,14 +116,20 @@ def stat(stat_maps,
 			#we use inverse floor division to get the ceiling
 			ncols = -(-len(stat_maps)//2)
 			scale = scale/float(nrows)
-		fig, axes = plt.subplots(figsize=(8*nrows,7*ncols), facecolor='#eeeeee', nrows=nrows, ncols=ncols)
+		fig, axes = plt.subplots(figsize=(8*ncols,3*nrows), facecolor='#eeeeee', nrows=nrows, ncols=ncols)
+		print("nrows",nrows)
 		if figure_title:
 			fig.suptitle(figure_title, fontsize=scale*30, fontweight='bold')
 		for ix, ax in enumerate(axes.flat):
 			try:
 				if subplot_titles:
 					title = subplot_titles[ix]
-				display = plotting.plot_stat_map(stat_maps[ix], bg_img=template,threshold=threshold, figure=fig, axes=ax, black_bg=black_bg, vmax=40, cmap=mymap, cut_coords=cut_coords[ix], annotate=False, title=None, draw_cross=False, interpolation=interpolation,dim=dim, colorbar=colorbar)
+				display = plotting.plot_stat_map(stat_maps[ix], bg_img=template,threshold=threshold, figure=fig, axes=ax, black_bg=black_bg, vmax=vmax, cmap=mymap, cut_coords=cut_coords[ix], annotate=False, title=None, draw_cross=False, interpolation=interpolation,dim=dim, colorbar=colorbar)
+				if overlays:
+					try:
+						display.add_contours(overlays[ix], threshold=.5)
+					except ValueError:
+						pass
 				if draw_cross:
 					display.draw_cross(linewidth=scale*1.6, alpha=0.4)
 				if annotate:

@@ -174,7 +174,7 @@ def seed_based_connectivity(ts, seed_mask,
 	seed_based_correlations_fisher_z = np.arctanh(seed_based_correlations)
 	print("seed-based correlation Fisher-z transformed: min = %.3f; max = %.3f" % (seed_based_correlations_fisher_z.min(),seed_based_correlations_fisher_z.max()))
 
-	seed_based_correlation_img = brain_masker.inverse_transform(seed_based_correlations.T)
+	seed_based_correlation_img = brain_masker.inverse_transform(seed_based_correlations_fisher_z.T)
 
 	return seed_based_correlation_img
 

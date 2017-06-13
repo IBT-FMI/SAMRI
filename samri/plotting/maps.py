@@ -117,7 +117,6 @@ def stat(stat_maps,
 			ncols = -(-len(stat_maps)//2)
 			scale = scale/float(nrows)
 		fig, axes = plt.subplots(figsize=(8*ncols,3*nrows), facecolor='#eeeeee', nrows=nrows, ncols=ncols)
-		print("nrows",nrows)
 		if figure_title:
 			fig.suptitle(figure_title, fontsize=scale*30, fontweight='bold')
 		for ix, ax in enumerate(axes.flat):

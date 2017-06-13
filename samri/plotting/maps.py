@@ -3,7 +3,6 @@ import nibabel as nib
 import pandas as pd
 import numpy as np
 from nilearn import image, plotting
-from nilearn.input_data import NiftiLabelsMasker
 
 import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors

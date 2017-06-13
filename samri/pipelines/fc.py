@@ -4,7 +4,7 @@ import nipype.interfaces.io as nio
 from os import path, listdir, getcwd, remove
 
 
-from nilearn.input_data import NiftiLabelsMasker, NiftiMasker
+from nilearn.input_data import NiftiMasker
 from nilearn.connectome import ConnectivityMeasure
 from nipype.interfaces import fsl
 
@@ -83,40 +83,80 @@ def get_signal(substitutions_a, substitutions_b,
 	copemerge = fsl.Merge(dimension='t')
 	varcopemerge = fsl.Merge(dimension='t')
 
-def seed_to_voxel(
-	# func_path="~/ni_data/ofM.dr/preprocessing/as_composite/sub-5706/ses-ofM_aF/func/sub-5706_ses-ofM_aF_trial-EPI_CBV_chr_longSOA.nii.gz",
-	func_path="~/ni_data/ofM.dr/preprocessing/as_composite/sub-5706/ses-ofM/func/sub-5706_ses-ofM_trial-EPI_CBV_chr_longSOA.nii.gz",
-	seed_mask_path="~/ni_data/templates/roi/DSURQEc_dr.nii.gz",
+def seed_based_connectivity(ts, seed_mask,
 	anat_path="~/ni_data/templates/DSURQEc_40micron_masked.nii.gz",
-	brain_mask_path="~/ni_data/templates/DSURQEc_40micron_mask.nii",
-	coords=None,
-	# coords=[2.5,-0.5,-1.3],
-	# coords=[0,-4.5,-3.3],
+	brain_mask="~/ni_data/templates/DSURQEc_200micron_mask.nii.gz",
+	smoothing_fwhm=.3,
+	detrend=True,
+	standardize=True,
+	low_pass=0.25,
+	high_pass=0.004,
+	tr=1.,
 	):
-	from nilearn import input_data
+	"""Return a NIfTI containing z scores for connectivity to a defined seed region
+
+	Parameters
+	----------
+
+	ts : string
+	Path to the 4D NIfTI timeseries file on which to perform the connectivity analysis.
+
+	seed_mask : string
+	Path to a 3D NIfTI-like binary mask file designating the seed region.
+
+	smoothing_fwhm : float, optional
+	Spatial smoothing kernel, passed to the NiftiMasker.
+
+	detrend : bool, optional
+	Whether to detrend the data, passed to the NiftiMasker.
+
+	standardize : bool, optional
+	Whether to standardize the data (make mean 0. and variance 1.), passed to the NiftiMasker.
+
+	low_pass : float, optional
+	Low-pass cut-off, passed to the NiftiMasker.
+
+	high_pass : float, optional
+	High-pass cut-off, passed to the NiftiMasker.
+
+	tr : float, optional
+	Repetition time, passed to the NiftiMasker.
+
+	Notes
+	-----
+
+	Contains sections of code copied from the nilearn examples:
+	http://nilearn.github.io/auto_examples/03_connectivity/plot_seed_to_voxel_correlation.html#sphx-glr-auto-examples-03-connectivity-plot-seed-to-voxel-correlation-py
+	"""
 
 	anat_path = path.abspath(path.expanduser(anat_path))
-	brain_mask_path = path.abspath(path.expanduser(brain_mask_path))
-	func_path = path.abspath(path.expanduser(func_path))
-	seed_mask_path = path.abspath(path.expanduser(seed_mask_path))
+	brain_mask = path.abspath(path.expanduser(brain_mask))
+	seed_mask = path.abspath(path.expanduser(seed_mask))
+	ts = path.abspath(path.expanduser(ts))
 
-	seed_masker = input_data.NiftiMasker(
-		mask_img=seed_mask_path,
-		# smoothing_fwhm=6,
-		detrend=True, standardize=True,
-		low_pass=0.5, high_pass=0.004, t_r=1.,
+	seed_masker = NiftiMasker(
+		mask_img=seed_mask,
+		smoothing_fwhm=smoothing_fwhm,
+		detrend=detrend,
+		standardize=standardize,
+		low_pass=low_pass,
+		high_pass=high_pass,
+		t_r=tr,
 		memory='nilearn_cache', memory_level=1, verbose=0
 		)
-	brain_masker = input_data.NiftiMasker(
-		mask_img=brain_mask_path,
-		# smoothing_fwhm=6,
-		detrend=True, standardize=True,
-		low_pass=0.5, high_pass=0.004, t_r=1.,
-		memory='nilearn_cache', memory_level=5, verbose=0
+	brain_masker = NiftiMasker(
+		mask_img=brain_mask,
+		smoothing_fwhm=smoothing_fwhm,
+		detrend=detrend,
+		standardize=standardize,
+		low_pass=low_pass,
+		high_pass=high_pass,
+		t_r=tr,
+		memory='nilearn_cache', memory_level=1, verbose=0
 		)
-	seed_time_series = seed_masker.fit_transform(func_path,).T
+	seed_time_series = seed_masker.fit_transform(ts,).T
 	seed_time_series = np.mean(seed_time_series, axis=0)
-	brain_time_series = brain_masker.fit_transform(func_path,)
+	brain_time_series = brain_masker.fit_transform(ts,)
 
 	try:
 		print("seed time series shape: (%s, %s)" % seed_time_series.shape)
@@ -134,30 +174,9 @@ def seed_to_voxel(
 	seed_based_correlations_fisher_z = np.arctanh(seed_based_correlations)
 	print("seed-based correlation Fisher-z transformed: min = %.3f; max = %.3f" % (seed_based_correlations_fisher_z.min(),seed_based_correlations_fisher_z.max()))
 
-	# Finally, we can tranform the correlation array back to a Nifti image
-	# object, that we can save.
 	seed_based_correlation_img = brain_masker.inverse_transform(seed_based_correlations.T)
-	import matplotlib.pyplot as plt
-	from nilearn import plotting
 
-	display = plotting.plot_stat_map(seed_based_correlation_img, bg_img=anat_path, black_bg=False, threshold=0.05, cut_coords=coords)
-	try:
-		display.add_contours(seed_mask_path, threshold=.5)
-	except ValueError:
-		print("Cannot add contours, as they do not intersect cur coordinates")
-
-	# display.add_markers(marker_coords=pcc_coords, marker_color='g', marker_size=300)
-
-	#
-	# plt.plot(seed_time_series)
-	# plt.title('Seed time series (Posterior cingulate cortex)')
-	# plt.xlabel('Scan number')
-	# plt.ylabel('Normalized signal')
-	# plt.tight_layout()
-	# plt.show()
-	# At last, we save the plot as pdf.
-	display.savefig('~/sbc_z.pdf')
-
+	return seed_based_correlation_img
 
 def correlation_matrix(func_data,
 	mask="/home/chymera/NIdata/templates/ds_QBI_chr_bin.nii.gz",

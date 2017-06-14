@@ -4,6 +4,7 @@ from samri.pipelines import fc
 from samri.utilities import bids_substitution_iterator
 from samri.fetch.local import roi_from_atlaslabel
 from samri.plotting import maps, timeseries, summary, network
+from samri.report import aggregate
 
 
 def overview(workflow, identifiers,
@@ -168,23 +169,29 @@ def seed_connectivity_overview(
 		# ["4009","4011","4012","5689","5690","5691"],
 		# ["4008","4009","4011","4012",],
 		["EPI_CBV_jb_long","EPI_CBV_chr_longSOA"],
-		"",
+		"as_composite",
 		l1_dir=l1_dir,
 		)
-	connectivity_img = fc.seed_based_connectivity(
-		"~/ni_data/ofM.dr/preprocessing/as_composite/sub-5706/ses-ofM_aF/func/sub-5706_ses-ofM_aF_trial-EPI_CBV_chr_longSOA.nii.gz",
-		# "~/ni_data/ofM.dr/preprocessing/as_composite/sub-5690/ses-ofM_aF/func/sub-5690_ses-ofM_aF_trial-EPI_CBV_chr_longSOA.nii.gz",
-		# "~/ni_data/ofM.dr/preprocessing/as_composite/sub-4011/ses-ofM_aF/func/sub-4011_ses-ofM_aF_trial-EPI_CBV_jb_long.nii.gz",
-		"~/ni_data/templates/roi/DSURQEc_dr.nii.gz",
-	)
-	stat_maps=[connectivity_img,connectivity_img]
-	maps.stat(stat_maps,
-		template=template,
-		threshold=0.1,
-		orientation="portrait",
-		cut_coords=[None,[0,-4.5,-3.3]],
-		overlays=["~/ni_data/templates/roi/DSURQEc_dr.nii.gz",],
+	subjectdf, voxeldf = aggregate.fc_rois(substitutions,
+		ts_file_template="~/ni_data/ofM.dr/preprocessing/{preprocessing_dir}/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_trial-{scan}.nii.gz",
+		roi="~/ni_data/templates/roi/DSURQEc_ctx.nii.gz",
+		seed="~/ni_data/templates/roi/DSURQEc_dr.nii.gz",
 		)
+
+	# connectivity_img = fc.seed_based_connectivity(
+	# 	"~/ni_data/ofM.dr/preprocessing/as_composite/sub-5706/ses-ofM_aF/func/sub-5706_ses-ofM_aF_trial-EPI_CBV_chr_longSOA.nii.gz",
+	# 	# "~/ni_data/ofM.dr/preprocessing/as_composite/sub-5690/ses-ofM_aF/func/sub-5690_ses-ofM_aF_trial-EPI_CBV_chr_longSOA.nii.gz",
+	# 	# "~/ni_data/ofM.dr/preprocessing/as_composite/sub-4011/ses-ofM_aF/func/sub-4011_ses-ofM_aF_trial-EPI_CBV_jb_long.nii.gz",
+	# 	"~/ni_data/templates/roi/DSURQEc_dr.nii.gz",
+	# )
+	# stat_maps=[connectivity_img,connectivity_img]
+	# maps.stat(stat_maps,
+	# 	template=template,
+	# 	threshold=0.1,
+	# 	orientation="portrait",
+	# 	cut_coords=[None,[0,-4.5,-3.3]],
+	# 	overlays=["~/ni_data/templates/roi/DSURQEc_dr.nii.gz",],
+	# 	)
 
 
 if __name__ == '__main__':
@@ -196,7 +203,8 @@ if __name__ == '__main__':
 	# overview("composite_subjects", ["4001","4005","4007","4008","4009","4011","4012"]) #4001 is a negative control (transgene but no injection
 	# overview("subjectwise_blur", ["4001","4005","4007","4008","4009","4011","4012"])
 
-	single_ts_seed_connectivity()
+	seed_connectivity_overview()
+	# single_ts_seed_connectivity()
 
 	# plot_roi_by_label(["medulla","midbrain","pons"],"chr_brainstem")
 	# plot_my_roi()

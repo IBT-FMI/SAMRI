@@ -141,6 +141,7 @@ def plot_roi_by_label(label_names,
 
 def single_ts_seed_connectivity(
 	template="~/ni_data/templates/DSURQEc_40micron_masked.nii.gz",
+	save_as=""
 	):
 	connectivity_img = fc.seed_based_connectivity(
 		"~/ni_data/ofM.dr/preprocessing/as_composite/sub-5689/ses-ofM/func/sub-5689_ses-ofM_trial-EPI_CBV_chr_longSOA.nii.gz",
@@ -148,14 +149,38 @@ def single_ts_seed_connectivity(
 		# "~/ni_data/ofM.dr/preprocessing/as_composite/sub-5690/ses-ofM/func/sub-5690_ses-ofM_trial-EPI_CBV_chr_longSOA.nii.gz",
 		# "~/ni_data/ofM.dr/preprocessing/as_composite/sub-4011/ses-ofM_aF/func/sub-4011_ses-ofM_aF_trial-EPI_CBV_jb_long.nii.gz",
 		"~/ni_data/templates/roi/DSURQEc_dr.nii.gz",
+		save_as="~/fc.nii.gz"
 	)
-	stat_maps=[connectivity_img,connectivity_img]
+	connectivity_img1 = fc.seed_based_connectivity(
+		# "~/ni_data/ofM.dr/preprocessing/as_composite/sub-5689/ses-ofM/func/sub-5689_ses-ofM_trial-EPI_CBV_chr_longSOA.nii.gz",
+		# "~/ni_data/ofM.dr/preprocessing/as_composite/sub-5706/ses-ofM_aF/func/sub-5706_ses-ofM_aF_trial-EPI_CBV_chr_longSOA.nii.gz",
+		"~/ni_data/ofM.dr/preprocessing/as_composite/sub-5690/ses-ofM/func/sub-5690_ses-ofM_trial-EPI_CBV_chr_longSOA.nii.gz",
+		# "~/ni_data/ofM.dr/preprocessing/as_composite/sub-4011/ses-ofM_aF/func/sub-4011_ses-ofM_aF_trial-EPI_CBV_jb_long.nii.gz",
+		"~/ni_data/templates/roi/DSURQEc_dr.nii.gz",
+		save_as="~/fc.nii.gz"
+	)
+	connectivity_img2 = fc.seed_based_connectivity(
+		# "~/ni_data/ofM.dr/preprocessing/as_composite/sub-5689/ses-ofM/func/sub-5689_ses-ofM_trial-EPI_CBV_chr_longSOA.nii.gz",
+		# "~/ni_data/ofM.dr/preprocessing/as_composite/sub-5706/ses-ofM_aF/func/sub-5706_ses-ofM_aF_trial-EPI_CBV_chr_longSOA.nii.gz",
+		"~/ni_data/ofM.dr/preprocessing/as_composite/sub-5690/ses-ofM_cF1/func/sub-5690_ses-ofM_cF1_trial-EPI_CBV_chr_longSOA.nii.gz",
+		# "~/ni_data/ofM.dr/preprocessing/as_composite/sub-4011/ses-ofM_aF/func/sub-4011_ses-ofM_aF_trial-EPI_CBV_jb_long.nii.gz",
+		"~/ni_data/templates/roi/DSURQEc_dr.nii.gz",
+		save_as="~/fc.nii.gz"
+	)
+	# stat_maps=[connectivity_img]
+	stat_maps=[connectivity_img,connectivity_img,"~/fc.nii.gz",connectivity_img1,connectivity_img1, connectivity_img2,]
+	# stat_maps=[connectivity_img,connectivity_img,]
 	maps.stat(stat_maps,
 		template=template,
 		threshold=0.1,
-		orientation="portrait",
-		cut_coords=[None,[0,-4.5,-3.3]],
+		orientation="landscape",
+		# cut_coords=[None,],
+		cut_coords=[None,[0,-4.5,-3.3],None,[0,-4.5,-3.3],None,None],
+		# cut_coords=[None,[0,-4.5,-3.3],],
 		overlays=["~/ni_data/templates/roi/DSURQEc_dr.nii.gz",],
+		save_as=save_as,
+		scale=0.8,
+		dim=0.8,
 		)
 
 def seed_connectivity_overview(
@@ -203,7 +228,7 @@ if __name__ == '__main__':
 	# overview("subjectwise_blur", ["4001","4005","4007","4008","4009","4011","4012"])
 
 	# seed_connectivity_overview()
-	single_ts_seed_connectivity()
+	single_ts_seed_connectivity(save_as="~/sbfc.pdf")
 
 	# plot_roi_by_label(["medulla","midbrain","pons"],"chr_brainstem")
 	# plot_my_roi()

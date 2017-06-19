@@ -1,4 +1,4 @@
-
+# -*- coding: utf-8 -*-
 
 def roi_per_session(substitutions, roi_mask,
 	legend_loc="best",

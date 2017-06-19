@@ -158,12 +158,6 @@ def seed_based_connectivity(ts, seed_mask,
 	seed_time_series = np.mean(seed_time_series, axis=0)
 	brain_time_series = brain_masker.fit_transform(ts,)
 
-	try:
-		print("seed time series shape: (%s, %s)" % seed_time_series.shape)
-	except TypeError:
-		print("seed time series shape: (%s,)" % seed_time_series.shape)
-	print("brain time series shape: (%s, %s)" % brain_time_series.shape)
-
 	seed_based_correlations = np.dot(brain_time_series.T, seed_time_series) / seed_time_series.shape[0]
 	try:
 		print("seed-based correlation shape: (%s, %s)" % seed_based_correlations.shape)

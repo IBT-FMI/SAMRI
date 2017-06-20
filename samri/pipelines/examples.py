@@ -111,15 +111,12 @@ def test_dual_regression(group_level="migp"):
 		"as_composite",
 		)
 	fc.dual_regression(substitutions_a,substitutions_b,
-            group_level=group_level,
-            )
+		group_level=group_level,
+		)
 	#fc.get_signal(substitutions_a,substitutions_b
 
-def test_seed_connectivity():
-	fc.seed_to_voxel()
 
 if __name__ == '__main__':
-	test_seed_connectivity()
 	# test_dual_regression()
 #	vta_composite()
 #	cbv_composite()

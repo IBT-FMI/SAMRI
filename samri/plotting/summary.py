@@ -55,9 +55,9 @@ def roi_per_session(substitutions, roi_mask,
 
 	n_jobs = mp.cpu_count()-2
 	roi_data = Parallel(n_jobs=n_jobs, verbose=0, backend="threading")(map(delayed(add_roi_data),
-		substitutions,
 		[t_file_template]*len(substitutions),
 		[masker]*len(substitutions),
+		substitutions,
 		))
 	subject_dfs, voxel_dfs = zip(*roi_data)
 	subjectdf = pd.concat(subject_dfs)
@@ -68,9 +68,9 @@ def roi_per_session(substitutions, roi_mask,
 			mask_normalize = os.path.abspath(os.path.expanduser(roi_mask_normalize))
 		masker_normalize = NiftiMasker(mask_img=mask_normalize)
 		roi_data = Parallel(n_jobs=n_jobs, verbose=0, backend="threading")(map(delayed(add_roi_data),
-			substitutions,
 			[t_file_template]*len(substitutions),
 			[masker_normalize]*len(substitutions),
+			substitutions,
 			))
 		subject_dfs_normalize, _ = zip(*roi_data)
 		subjectdf_normalize = pd.concat(subject_dfs_normalize)

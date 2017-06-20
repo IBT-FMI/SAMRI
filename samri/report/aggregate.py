@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from nilearn.input_data import NiftiLabelsMasker, NiftiMapsMasker, NiftiMasker
 from samri.utilities import add_roi_data, add_pattern_data
 from samri.pipelines import fc

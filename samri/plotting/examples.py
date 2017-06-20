@@ -172,10 +172,8 @@ def seed_connectivity_overview(
 		"as_composite",
 		l1_dir=l1_dir,
 		)
-	subjectdf, voxeldf = aggregate.fc_rois(substitutions,
+	subjectdf, voxeldf = aggregate.seed_fc_rois(substitutions, "~/ni_data/templates/roi/DSURQEc_dr.nii.gz", "~/ni_data/templates/roi/DSURQEc_ctx.nii.gz",
 		ts_file_template="~/ni_data/ofM.dr/preprocessing/{preprocessing_dir}/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_trial-{scan}.nii.gz",
-		roi="~/ni_data/templates/roi/DSURQEc_ctx.nii.gz",
-		seed="~/ni_data/templates/roi/DSURQEc_dr.nii.gz",
 		)
 
 	# connectivity_img = fc.seed_based_connectivity(

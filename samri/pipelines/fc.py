@@ -92,6 +92,7 @@ def seed_based_connectivity(ts, seed_mask,
 	low_pass=0.25,
 	high_pass=0.004,
 	tr=1.,
+	save_as="",
 	):
 	"""Return a NIfTI containing z scores for connectivity to a defined seed region
 
@@ -122,6 +123,9 @@ def seed_based_connectivity(ts, seed_mask,
 	tr : float, optional
 	Repetition time, passed to the NiftiMasker.
 
+	save_as : string, optional
+	Path to save a NIfTI of the functional connectivity zstatistic to.
+
 	Notes
 	-----
 
@@ -132,6 +136,7 @@ def seed_based_connectivity(ts, seed_mask,
 	anat_path = path.abspath(path.expanduser(anat_path))
 	brain_mask = path.abspath(path.expanduser(brain_mask))
 	seed_mask = path.abspath(path.expanduser(seed_mask))
+	save_as = path.abspath(path.expanduser(save_as))
 	ts = path.abspath(path.expanduser(ts))
 
 	seed_masker = NiftiMasker(
@@ -158,12 +163,6 @@ def seed_based_connectivity(ts, seed_mask,
 	seed_time_series = np.mean(seed_time_series, axis=0)
 	brain_time_series = brain_masker.fit_transform(ts,)
 
-	try:
-		print("seed time series shape: (%s, %s)" % seed_time_series.shape)
-	except TypeError:
-		print("seed time series shape: (%s,)" % seed_time_series.shape)
-	print("brain time series shape: (%s, %s)" % brain_time_series.shape)
-
 	seed_based_correlations = np.dot(brain_time_series.T, seed_time_series) / seed_time_series.shape[0]
 	try:
 		print("seed-based correlation shape: (%s, %s)" % seed_based_correlations.shape)
@@ -175,6 +174,9 @@ def seed_based_connectivity(ts, seed_mask,
 	print("seed-based correlation Fisher-z transformed: min = %.3f; max = %.3f" % (seed_based_correlations_fisher_z.min(),seed_based_correlations_fisher_z.max()))
 
 	seed_based_correlation_img = brain_masker.inverse_transform(seed_based_correlations_fisher_z.T)
+
+	if save_as:
+		seed_based_correlation_img.to_filename(save_as)
 
 	return seed_based_correlation_img
 

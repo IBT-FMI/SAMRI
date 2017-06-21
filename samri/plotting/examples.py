@@ -108,9 +108,10 @@ def qc_regressor_old(mask):
 		event_file_template="~/ni_data/ofM.dr/preprocessing/{preprocessing_dir}/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_trial-{scan}_events.tsv",
 		)
 	timeseries.multi(timecourses, designs, stat_maps, events_dfs, subplot_titles, figure="timecourses")
-	plt.show()
 
-def qc_regressor(sessions, subjects, scans, workflow_name, mask):
+def qc_regressor(sessions, subjects, scans, workflow_name, mask,
+	save_as="",
+	):
 	substitutions = bids_substitution_iterator(sessions,subjects,scans,workflow_name)
 	timecourses, designs, stat_maps, events_dfs, subplot_titles = summary.ts_overviews(substitutions, mask,
 		ts_file_template="~/ni_data/ofM.dr/preprocessing/{preprocessing_dir}/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_trial-{scan}.nii.gz",
@@ -119,8 +120,7 @@ def qc_regressor(sessions, subjects, scans, workflow_name, mask):
 		event_file_template="~/ni_data/ofM.dr/preprocessing/{preprocessing_dir}/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_trial-{scan}_events.tsv",
 		)
 
-	timeseries.multi(timecourses, designs, stat_maps, events_dfs, subplot_titles, figure="timecourses")
-	plt.show()
+	timeseries.multi(timecourses, designs, stat_maps, events_dfs, subplot_titles, figure="timecourses",save_as=save_as)
 
 def plot_my_roi():
 	maps.atlas_label("~/ni_data/templates/roi/DSURQEc_dr.nii.gz",
@@ -226,7 +226,7 @@ if __name__ == '__main__':
 	# overview("subjectwise_blur", ["4001","4005","4007","4008","4009","4011","4012"])
 
 	# seed_connectivity_overview()
-	single_ts_seed_connectivity(save_as="~/sbfc.pdf")
+	# single_ts_seed_connectivity(save_as="~/sbfc.pdf")
 
 	# plot_roi_by_label(["medulla","midbrain","pons"],"chr_brainstem")
 	# plot_my_roi()
@@ -245,13 +245,13 @@ if __name__ == '__main__':
 	# check_responders()
 	# qc_regressor_old("~/ni_data/templates/roi/f_dr_chr.nii.gz")
 	# qc_regressor_old("~/ni_data/templates/roi/ctx_chr.nii.gz")
-	# qc_regressor(
-	# 	["ofM","ofM_aF","ofM_cF1","ofM_cF2","ofM_pF"],
-	# 	["4005","5687","4007","4011","4012","5689","5690","5691"],
-	# 	["EPI_CBV_jb_long","EPI_CBV_chr_longSOA"],
-	# 	"as_composite",
-	# 	"~/ni_data/templates/roi/DSURQEc_ctx.nii.gz",
-	# 	)
+	qc_regressor(
+		["ofM","ofM_aF","ofM_cF1","ofM_cF2"],
+		["5687","5689","5690","5691"],
+		["EPI_CBV_jb_long","EPI_CBV_chr_longSOA"],
+		"as_composite",
+		"~/ni_data/templates/roi/DSURQEc_ctx.nii.gz",
+		)
 	# qc_regressor(["ofM_cF1"],["4011"],["EPI_CBV_jb_long"],"as_composite","~/ni_data/templates/roi/DSURQEc_ctx.nii.gz")
 	# network.simple_dr(output="~/ntw1.png", graphsize=800, scale=1.8)
 

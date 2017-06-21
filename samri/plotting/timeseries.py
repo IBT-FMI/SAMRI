@@ -137,6 +137,7 @@ def roi_based(substitutions,
 def multi(timecourses, designs, stat_maps, events_dfs, subplot_titles,
 	colors=QUALITATIVE_COLORSET,
 	figure="maps",
+	save_as="",
 	):
 	if figure == "maps":
 		maps.stat(stat_maps, template="~/ni_data/templates/ds_QBI_chr.nii.gz", threshold=0.1, interpolation="gaussian", subplot_titles=subplot_titles)
@@ -210,6 +211,9 @@ def multi(timecourses, designs, stat_maps, events_dfs, subplot_titles,
 			ax.set_xlabel("TR[1s]")
 	else:
 		print("WARNING: you must specify either 'maps' or 'timecourses'")
+	if save_as:
+		save_as = os.path.abspath(os.path.expanduser(save_as))
+		plt.savefig(save_as)
 
 if __name__ == '__main__':
 	# plot_fsl_design("/home/chymera/ni_data/ofM.dr/level1/first_level/_condition_ofM_subject_4001/modelgen/run0.mat")

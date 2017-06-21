@@ -58,6 +58,8 @@ def bruker(measurements_base,
 	autorotate=False,
 	):
 
+	measurements_base = os.path.abspath(os.path.expanduser(measurements_base))
+
 	#select all functional/sturctural scan types unless specified
 	if not functional_scan_types or not structural_scan_types:
 		scan_classification = pd.read_csv(scan_classification_file_path)

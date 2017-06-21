@@ -241,6 +241,8 @@ def get_scan(measurements_base, data_selection, scan_type, selector=None, subjec
 def get_data_selection(workflow_base, sessions=[], scan_types=[], subjects=[], exclude_subjects=[], measurements=[], exclude_measurements=[]):
 	import os
 
+	workflow_base = os.path.abspath(os.path.expanduser(workflow_base))
+
 	if measurements:
 		measurement_path_list = [os.path.join(workflow_base,i) for i in measurements]
 	else:

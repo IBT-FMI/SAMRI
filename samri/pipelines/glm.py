@@ -180,9 +180,9 @@ def add_suffix(name, suffix):
 		
 	Parameters
 	----------
-	name 
+	name : list or str
 		Will be converted to string and return with suffix		
-	suffix 
+	suffix : str
 		Will be converted to string and will be added at the end of 'name'.
 			
 	Returns

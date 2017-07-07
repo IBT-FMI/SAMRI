@@ -76,6 +76,9 @@ def write_events_file(scan_dir, scan_type, stim_protocol_dictionary,
 	very_nasty_bruker_delay_hack=False,
 	):
 
+	if scan_type in ["EPI_CBV", "EPI_BOLD"] or "rest" in scan_type:
+		return
+
 	import csv
 	import os
 	import sys

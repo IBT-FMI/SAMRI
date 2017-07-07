@@ -250,7 +250,8 @@ if __name__ == '__main__':
 		["5687","5689","5690","5691"],
 		["EPI_CBV_jb_long","EPI_CBV_chr_longSOA"],
 		"as_composite",
-		"~/ni_data/templates/roi/DSURQEc_ctx.nii.gz",
+		"~/ni_data/templates/roi/DSURQEc_dr.nii.gz",
+		save_as="~/qc_regressor.pdf",
 		)
 	# qc_regressor(["ofM_cF1"],["4011"],["EPI_CBV_jb_long"],"as_composite","~/ni_data/templates/roi/DSURQEc_ctx.nii.gz")
 	# network.simple_dr(output="~/ntw1.png", graphsize=800, scale=1.8)

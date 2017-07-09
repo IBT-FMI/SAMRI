@@ -121,6 +121,7 @@ def structural_registration(template, num_threads=4):
 	return registration, s_warp, f_warp
 
 def DSURQEc_structural_registration(template,
+	mask="~/ni_data/templates/DSURQEc_200micron_mask.nii.gz",
 	num_threads=4,
 	select_phases=["rigid","affine","syn"],
 	):
@@ -152,7 +153,8 @@ def DSURQEc_structural_registration(template,
 	registration.inputs.winsorize_lower_quantile = 0.05
 	registration.inputs.winsorize_upper_quantile = 0.95
 	registration.inputs.args = '--float'
-	registration.inputs.fixed_image_mask = os.path.abspath(os.path.expanduser("~/ni_data/templates/DSURQEc_200micron_mask.nii"))
+	if mask:
+		registration.inputs.fixed_image_mask = os.path.abspath(os.path.expanduser(mask))
 	registration.inputs.num_threads = num_threads
 
 	f_warp = pe.Node(ants.ApplyTransforms(), name="f_warp")

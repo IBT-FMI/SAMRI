@@ -24,7 +24,6 @@ def plot_connectivity_matrix(correlation_matrix,
 	"""
 
 	#TODO: fix labels in ascending order corresponding to intensity values
-	#TODO: add example
 	labels = path.abspath(path.expanduser(labels))
 	correlation_matrix = path.abspath(path.expanduser(correlation_matrix))
 

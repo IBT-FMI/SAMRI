@@ -25,8 +25,10 @@ def plot_connectivity_matrix(correlation_matrix,
 
 	#TODO: fix labels in ascending order corresponding to intensity values
 	labels = path.abspath(path.expanduser(labels))
+	correlation_matrix = path.abspath(path.expanduser(correlation_matrix))
 
 	labels_np = genfromtxt(labels, delimiter=',', usecols = (1), dtype = 'str')
+	correlation_matrix = genfromtxt(correlation_matrix, delimiter=',')
 
 	plt.figure(figsize=figsize)
 	np.fill_diagonal(correlation_matrix, 0)

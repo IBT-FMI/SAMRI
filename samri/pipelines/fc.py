@@ -184,7 +184,7 @@ def correlation_matrix(ts,
 	brain_mask="~/ni_data/templates/DSURQEc_200micron_mask.nii.gz",
 	loud = False,
 	):
-	"""Return a NIfTI containing z scores for connectivity to a defined seed region
+	"""Return a csv containing correlations between ROIs.
 
 	Parameters
 	----------

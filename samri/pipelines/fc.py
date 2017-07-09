@@ -212,3 +212,5 @@ def correlation_matrix(ts,
 	correlation_matrix = correlation_measure.fit_transform([timeseries])[0]
 
 	np.savetxt('correlation_matrix.csv', correlation_matrix, delimiter=',')
+
+	return correlation_matrix

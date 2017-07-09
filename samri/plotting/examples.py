@@ -4,7 +4,7 @@ from os import path
 from samri.pipelines import fc
 from samri.utilities import bids_substitution_iterator
 from samri.fetch.local import roi_from_atlaslabel
-from samri.plotting import maps, timeseries, summary, network
+from samri.plotting import maps, timeseries, summary, network, connectivity
 from samri.report import aggregate
 
 
@@ -234,6 +234,18 @@ def seed_connectivity_overview(
 	# 	cut_coords=[None,[0,-4.5,-3.3]],
 	# 	overlays=["~/ni_data/templates/roi/DSURQEc_dr.nii.gz",],
 	# 	)
+
+def functional_connectivity(ts="~/ni_data/ofM.dr/preprocessing/as_composite/sub-5690/ses-ofM_aF/func/sub-5690_ses-ofM_aF_trial-EPI_CBV_chr_longSOA.nii.gz",
+	brain_mask="~/ni_data/templates/DSURQEc_200micron_mask.nii.gz",
+	labels = '~/ni_data/templates/roi/DSURQE_mapping.csv',
+	):
+	"""
+	simple fc example
+	"""
+	figsize = (50,50)
+	correlation_matrix = fc.correlation_matrix(ts, brain_mask)
+	connectivity.plot_connectivity_matrix(correlation_matrix, figsize, labels)
+
 
 
 if __name__ == '__main__':

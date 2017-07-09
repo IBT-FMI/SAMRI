@@ -180,17 +180,37 @@ def seed_based_connectivity(ts, seed_mask,
 
 	return seed_based_correlation_img
 
-def correlation_matrix(func_data,
-	mask="/home/chymera/NIdata/templates/ds_QBI_chr_bin.nii.gz",
-	labels = '',
+def correlation_matrix(ts,
+	brain_mask="~/ni_data/templates/DSURQEc_200micron_mask.nii.gz",
 	loud = False,
 	):
+	"""Return a csv containing correlations between ROIs.
 
-	labels_masker = NiftiLabelsMasker(labels_img=mask, verbose=loud)
+	Parameters
+	----------
 
-	timeseries = labels_masker.fit_transform(func_data)
+	ts : string
+	Path to the 4D NIfTI timeseries file on which to perform the connectivity analysis.
+
+	brain mask : string
+	Path to a 3D NIfTI-like binary mask file designating ROIs.
+
+	"""
+	ts = path.abspath(path.expanduser(ts))
+	brain_mask = path.abspath(path.expanduser(brain_mask))
+
+	labels_masker = NiftiLabelsMasker(
+	    labels_img=brain_mask,
+	    standardize=True,
+	    memory='nilearn_cache',
+	    verbose=5
+		)
+
+	timeseries = labels_masker.fit_transform(ts)
 
 	correlation_measure = ConnectivityMeasure(kind='correlation')
 	correlation_matrix = correlation_measure.fit_transform([timeseries])[0]
 
-	np.save(correlation_matrix, 'correlation_matrix.csv')
+	np.savetxt('correlation_matrix.csv', correlation_matrix, delimiter=',')
+
+	return correlation_matrix

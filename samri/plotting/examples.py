@@ -1,4 +1,5 @@
 import matplotlib.pyplot as plt
+from os import path
 
 from samri.pipelines import fc
 from samri.utilities import bids_substitution_iterator
@@ -8,14 +9,18 @@ from samri.report import aggregate
 
 
 def overview(workflow, identifiers,
-	cut_coords=[None],
+	cut_coords=[None, [0,-4.5,-3.3]],
 	threshold=2.5,
 	template="~/ni_data/templates/DSURQEc_40micron_masked.nii.gz",
 	):
 	"""Plot the statistical maps per-factor from a 2nd level GLM workflow result directory."""
-	stat_maps = ["/home/chymera/ni_data/ofM.dr/l2/{0}/{1}/tstat1.nii.gz".format(workflow, i) for i in identifiers]
-	if isinstance(cut_coords[0], int):
-		cut_coords = [cut_coords]
+	stat_maps_ = ["/home/chymera/ni_data/ofM.dr/l2/{0}/{1}/tstat1.nii.gz".format(workflow, i) for i in identifiers]
+	stat_maps_ = [i for i in stat_maps_ if path.isfile(i)]
+	identifiers = [[i]*len(cut_coords) for i in identifiers]
+	stat_maps = [[i]*len(cut_coords) for i in stat_maps_]
+	stat_maps = [item for sublist in stat_maps for item in sublist]
+	identifiers = [item for sublist in identifiers for item in sublist]
+	cut_coords = cut_coords*len(stat_maps_)
 	maps.stat(stat_maps, template=template, threshold=threshold, interpolation="gaussian", figure_title=workflow, subplot_titles=identifiers, cut_coords=cut_coords)
 
 def blur_kernel_compare_dr(conditions=["ofM","ofM_aF","ofM_cF1","ofM_cF2","ofM_pF"], parameters=["level2_dgamma","level2_dgamma_blurxy4","level2_dgamma_blurxy5", "level2_dgamma_blurxy6", "level2_dgamma_blurxy7"], threshold=3):
@@ -217,13 +222,14 @@ def seed_connectivity_overview(
 
 
 if __name__ == '__main__':
-	# overview("as_composite_subjects", ["4005","4007","4008","4009","4011","4012","5687","5689","5690","5691","5703","5704","5706"],) #4001 is a negative control (transgene but no injection
+	# overview("as_composite_subjects", ["4001","4005","4007","4008","4009","4011","4012","5687","5689","5690","5691","5703","5704","5706"],) #4001 is a negative control (transgene but no injection
 	# overview("as_composite_subjects", ["4007","4008","4009","4011","4012","5689","5690","5691"],) #4001 is a negative control (transgene but no injection
 	# overview("as_composite_sessions_responders", ["ofM","ofM_aF","ofM_cF1","ofM_cF2","ofM_pF"],cut_coords=[0,-4.3,-3.3])
 	# overview("as_composite_sessions_best_responders", ["ofM","ofM_aF","ofM_cF1","ofM_cF2","ofM_pF"],cut_coords=[0,-4.3,-3.3])
 	# overview("composite_subjects", ["4007","4008","4011","4012","5689","5690","5691"], template="~/ni_data/templates/ds_QBI_chr.nii.gz") #4001 is a negative control (transgene but no injection
 	# overview("composite_subjects", ["4001","4005","4007","4008","4009","4011","4012"]) #4001 is a negative control (transgene but no injection
-	# overview("subjectwise_blur", ["4001","4005","4007","4008","4009","4011","4012"])
+	# overview("as_composite_subjects", ["4001","4005","4007","4008","4009","4011","4012"])
+	overview("as_composite_subjects", ["4012","5687","5689","5690","5691","5703","5704","5706"])
 
 	# seed_connectivity_overview()
 	# single_ts_seed_connectivity(save_as="~/sbfc.pdf")
@@ -245,14 +251,14 @@ if __name__ == '__main__':
 	# check_responders()
 	# qc_regressor_old("~/ni_data/templates/roi/f_dr_chr.nii.gz")
 	# qc_regressor_old("~/ni_data/templates/roi/ctx_chr.nii.gz")
-	qc_regressor(
-		["ofM","ofM_aF","ofM_cF1","ofM_cF2"],
-		["5687","5689","5690","5691"],
-		["EPI_CBV_jb_long","EPI_CBV_chr_longSOA"],
-		"as_composite",
-		"~/ni_data/templates/roi/DSURQEc_dr.nii.gz",
-		save_as="~/qc_regressor.pdf",
-		)
+	# qc_regressor(
+	# 	["ofM","ofM_aF","ofM_cF1","ofM_cF2"],
+	# 	["5687","5689","5690","5691"],
+	# 	["EPI_CBV_jb_long","EPI_CBV_chr_longSOA"],
+	# 	"as_composite",
+	# 	"~/ni_data/templates/roi/DSURQEc_dr.nii.gz",
+	# 	save_as="~/qc_regressor.pdf",
+	# 	)
 	# qc_regressor(["ofM_cF1"],["4011"],["EPI_CBV_jb_long"],"as_composite","~/ni_data/templates/roi/DSURQEc_ctx.nii.gz")
 	# network.simple_dr(output="~/ntw1.png", graphsize=800, scale=1.8)
 

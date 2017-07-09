@@ -2,7 +2,7 @@ import os
 import nibabel as nib
 import pandas as pd
 import numpy as np
-from nilearn import image, plotting
+import nilearn
 
 #Here we import internal nilearn functions, YOLO!
 from nilearn._utils.niimg import _safe_get_data
@@ -103,7 +103,6 @@ def scaled_plot(stat_map, template, fig, ax,
 	A path to a NIfTI file, or a nibabel object (e.g. Nifti1Image), giving an image fr which to draw the contours on top of the statistic plot.
 
 	"""
-
 	# Make sure that if the variables are paths, they are absolute
 	try:
 		stat_map = os.path.abspath(os.path.expanduser(stat_map))
@@ -117,8 +116,7 @@ def scaled_plot(stat_map, template, fig, ax,
 		overlay = os.path.abspath(os.path.expanduser(overlay))
 	except AttributeError:
 		pass
-
-	display = plotting.plot_stat_map(stat_map,
+	display = nilearn.plotting.plot_stat_map(stat_map,
 		bg_img=template,
 		threshold=threshold,
 		figure=fig,
@@ -227,8 +225,12 @@ def stat(stat_maps,
 	else:
 		if len(overlays) == 1:
 			overlays = overlays*len(stat_maps)
+		elif len(overlays) == 0:
+			overlays = [None]*len(stat_maps)
 		if len(cut_coords) == 1:
 			cut_coords = cut_coords*len(stat_maps)
+		elif len(cut_coords) == 0:
+			cut_coords = [None]*len(stat_maps)
 		if orientation == "landscape":
 			ncols = 2
 			#we use inverse floor division to get the ceiling
@@ -248,22 +250,25 @@ def stat(stat_maps,
 		# This is done to better share colorbars between consecutive axes.
 		flat_axes = list(axes.T.flatten())
 		for ix, ax in enumerate(flat_axes):
+			#create or use conserved colorbar for multiple cnsecutive plots of the same image
+			if conserve_colorbar_steps == 0:
+				while True and conserve_colorbar_steps < len(stat_maps)-ix:
+					if stat_maps[ix+conserve_colorbar_steps] == stat_maps[ix]:
+						conserve_colorbar_steps+=1
+					else:
+						break
+				cax, kw = _draw_colorbar(stat_maps[ix],flat_axes[ix:ix+conserve_colorbar_steps])
+			conserve_colorbar_steps-=1
+
+			if subplot_titles:
+				try:
+					title = subplot_titles[ix]
+				except IndexError:
+					title = None
+			else:
+				title = None
 			#enough axes are created to fully populate a grid. This may be more than the available number of subplots.
 			try:
-				#create or use conserved colorbar for multiple cnsecutive plots of the same image
-				if conserve_colorbar_steps == 0:
-					while True and conserve_colorbar_steps < len(stat_maps)-ix:
-						if stat_maps[ix+conserve_colorbar_steps] == stat_maps[ix]:
-							conserve_colorbar_steps+=1
-						else:
-							break
-					cax, kw = _draw_colorbar(stat_maps[ix],flat_axes[ix:ix+conserve_colorbar_steps])
-				conserve_colorbar_steps-=1
-
-				if subplot_titles:
-					title = subplot_titles[ix]
-				else:
-					title=None
 				display = scaled_plot(stat_maps[ix], template, fig, ax,
 					overlay = overlays[ix],
 					title=title,
@@ -322,7 +327,7 @@ def atlas_label(atlas,
 
 	cm = ListedColormap([color], name="my_atlas_label_cmap", N=None)
 
-	display = plotting.plot_roi(roi, bg_img=anat, black_bg=black_bg, annotate=False, draw_cross=False, cmap=cm, dim=dim)
+	display = nilearn.plotting.plot_roi(roi, bg_img=anat, black_bg=black_bg, annotate=False, draw_cross=False, cmap=cm, dim=dim)
 	if draw_cross:
 		display.draw_cross(linewidth=scale*1.6, alpha=0.4)
 	if annotate:
@@ -332,12 +337,12 @@ def atlas_label(atlas,
 
 
 def plot_myanat(anat="/home/chymera/ni_data/templates/hires_QBI_chr.nii.gz"):
-	plotting.plot_anat(anat, cut_coords=[0, 0, 0],title='Anatomy image')
+	nilearn.plotting.plot_anat(anat, cut_coords=[0, 0, 0],title='Anatomy image')
 
 def plot_nii(file_path, slices):
-	plotting.plot_anat(file_path, cut_coords=slices, display_mode="y", annotate=False, draw_cross=False)
+	nilearn.plotting.plot_anat(file_path, cut_coords=slices, display_mode="y", annotate=False, draw_cross=False)
 
 def from_multi_contrast(session_participant_file, template="/home/chymera/ni_data/templates/ds_QBI_chr.nii.gz", threshold="2"):
 	img = nib.load(session_participant_file)
 	print(img.__dict__)
-	plotting.plot_stat_map(img, bg_img=template,threshold=threshold, black_bg=False, vmax=40)
+	nilearn.plotting.plot_stat_map(img, bg_img=template,threshold=threshold, black_bg=False, vmax=40)

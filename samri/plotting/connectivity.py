@@ -36,9 +36,9 @@ def plot_connectivity_matrix(correlation_matrix,
 	np.fill_diagonal(correlation_matrix, 0)
 
 	sns.heatmap(correlation_matrix,
-        xticklabels=labels_np,
-        yticklabels=labels_np,
-        square = 1
+		xticklabels=labels_np,
+		yticklabels=labels_np,
+		square = 1
 		)
 
 	plt.show()

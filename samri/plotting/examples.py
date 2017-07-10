@@ -231,7 +231,7 @@ def seed_connectivity_overview(
 	# 	overlays=["~/ni_data/templates/roi/DSURQEc_dr.nii.gz",],
 	# 	)
 
-def functional_connectivity(ts="~/ni_data/ofM.dr/preprocessing/as_composite/sub-5690/ses-ofM_aF/func/sub-5690_ses-ofM_aF_trial-EPI_CBV_chr_longSOA.nii.gz",
+def functional_connectivity(ts,
 	brain_mask="~/ni_data/templates/DSURQEc_200micron_mask.nii.gz",
 	labels = '~/ni_data/templates/roi/DSURQE_mapping.csv',
 	):
@@ -254,12 +254,12 @@ if __name__ == '__main__':
 	# overview("as_composite_subjects", ["4001","4005","4007","4008","4009","4011","4012"])
 	# overview("as_composite_subjects", ["4012","5687","5689","5690","5691","5703","5704","5706"])
 	# overview("as_composite_subjects", ["4012","5687","5689","5690","5691","5703"])
-	single_ts_seed_connectivity(save_as="~/11.png")
-	overview("as_composite_subjects", ["4012"], orientation="landscape",save_as="~/12.png")
-	overview("as_composite_subjects", ["4012"], orientation="portrait", save_as="~/21.png")
-	overview("as_composite_subjects", ["4012","5687"], save_as="~/22.png")
-	overview("as_composite_subjects", ["4012","5687","5689","5690"], save_as="~/42.png")
-	overview("as_composite_subjects", ["4012","5687","5689","5690","5691","5703"], save_as="~/62.png")
+	# single_ts_seed_connectivity(save_as="~/11.png")
+	# overview("as_composite_subjects", ["4012"], orientation="landscape",save_as="~/12.png")
+	# overview("as_composite_subjects", ["4012"], orientation="portrait", save_as="~/21.png")
+	# overview("as_composite_subjects", ["4012","5687"], save_as="~/22.png")
+	# overview("as_composite_subjects", ["4012","5687","5689","5690"], save_as="~/42.png")
+	# overview("as_composite_subjects", ["4012","5687","5689","5690","5691","5703"], save_as="~/62.png")
 
 	# seed_connectivity_overview()
 	# single_ts_seed_connectivity(save_as="~/sbfc.pdf")
@@ -309,4 +309,5 @@ if __name__ == '__main__':
 	# 	xy_label=["Session","t-statistic"],
 	# 	)
 	# print(anova)
+	functional_connectivity("~/ni_data/ofM.dr/preprocessing/as_composite/sub-5690/ses-ofM_aF/func/sub-5690_ses-ofM_aF_trial-EPI_CBV_chr_longSOA.nii.gz")
 	plt.show()

@@ -200,10 +200,10 @@ def correlation_matrix(ts,
 	brain_mask = path.abspath(path.expanduser(brain_mask))
 
 	labels_masker = NiftiLabelsMasker(
-	    labels_img=brain_mask,
-	    standardize=True,
-	    memory='nilearn_cache',
-	    verbose=5
+		labels_img=brain_mask,
+		standardize=True,
+		memory='nilearn_cache',
+		verbose=5
 		)
 
 	timeseries = labels_masker.fit_transform(ts)

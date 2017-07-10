@@ -4,7 +4,7 @@ import nipype.interfaces.io as nio
 from os import path, listdir, getcwd, remove
 
 
-from nilearn.input_data import NiftiMasker
+from nilearn.input_data import NiftiMasker, NiftiLabelsMasker
 from nilearn.connectome import ConnectivityMeasure
 from nipype.interfaces import fsl
 

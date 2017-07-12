@@ -26,10 +26,11 @@ git clone git@github.com:IBT-FMI/SAMRI.git
 cd SAMRI
 python setup.py install --user
 ````
-If you are getting a `Permission denied (publickey)` error upon trying to pull, please try pulling via the HTTPS link:
+
+If you are getting a `Permission denied (publickey)` error upon trying to clone, please try pulling via the HTTPS link:
 
 ```
-https://github.com/IBT-FMI/SAMRI.git
+git clone https://github.com/IBT-FMI/SAMRI.git
 ```
 
 
@@ -48,10 +49,11 @@ echo "export PYTHONPATH=\$HOME/.python_develop:\$PYTHONPATH" >> ~/.bashrc
 echo "export PATH=\$HOME/.python_develop:\$PATH" >> ~/.bashrc
 source ~/.bashrc
 ````
-If you are getting a `Permission denied (publickey)` error upon trying to pull, please try pulling via the HTTPS link:
+
+If you are getting a `Permission denied (publickey)` error upon trying to clone, please try pulling via the HTTPS link:
 
 ```
-https://github.com/IBT-FMI/SAMRI.git
+git clone https://github.com/IBT-FMI/SAMRI.git
 ```
 
 ## Dependencies:

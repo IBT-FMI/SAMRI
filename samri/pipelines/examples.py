@@ -84,9 +84,16 @@ def test_dual_regression(group_level="migp"):
 		)
 	#fc.get_signal(substitutions_a,substitutions_b
 
+def run_level1_glm():
+	glm.l1(preprocessing_dir='~/bandpass_ni_data/rsfM/preprocessing/composite',
+	    workflow_name='as_composite',
+	    habituation='confound',
+	    mask="/home/chymera/ni_data/templates/DSURQEc_200micron_mask.nii.gz",
+	    keep_work=True)
 
 if __name__ == '__main__':
 	# test_dual_regression()
 #	vta_composite()
 	cbv_composite("~/ni_data/ofM.vta/","composite")
 #	dr_only()
+#	run_level1_glm()

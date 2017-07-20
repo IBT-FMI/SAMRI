@@ -56,7 +56,7 @@ def plot_connectivity_matrix(correlation_matrix,
 		xticklabels=labels_np,
 		yticklabels=labels_np,
 		square = 1,
-		cbar_kws={"shrink": 0.75, "font_scale": 4},
+		cbar_kws={"shrink": 0.75},
 		)
 	if(save_as):
 		plt.savefig('matrix.png')

@@ -4,7 +4,7 @@ from os import path
 from samri.pipelines import fc
 from samri.utilities import bids_substitution_iterator
 from samri.fetch.local import roi_from_atlaslabel
-from samri.plotting import maps, timeseries, summary, network, connectivity
+from samri.plotting import maps, connectivity
 from samri.report import aggregate
 
 
@@ -46,6 +46,7 @@ def blur_kernel_compare_dr(conditions=["ofM","ofM_aF","ofM_cF1","ofM_cF2","ofM_p
 def roi_per_session(l1_dir, roi, color,
 	roi_mask_normalize="",
 	):
+	from samri.plotting import summary
 	substitutions = bids_substitution_iterator(
 		["ofM","ofM_aF","ofM_cF1","ofM_cF2","ofM_pF"],
 		# ["5689","5690","5691"],
@@ -74,6 +75,8 @@ def roi_per_session(l1_dir, roi, color,
 	print(anova)
 
 def p_clusters(mask):
+	from samri.plotting import summary, timeseries
+
 	substitutions = bids_substitution_iterator(
 		["ofM","ofM_aF","ofM_cF1","ofM_cF2","ofM_pF"],
 		["4011","4012","5689","5690","5691"],
@@ -96,21 +99,29 @@ def p_clusters(mask):
 	plt.show()
 
 def roi(roi_path="~/ni_data/templates/roi/f_dr_chr.nii.gz"):
+	from samri.plotting import summary, timeseries
+
 	substitutions = bids_substitution_iterator(["ofM","ofM_aF","ofM_cF1","ofM_cF2","ofM_pF"],[4007,4008,4009,4011,4012],["EPI_CBV_jb_long"],"composite")
 	timecourses, designs, stat_maps, subplot_titles = summary.roi_ts(substitutions, roi_path=roi_path,)
 	timeseries.multi(timecourses, designs, stat_maps, subplot_titles, figure="timecourses")
 	plt.show()
 
 def roi_teaching(roi_path="~/ni_data/templates/roi/f_dr_chr.nii.gz"):
+	from samri.plotting import timeseries
+
 	design_file_template="~/ni_data/ofM.dr/l1/{l1_workdir}/_subject_session_scan_{subject}.{session}.{scan}/modelgen/run0.mat"
 	substitutions = bids_substitution_iterator(["ofM_cF2"],[4008],["EPI_CBV_jb_long"],"composite")
 	timeseries.roi_based(substitutions[0], design_file_template=design_file_template, flip=True, plot_design_regressors=[0])
 	plt.show()
 
 def check_responders():
+	from samri.plotting import summary
+
 	summary.responders("subjectwise_composite")
 
 def qc_regressor_old(mask):
+	from samri.plotting import summary, timeseries
+
 	substitutions = bids_substitution_iterator(
 		["ofM","ofM_aF","ofM_cF1","ofM_cF2","ofM_pF"],
 		["4011","4012","5689","5690","5691"],
@@ -128,6 +139,8 @@ def qc_regressor_old(mask):
 def qc_regressor(sessions, subjects, scans, workflow_name, mask,
 	save_as="",
 	):
+	from samri.plotting import summary, timeseries
+
 	substitutions = bids_substitution_iterator(sessions,subjects,scans,workflow_name)
 	timecourses, designs, stat_maps, events_dfs, subplot_titles = summary.ts_overviews(substitutions, mask,
 		ts_file_template="~/ni_data/ofM.dr/preprocessing/{preprocessing_dir}/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_trial-{scan}.nii.gz",
@@ -231,9 +244,9 @@ def seed_connectivity_overview(
 	# 	overlays=["~/ni_data/templates/roi/DSURQEc_dr.nii.gz",],
 	# 	)
 
-def functional_connectivity(ts,
-	brain_mask="~/ni_data/templates/DSURQEc_200micron_mask.nii.gz",
-	labels = '~/ni_data/templates/roi/DSURQE_mapping.csv',
+def functional_connectivity(ts="/Users/marksm/GitHub/mriPipeline/restingState/von_christian/a.nii.gz",
+	brain_mask="/Users/marksm/GitHub/mriPipeline/restingState/von_christian/labels_originals.nii",
+	labels = '/Users/marksm/GitHub/mriPipeline/restingState/von_christian/labels.csv',
 	):
 	"""
 	simple fc example
@@ -309,5 +322,5 @@ if __name__ == '__main__':
 	# 	xy_label=["Session","t-statistic"],
 	# 	)
 	# print(anova)
-	functional_connectivity("~/ni_data/ofM.dr/preprocessing/as_composite/sub-5690/ses-ofM_aF/func/sub-5690_ses-ofM_aF_trial-EPI_CBV_chr_longSOA.nii.gz")
+	functional_connectivity()
 	plt.show()

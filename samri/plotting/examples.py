@@ -4,7 +4,7 @@ from os import path
 from samri.pipelines import fc
 from samri.utilities import bids_substitution_iterator
 from samri.fetch.local import roi_from_atlaslabel
-from samri.plotting import maps, timeseries, summary, network
+from samri.plotting import maps, timeseries, summary, network, connectivity
 from samri.report import aggregate
 
 
@@ -12,6 +12,8 @@ def overview(workflow, identifiers,
 	cut_coords=[None, [0,-4.5,-3.3]],
 	threshold=2.5,
 	template="~/ni_data/templates/DSURQEc_40micron_masked.nii.gz",
+	orientation="portrait",
+	save_as="",
 	):
 	"""Plot the statistical maps per-factor from a 2nd level GLM workflow result directory."""
 	stat_maps_ = ["/home/chymera/ni_data/ofM.dr/l2/{0}/{1}/tstat1.nii.gz".format(workflow, i) for i in identifiers]
@@ -28,6 +30,8 @@ def overview(workflow, identifiers,
 		figure_title=workflow,
 		subplot_titles=identifiers,
 		cut_coords=cut_coords,
+		orientation=orientation,
+		save_as=save_as,
 		)
 
 def blur_kernel_compare_dr(conditions=["ofM","ofM_aF","ofM_cF1","ofM_cF2","ofM_pF"], parameters=["level2_dgamma","level2_dgamma_blurxy4","level2_dgamma_blurxy5", "level2_dgamma_blurxy6", "level2_dgamma_blurxy7"], threshold=3):
@@ -171,14 +175,6 @@ def single_ts_seed_connectivity(
 	# 	"~/ni_data/templates/roi/DSURQEc_dr.nii.gz",
 	# 	save_as="~/fc.nii.gz"
 	# )
-	# connectivity_img2 = fc.seed_based_connectivity(
-	# 	# "~/ni_data/ofM.dr/preprocessing/as_composite/sub-5689/ses-ofM/func/sub-5689_ses-ofM_trial-EPI_CBV_chr_longSOA.nii.gz",
-	# 	# "~/ni_data/ofM.dr/preprocessing/as_composite/sub-5706/ses-ofM_aF/func/sub-5706_ses-ofM_aF_trial-EPI_CBV_chr_longSOA.nii.gz",
-	# 	"~/ni_data/ofM.dr/preprocessing/as_composite/sub-5690/ses-ofM_cF1/func/sub-5690_ses-ofM_cF1_trial-EPI_CBV_chr_longSOA.nii.gz",
-	# 	# "~/ni_data/ofM.dr/preprocessing/as_composite/sub-4011/ses-ofM_aF/func/sub-4011_ses-ofM_aF_trial-EPI_CBV_jb_long.nii.gz",
-	# 	"~/ni_data/templates/roi/DSURQEc_dr.nii.gz",
-	# 	save_as="~/fc.nii.gz"
-	# )
 	connectivity_img2 = fc.seed_based_connectivity(
 		# "~/ni_data/ofM.dr/preprocessing/as_composite/sub-5689/ses-ofM/func/sub-5689_ses-ofM_trial-EPI_CBV_chr_longSOA.nii.gz",
 		# "~/ni_data/ofM.dr/preprocessing/as_composite/sub-5706/ses-ofM_aF/func/sub-5706_ses-ofM_aF_trial-EPI_CBV_chr_longSOA.nii.gz",
@@ -235,6 +231,18 @@ def seed_connectivity_overview(
 	# 	overlays=["~/ni_data/templates/roi/DSURQEc_dr.nii.gz",],
 	# 	)
 
+def functional_connectivity(ts,
+	brain_mask="~/ni_data/templates/DSURQEc_200micron_mask.nii.gz",
+	labels = '~/ni_data/templates/roi/DSURQE_mapping.csv',
+	):
+	"""
+	simple fc example
+	"""
+	figsize = (50,50)
+	correlation_matrix = fc.correlation_matrix(ts, brain_mask)
+	connectivity.plot_connectivity_matrix(correlation_matrix, figsize, labels)
+
+
 
 if __name__ == '__main__':
 	# overview("as_composite_subjects", ["4001","4005","4007","4008","4009","4011","4012","5687","5689","5690","5691","5703","5704","5706"],) #4001 is a negative control (transgene but no injection
@@ -246,10 +254,15 @@ if __name__ == '__main__':
 	# overview("as_composite_subjects", ["4001","4005","4007","4008","4009","4011","4012"])
 	# overview("as_composite_subjects", ["4012","5687","5689","5690","5691","5703","5704","5706"])
 	# overview("as_composite_subjects", ["4012","5687","5689","5690","5691","5703"])
-	# overview("as_composite_subjects", ["4012","5689"])
+	# single_ts_seed_connectivity(save_as="~/11.png")
+	# overview("as_composite_subjects", ["4012"], orientation="landscape",save_as="~/12.png")
+	# overview("as_composite_subjects", ["4012"], orientation="portrait", save_as="~/21.png")
+	# overview("as_composite_subjects", ["4012","5687"], save_as="~/22.png")
+	# overview("as_composite_subjects", ["4012","5687","5689","5690"], save_as="~/42.png")
+	# overview("as_composite_subjects", ["4012","5687","5689","5690","5691","5703"], save_as="~/62.png")
 
 	# seed_connectivity_overview()
-	single_ts_seed_connectivity(save_as="~/sbfc.pdf")
+	# single_ts_seed_connectivity(save_as="~/sbfc.pdf")
 
 	# plot_roi_by_label(["medulla","midbrain","pons"],"chr_brainstem")
 	# plot_my_roi()
@@ -296,4 +309,5 @@ if __name__ == '__main__':
 	# 	xy_label=["Session","t-statistic"],
 	# 	)
 	# print(anova)
+	functional_connectivity("~/ni_data/ofM.dr/preprocessing/as_composite/sub-5690/ses-ofM_aF/func/sub-5690_ses-ofM_aF_trial-EPI_CBV_chr_longSOA.nii.gz")
 	plt.show()

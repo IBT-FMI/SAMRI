@@ -26,16 +26,19 @@ def _draw_colorbar(stat_map_img, axes,
 	nb_ticks=5,
 	edge_color="0.5",
 	edge_alpha=1,
+	aspect=40,
+	fraction=0.025,
+	anchor=(10.0,0.5),
 	):
 	if isinstance(stat_map_img, str):
 		stat_map_img = os.path.abspath(os.path.expanduser(stat_map_img))
 		stat_map_img = nib.load(stat_map_img)
 	_,_,vmin, vmax, = _get_colorbar_and_data_ranges(_safe_get_data(stat_map_img, ensure_finite=True),None,"auto","")
 	cbar_ax, p_ax = make_axes(axes,
-		aspect=40,
-		fraction=0.025,
+		aspect=aspect,
+		fraction=fraction,
 		# pad=-0.5,
-		anchor=(12.0, 0.5),
+		anchor=anchor,
 		# panchor=(-110.0, 0.5),
 		)
 	ticks = np.linspace(vmin, vmax, nb_ticks)
@@ -161,7 +164,8 @@ def stat(stat_maps,
 	show_plot=True,
 	dim=0,
 	vmax=None,
-	orientation="landscape"):
+	orientation="portrait",
+	):
 
 	"""Plot a list of statistical maps.
 	This Function acts as a wrapper of nilearn.plotting.plot_stat_map, adding support for multiple axes, using a prettier default and allowing intelligent text and crosshair scaling.
@@ -211,6 +215,11 @@ def stat(stat_maps,
 		else:
 			title=None
 
+		cax, kw = _draw_colorbar(stat_maps[0],axes,
+			aspect=30,
+			fraction=0.05,
+			anchor=(1.,0.5),
+			)
 		display = scaled_plot(stat_maps[0], template, fig, axes,
 			overlay= overlays[0],
 			title=title,
@@ -231,24 +240,30 @@ def stat(stat_maps,
 			cut_coords = cut_coords*len(stat_maps)
 		elif len(cut_coords) == 0:
 			cut_coords = [None]*len(stat_maps)
-		if orientation == "landscape":
+		if orientation == "portrait":
 			ncols = 2
 			#we use inverse floor division to get the ceiling
 			nrows = -(-len(stat_maps)//2)
 			scale = scale/float(ncols)
-		if orientation == "portrait":
+		if orientation == "landscape":
 			nrows = 2
 			#we use inverse floor division to get the ceiling
 			ncols = -(-len(stat_maps)//2)
 			scale = scale/float(nrows)
-		fig, axes = plt.subplots(figsize=(9*ncols,4*nrows), facecolor='#eeeeee', nrows=nrows, ncols=ncols)
+		fig, axes = plt.subplots(figsize=(6*ncols,2.5*nrows), facecolor='#eeeeee', nrows=nrows, ncols=ncols)
 		if figure_title:
 			fig.suptitle(figure_title, fontsize=scale*30, fontweight='bold')
-
 		conserve_colorbar_steps = 0
 		# We transform the axes array so that we iterate column-first rather than row-first.
 		# This is done to better share colorbars between consecutive axes.
 		flat_axes = list(axes.T.flatten())
+		cbar_aspect = 30
+		if nrows >=2:
+			fraction = 0.09
+		elif ncols >=2:
+			fraction = 0.025
+		else:
+			fraction = 0.04
 		for ix, ax in enumerate(flat_axes):
 			#create or use conserved colorbar for multiple cnsecutive plots of the same image
 			if conserve_colorbar_steps == 0:
@@ -257,7 +272,11 @@ def stat(stat_maps,
 						conserve_colorbar_steps+=1
 					else:
 						break
-				cax, kw = _draw_colorbar(stat_maps[ix],flat_axes[ix:ix+conserve_colorbar_steps])
+				cax, kw = _draw_colorbar(stat_maps[ix],flat_axes[ix:ix+conserve_colorbar_steps],
+					aspect=cbar_aspect,
+					fraction=fraction,
+					anchor=(2,0.5),
+					)
 			conserve_colorbar_steps-=1
 
 			if subplot_titles:

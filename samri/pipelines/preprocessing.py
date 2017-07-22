@@ -385,16 +385,6 @@ def bruker(measurements_base,
 	workflow.write_graph(dotfilename=path.join(workflow.base_dir,workdir_name,"graph.dot"), graph2use="hierarchical", format="png")
 
 	workflow.run(plugin="MultiProc",  plugin_args={'n_procs' : n_procs})
-	# if not loud:
-	# 	try:
-	# 		workflow.run(plugin="MultiProc",  plugin_args={'n_procs' : n_procs})
-	# 	except RuntimeError:
-	# 		print("WARNING: Some expected scans have not been found (or another TypeError has occured).")
-	# 	for f in listdir(getcwd()):
-	# 		if re.search("crash.*?get_s_scan|get_f_scan.*?pklz", f):
-	# 			remove(path.join(getcwd(), f))
-	# else:
-	# 	workflow.run(plugin="MultiProc",  plugin_args={'n_procs' : n_procs})
 	if not keep_work:
 		shutil.rmtree(path.join(workflow.base_dir,workdir_name))
 

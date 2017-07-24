@@ -246,9 +246,9 @@ def seed_connectivity_overview(
 	# 	overlays=["~/ni_data/templates/roi/DSURQEc_dr.nii.gz",],
 	# 	)
 
-def functional_connectivity(ts="/Users/marksm/GitHub/mriPipeline/restingState/von_christian/a.nii.gz",
-	brain_mask="/Users/marksm/GitHub/mriPipeline/restingState/von_christian/labels_originals.nii",
-	labels = '/Users/marksm/GitHub/mriPipeline/restingState/von_christian/labels.csv',
+def functional_connectivity(ts="~/ni_data/ofM.dr/preprocessing/as_composite/sub-5690/ses-ofM_aF/func/sub-5690_ses-ofM_aF_trial-EPI_CBV_chr_longSOA.nii.gz",
+	brain_mask="~/ni_data/templates/DSURQEc_200micron_mask.nii",
+	labels = '~/ni_data/templates/roi/DSURQE_mapping.csv',
 	):
 	"""
 	simple fc example

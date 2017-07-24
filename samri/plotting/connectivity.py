@@ -52,25 +52,26 @@ def plot_connectivity_matrix(correlation_matrix,
 
 	plt.figure(figsize=figsize)
 	np.fill_diagonal(correlation_matrix, 0)
-	sns.heatmap(correlation_matrix,
-		xticklabels=labels_np,
-		yticklabels=labels_np,
-		square = 1,
-		cbar_kws={"shrink": 0.75},
+	## seaborn plot routing
+	# sns.heatmap(correlation_matrix,
+	# 	xticklabels=labels_np,
+	# 	yticklabels=labels_np,
+	# 	square = 1,
+	# 	cbar_kws={"shrink": 0.75},
+	# 	)
+	plt.imshow(correlation_matrix,
+		interpolation="nearest",
+		cmap="RdBu_r",
+		vmax=0.8,
+		vmin=-0.8,
+		aspect='auto'
 		)
+	x_ticks = plt.xticks(range(len(labels_np) - 1), labels_np[1:], rotation=90)
+	y_ticks = plt.yticks(range(len(labels_np) - 1), labels_np[1:])
+	plt.gca().yaxis.tick_left()
+	cbar = plt.colorbar()
+	cbar.ax.tick_params(labelsize=100)
+	# plt.subplots_adjust(left=.01, bottom=.3, top=.99, right=.62)
 	if(save_as):
 		plt.savefig(os.path.abspath(os.path.expanduser(save_as)))
 	plt.show()
-
-	# old plt routing, keep for now
-	# plt.imshow(correlation_matrix,
-	# 	interpolation="nearest",
-	# 	cmap="RdBu_r",
-	# 	vmax=0.8,
-	# 	vmin=-0.8
-	# 	)
-	#
-	# x_ticks = plt.xticks(range(len(labels) - 1), labels[1:], rotation=90)
-	# y_ticks = plt.yticks(range(len(labels) - 1), labels[1:])
-	# plt.gca().yaxis.tick_right()
-	# plt.subplots_adjust(left=.01, bottom=.3, top=.99, right=.62)

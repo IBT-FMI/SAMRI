@@ -177,7 +177,7 @@ def bruker(measurements_base,
 			s_biascorrect.inputs.shrink_factor = 2
 			s_biascorrect.inputs.n_iterations = [150,100,50,30]
 			s_biascorrect.inputs.convergence_threshold = 1e-16
-			s_register, s_warp, f_warp = DSURQEc_structural_registration(template, registration_mask)
+			s_register, s_warp, _, _ = DSURQEc_structural_registration(template, registration_mask)
 			#TODO: incl. in func registration
 			if autorotate:
 				workflow_connections.extend([
@@ -215,7 +215,7 @@ def bruker(measurements_base,
 			s_BET.inputs.robust = True
 
 			s_mask = pe.Node(interface=fsl.ApplyMask(), name="s_mask")
-			s_register, s_warp, f_warp = structural_registration(template)
+			s_register, s_warp, _, _ = structural_registration(template)
 
 			workflow_connections.extend([
 				(s_bru2nii, s_reg_biascorrect, [('nii_file', 'input_image')]),
@@ -276,7 +276,7 @@ def bruker(measurements_base,
 	if functional_registration_method == "composite":
 		if not structural_scan_types:
 			raise ValueError('The option `registration="composite"` requires there to be a structural scan type.')
-		f_register, f_warp = composite_registration(template)
+		_, _, f_register, f_warp = DSURQEc_structural_registration(template, registration_mask)
 
 		temporal_mean = pe.Node(interface=fsl.MeanImage(), name="temporal_mean")
 

@@ -252,8 +252,9 @@ def functional_connectivity(ts="~/ni_data/ofM.dr/preprocessing/as_composite/sub-
 	simple fc example
 	"""
 	figsize = (50,50)
-	correlation_matrix = fc.correlation_matrix(ts, brain_mask)
-	connectivity.plot_connectivity_matrix(correlation_matrix, figsize, labels)
+	# incl. plotting
+	correlation_matrix = fc.correlation_matrix(ts, brain_mask, save_as = '~/correlation_matrix.csv')
+	connectivity.plot_connectivity_matrix(correlation_matrix, figsize, labels, save_as = '~/correlation_matrix.png')
 
 
 

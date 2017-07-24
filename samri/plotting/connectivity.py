@@ -5,6 +5,7 @@ from matplotlib import pyplot as plt
 from numpy import genfromtxt
 import seaborn as sns
 import collections
+from pandas import read_csv
 
 def fix_labels(labels,
 	):
@@ -21,8 +22,8 @@ def fix_labels(labels,
 
 def plot_connectivity_matrix(correlation_matrix,
 	figsize = (50,50),
-	labels = '~/ni_data/templates/roi/DSURQE_mapping.csv',
-	save_as = '~/connectivity_matrix.png',
+	labels = '',
+	save_as = '',
 	):
 	"""Plot correlation_matrix
 
@@ -42,10 +43,8 @@ def plot_connectivity_matrix(correlation_matrix,
 
 	#TODO: fomatting
 	labels = path.abspath(path.expanduser(labels))
-	labels_np = genfromtxt(labels, delimiter=',', usecols = (1,2,3), dtype = 'str', skip_header = 1)
-	labels_np[0]
-	print(type(labels_np))
-	labels_np = fix_labels(labels_np)
+	labels_np = read_csv(labels)
+	labels_np = fix_labels(labels_np.as_matrix(['Structure','right label','left label']))
 	if isinstance(correlation_matrix, str):
 		correlation_matrix = path.abspath(path.expanduser(correlation_matrix))
 		correlation_matrix = genfromtxt(correlation_matrix, delimiter=',')

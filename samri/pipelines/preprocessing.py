@@ -49,13 +49,14 @@ def bruker(measurements_base,
 	negative_contrast_agent=False,
 	n_procs=N_PROCS,
 	realign=True,
+	registration_mask=False,
 	template="/home/chymera/ni_data/templates/ds_QBI_chr.nii.gz",
 	tr=1,
 	very_nasty_bruker_delay_hack=False,
 	workflow_name="generic",
-	loud=False,
 	keep_work=False,
 	autorotate=False,
+	strict=False,
 	):
 
 	measurements_base = os.path.abspath(os.path.expanduser(measurements_base))
@@ -90,6 +91,8 @@ def bruker(measurements_base,
 	infosource.iterables = [('subject_session', subjects_sessions)]
 
 	get_f_scan = pe.Node(name='get_f_scan', interface=util.Function(function=get_scan,input_names=inspect.getargspec(get_scan)[0], output_names=['scan_path','scan_type']))
+	if not strict:
+		get_f_scan.inputs.ignore_exception = True
 	get_f_scan.inputs.data_selection = data_selection
 	get_f_scan.inputs.measurements_base = measurements_base
 	get_f_scan.iterables = ("scan_type", functional_scan_types)
@@ -156,6 +159,8 @@ def bruker(measurements_base,
 	#ADDING SELECTABLE NODES AND EXTENDING WORKFLOW AS APPROPRIATE:
 	if structural_scan_types:
 		get_s_scan = pe.Node(name='get_s_scan', interface=util.Function(function=get_scan,input_names=inspect.getargspec(get_scan)[0], output_names=['scan_path','scan_type']))
+		if not strict:
+			get_s_scan.inputs.ignore_exception = True
 		get_s_scan.inputs.data_selection = data_selection
 		get_s_scan.inputs.measurements_base = measurements_base
 		get_s_scan.iterables = ("scan_type", structural_scan_types)
@@ -172,7 +177,7 @@ def bruker(measurements_base,
 			s_biascorrect.inputs.shrink_factor = 2
 			s_biascorrect.inputs.n_iterations = [150,100,50,30]
 			s_biascorrect.inputs.convergence_threshold = 1e-16
-			s_register, s_warp, f_warp = DSURQEc_structural_registration(template)
+			s_register, s_warp, _, _ = DSURQEc_structural_registration(template, registration_mask)
 			#TODO: incl. in func registration
 			if autorotate:
 				workflow_connections.extend([
@@ -210,7 +215,7 @@ def bruker(measurements_base,
 			s_BET.inputs.robust = True
 
 			s_mask = pe.Node(interface=fsl.ApplyMask(), name="s_mask")
-			s_register, s_warp, f_warp = structural_registration(template)
+			s_register, s_warp, _, _ = structural_registration(template)
 
 			workflow_connections.extend([
 				(s_bru2nii, s_reg_biascorrect, [('nii_file', 'input_image')]),
@@ -271,7 +276,7 @@ def bruker(measurements_base,
 	if functional_registration_method == "composite":
 		if not structural_scan_types:
 			raise ValueError('The option `registration="composite"` requires there to be a structural scan type.')
-		f_register, f_warp = composite_registration(template)
+		_, _, f_register, f_warp = DSURQEc_structural_registration(template, registration_mask)
 
 		temporal_mean = pe.Node(interface=fsl.MeanImage(), name="temporal_mean")
 
@@ -377,16 +382,8 @@ def bruker(measurements_base,
 	workflow.base_dir = path.join(measurements_base,"preprocessing")
 	workflow.config = {"execution": {"crashdump_dir": path.join(measurements_base,"preprocessing/crashdump")}}
 	workflow.write_graph(dotfilename=path.join(workflow.base_dir,workdir_name,"graph.dot"), graph2use="hierarchical", format="png")
-	if not loud:
-		try:
-			workflow.run(plugin="MultiProc",  plugin_args={'n_procs' : n_procs})
-		except RuntimeError:
-			print("WARNING: Some expected scans have not been found (or another TypeError has occured).")
-		for f in listdir(getcwd()):
-			if re.search("crash.*?get_s_scan|get_f_scan.*?pklz", f):
-				remove(path.join(getcwd(), f))
-	else:
-		workflow.run(plugin="MultiProc",  plugin_args={'n_procs' : n_procs})
+
+	workflow.run(plugin="MultiProc",  plugin_args={'n_procs' : n_procs})
 	if not keep_work:
 		shutil.rmtree(path.join(workflow.base_dir,workdir_name))
 

@@ -1,5 +1,3 @@
-import matplotlib
-matplotlib.use('Agg')
 import numpy as np
 from os import path
 import os
@@ -24,7 +22,7 @@ def fix_labels(labels,
 
 def plot_connectivity_matrix(correlation_matrix,
 	figsize = (50,50),
-	labels = '~/ni_data/templates/roi/DSURQE_mapping.csv',
+	labels = '',
 	save_as = '',
 	):
 	"""Plot correlation_matrix

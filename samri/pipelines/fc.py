@@ -2,6 +2,7 @@ import nibabel
 import numpy as np
 import nipype.interfaces.io as nio
 from os import path, listdir, getcwd, remove
+import os
 
 
 from nilearn.input_data import NiftiMasker, NiftiLabelsMasker
@@ -183,6 +184,7 @@ def seed_based_connectivity(ts, seed_mask,
 def correlation_matrix(ts,
 	brain_mask="~/ni_data/templates/DSURQEc_200micron_mask.nii.gz",
 	loud = False,
+	save_as = 'csv',
 	):
 	"""Return a csv containing correlations between ROIs.
 
@@ -194,6 +196,8 @@ def correlation_matrix(ts,
 
 	brain mask : string
 	Path to a 3D NIfTI-like binary mask file designating ROIs.
+
+	safe_as : str
 
 	"""
 	ts = path.abspath(path.expanduser(ts))
@@ -211,6 +215,7 @@ def correlation_matrix(ts,
 	correlation_measure = ConnectivityMeasure(kind='correlation')
 	correlation_matrix = correlation_measure.fit_transform([timeseries])[0]
 
-	np.savetxt('correlation_matrix.csv', correlation_matrix, delimiter=',')
+	if save_as:
+		np.savetxt(os.path.abspath(os.path.expanduser(save_as)), correlation_matrix, delimiter=',')
 
 	return correlation_matrix

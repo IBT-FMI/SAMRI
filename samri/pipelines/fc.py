@@ -184,7 +184,7 @@ def seed_based_connectivity(ts, seed_mask,
 def correlation_matrix(ts,
 	brain_mask="~/ni_data/templates/DSURQEc_200micron_mask.nii.gz",
 	loud = False,
-	save_as = 'csv',
+	save_as = '',
 	):
 	"""Return a csv containing correlations between ROIs.
 

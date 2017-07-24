@@ -5,7 +5,24 @@ import nipype.interfaces.ants as ants
 from nipype.interfaces import fsl
 
 PHASES = {
-	"rigid":{
+	"f_rigid":{
+		"transforms":"Rigid",
+		"transform_parameters":(0.1,),
+		"number_of_iterations":[40,20,10],
+		"metric":"GC",
+		"metric_weight":1,
+		"radius_or_number_of_bins":32,
+		"sampling_strategy":"Regular",
+		"sampling_percentage":0.2,
+		"convergence_threshold":1.e-2,
+		"convergence_window_size":8,
+		"smoothing_sigmas":[2,1,0],
+		"sigma_units":"vox",
+		"shrink_factors":[4,2,1],
+		"use_estimate_learning_rate_once":False,
+		"use_histogram_matching":False,
+		},
+	"s_rigid":{
 		"transforms":"Rigid",
 		"transform_parameters":(0.1,),
 		"number_of_iterations":[6000,3000],
@@ -123,45 +140,79 @@ def structural_registration(template, num_threads=4):
 def DSURQEc_structural_registration(template,
 	mask="~/ni_data/templates/DSURQEc_200micron_mask.nii.gz",
 	num_threads=4,
-	select_phases=["rigid","affine","syn"],
+	phase_dictionary=PHASES,
+	s_phases=["s_rigid","affine","syn"],
+	f_phases=["f_rigid",],
 	):
 
-	parameters = [PHASES[selection] for selection in select_phases]
+	s_parameters = [phase_dictionary[selection] for selection in s_phases]
 
-	registration = pe.Node(ants.Registration(), name="s_register")
-	registration.inputs.fixed_image = os.path.abspath(os.path.expanduser(template))
-	registration.inputs.output_transform_prefix = "output_"
-	registration.inputs.transforms = [i["transforms"] for i in parameters] ##
-	registration.inputs.transform_parameters = [i["transform_parameters"] for i in parameters] ##
-	registration.inputs.number_of_iterations = [i["number_of_iterations"] for i in parameters] #
-	registration.inputs.dimension = 3
-	registration.inputs.write_composite_transform = True
-	registration.inputs.collapse_output_transforms = True
-	registration.inputs.initial_moving_transform_com = True
-	registration.inputs.metric = [i["metric"] for i in parameters]
-	registration.inputs.metric_weight = [i["metric_weight"] for i in parameters]
-	registration.inputs.radius_or_number_of_bins = [i["radius_or_number_of_bins"] for i in parameters]
-	registration.inputs.sampling_strategy = [i["sampling_strategy"] for i in parameters]
-	registration.inputs.sampling_percentage = [i["sampling_percentage"] for i in parameters]
-	registration.inputs.convergence_threshold = [i["convergence_threshold"] for i in parameters]
-	registration.inputs.convergence_window_size = [i["convergence_window_size"] for i in parameters]
-	registration.inputs.smoothing_sigmas = [i["smoothing_sigmas"] for i in parameters]
-	registration.inputs.sigma_units = [i["sigma_units"] for i in parameters]
-	registration.inputs.shrink_factors = [i["shrink_factors"] for i in parameters]
-	registration.inputs.use_estimate_learning_rate_once = [i["use_estimate_learning_rate_once"] for i in parameters]
-	registration.inputs.use_histogram_matching = [i["use_histogram_matching"] for i in parameters]
-	registration.inputs.winsorize_lower_quantile = 0.05
-	registration.inputs.winsorize_upper_quantile = 0.95
-	registration.inputs.args = '--float'
+	s_registration = pe.Node(ants.Registration(), name="s_register")
+	s_registration.inputs.fixed_image = os.path.abspath(os.path.expanduser(template))
+	s_registration.inputs.output_transform_prefix = "output_"
+	s_registration.inputs.transforms = [i["transforms"] for i in s_parameters] ##
+	s_registration.inputs.transform_parameters = [i["transform_parameters"] for i in s_parameters] ##
+	s_registration.inputs.number_of_iterations = [i["number_of_iterations"] for i in s_parameters] #
+	s_registration.inputs.dimension = 3
+	s_registration.inputs.write_composite_transform = True
+	s_registration.inputs.collapse_output_transforms = True
+	s_registration.inputs.initial_moving_transform_com = True
+	s_registration.inputs.metric = [i["metric"] for i in s_parameters]
+	s_registration.inputs.metric_weight = [i["metric_weight"] for i in s_parameters]
+	s_registration.inputs.radius_or_number_of_bins = [i["radius_or_number_of_bins"] for i in s_parameters]
+	s_registration.inputs.sampling_strategy = [i["sampling_strategy"] for i in s_parameters]
+	s_registration.inputs.sampling_percentage = [i["sampling_percentage"] for i in s_parameters]
+	s_registration.inputs.convergence_threshold = [i["convergence_threshold"] for i in s_parameters]
+	s_registration.inputs.convergence_window_size = [i["convergence_window_size"] for i in s_parameters]
+	s_registration.inputs.smoothing_sigmas = [i["smoothing_sigmas"] for i in s_parameters]
+	s_registration.inputs.sigma_units = [i["sigma_units"] for i in s_parameters]
+	s_registration.inputs.shrink_factors = [i["shrink_factors"] for i in s_parameters]
+	s_registration.inputs.use_estimate_learning_rate_once = [i["use_estimate_learning_rate_once"] for i in s_parameters]
+	s_registration.inputs.use_histogram_matching = [i["use_histogram_matching"] for i in s_parameters]
+	s_registration.inputs.winsorize_lower_quantile = 0.05
+	s_registration.inputs.winsorize_upper_quantile = 0.95
+	s_registration.inputs.args = '--float'
 	if mask:
-		registration.inputs.fixed_image_mask = os.path.abspath(os.path.expanduser(mask))
-	registration.inputs.num_threads = num_threads
+		s_registration.inputs.fixed_image_mask = os.path.abspath(os.path.expanduser(mask))
+	s_registration.inputs.num_threads = num_threads
+
+	f_parameters = [phase_dictionary[selection] for selection in f_phases]
+
+	f_registration = pe.Node(ants.Registration(), name="f_register")
+	f_registration.inputs.fixed_image = os.path.abspath(os.path.expanduser(template))
+	f_registration.inputs.output_transform_prefix = "output_"
+	f_registration.inputs.transforms = [i["transforms"] for i in f_parameters] ##
+	f_registration.inputs.transform_parameters = [i["transform_parameters"] for i in f_parameters] ##
+	f_registration.inputs.number_of_iterations = [i["number_of_iterations"] for i in f_parameters] #
+	f_registration.inputs.dimension = 3
+	f_registration.inputs.write_composite_transform = True
+	f_registration.inputs.collapse_output_transforms = True
+	f_registration.inputs.initial_moving_transform_com = True
+	f_registration.inputs.metric = [i["metric"] for i in f_parameters]
+	f_registration.inputs.metric_weight = [i["metric_weight"] for i in f_parameters]
+	f_registration.inputs.radius_or_number_of_bins = [i["radius_or_number_of_bins"] for i in f_parameters]
+	f_registration.inputs.sampling_strategy = [i["sampling_strategy"] for i in f_parameters]
+	f_registration.inputs.sampling_percentage = [i["sampling_percentage"] for i in f_parameters]
+	f_registration.inputs.convergence_threshold = [i["convergence_threshold"] for i in f_parameters]
+	f_registration.inputs.convergence_window_size = [i["convergence_window_size"] for i in f_parameters]
+	f_registration.inputs.smoothing_sigmas = [i["smoothing_sigmas"] for i in f_parameters]
+	f_registration.inputs.sigma_units = [i["sigma_units"] for i in f_parameters]
+	f_registration.inputs.shrink_factors = [i["shrink_factors"] for i in f_parameters]
+	f_registration.inputs.use_estimate_learning_rate_once = [i["use_estimate_learning_rate_once"] for i in f_parameters]
+	f_registration.inputs.use_histogram_matching = [i["use_histogram_matching"] for i in f_parameters]
+	f_registration.inputs.winsorize_lower_quantile = 0.05
+	f_registration.inputs.winsorize_upper_quantile = 0.95
+	f_registration.inputs.args = '--float'
+	if mask:
+		f_registration.inputs.fixed_image_mask = os.path.abspath(os.path.expanduser(mask))
+	f_registration.inputs.num_threads = num_threads
+
 
 	f_warp = pe.Node(ants.ApplyTransforms(), name="f_warp")
 	f_warp.inputs.reference_image = os.path.abspath(os.path.expanduser(template))
 	f_warp.inputs.input_image_type = 3
 	f_warp.inputs.interpolation = 'Linear'
-	f_warp.inputs.invert_transform_flags = [False]
+	f_warp.inputs.invert_transform_flags = [False, False]
 	f_warp.inputs.terminal_output = 'file'
 	f_warp.num_threads = num_threads
 
@@ -173,7 +224,7 @@ def DSURQEc_structural_registration(template,
 	s_warp.inputs.terminal_output = 'file'
 	s_warp.num_threads = num_threads
 
-	return registration, s_warp, f_warp
+	return s_registration, s_warp, f_registration, f_warp
 
 def composite_registration(template, num_threads=4):
 	f_registration = pe.Node(ants.Registration(), name="f_register")

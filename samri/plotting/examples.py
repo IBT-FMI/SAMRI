@@ -245,7 +245,7 @@ def seed_connectivity_overview(
 	# 	)
 
 def functional_connectivity(ts="~/ni_data/ofM.dr/preprocessing/as_composite/sub-5690/ses-ofM_aF/func/sub-5690_ses-ofM_aF_trial-EPI_CBV_chr_longSOA.nii.gz",
-	brain_mask="~/ni_data/templates/DSURQEc_200micron_mask.nii",
+	brain_mask="~/ni_data/templates/DSURQEc_200micron_mask.nii.gz",
 	labels = '~/ni_data/templates/roi/DSURQE_mapping.csv',
 	):
 	"""

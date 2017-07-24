@@ -2,6 +2,7 @@ import nibabel
 import numpy as np
 import nipype.interfaces.io as nio
 from os import path, listdir, getcwd, remove
+import os
 
 
 from nilearn.input_data import NiftiMasker, NiftiLabelsMasker
@@ -215,6 +216,6 @@ def correlation_matrix(ts,
 	correlation_matrix = correlation_measure.fit_transform([timeseries])[0]
 
 	if save_as:
-		np.savetxt('correlation_matrix.' + save_as, correlation_matrix, delimiter=',')
+		np.savetxt(os.path.abspath(os.path.expanduser(save_as)), correlation_matrix, delimiter=',')
 
 	return correlation_matrix

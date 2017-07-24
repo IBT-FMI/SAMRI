@@ -1,5 +1,6 @@
 import numpy as np
 from os import path
+import os
 from matplotlib import pyplot as plt
 from numpy import genfromtxt
 import seaborn as sns
@@ -21,7 +22,7 @@ def fix_labels(labels,
 def plot_connectivity_matrix(correlation_matrix,
 	figsize = (50,50),
 	labels = '~/ni_data/templates/roi/DSURQE_mapping.csv',
-	save_as = True,
+	save_as = '~/connectivity_matrix.png',
 	):
 	"""Plot correlation_matrix
 
@@ -59,7 +60,7 @@ def plot_connectivity_matrix(correlation_matrix,
 		cbar_kws={"shrink": 0.75},
 		)
 	if(save_as):
-		plt.savefig('matrix.png')
+		plt.savefig(os.path.abspath(os.path.expanduser(save_as)))
 	plt.show()
 
 	# old plt routing, keep for now

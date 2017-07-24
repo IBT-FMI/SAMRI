@@ -245,7 +245,7 @@ def seed_connectivity_overview(
 	# 	)
 
 def functional_connectivity(ts="~/ni_data/ofM.dr/preprocessing/as_composite/sub-5690/ses-ofM_aF/func/sub-5690_ses-ofM_aF_trial-EPI_CBV_chr_longSOA.nii.gz",
-	brain_mask="~/ni_data/templates/roi/DSURQEc_40micron_labels.nii",
+	labels_img='~/ni_data/templates/roi/DSURQEc_40micron_labels.nii',
 	labels = '~/ni_data/templates/roi/DSURQE_mapping.csv',
 	):
 	"""
@@ -253,7 +253,7 @@ def functional_connectivity(ts="~/ni_data/ofM.dr/preprocessing/as_composite/sub-
 	"""
 	figsize = (50,50)
 	# incl. plotting
-	correlation_matrix = fc.correlation_matrix(ts, brain_mask, save_as = '~/correlation_matrix.csv')
+	correlation_matrix = fc.correlation_matrix(ts, labels_img, save_as = '~/correlation_matrix.csv')
 	connectivity.plot_connectivity_matrix(correlation_matrix, figsize, labels, save_as = '~/correlation_matrix.png')
 
 

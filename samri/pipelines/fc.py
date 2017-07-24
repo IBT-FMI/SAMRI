@@ -182,7 +182,7 @@ def seed_based_connectivity(ts, seed_mask,
 	return seed_based_correlation_img
 
 def correlation_matrix(ts,
-	brain_mask="~/ni_data/templates/DSURQEc_200micron_mask.nii.gz",
+	labels_img='',
 	loud = False,
 	save_as = '',
 	):
@@ -194,17 +194,17 @@ def correlation_matrix(ts,
 	ts : string
 	Path to the 4D NIfTI timeseries file on which to perform the connectivity analysis.
 
-	brain mask : string
-	Path to a 3D NIfTI-like binary mask file designating ROIs.
+	labels_img: string
+	Path to a 3D NIfTI-like binary label file designating ROIs.
 
 	safe_as : str
 
 	"""
 	ts = path.abspath(path.expanduser(ts))
-	brain_mask = path.abspath(path.expanduser(brain_mask))
+	labels_img = path.abspath(path.expanduser(labels_img))
 
 	labels_masker = NiftiLabelsMasker(
-		labels_img=brain_mask,
+		labels_img=labels_img,
 		standardize=True,
 		memory='nilearn_cache',
 		verbose=5

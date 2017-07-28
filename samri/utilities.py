@@ -77,7 +77,7 @@ def add_pattern_data(substitution,img_path,pattern,
 		sdf = pd.DataFrame(subject_data, index=[None])
 		return sdf, vdf
 
-def bids_substitution_iterator(sessions, subjects, scans, preprocessing_dir,
+def bids_substitution_iterator(sessions, subjects, scans, data_dir, preprocessing_dir,
 	l1_dir=None,
 	l1_workdir=None,
 	preprocessing_workdir=None,
@@ -92,6 +92,7 @@ def bids_substitution_iterator(sessions, subjects, scans, preprocessing_dir,
 	substitutions=[]
 	for subject, session, scan in product(subjects, sessions, scans):
 		substitution={}
+		substitution["data_dir"] = data_dir
 		substitution["l1_dir"] = l1_dir
 		substitution["l1_workdir"] = l1_workdir
 		substitution["preprocessing_dir"] = preprocessing_dir

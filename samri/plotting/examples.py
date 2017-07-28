@@ -55,6 +55,7 @@ def roi_per_session(l1_dir, roi, color,
 		# ["4009","4011","4012","5689","5690","5691"],
 		# ["4008","4009","4011","4012",],
 		["EPI_CBV_jb_long","EPI_CBV_chr_longSOA"],
+		"~/ni_data/ofM.dr/",
 		"",
 		l1_dir=l1_dir,
 		)
@@ -64,7 +65,7 @@ def roi_per_session(l1_dir, roi, color,
 			label_names=roi,
 			)
 	fit, anova = summary.roi_per_session(substitutions,
-		t_file_template="~/ni_data/ofM.dr/l1/{l1_dir}/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_trial-{scan}_tstat.nii.gz",
+		t_file_template="{data_dir}/l1/{l1_dir}/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_trial-{scan}_tstat.nii.gz",
 		legend_loc=2,
 		# figure="per-voxel",
 		figure="per-participant",
@@ -82,16 +83,17 @@ def p_clusters(mask):
 		["4011","4012","5689","5690","5691"],
 		# ["4007","4008","4011","4012","5689","5690","5691"],
 		["EPI_CBV_jb_long","EPI_CBV_chr_longSOA"],
+		"~/ni_data/ofM.dr/",
 		"composite",
 		l1_dir="dr",
 		)
 	timecourses, designs, stat_maps, events_dfs, subplot_titles = summary.p_filtered_ts(substitutions,
-		ts_file_template="~/ni_data/ofM.dr/preprocessing/{preprocessing_dir}/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_trial-{scan}.nii.gz",
-		beta_file_template="~/ni_data/ofM.dr/l1/{l1_dir}/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_trial-{scan}_cope.nii.gz",
-		# p_file_template="~/ni_data/ofM.dr/l1/{l1_dir}/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_trial-{scan}_pstat.nii.gz",
-		p_file_template="~/ni_data/ofM.dr/l1/{l1_dir}/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_trial-{scan}_pfstat.nii.gz",
-		design_file_template="~/ni_data/ofM.dr/l1/{l1_workdir}/_subject_session_scan_{subject}.{session}.{scan}/modelgen/run0.mat",
-		event_file_template="~/ni_data/ofM.dr/preprocessing/{preprocessing_dir}/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_trial-{scan}_events.tsv",
+		ts_file_template="{data_dir}/preprocessing/{preprocessing_dir}/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_trial-{scan}.nii.gz",
+		beta_file_template="{data_dir}/l1/{l1_dir}/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_trial-{scan}_cope.nii.gz",
+		# p_file_template="{data_dir}/l1/{l1_dir}/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_trial-{scan}_pstat.nii.gz",
+		p_file_template="{data_dir}/l1/{l1_dir}/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_trial-{scan}_pfstat.nii.gz",
+		design_file_template="{data_dir}/l1/{l1_workdir}/_subject_session_scan_{subject}.{session}.{scan}/modelgen/run0.mat",
+		event_file_template="{data_dir}/preprocessing/{preprocessing_dir}/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_trial-{scan}_events.tsv",
 		brain_mask=mask,
 		p_level=0.05,
 		)
@@ -101,7 +103,13 @@ def p_clusters(mask):
 def roi(roi_path="~/ni_data/templates/roi/f_dr_chr.nii.gz"):
 	from samri.plotting import summary, timeseries
 
-	substitutions = bids_substitution_iterator(["ofM","ofM_aF","ofM_cF1","ofM_cF2","ofM_pF"],[4007,4008,4009,4011,4012],["EPI_CBV_jb_long"],"composite")
+	substitutions = bids_substitution_iterator(
+		["ofM","ofM_aF","ofM_cF1","ofM_cF2","ofM_pF"],
+		[4007,4008,4009,4011,4012],
+		["EPI_CBV_jb_long"],
+		"~/ni_data/ofM.dr/",
+		"composite",
+		)
 	timecourses, designs, stat_maps, subplot_titles = summary.roi_ts(substitutions, roi_path=roi_path,)
 	timeseries.multi(timecourses, designs, stat_maps, subplot_titles, figure="timecourses")
 	plt.show()
@@ -110,7 +118,13 @@ def roi_teaching(roi_path="~/ni_data/templates/roi/f_dr_chr.nii.gz"):
 	from samri.plotting import timeseries
 
 	design_file_template="~/ni_data/ofM.dr/l1/{l1_workdir}/_subject_session_scan_{subject}.{session}.{scan}/modelgen/run0.mat"
-	substitutions = bids_substitution_iterator(["ofM_cF2"],[4008],["EPI_CBV_jb_long"],"composite")
+	substitutions = bids_substitution_iterator(
+		["ofM_cF2"],
+		[4008],
+		["EPI_CBV_jb_long"],
+		"~/ni_data/ofM.dr/"
+		"composite",
+		)
 	timeseries.roi_based(substitutions[0], design_file_template=design_file_template, flip=True, plot_design_regressors=[0])
 	plt.show()
 
@@ -127,12 +141,13 @@ def qc_regressor_old(mask):
 		["4011","4012","5689","5690","5691"],
 		# ["4007","4008","4011","4012","5689","5690","5691"],
 		["EPI_CBV_jb_long","EPI_CBV_chr_longSOA"],
+		"~/ni_data/ofM.dr/",
 		"composite")
 	timecourses, designs, stat_maps, events_dfs, subplot_titles = summary.ts_overviews(substitutions, mask,
-		ts_file_template="~/ni_data/ofM.dr/preprocessing/{preprocessing_dir}/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_trial-{scan}.nii.gz",
-		beta_file_template="~/ni_data/ofM.dr/l1/{l1_dir}/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_trial-{scan}_cope.nii.gz",
-		design_file_template="~/ni_data/ofM.dr/l1/{l1_workdir}/_subject_session_scan_{subject}.{session}.{scan}/modelgen/run0.mat",
-		event_file_template="~/ni_data/ofM.dr/preprocessing/{preprocessing_dir}/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_trial-{scan}_events.tsv",
+		ts_file_template="{data_dir}/preprocessing/{preprocessing_dir}/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_trial-{scan}.nii.gz",
+		beta_file_template="{data_dir}/l1/{l1_dir}/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_trial-{scan}_cope.nii.gz",
+		design_file_template="{data_dir}/l1/{l1_workdir}/_subject_session_scan_{subject}.{session}.{scan}/modelgen/run0.mat",
+		event_file_template="{data_dir}/preprocessing/{preprocessing_dir}/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_trial-{scan}_events.tsv",
 		)
 	timeseries.multi(timecourses, designs, stat_maps, events_dfs, subplot_titles, figure="timecourses")
 
@@ -225,6 +240,7 @@ def seed_connectivity_overview(
 		# ["4009","4011","4012","5689","5690","5691"],
 		# ["4008","4009","4011","4012",],
 		["EPI_CBV_jb_long","EPI_CBV_chr_longSOA"],
+		"~/ni_data/ofM.dr/",
 		"as_composite",
 		)
 	subjectdf, voxeldf = aggregate.seed_fc_rois(substitutions, "~/ni_data/templates/roi/DSURQEc_dr.nii.gz", "~/ni_data/templates/roi/DSURQEc_ctx.nii.gz",
@@ -307,22 +323,4 @@ if __name__ == '__main__':
 		)
 	# qc_regressor(["ofM_cF1"],["4011"],["EPI_CBV_jb_long"],"as_composite","~/ni_data/templates/roi/DSURQEc_ctx.nii.gz")
 	# network.simple_dr(output="~/ntw1.png", graphsize=800, scale=1.8)
-
-	# substitutions = bids_substitution_iterator(
-	# 	["ofM","ofM_aF","ofM_cF1","ofM_cF2","ofM_pF"],
-	# 	["4005","5687","4007","4011","4012","5689","5690","5691"],
-	# 	["EPI_CBV_jb_long","EPI_CBV_chr_longSOA"],
-	# 	"",
-	# 	l1_dir="as_composite",
-	# 	)
-	#
-	#
-	# fit, anova = summary.analytic_pattern_per_session(substitutions, '~/ni_data/ofM.dr/l2/as_composite_sessions_responders/ofM/tstat1.nii.gz',
-	# 	t_file_template="~/ni_data/ofM.dr/l1/{l1_dir}/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_trial-{scan}_tstat.nii.gz",
-	# 	legend_loc=2,
-	# 	figure="per-participant",
-	# 	color="#e66633",
-	# 	xy_label=["Session","t-statistic"],
-	# 	)
-	# print(anova)
 	plt.show()

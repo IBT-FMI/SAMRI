@@ -14,7 +14,7 @@ def dual_regression(substitutions_a, substitutions_b,
 	components=9,
 	group_level="concat",
 	tr=1,
-	ts_file_template="~/ni_data/ofM.dr/preprocessing/{preprocessing_dir}/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_trial-{scan}.nii.gz",
+	ts_file_template="{data_dir}/preprocessing/{preprocessing_dir}/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_trial-{scan}.nii.gz",
 	):
 
 	all_merged_path = path.abspath(path.expanduser(all_merged_path))

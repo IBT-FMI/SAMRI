@@ -73,12 +73,14 @@ def test_dual_regression(group_level="migp"):
 		["ofM",],
 		["5689","5690","5691"],
 		["EPI_CBV_chr_longSOA"],
+		"~/ni_data/ofM.dr/",
 		"as_composite",
 		)
 	substitutions_b = bids_substitution_iterator(
 		["ofM_cF2",],
 		["5689","5690","5691"],
 		["EPI_CBV_chr_longSOA"],
+		"~/ni_data/ofM.dr/",
 		"as_composite",
 		)
 	fc.dual_regression(substitutions_a,substitutions_b,

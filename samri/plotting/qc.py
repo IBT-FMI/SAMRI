@@ -5,9 +5,9 @@ import numpy as np
 from scipy.stats import norm
 import os.path 
 
-def plot_t_value_hist(img_path='/home/chymera/ni_data/ofM.dr/l1/as_composite/sub-5703/ses-ofM/sub-5703_ses-ofM_trial-EPI_CBV_chr_longSOA_tstat.nii.gz',
-	roi_path='/home/chymera/ni_data/templates/roi/DSURQEc_ctx.nii.gz',
-	mask_path='/home/chymera/ni_data/templates/DSURQEc_200micron_mask.nii.gz',
+def plot_t_value_hist(img_path='~/ni_data/ofM.dr/l1/as_composite/sub-5703/ses-ofM/sub-5703_ses-ofM_trial-EPI_CBV_chr_longSOA_tstat.nii.gz',
+	roi_path='~/ni_data/templates/roi/DSURQEc_ctx.nii.gz',
+	mask_path='~/ni_data/templates/DSURQEc_200micron_mask.nii.gz',
 	save_as='~/qc_tvalues.pdf',
 	):
 	"""Make t-value histogram plot"""

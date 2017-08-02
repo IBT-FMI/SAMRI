@@ -6,7 +6,6 @@ from samri.utilities import bids_substitution_iterator
 from samri.fetch.local import roi_from_atlaslabel
 from samri.plotting import maps, connectivity
 from samri.report import aggregate
-plt.style.use('samri.conf')
 
 def overview(workflow, identifiers,
 	cut_coords=[None, [0,-4.5,-3.3]],
@@ -16,7 +15,9 @@ def overview(workflow, identifiers,
 	save_as="",
 	):
 	"""Plot the statistical maps per-factor from a 2nd level GLM workflow result directory."""
-	stat_maps_ = ["/home/chymera/ni_data/ofM.dr/l2/{0}/{1}/tstat1.nii.gz".format(workflow, i) for i in identifiers]
+	plt.style.use('samri.conf')
+
+	stat_maps_ = ["~/ni_data/ofM.dr/l2/{0}/{1}/tstat1.nii.gz".format(workflow, i) for i in identifiers]
 	stat_maps_ = [i for i in stat_maps_ if path.isfile(i)]
 	identifiers = [[i]*len(cut_coords) for i in identifiers]
 	stat_maps = [[i]*len(cut_coords) for i in stat_maps_]
@@ -36,7 +37,7 @@ def overview(workflow, identifiers,
 
 def blur_kernel_compare_dr(conditions=["ofM","ofM_aF","ofM_cF1","ofM_cF2","ofM_pF"], parameters=["level2_dgamma","level2_dgamma_blurxy4","level2_dgamma_blurxy5", "level2_dgamma_blurxy6", "level2_dgamma_blurxy7"], threshold=3):
 	from matplotlib.backends.backend_pdf import PdfPages
-	pp = PdfPages('/home/chymera/DR.pdf')
+	pp = PdfPages('~/DR.pdf')
 	for condition in conditions:
 		stat_maps = ["~/ni_data/ofM.dr/GLM/"+parameter+"/_category_multi_"+condition+"/flameo/mapflow/_flameo0/stats/tstat1.nii.gz" for parameter in parameters]
 		titles = [stat_map[32:-43] for stat_map in stat_maps]
@@ -138,7 +139,7 @@ def qc_regressor(sessions, subjects, scans, workflow_name, mask,
 	save_as="",
 	):
 	from samri.plotting import summary, timeseries
-	plt.style.use('samri.conf')
+	plt.style.use('samri_mts.conf')
 
 	substitutions = bids_substitution_iterator(sessions,subjects,scans,data_dir,workflow_name)
 	timecourses, designs, stat_maps, events_dfs, subplot_titles = summary.ts_overviews(substitutions, mask,
@@ -148,7 +149,11 @@ def qc_regressor(sessions, subjects, scans, workflow_name, mask,
 		event_file_template="{data_dir}/preprocessing/{preprocessing_dir}/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_trial-{scan}_events.tsv",
 		)
 
-	timeseries.multi(timecourses, designs, stat_maps, events_dfs, subplot_titles, figure="timecourses",save_as=save_as)
+	timeseries.multi(timecourses, designs, stat_maps, events_dfs, subplot_titles,
+		figure="timecourses",
+		quantitative=False,
+		save_as=save_as,
+		)
 
 def plot_my_roi():
 	maps.atlas_label("~/ni_data/templates/roi/DSURQEc_dr.nii.gz",

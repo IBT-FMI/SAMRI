@@ -129,7 +129,7 @@ def roi_based(substitutions,
 				ax.set_xlim([0,design_len])
 
 	if melodic_hit:
-		melodic_file = "/home/chymera/ni_data/ofM.dr/20151208_182500_4007_1_4/melo10/report/t4.txt"
+		melodic_file = "~/ni_data/ofM.dr/20151208_182500_4007_1_4/melo10/report/t4.txt"
 		melodic = np.loadtxt(melodic_file)
 		if flip:
 			melodic = melodic.T
@@ -148,6 +148,7 @@ def roi_based(substitutions,
 def multi(timecourses, designs, stat_maps, events_dfs, subplot_titles,
 	colors=QUALITATIVE_COLORSET,
 	figure="maps",
+	quantitative=True,
 	save_as="",
 	):
 	if figure == "maps":
@@ -183,21 +184,21 @@ def multi(timecourses, designs, stat_maps, events_dfs, subplot_titles,
 				ax.plot(design[0])
 				if not ix in xlabel_positive:
 					plt.setp(ax.get_xticklabels(), visible=False)
-				#ax.yaxis.grid(False)
-				ax.yaxis.set_label_position("right")
+				if not quantitative:
+					ax.yaxis.grid(False)
+					ax.set_yticks([])
+				else:
+					ax.yaxis.set_label_position("right")
 				ax.tick_params(axis='y',)
 				ax.set_xlim([0,len(timecourse)])
 				ax.set_ylabel(subplot_title)
 		else:
 			fig, ax = plt.subplots(figsize=(10,2), facecolor='#eeeeee')
-			# xlabel_positive = [(i*max_rows)-1 for i in range(1,ncols)]
-			# xlabel_positive.append(len(timecourses)-1)
 
 			timecourse = timecourses[0]
 			design = designs[0]
 			events_df = events_dfs[0]
 			subplot_title = "Arbitrary Units"
-			# subplot_title = subplot_titles[0]
 
 			for d, o in zip(events_df["duration"], events_df["onset"]):
 				d = round(d)
@@ -210,8 +211,11 @@ def multi(timecourses, designs, stat_maps, events_dfs, subplot_titles,
 				except IndexError:
 					pass
 				ax.plot(design[ix], lw=rcParams['lines.linewidth']*2, color=iteration_color, alpha=1)
-			#ax.yaxis.grid(False)
-			ax.yaxis.set_label_position("right")
+			if not quantitative:
+				ax.yaxis.grid(False)
+				ax.set_yticks([])
+			else:
+				ax.yaxis.set_label_position("right")
 			ax.set_xlim([0,len(timecourse)])
 			ax.set_ylabel(subplot_title)
 			ax.set_xlabel("TR[1s]")
@@ -222,12 +226,12 @@ def multi(timecourses, designs, stat_maps, events_dfs, subplot_titles,
 		plt.savefig(save_as)
 
 if __name__ == '__main__':
-	# plot_fsl_design("/home/chymera/ni_data/ofM.dr/level1/first_level/_condition_ofM_subject_4001/modelgen/run0.mat")
+	# plot_fsl_design("~/ni_data/ofM.dr/level1/first_level/_condition_ofM_subject_4001/modelgen/run0.mat")
 	# stim = {"durations":[[20.0], [20.0], [20.0], [20.0], [20.0], [20.0]], "onsets":[[172.44299999999998], [352.443], [532.443], [712.443], [892.443], [1072.443]]}
-	# plot_stim_design("/home/chymera/level1/first_level/_condition_ERC_ofM_subject_5503/_scan_type_T2_TurboRARE/_scan_type_EPI_CBV_alej/modelgen/run0.mat",stim)
+	# plot_stim_design("~/level1/first_level/_condition_ERC_ofM_subject_5503/_scan_type_T2_TurboRARE/_scan_type_EPI_CBV_alej/modelgen/run0.mat",stim)
 	# plot_stim_design(
-		# "/home/chymera/run0_dg.mat",
-		# "/home/chymera/report_dg.rst"
+		# "~/run0_dg.mat",
+		# "~/report_dg.rst"
 		# )
 
 	# plt.style.use(u'seaborn-darkgrid')

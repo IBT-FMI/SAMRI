@@ -56,7 +56,6 @@ def plot_stim_design(file_path,stim):
 	# 	d = int(d[0])
 	# 	o = int(o[0])
 	# 	ax.axvspan(o,o+d, facecolor="cyan", alpha=0.15)
-	# 	plt.hold(True)
 	ax = df.plot(ax=ax)
 	#remove bottom and top small tick lines
 	plt.tick_params(axis='x', which='both', bottom='off', top='off', left='off', right='off')
@@ -123,7 +122,6 @@ def roi_based(substitutions,
 				ax.axhspan(o,o+d, facecolor="cyan", alpha=0.15)
 			else:
 				ax.axvspan(o,o+d, facecolor="cyan", alpha=0.15)
-			plt.hold(True)
 		if design_len:
 			if flip:
 				ax.set_ylim([0,design_len])
@@ -181,15 +179,14 @@ def multi(timecourses, designs, stat_maps, events_dfs, subplot_titles,
 					d = round(d)
 					o = round(o)
 					ax.axvspan(o,o+d, facecolor="cyan", alpha=0.15)
-					plt.hold(True)
 				ax.plot(timecourse, lw=rcParams['lines.linewidth']/4)
 				ax.plot(design[0])
 				if not ix in xlabel_positive:
 					plt.setp(ax.get_xticklabels(), visible=False)
-				current_ylim = ax.get_ylim()
-				ax.yaxis.grid(False)
+				#ax.yaxis.grid(False)
+				ax.yaxis.set_label_position("right")
+				ax.tick_params(axis='y',)
 				ax.set_xlim([0,len(timecourse)])
-				ax.set_yticks([])
 				ax.set_ylabel(subplot_title)
 		else:
 			fig, ax = plt.subplots(figsize=(10,2), facecolor='#eeeeee')
@@ -206,7 +203,6 @@ def multi(timecourses, designs, stat_maps, events_dfs, subplot_titles,
 				d = round(d)
 				o = round(o)
 				ax.axvspan(o,o+d, facecolor="cyan", alpha=0.15)
-				plt.hold(True)
 			ax.plot(timecourse, lw=rcParams['lines.linewidth']*1.5, color=colors[0], alpha=1)
 			for ix, i in enumerate(design):
 				try:
@@ -214,12 +210,9 @@ def multi(timecourses, designs, stat_maps, events_dfs, subplot_titles,
 				except IndexError:
 					pass
 				ax.plot(design[ix], lw=rcParams['lines.linewidth']*2, color=iteration_color, alpha=1)
-			# if not ix in xlabel_positive:
-			# 	plt.setp(ax.get_xticklabels(), visible=False)
-			current_ylim = ax.get_ylim()
-			ax.yaxis.grid(False)
+			#ax.yaxis.grid(False)
+			ax.yaxis.set_label_position("right")
 			ax.set_xlim([0,len(timecourse)])
-			ax.set_yticks([])
 			ax.set_ylabel(subplot_title)
 			ax.set_xlabel("TR[1s]")
 	else:

@@ -355,13 +355,13 @@ def atlas_label(atlas,
 		display.title(title, size=2+scale*26)
 
 
-def plot_myanat(anat="/home/chymera/ni_data/templates/hires_QBI_chr.nii.gz"):
+def plot_myanat(anat="~/ni_data/templates/hires_QBI_chr.nii.gz"):
 	nilearn.plotting.plot_anat(anat, cut_coords=[0, 0, 0],title='Anatomy image')
 
 def plot_nii(file_path, slices):
 	nilearn.plotting.plot_anat(file_path, cut_coords=slices, display_mode="y", annotate=False, draw_cross=False)
 
-def from_multi_contrast(session_participant_file, template="/home/chymera/ni_data/templates/ds_QBI_chr.nii.gz", threshold="2"):
+def from_multi_contrast(session_participant_file, template="~/ni_data/templates/ds_QBI_chr.nii.gz", threshold="2"):
 	img = nib.load(session_participant_file)
 	print(img.__dict__)
 	nilearn.plotting.plot_stat_map(img, bg_img=template,threshold=threshold, black_bg=False, vmax=40)

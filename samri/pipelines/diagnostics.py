@@ -57,7 +57,7 @@ def diagnose(measurements_base,
 	keep_work=False,
 	loud=False,
 	n_procs=N_PROCS,
-	realign=False,
+	realign="time",
 	tr=1,
 	workflow_name="diagnostic",
 	):
@@ -170,6 +170,13 @@ def diagnose(measurements_base,
 			(realigner, melodic, [('out_file', 'in_files')]),
 			])
 
+        elif realign == "time":
+                realigner = pe.Node(interface=fsl.SliceTimer(), name="slicetimer")
+                realigner.inputs.time_repetition = tr
+		workflow_connections.extend([
+			(dummy_scans, realigner, [('out_file', 'in_file')]),
+			(realigner, melodic, [('slice_time_corrected_file', 'in_files')]),
+			])
 	else:
 		workflow_connections.extend([
 			(dummy_scans, melodic, [('out_file', 'in_files')]),

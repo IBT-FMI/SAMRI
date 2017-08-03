@@ -215,7 +215,7 @@ def bruker(measurements_base,
 			s_BET.inputs.robust = True
 
 			s_mask = pe.Node(interface=fsl.ApplyMask(), name="s_mask")
-			s_register, s_warp, _, _ = structural_registration(template)
+			s_register, s_warp, f_warp = structural_registration(template)
 
 			workflow_connections.extend([
 				(s_bru2nii, s_reg_biascorrect, [('nii_file', 'input_image')]),

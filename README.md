@@ -1,4 +1,5 @@
 # SAMRI
+[![Build Status](https://travis-ci.org/IBT-FMI/SAMRI.svg?branch=master)](https://travis-ci.org/IBT-FMI/SAMRI)
 
 SAMRI (Small Animal Magnetic Resonance Imaging) - pronounced "Sam-rye" - provides fMRI preprocessing, metadata parsing, and data analysis functions and pipelines.
 SAMRI integrates functionalities from a number of other packages (listed under the dependencies section below) to create higher-level tools.

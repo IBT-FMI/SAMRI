@@ -185,6 +185,7 @@ def correlation_matrix(ts,
 	labels_img='',
 	loud = False,
 	save_as = '',
+        confounds,
 	):
 	"""Return a csv containing correlations between ROIs.
 
@@ -199,6 +200,9 @@ def correlation_matrix(ts,
 
 	safe_as : str
 
+        confounds : 2D array OR path to CSV file
+        Array/CSV file containing confounding time-series to be regressed out before FC analysis.
+
 	"""
 	ts = path.abspath(path.expanduser(ts))
 	labels_img = path.abspath(path.expanduser(labels_img))
@@ -210,7 +214,11 @@ def correlation_matrix(ts,
 		verbose=5
 		)
 
-	timeseries = labels_masker.fit_transform(ts)
+        #TODO: test confounds with physiological signals
+        if(confounds):
+	    timeseries = labels_masker.fit_transform(ts, confounds=confounds)
+        else:
+            timeseries = labels_masker.fit_transform(ts)
 
 	correlation_measure = ConnectivityMeasure(kind='correlation')
 	correlation_matrix = correlation_measure.fit_transform([timeseries])[0]

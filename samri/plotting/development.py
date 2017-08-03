@@ -259,6 +259,8 @@ def functional_connectivity(ts="~/ni_data/ofM.dr/preprocessing/as_composite/sub-
 	figsize = (50,50)
 	# incl. plotting
 	correlation_matrix = fc.correlation_matrix(ts, labels_img, save_as = '~/correlation_matrix.csv')
+        #TODO: to test with confounds 
+	#correlation_matrix = fc.correlation_matrix(ts, labels_img, save_as = '~/correlation_matrix.csv', '~/confounding_timeseries.csv')
 	connectivity.plot_connectivity_matrix(correlation_matrix, figsize, labels, save_as = '~/correlation_matrix.png')
 
 

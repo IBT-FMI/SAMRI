@@ -18,20 +18,19 @@ except ImportError:
 from samri.plotting.utilities import QUALITATIVE_COLORSET
 
 def plot_fsl_design(file_path):
-	"""Returns a plot of a Dataframe resulted from a csv file.    
-			
+	"""Returns a plot of a Dataframe resulted from a csv file.
+
 	Parameters
 	----------
 	file_path : str
 		The path and the filename to obtain the csv from.
-				
+
 	Returns
 	-------
-	axes : matplotlib.AxesSubplot or np.array of them	
-			
+	axes : matplotlib.AxesSubplot or np.array of them.
 	"""
-	
-	df = pd.read_csv(file_path, skiprows=5, sep="\t", header=None, names=[1,2,3,4,5,6], index_col=False)
+
+df = pd.read_csv(file_path, skiprows=5, sep="\t", header=None, names=[1,2,3,4,5,6], index_col=False)
 	df.plot()
 
 def plot_stim_design(file_path,stim):

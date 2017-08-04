@@ -1,10 +1,9 @@
 import numpy as np
-from os import path
-import os
+import collections
+import seaborn as sns
 from matplotlib import pyplot as plt
 from numpy import genfromtxt
-import seaborn as sns
-import collections
+from os import path
 from pandas import read_csv
 
 def fix_labels(labels,
@@ -73,5 +72,5 @@ def plot_connectivity_matrix(correlation_matrix,
 	cbar.ax.tick_params(labelsize=100)
 	# plt.subplots_adjust(left=.01, bottom=.3, top=.99, right=.62)
 	if(save_as):
-		plt.savefig(os.path.abspath(os.path.expanduser(save_as)))
+		plt.savefig(path.abspath(path.expanduser(save_as)))
 	plt.show()

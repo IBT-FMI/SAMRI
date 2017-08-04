@@ -1,10 +1,10 @@
-import os
 import multiprocessing
 import numpy as np
 import nibabel as nib
 import pandas as pd
 from copy import deepcopy
 from itertools import product
+from os import path
 
 try: FileNotFoundError
 except NameError:
@@ -20,7 +20,7 @@ def add_roi_data(img_path,masker,
 	subject_data={}
 	if substitution:
 		img_path = img_path.format(**substitution)
-	img_path = os.path.abspath(os.path.expanduser(img_path))
+	img_path = path.abspath(path.expanduser(img_path))
 	try:
 		img = nib.load(img_path)
 		img = masker.fit_transform(img)
@@ -50,7 +50,7 @@ def add_pattern_data(substitution,img_path,pattern,
 	subject_data={}
 	if substitution:
 		img_path = img_path.format(**substitution)
-	img_path = os.path.abspath(os.path.expanduser(img_path))
+	img_path = path.abspath(path.expanduser(img_path))
 	try:
 		img = nib.load(img_path)
 		img_data = img.get_data()

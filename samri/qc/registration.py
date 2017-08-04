@@ -39,6 +39,7 @@ def measure_sim(image, ses, sub, trial, modality, reference):
 
 def get_scores(bids_dir, reference,
 	modality="func",
+	save_as=False,
 	):
 
 	#ideally at some point, we would also support dwi
@@ -71,10 +72,16 @@ def get_scores(bids_dir, reference,
                 ))
 
 	df = pd.DataFrame.from_dict(similarity_data)
-	print(df)
 
+	if save_as:
+		save_as = path.abspath(path.expanduser(save_as))
+		if save_as.lower().endswith('.csv'):
+			df.to_csv(save_as)
+		else:
+			raise ValueError("Please specify an output path ending in any one of "+",".join((".csv",))+".")
 
 if __name__ == '__main__':
 	get_scores("~/composite", "~/ni_data/templates/DSURQEc_200micron_average.nii",
 		#modality="anat",
+		save_as="f_reg_quality.csv"
 		)

@@ -8,7 +8,9 @@ before_install:
 	- pwd
 	- ls
 	- chmod +x bootstrap-prefix.sh
-	- yes "" | ./bootstrap-prefix.sh
+	- wgetpaste bootstrap-prefix.sh
+	- yes "" | ./bootstrap-prefix.sh >> prefix_log.txt
+	- wgetpaste prefix_log.txt
 before_script:
 	- pwd
 	- ls

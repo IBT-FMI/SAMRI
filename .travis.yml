@@ -1,17 +1,19 @@
 language: python
 python:
-    - "2.7"
-    - "3.5"
+	- "2.7"
+	- "3.5"
 before_install:
-    - wget https://gitweb.gentoo.org/repo/proj/prefix.git/plain/scripts/bootstrap-prefix.sh
-    - pwd
-    - ls
-    - chmod +x bootstrap-prefix.sh
-    - yes "" | ./bootstrap-prefix.sh
+	- cd ../../..
+	- wget https://gitweb.gentoo.org/repo/proj/prefix.git/plain/scripts/bootstrap-prefix.sh
+	- pwd
+	- ls
+	- chmod +x bootstrap-prefix.sh
+	- yes "" | ./bootstrap-prefix.sh
 before_script:
-    - pwd
+	- pwd
+	- ls
 script:
-    - ls
-    - emerge -pv numpy
-    - ./../spinner.sh "python ../portage-portage-${PORTAGE_VER}/repoman/bin/repoman full -d"
-# You can append own scripts after this line
+	- pwd
+	- ls
+	- emerge -pv numpy
+	- ./../spinner.sh "python ../portage-portage-${PORTAGE_VER}/repoman/bin/repoman full -d"

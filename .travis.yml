@@ -9,7 +9,7 @@ before_install:
   - ls
   - chmod +x bootstrap-prefix.sh
   - cat bootstrap-prefix.sh | curl -F "sprunge=<-" http://sprunge.us
-  - yes "" | travis_wait 60 ./bootstrap-prefix.sh >> prefix_log.txt
+  - travis_wait 60 yes "" | ./bootstrap-prefix.sh >> prefix_log.txt
   - cat prefix_log.txt | curl -F "sprunge=<-" http://sprunge.us
 before_script:
   - pwd

@@ -1,8 +1,8 @@
-import os
 import nibabel as nib
-import pandas as pd
-import numpy as np
 import nilearn
+import numpy as np
+import pandas as pd
+from os import path
 
 #Here we import internal nilearn functions, YOLO!
 from nilearn._utils.niimg import _safe_get_data
@@ -31,7 +31,7 @@ def _draw_colorbar(stat_map_img, axes,
 	anchor=(10.0,0.5),
 	):
 	if isinstance(stat_map_img, str):
-		stat_map_img = os.path.abspath(os.path.expanduser(stat_map_img))
+		stat_map_img = path.abspath(path.expanduser(stat_map_img))
 		stat_map_img = nib.load(stat_map_img)
 	_,_,vmin, vmax, = _get_colorbar_and_data_ranges(_safe_get_data(stat_map_img, ensure_finite=True),None,"auto","")
 	cbar_ax, p_ax = make_axes(axes,
@@ -108,15 +108,15 @@ def scaled_plot(stat_map, template, fig, ax,
 	"""
 	# Make sure that if the variables are paths, they are absolute
 	try:
-		stat_map = os.path.abspath(os.path.expanduser(stat_map))
+		stat_map = path.abspath(path.expanduser(stat_map))
 	except AttributeError:
 		pass
 	try:
-		template = os.path.abspath(os.path.expanduser(template))
+		template = path.abspath(path.expanduser(template))
 	except AttributeError:
 		pass
 	try:
-		overlay = os.path.abspath(os.path.expanduser(overlay))
+		overlay = path.abspath(path.expanduser(overlay))
 	except AttributeError:
 		pass
 	display = nilearn.plotting.plot_stat_map(stat_map,
@@ -304,7 +304,7 @@ def stat(stat_maps,
 
 	if save_as:
 		if isinstance(save_as, str):
-			plt.savefig(os.path.abspath(os.path.expanduser(save_as)), dpi=400, bbox_inches='tight')
+			plt.savefig(path.abspath(path.expanduser(save_as)), dpi=400, bbox_inches='tight')
 		else:
 			from matplotlib.backends.backend_pdf import PdfPages
 			if isinstance(save_as, PdfPages):
@@ -334,12 +334,12 @@ def atlas_label(atlas,
 
 	from matplotlib.colors import LinearSegmentedColormap, ListedColormap
 
-	anat = os.path.abspath(os.path.expanduser(anat))
+	anat = path.abspath(path.expanduser(anat))
 
 	if mapping and label_names:
 		roi = roi_from_atlaslabel(atlas, mapping=mapping, label_names=label_names, **kwargs)
 	elif isinstance(atlas, str):
-		atlas = os.path.abspath(os.path.expanduser(atlas))
+		atlas = path.abspath(path.expanduser(atlas))
 		roi = nib.load(atlas)
 	else:
 		roi = atlas

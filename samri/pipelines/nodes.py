@@ -1,4 +1,4 @@
-import os
+from os import path
 
 import nipype.pipeline.engine as pe				# pypeline engine
 import nipype.interfaces.ants as ants
@@ -91,7 +91,7 @@ def autorotate(template):
 
 def structural_registration(template, num_threads=4):
 	registration = pe.Node(ants.Registration(), name="s_register")
-	registration.inputs.fixed_image = os.path.abspath(os.path.expanduser(template))
+	registration.inputs.fixed_image = path.abspath(path.expanduser(template))
 	registration.inputs.output_transform_prefix = "output_"
 	registration.inputs.transforms = ['Affine', 'SyN'] ##
 	registration.inputs.transform_parameters = [(1.0,), (1.0, 3.0, 5.0)] ##
@@ -120,7 +120,7 @@ def structural_registration(template, num_threads=4):
 	registration.inputs.num_threads = num_threads
 
 	f_warp = pe.Node(ants.ApplyTransforms(), name="f_warp")
-	f_warp.inputs.reference_image = os.path.abspath(os.path.expanduser(template))
+	f_warp.inputs.reference_image = path.abspath(path.expanduser(template))
 	f_warp.inputs.input_image_type = 3
 	f_warp.inputs.interpolation = 'Linear'
 	f_warp.inputs.invert_transform_flags = [False]
@@ -128,7 +128,7 @@ def structural_registration(template, num_threads=4):
 	f_warp.num_threads = num_threads
 
 	s_warp = pe.Node(ants.ApplyTransforms(), name="s_warp")
-	s_warp.inputs.reference_image = os.path.abspath(os.path.expanduser(template))
+	s_warp.inputs.reference_image = path.abspath(path.expanduser(template))
 	s_warp.inputs.input_image_type = 3
 	s_warp.inputs.interpolation = 'Linear'
 	s_warp.inputs.invert_transform_flags = [False]
@@ -148,7 +148,7 @@ def DSURQEc_structural_registration(template,
 	s_parameters = [phase_dictionary[selection] for selection in s_phases]
 
 	s_registration = pe.Node(ants.Registration(), name="s_register")
-	s_registration.inputs.fixed_image = os.path.abspath(os.path.expanduser(template))
+	s_registration.inputs.fixed_image = path.abspath(path.expanduser(template))
 	s_registration.inputs.output_transform_prefix = "output_"
 	s_registration.inputs.transforms = [i["transforms"] for i in s_parameters] ##
 	s_registration.inputs.transform_parameters = [i["transform_parameters"] for i in s_parameters] ##
@@ -173,13 +173,13 @@ def DSURQEc_structural_registration(template,
 	s_registration.inputs.winsorize_upper_quantile = 0.95
 	s_registration.inputs.args = '--float'
 	if mask:
-		s_registration.inputs.fixed_image_mask = os.path.abspath(os.path.expanduser(mask))
+		s_registration.inputs.fixed_image_mask = path.abspath(path.expanduser(mask))
 	s_registration.inputs.num_threads = num_threads
 
 	f_parameters = [phase_dictionary[selection] for selection in f_phases]
 
 	f_registration = pe.Node(ants.Registration(), name="f_register")
-	f_registration.inputs.fixed_image = os.path.abspath(os.path.expanduser(template))
+	f_registration.inputs.fixed_image = path.abspath(path.expanduser(template))
 	f_registration.inputs.output_transform_prefix = "output_"
 	f_registration.inputs.transforms = [i["transforms"] for i in f_parameters] ##
 	f_registration.inputs.transform_parameters = [i["transform_parameters"] for i in f_parameters] ##
@@ -204,12 +204,12 @@ def DSURQEc_structural_registration(template,
 	f_registration.inputs.winsorize_upper_quantile = 0.95
 	f_registration.inputs.args = '--float'
 	if mask:
-		f_registration.inputs.fixed_image_mask = os.path.abspath(os.path.expanduser(mask))
+		f_registration.inputs.fixed_image_mask = path.abspath(path.expanduser(mask))
 	f_registration.inputs.num_threads = num_threads
 
 
 	f_warp = pe.Node(ants.ApplyTransforms(), name="f_warp")
-	f_warp.inputs.reference_image = os.path.abspath(os.path.expanduser(template))
+	f_warp.inputs.reference_image = path.abspath(path.expanduser(template))
 	f_warp.inputs.input_image_type = 3
 	f_warp.inputs.interpolation = 'Linear'
 	f_warp.inputs.invert_transform_flags = [False, False]
@@ -217,7 +217,7 @@ def DSURQEc_structural_registration(template,
 	f_warp.num_threads = num_threads
 
 	s_warp = pe.Node(ants.ApplyTransforms(), name="s_warp")
-	s_warp.inputs.reference_image = os.path.abspath(os.path.expanduser(template))
+	s_warp.inputs.reference_image = path.abspath(path.expanduser(template))
 	s_warp.inputs.input_image_type = 3
 	s_warp.inputs.interpolation = 'Linear'
 	s_warp.inputs.invert_transform_flags = [False]
@@ -254,7 +254,7 @@ def composite_registration(template, num_threads=4):
 	f_registration.inputs.num_threads = num_threads
 
 	f_warp = pe.Node(ants.ApplyTransforms(), name="f_warp")
-	f_warp.inputs.reference_image = os.path.abspath(os.path.expanduser(template))
+	f_warp.inputs.reference_image = path.abspath(path.expanduser(template))
 	f_warp.inputs.input_image_type = 3
 	f_warp.inputs.interpolation = 'Linear'
 	f_warp.inputs.invert_transform_flags = [False, False]

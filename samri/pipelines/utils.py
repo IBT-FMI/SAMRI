@@ -2,8 +2,6 @@
 
 from __future__ import print_function, division, unicode_literals, absolute_import
 
-import os
-
 STIM_PROTOCOL_DICTIONARY={
 	"EPI_BOLD_chr_longSOA":"chr_longSOA",
 	"EPI_BOLD_jb_long":"jb_long",
@@ -97,7 +95,7 @@ def ss_to_path(subject_session):
 	return "/".join([subject,session])
 
 def sss_to_source(source_format, subject=False, session=False, scan=False, subject_session_scan=False, base_directory=False, groupby=False):
-	import os
+	from os import path
 
 	if any(a is False for a in [subject,session,scan]):
 		(subject,session,scan) = subject_session_scan
@@ -107,7 +105,7 @@ def sss_to_source(source_format, subject=False, session=False, scan=False, subje
 	else:
 		source = source_format.format(subject, session, scan)
 	if base_directory:
-		source = os.path.join(base_directory, source)
+		source = path.join(base_directory, source)
 	return source
 
 def sss_filename(subject_session, scan, scan_prefix="trial", suffix="", extension=".nii.gz"):

@@ -1,9 +1,9 @@
-import os
 import nibabel
-import pandas as pd
-import numpy as np
-from nilearn.input_data import NiftiLabelsMasker, NiftiMapsMasker, NiftiMasker
 import nipype.interfaces.io as nio
+import numpy as np
+import pandas as pd
+from os import path
+from nilearn.input_data import NiftiLabelsMasker, NiftiMapsMasker, NiftiMasker
 
 from matplotlib import rcParams
 
@@ -79,11 +79,11 @@ def roi_based(substitutions,
 
 	if roi:
 		if isinstance(roi, str):
-			roi = os.path.abspath(os.path.expanduser(roi))
+			roi = path.abspath(path.expanduser(roi))
 			roi = nib.load(roi)
 		masker = NiftiMasker(mask_img=roi)
 		if ts_file_template:
-			ts_file = os.path.expanduser(ts_file_template.format(**substitutions))
+			ts_file = path.expanduser(ts_file_template.format(**substitutions))
 			final_time_series = masker.fit_transform(ts_file).T
 			final_time_series = np.mean(final_time_series, axis=0)
 			if flip:
@@ -94,10 +94,10 @@ def roi_based(substitutions,
 				ax.set_xlim([0,len(final_time_series)])
 
 	if design_file_template:
-		design_file = os.path.expanduser(design_file_template.format(**substitutions))
+		design_file = path.expanduser(design_file_template.format(**substitutions))
 		design_df = pd.read_csv(design_file, skiprows=5, sep="\t", header=None, index_col=False)
 		if beta_file_template and roi:
-			beta_file = os.path.expanduser(beta_file_template.format(**substitutions))
+			beta_file = path.expanduser(beta_file_template.format(**substitutions))
 			roi_betas = masker.fit_transform(beta_file).T
 			design_df = design_df*np.mean(roi_betas)
 		for i in plot_design_regressors:
@@ -112,7 +112,7 @@ def roi_based(substitutions,
 			ax.set_xlim([0,len(regressor)])
 
 	if events_file_template:
-		events_file = os.path.expanduser(events_file_template.format(**substitutions))
+		events_file = path.expanduser(events_file_template.format(**substitutions))
 		events_df = pd.read_csv(events_file, sep="\t")
 		for d, o in zip(events_df["duration"], events_df["onset"]):
 			d = round(d)
@@ -221,7 +221,7 @@ def multi(timecourses, designs, stat_maps, events_dfs, subplot_titles,
 	else:
 		print("WARNING: you must specify either 'maps' or 'timecourses'")
 	if save_as:
-		save_as = os.path.abspath(os.path.expanduser(save_as))
+		save_as = path.abspath(path.expanduser(save_as))
 		plt.savefig(save_as)
 
 if __name__ == '__main__':

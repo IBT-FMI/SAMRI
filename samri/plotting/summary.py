@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-import os
 from itertools import product
 from copy import deepcopy
 
@@ -14,6 +13,7 @@ import statsmodels.formula.api as smf
 from joblib import Parallel, delayed
 from nilearn.input_data import NiftiMasker
 from nipype.interfaces.io import DataFinder
+from os import path
 from statsmodels.sandbox.stats.multicomp import multipletests
 
 from samri.utilities import add_roi_data, add_pattern_data
@@ -50,7 +50,7 @@ def roi_per_session(substitutions, roi_mask,
 	"""
 
 	if isinstance(roi_mask,str):
-		roi_mask = os.path.abspath(os.path.expanduser(roi_mask))
+		roi_mask = path.abspath(path.expanduser(roi_mask))
 	masker = NiftiMasker(mask_img=roi_mask)
 
 	n_jobs = mp.cpu_count()-2
@@ -65,7 +65,7 @@ def roi_per_session(substitutions, roi_mask,
 	if roi_mask_normalize:
 		figure="per-participant"
 		if isinstance(roi_mask_normalize,str):
-			mask_normalize = os.path.abspath(os.path.expanduser(roi_mask_normalize))
+			mask_normalize = path.abspath(path.expanduser(roi_mask_normalize))
 		masker_normalize = NiftiMasker(mask_img=mask_normalize)
 		roi_data = Parallel(n_jobs=n_jobs, verbose=0, backend="threading")(map(delayed(add_roi_data),
 			[t_file_template]*len(substitutions),
@@ -137,7 +137,7 @@ def analytic_pattern_per_session(substitutions, analytic_pattern,
 	"""
 
 	if isinstance(analytic_pattern,str):
-		analytic_pattern = os.path.abspath(os.path.expanduser(analytic_pattern))
+		analytic_pattern = path.abspath(path.expanduser(analytic_pattern))
 	analytic_pattern = nib.load(analytic_pattern)
 	pattern_data = analytic_pattern.get_data()
 
@@ -191,13 +191,13 @@ def responders(l2_dir,
 
 	data_regex = "(?P<subject>.+)/tstat1.nii.gz"
 	data_path = "{data_root}/l2/{l2_dir}/".format(data_root=data_root, l2_dir=l2_dir)
-	data_path = os.path.expanduser(data_path)
+	data_path = path.expanduser(data_path)
 	roi_path = "{roi_root}/{roi}.nii.gz".format(roi_root=roi_root, roi=roi)
-	roi_path = os.path.expanduser(roi_path)
+	roi_path = path.expanduser(roi_path)
 
 	data_find = DataFinder()
 	data_find.inputs.root_paths = data_path
-	data_find.inputs.match_regex = os.path.join(data_path,data_regex)
+	data_find.inputs.match_regex = path.join(data_path,data_regex)
 	found_data = data_find.run().outputs
 
 	masker = NiftiMasker(mask_img=roi_path)
@@ -255,12 +255,12 @@ def p_roi_masking(substitution, ts_file_template, beta_file_template, p_file_tem
 	Title for the subplot, computed from the substitution fields.
 	"""
 
-	ts_file = os.path.abspath(os.path.expanduser(ts_file_template.format(**substitution)))
-	beta_file = os.path.abspath(os.path.expanduser(beta_file_template.format(**substitution)))
-	p_file = os.path.abspath(os.path.expanduser(p_file_template.format(**substitution)))
-	design_file = os.path.abspath(os.path.expanduser(design_file_template.format(**substitution)))
-	event_file = os.path.abspath(os.path.expanduser(event_file_template.format(**substitution)))
-	brain_mask = os.path.abspath(os.path.expanduser(brain_mask))
+	ts_file = path.abspath(path.expanduser(ts_file_template.format(**substitution)))
+	beta_file = path.abspath(path.expanduser(beta_file_template.format(**substitution)))
+	p_file = path.abspath(path.expanduser(p_file_template.format(**substitution)))
+	design_file = path.abspath(path.expanduser(design_file_template.format(**substitution)))
+	event_file = path.abspath(path.expanduser(event_file_template.format(**substitution)))
+	brain_mask = path.abspath(path.expanduser(brain_mask))
 	try:
 		img = nib.load(p_file)
 		brain_mask = nib.load(brain_mask)
@@ -331,10 +331,10 @@ def roi_masking(substitution, ts_file_template, beta_file_template, design_file_
 	Title for the subplot, computed from the substitution fields.
 	"""
 
-	ts_file = os.path.expanduser(ts_file_template.format(**substitution))
-	beta_file = os.path.expanduser(beta_file_template.format(**substitution))
-	design_file = os.path.expanduser(design_file_template.format(**substitution))
-	event_file = os.path.expanduser(event_file_template.format(**substitution))
+	ts_file = path.expanduser(ts_file_template.format(**substitution))
+	beta_file = path.expanduser(beta_file_template.format(**substitution))
+	design_file = path.expanduser(design_file_template.format(**substitution))
+	event_file = path.expanduser(event_file_template.format(**substitution))
 
 	masker = NiftiMasker(mask_img=roi_path)
 	mask_map = nib.load(roi_path)
@@ -362,7 +362,7 @@ def ts_overviews(substitutions, roi_path,
 	stat_maps = []
 	subplot_titles = []
 	designs = []
-	roi_path = os.path.expanduser(roi_path)
+	roi_path = path.expanduser(roi_path)
 
 	n_jobs = mp.cpu_count()-2
 	substitutions_data = Parallel(n_jobs=n_jobs, verbose=0, backend="threading")(map(delayed(roi_masking),

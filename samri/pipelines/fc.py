@@ -1,7 +1,7 @@
 import nibabel
 import numpy as np
 import nipype.interfaces.io as nio
-from os import path, listdir, getcwd, remove
+from os import path
 
 
 from nilearn.input_data import NiftiMasker, NiftiLabelsMasker
@@ -13,7 +13,7 @@ def dual_regression(substitutions_a, substitutions_b,
 	components=9,
 	group_level="concat",
 	tr=1,
-	ts_file_template="~/ni_data/ofM.dr/preprocessing/{preprocessing_dir}/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_trial-{scan}.nii.gz",
+	ts_file_template="{data_dir}/preprocessing/{preprocessing_dir}/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_trial-{scan}.nii.gz",
 	):
 
 	all_merged_path = path.abspath(path.expanduser(all_merged_path))
@@ -181,8 +181,9 @@ def seed_based_connectivity(ts, seed_mask,
 	return seed_based_correlation_img
 
 def correlation_matrix(ts,
-	brain_mask="~/ni_data/templates/DSURQEc_200micron_mask.nii.gz",
+	labels_img='',
 	loud = False,
+	save_as = '',
 	):
 	"""Return a csv containing correlations between ROIs.
 
@@ -192,15 +193,17 @@ def correlation_matrix(ts,
 	ts : string
 	Path to the 4D NIfTI timeseries file on which to perform the connectivity analysis.
 
-	brain mask : string
-	Path to a 3D NIfTI-like binary mask file designating ROIs.
+	labels_img: string
+	Path to a 3D NIfTI-like binary label file designating ROIs.
+
+	safe_as : str
 
 	"""
 	ts = path.abspath(path.expanduser(ts))
-	brain_mask = path.abspath(path.expanduser(brain_mask))
+	labels_img = path.abspath(path.expanduser(labels_img))
 
 	labels_masker = NiftiLabelsMasker(
-		labels_img=brain_mask,
+		labels_img=labels_img,
 		standardize=True,
 		memory='nilearn_cache',
 		verbose=5
@@ -211,6 +214,7 @@ def correlation_matrix(ts,
 	correlation_measure = ConnectivityMeasure(kind='correlation')
 	correlation_matrix = correlation_measure.fit_transform([timeseries])[0]
 
-	np.savetxt('correlation_matrix.csv', correlation_matrix, delimiter=',')
+	if save_as:
+		np.savetxt(path.abspath(path.expanduser(save_as)), correlation_matrix, delimiter=',')
 
 	return correlation_matrix

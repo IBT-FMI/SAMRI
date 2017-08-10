@@ -1,9 +1,9 @@
-import os
 import nibabel
-import pandas as pd
-import numpy as np
-from nilearn.input_data import NiftiLabelsMasker, NiftiMapsMasker, NiftiMasker
 import nipype.interfaces.io as nio
+import numpy as np
+import pandas as pd
+from os import path
+from nilearn.input_data import NiftiLabelsMasker, NiftiMapsMasker, NiftiMasker
 
 from matplotlib import rcParams
 
@@ -18,20 +18,19 @@ except ImportError:
 from samri.plotting.utilities import QUALITATIVE_COLORSET
 
 def plot_fsl_design(file_path):
-	"""Returns a plot of a Dataframe resulted from a csv file.    
-			
+	"""Returns a plot of a Dataframe resulted from a csv file.
+
 	Parameters
 	----------
 	file_path : str
 		The path and the filename to obtain the csv from.
-				
+
 	Returns
 	-------
-	axes : matplotlib.AxesSubplot or np.array of them	
-			
+	axes : matplotlib.AxesSubplot or np.array of them.
 	"""
-	
-	df = pd.read_csv(file_path, skiprows=5, sep="\t", header=None, names=[1,2,3,4,5,6], index_col=False)
+
+df = pd.read_csv(file_path, skiprows=5, sep="\t", header=None, names=[1,2,3,4,5,6], index_col=False)
 	df.plot()
 
 def plot_stim_design(file_path,stim):
@@ -56,7 +55,6 @@ def plot_stim_design(file_path,stim):
 	# 	d = int(d[0])
 	# 	o = int(o[0])
 	# 	ax.axvspan(o,o+d, facecolor="cyan", alpha=0.15)
-	# 	plt.hold(True)
 	ax = df.plot(ax=ax)
 	#remove bottom and top small tick lines
 	plt.tick_params(axis='x', which='both', bottom='off', top='off', left='off', right='off')
@@ -81,11 +79,11 @@ def roi_based(substitutions,
 
 	if roi:
 		if isinstance(roi, str):
-			roi = os.path.abspath(os.path.expanduser(roi))
+			roi = path.abspath(path.expanduser(roi))
 			roi = nib.load(roi)
 		masker = NiftiMasker(mask_img=roi)
 		if ts_file_template:
-			ts_file = os.path.expanduser(ts_file_template.format(**substitutions))
+			ts_file = path.expanduser(ts_file_template.format(**substitutions))
 			final_time_series = masker.fit_transform(ts_file).T
 			final_time_series = np.mean(final_time_series, axis=0)
 			if flip:
@@ -96,10 +94,10 @@ def roi_based(substitutions,
 				ax.set_xlim([0,len(final_time_series)])
 
 	if design_file_template:
-		design_file = os.path.expanduser(design_file_template.format(**substitutions))
+		design_file = path.expanduser(design_file_template.format(**substitutions))
 		design_df = pd.read_csv(design_file, skiprows=5, sep="\t", header=None, index_col=False)
 		if beta_file_template and roi:
-			beta_file = os.path.expanduser(beta_file_template.format(**substitutions))
+			beta_file = path.expanduser(beta_file_template.format(**substitutions))
 			roi_betas = masker.fit_transform(beta_file).T
 			design_df = design_df*np.mean(roi_betas)
 		for i in plot_design_regressors:
@@ -114,7 +112,7 @@ def roi_based(substitutions,
 			ax.set_xlim([0,len(regressor)])
 
 	if events_file_template:
-		events_file = os.path.expanduser(events_file_template.format(**substitutions))
+		events_file = path.expanduser(events_file_template.format(**substitutions))
 		events_df = pd.read_csv(events_file, sep="\t")
 		for d, o in zip(events_df["duration"], events_df["onset"]):
 			d = round(d)
@@ -123,7 +121,6 @@ def roi_based(substitutions,
 				ax.axhspan(o,o+d, facecolor="cyan", alpha=0.15)
 			else:
 				ax.axvspan(o,o+d, facecolor="cyan", alpha=0.15)
-			plt.hold(True)
 		if design_len:
 			if flip:
 				ax.set_ylim([0,design_len])
@@ -131,7 +128,7 @@ def roi_based(substitutions,
 				ax.set_xlim([0,design_len])
 
 	if melodic_hit:
-		melodic_file = "/home/chymera/ni_data/ofM.dr/20151208_182500_4007_1_4/melo10/report/t4.txt"
+		melodic_file = "~/ni_data/ofM.dr/20151208_182500_4007_1_4/melo10/report/t4.txt"
 		melodic = np.loadtxt(melodic_file)
 		if flip:
 			melodic = melodic.T
@@ -150,6 +147,7 @@ def roi_based(substitutions,
 def multi(timecourses, designs, stat_maps, events_dfs, subplot_titles,
 	colors=QUALITATIVE_COLORSET,
 	figure="maps",
+	quantitative=True,
 	save_as="",
 	):
 	if figure == "maps":
@@ -181,32 +179,30 @@ def multi(timecourses, designs, stat_maps, events_dfs, subplot_titles,
 					d = round(d)
 					o = round(o)
 					ax.axvspan(o,o+d, facecolor="cyan", alpha=0.15)
-					plt.hold(True)
 				ax.plot(timecourse, lw=rcParams['lines.linewidth']/4)
 				ax.plot(design[0])
 				if not ix in xlabel_positive:
 					plt.setp(ax.get_xticklabels(), visible=False)
-				current_ylim = ax.get_ylim()
-				ax.yaxis.grid(False)
+				if not quantitative:
+					ax.yaxis.grid(False)
+					ax.set_yticks([])
+				else:
+					ax.yaxis.set_label_position("right")
+				ax.tick_params(axis='y',)
 				ax.set_xlim([0,len(timecourse)])
-				ax.set_yticks([])
 				ax.set_ylabel(subplot_title)
 		else:
 			fig, ax = plt.subplots(figsize=(10,2), facecolor='#eeeeee')
-			# xlabel_positive = [(i*max_rows)-1 for i in range(1,ncols)]
-			# xlabel_positive.append(len(timecourses)-1)
 
 			timecourse = timecourses[0]
 			design = designs[0]
 			events_df = events_dfs[0]
 			subplot_title = "Arbitrary Units"
-			# subplot_title = subplot_titles[0]
 
 			for d, o in zip(events_df["duration"], events_df["onset"]):
 				d = round(d)
 				o = round(o)
 				ax.axvspan(o,o+d, facecolor="cyan", alpha=0.15)
-				plt.hold(True)
 			ax.plot(timecourse, lw=rcParams['lines.linewidth']*1.5, color=colors[0], alpha=1)
 			for ix, i in enumerate(design):
 				try:
@@ -214,27 +210,27 @@ def multi(timecourses, designs, stat_maps, events_dfs, subplot_titles,
 				except IndexError:
 					pass
 				ax.plot(design[ix], lw=rcParams['lines.linewidth']*2, color=iteration_color, alpha=1)
-			# if not ix in xlabel_positive:
-			# 	plt.setp(ax.get_xticklabels(), visible=False)
-			current_ylim = ax.get_ylim()
-			ax.yaxis.grid(False)
+			if not quantitative:
+				ax.yaxis.grid(False)
+				ax.set_yticks([])
+			else:
+				ax.yaxis.set_label_position("right")
 			ax.set_xlim([0,len(timecourse)])
-			ax.set_yticks([])
 			ax.set_ylabel(subplot_title)
 			ax.set_xlabel("TR[1s]")
 	else:
 		print("WARNING: you must specify either 'maps' or 'timecourses'")
 	if save_as:
-		save_as = os.path.abspath(os.path.expanduser(save_as))
+		save_as = path.abspath(path.expanduser(save_as))
 		plt.savefig(save_as)
 
 if __name__ == '__main__':
-	# plot_fsl_design("/home/chymera/ni_data/ofM.dr/level1/first_level/_condition_ofM_subject_4001/modelgen/run0.mat")
+	# plot_fsl_design("~/ni_data/ofM.dr/level1/first_level/_condition_ofM_subject_4001/modelgen/run0.mat")
 	# stim = {"durations":[[20.0], [20.0], [20.0], [20.0], [20.0], [20.0]], "onsets":[[172.44299999999998], [352.443], [532.443], [712.443], [892.443], [1072.443]]}
-	# plot_stim_design("/home/chymera/level1/first_level/_condition_ERC_ofM_subject_5503/_scan_type_T2_TurboRARE/_scan_type_EPI_CBV_alej/modelgen/run0.mat",stim)
+	# plot_stim_design("~/level1/first_level/_condition_ERC_ofM_subject_5503/_scan_type_T2_TurboRARE/_scan_type_EPI_CBV_alej/modelgen/run0.mat",stim)
 	# plot_stim_design(
-		# "/home/chymera/run0_dg.mat",
-		# "/home/chymera/report_dg.rst"
+		# "~/run0_dg.mat",
+		# "~/report_dg.rst"
 		# )
 
 	# plt.style.use(u'seaborn-darkgrid')

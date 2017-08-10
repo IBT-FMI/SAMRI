@@ -26,12 +26,12 @@ def force_dummy_scans(in_file, scan_dir,
 	Desired timepoints dummy scans.
 	"""
 
-	import os
 	import nibabel as nib
+	from os import path
 
-	out_file = os.path.abspath(os.path.expanduser(out_file))
+	out_file = path.abspath(path.expanduser(out_file))
 
-	method_file_path = os.path.join(scan_dir,"method")
+	method_file_path = path.join(scan_dir,"method")
 	method_file = open(method_file_path, "r")
 	dummy_scans = 0
 	while True:
@@ -80,20 +80,20 @@ def write_events_file(scan_dir, scan_type, stim_protocol_dictionary,
 		return
 
 	import csv
-	import os
 	import sys
 	from copy import deepcopy
 	from datetime import datetime
+	from os import path
 	import pandas as pd
 	import numpy as np
 	from labbookdb.db.query import loadSession
 	from labbookdb.db.common_classes import LaserStimulationProtocol
 
-	out_file = os.path.abspath(os.path.expanduser(out_file))
+	out_file = path.abspath(path.expanduser(out_file))
 
 	if not subject_delay:
-		scan_dir = os.path.abspath(os.path.expanduser(scan_dir))
-		state_file_path = os.path.join(scan_dir,"AdjStatePerScan")
+		scan_dir = path.abspath(path.expanduser(scan_dir))
+		state_file_path = path.join(scan_dir,"AdjStatePerScan")
 
 		#Here we read the `AdjStatePerScan` file, which may be missing if no adjustments were run at the beginning of this scan
 		try:
@@ -114,7 +114,7 @@ def write_events_file(scan_dir, scan_type, stim_protocol_dictionary,
 				delay_seconds += 12
 
 		#Here we read the `method` file, which contains info about dummy scans
-		method_file_path = os.path.join(scan_dir,"method")
+		method_file_path = path.join(scan_dir,"method")
 		method_file = open(method_file_path, "r")
 
 		read_variables=0 #count variables so that breaking takes place after both have been read

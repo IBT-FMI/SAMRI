@@ -1,9 +1,7 @@
-import os
-
 import nibabel as nib
 import numpy as np
 import pandas as pd
-
+from os import path
 from scipy import ndimage
 
 def roi_from_atlaslabel(atlas, mapping, label_names,
@@ -22,8 +20,8 @@ def roi_from_atlaslabel(atlas, mapping, label_names,
 	Whether to dilate the roi by one voxel. This is useful for filling up downsampled masks (nearest-neighbour interpolation, may create unexpected holes in masks).
 	"""
 
-	mapping = os.path.abspath(os.path.expanduser(mapping))
-	atlas = os.path.abspath(os.path.expanduser(atlas))
+	mapping = path.abspath(path.expanduser(mapping))
+	atlas = path.abspath(path.expanduser(atlas))
 	atlas = nib.load(atlas)
 
 	mapping = pd.read_csv(mapping)
@@ -40,6 +38,6 @@ def roi_from_atlaslabel(atlas, mapping, label_names,
 		masked_data = ndimage.binary_dilation(masked_data).astype(masked_data.dtype)
 	roi = nib.Nifti1Image(masked_data, affine, header)
 	if save_as:
-		roi.to_filename(os.path.abspath(os.path.expanduser(save_as)))
+		roi.to_filename(path.abspath(path.expanduser(save_as)))
 
 	return roi

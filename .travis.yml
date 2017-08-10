@@ -1,0 +1,21 @@
+language: python
+python:
+  - "2.7"
+  - "3.5"
+before_install:
+  - cd ../../..
+  - wget https://gitweb.gentoo.org/repo/proj/prefix.git/plain/scripts/bootstrap-prefix.sh
+  - pwd
+  - ls
+  - chmod +x bootstrap-prefix.sh
+  - cat bootstrap-prefix.sh | curl -F "sprunge=<-" http://sprunge.us
+  - travis_wait 60 |& yes "" | ./bootstrap-prefix.sh >> prefix_log.txt
+  - cat prefix_log.txt | curl -F "sprunge=<-" http://sprunge.us
+before_script:
+  - pwd
+  - ls
+script:
+  - pwd
+  - ls
+  - emerge -pv numpy
+  - ./../spinner.sh "python ../portage-portage-${PORTAGE_VER}/repoman/bin/repoman full -d"

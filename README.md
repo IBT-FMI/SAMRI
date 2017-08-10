@@ -1,4 +1,5 @@
 # SAMRI
+[![Build Status](https://travis-ci.org/IBT-FMI/SAMRI.svg?branch=master)](https://travis-ci.org/IBT-FMI/SAMRI)
 
 SAMRI (Small Animal Magnetic Resonance Imaging) - pronounced "Sam-rye" - provides fMRI preprocessing, metadata parsing, and data analysis functions and pipelines.
 SAMRI integrates functionalities from a number of other packages (listed under the dependencies section below) to create higher-level tools.
@@ -44,10 +45,10 @@ This method is sub-par for dependency management (see above notice), but - as a 
 git clone git@github.com:IBT-FMI/SAMRI.git
 cd SAMRI
 mkdir ~/.python_develop
-python setup.py develop --install-dir ~/.python_develop/
 echo "export PYTHONPATH=\$HOME/.python_develop:\$PYTHONPATH" >> ~/.bashrc
 echo "export PATH=\$HOME/.python_develop:\$PATH" >> ~/.bashrc
 source ~/.bashrc
+python setup.py develop --install-dir ~/.python_develop/
 ````
 
 If you are getting a `Permission denied (publickey)` error upon trying to clone, please try pulling via the HTTPS link:

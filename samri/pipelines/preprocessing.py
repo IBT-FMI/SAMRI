@@ -169,6 +169,9 @@ def bruker(measurements_base,
 		s_bru2nii.inputs.force_conversion=True
 		s_bru2nii.inputs.actual_size=actual_size
 
+		s_bids_filename = pe.Node(name='s_bids_filename', interface=util.Function(function=sss_filename,input_names=inspect.getargspec(sss_filename)[0], output_names=['filename']))
+		s_bids_filename.inputs.scan_prefix = False
+
 		if actual_size:
 			s_biascorrect = pe.Node(interface=ants.N4BiasFieldCorrection(), name="s_biascorrect")
 			s_biascorrect.inputs.dimension = 3
@@ -242,9 +245,6 @@ def bruker(measurements_base,
 
 		if autorotate:
 			s_rotated = autorotate(template)
-
-		s_bids_filename = pe.Node(name='s_bids_filename', interface=util.Function(function=sss_filename,input_names=inspect.getargspec(sss_filename)[0], output_names=['filename']))
-		s_bids_filename.inputs.scan_prefix = False
 
 		workflow_connections.extend([
 			(infosource, get_s_scan, [('subject_session', 'selector')]),

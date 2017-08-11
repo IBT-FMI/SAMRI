@@ -302,3 +302,36 @@ def functional_registration(template):
 	warp.num_threads = 4
 
 	return registration, warp
+
+def real_size_nodes():
+	s_biascorrect = pe.Node(interface=ants.N4BiasFieldCorrection(), name="s_biascorrect")
+	s_biascorrect.inputs.dimension = 3
+	s_biascorrect.inputs.bspline_fitting_distance = 10
+	s_biascorrect.inputs.bspline_order = 4
+	s_biascorrect.inputs.shrink_factor = 2
+	s_biascorrect.inputs.n_iterations = [150,100,50,30]
+	s_biascorrect.inputs.convergence_threshold = 1e-16
+
+	s_biascorrect = pe.Node(interface=ants.N4BiasFieldCorrection(), name="f_biascorrect")
+	s_biascorrect.inputs.dimension = 3
+	s_biascorrect.inputs.bspline_fitting_distance = 10
+	s_biascorrect.inputs.bspline_order = 4
+	s_biascorrect.inputs.shrink_factor = 2
+	s_biascorrect.inputs.n_iterations = [150,100,50,30]
+	s_biascorrect.inputs.convergence_threshold = 1e-11
+
+def inflated_size_nodes():
+	s_biascorrect = pe.Node(interface=ants.N4BiasFieldCorrection(), name="s_biascorrect")
+	s_biascorrect.inputs.dimension = 3
+	s_biascorrect.inputs.bspline_fitting_distance = 100
+	s_biascorrect.inputs.shrink_factor = 2
+	s_biascorrect.inputs.n_iterations = [200,200,200,200]
+	s_biascorrect.inputs.convergence_threshold = 1e-11
+
+	f_biascorrect = pe.Node(interface=ants.N4BiasFieldCorrection(), name="f_biascorrect")
+	f_biascorrect.inputs.dimension = 3
+	f_biascorrect.inputs.bspline_fitting_distance = 100
+	f_biascorrect.inputs.shrink_factor = 2
+	f_biascorrect.inputs.n_iterations = [200,200,200,200]
+	f_biascorrect.inputs.convergence_threshold = 1e-11
+

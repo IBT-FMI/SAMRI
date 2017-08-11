@@ -82,10 +82,11 @@ def bruker(measurements_base,
 	if not sessions:
 		sessions = set(list(data_selection["session"]))
 
+	# we currently only support one structural scan type per session
 	if structural_registration:
 		structural_scan_types = [structural_scan_types[0]]
 
-	# here we start to define the nipype workflow elements (nodes, connectons, meta)
+	# we start to define nipype workflow elements (nodes, connections, meta)
 	subjects_sessions = data_selection[["subject","session"]].drop_duplicates().values.tolist()
 	infosource = pe.Node(interface=util.IdentityInterface(fields=['subject_session']), name="infosource")
 	infosource.iterables = [('subject_session', subjects_sessions)]
@@ -107,12 +108,6 @@ def bruker(measurements_base,
 	events_file.inputs.dummy_scans_ms = DUMMY_SCANS * tr * 1000
 	events_file.inputs.stim_protocol_dictionary = STIM_PROTOCOL_DICTIONARY
 	events_file.inputs.very_nasty_bruker_delay_hack = very_nasty_bruker_delay_hack
-
-	if realign:
-		realigner = pe.Node(interface=nipy.SpaceTimeRealigner(), name="realigner")
-		realigner.inputs.slice_times = "asc_alt_2"
-		realigner.inputs.tr = tr
-		realigner.inputs.slice_info = 3 #3 for coronal slices (2 for horizontal, 1 for sagittal)
 
 	bandpass = pe.Node(interface=fsl.maths.TemporalFilter(), name="bandpass")
 	bandpass.inputs.highpass_sigma = highpass_sigma
@@ -152,13 +147,18 @@ def bruker(measurements_base,
 		]
 
 	if realign:
+		realigner = pe.Node(interface=nipy.SpaceTimeRealigner(), name="realigner")
+		realigner.inputs.slice_times = "asc_alt_2"
+		realigner.inputs.tr = tr
+		realigner.inputs.slice_info = 3	#coronal (2=horizontal, 1=sagittal)
+
 		workflow_connections.extend([
 			(dummy_scans, realigner, [('out_file', 'in_file')]),
 			])
 
 	#ADDING SELECTABLE NODES AND EXTENDING WORKFLOW AS APPROPRIATE:
 	if structural_scan_types:
-		get_s_scan = pe.Node(name='get_s_scan', interface=util.Function(function=get_scan,input_names=inspect.getargspec(get_scan)[0], output_names=['scan_path','scan_type']))
+		get_s_scan = pe.Node(name='get_s_scan', interface=util.Function(function=get_scan, input_names=inspect.getargspec(get_scan)[0], output_names=['scan_path','scan_type']))
 		if not strict:
 			get_s_scan.inputs.ignore_exception = True
 		get_s_scan.inputs.data_selection = data_selection
@@ -169,7 +169,7 @@ def bruker(measurements_base,
 		s_bru2nii.inputs.force_conversion=True
 		s_bru2nii.inputs.actual_size=actual_size
 
-		if "DSURQEc" in template:
+		if actual_size:
 			s_biascorrect = pe.Node(interface=ants.N4BiasFieldCorrection(), name="s_biascorrect")
 			s_biascorrect.inputs.dimension = 3
 			s_biascorrect.inputs.bspline_fitting_distance = 10

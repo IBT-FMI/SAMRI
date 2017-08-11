@@ -105,6 +105,8 @@ def bruker(measurements_base,
 	dummy_scans.inputs.desired_dummy_scans = DUMMY_SCANS
 
 	events_file = pe.Node(name='events_file', interface=util.Function(function=write_events_file,input_names=inspect.getargspec(write_events_file)[0], output_names=['out_file']))
+	if not strict:
+		events_file.inputs.ignore_exception = True
 	events_file.inputs.dummy_scans_ms = DUMMY_SCANS * tr * 1000
 	events_file.inputs.stim_protocol_dictionary = STIM_PROTOCOL_DICTIONARY
 	events_file.inputs.very_nasty_bruker_delay_hack = very_nasty_bruker_delay_hack

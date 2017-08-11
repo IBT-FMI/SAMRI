@@ -173,13 +173,7 @@ def bruker(measurements_base,
 		s_bids_filename.inputs.scan_prefix = False
 
 		if actual_size:
-			s_biascorrect = pe.Node(interface=ants.N4BiasFieldCorrection(), name="s_biascorrect")
-			s_biascorrect.inputs.dimension = 3
-			s_biascorrect.inputs.bspline_fitting_distance = 10
-			s_biascorrect.inputs.bspline_order = 4
-			s_biascorrect.inputs.shrink_factor = 2
-			s_biascorrect.inputs.n_iterations = [150,100,50,30]
-			s_biascorrect.inputs.convergence_threshold = 1e-16
+			real_size_nodes()
 			s_register, s_warp, _, _ = DSURQEc_structural_registration(template, registration_mask)
 			#TODO: incl. in func registration
 			if autorotate:
@@ -195,12 +189,7 @@ def bruker(measurements_base,
 					(s_warp, datasink, [('output_image', 'anat')]),
 					])
 		else:
-			s_biascorrect = pe.Node(interface=ants.N4BiasFieldCorrection(), name="s_biascorrect")
-			s_biascorrect.inputs.dimension = 3
-			s_biascorrect.inputs.bspline_fitting_distance = 100
-			s_biascorrect.inputs.shrink_factor = 2
-			s_biascorrect.inputs.n_iterations = [200,200,200,200]
-			s_biascorrect.inputs.convergence_threshold = 1e-11
+			inflated_size_nodes()
 
 			s_reg_biascorrect = pe.Node(interface=ants.N4BiasFieldCorrection(), name="s_reg_biascorrect")
 			s_reg_biascorrect.inputs.dimension = 3
@@ -280,13 +269,6 @@ def bruker(measurements_base,
 
 		temporal_mean = pe.Node(interface=fsl.MeanImage(), name="temporal_mean")
 
-		f_biascorrect = pe.Node(interface=ants.N4BiasFieldCorrection(), name="f_biascorrect")
-		f_biascorrect.inputs.dimension = 3
-		f_biascorrect.inputs.bspline_fitting_distance = 100
-		f_biascorrect.inputs.shrink_factor = 2
-		f_biascorrect.inputs.n_iterations = [200,200,200,200]
-		f_biascorrect.inputs.convergence_threshold = 1e-11
-
 		merge = pe.Node(util.Merge(2), name='merge')
 
 		workflow_connections.extend([
@@ -312,13 +294,6 @@ def bruker(measurements_base,
 		f_register, f_warp = functional_registration(template)
 
 		temporal_mean = pe.Node(interface=fsl.MeanImage(), name="temporal_mean")
-
-		f_biascorrect = pe.Node(interface=ants.N4BiasFieldCorrection(), name="f_biascorrect")
-		f_biascorrect.inputs.dimension = 3
-		f_biascorrect.inputs.bspline_fitting_distance = 100
-		f_biascorrect.inputs.shrink_factor = 2
-		f_biascorrect.inputs.n_iterations = [200,200,200,200]
-		f_biascorrect.inputs.convergence_threshold = 1e-11
 
 		f_cutoff = pe.Node(interface=fsl.ImageMaths(), name="f_cutoff")
 		f_cutoff.inputs.op_string = "-thrP 30"

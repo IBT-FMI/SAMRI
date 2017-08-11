@@ -240,7 +240,7 @@ def bruker(measurements_base,
 					])
 
 
-		if(autorotate):
+		if autorotate:
 			s_rotated = autorotate(template)
 
 		s_bids_filename = pe.Node(name='s_bids_filename', interface=util.Function(function=sss_filename,input_names=inspect.getargspec(sss_filename)[0], output_names=['filename']))

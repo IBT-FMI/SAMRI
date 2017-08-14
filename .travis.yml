@@ -1,16 +1,15 @@
+sudo: required
 language: python
+services:
+  - docker
 python:
   - "2.7"
   - "3.5"
 before_install:
-  - cd ../../..
-  - wget https://gitweb.gentoo.org/repo/proj/prefix.git/plain/scripts/bootstrap-prefix.sh
-  - pwd
-  - ls
-  - chmod +x bootstrap-prefix.sh
-  - cat bootstrap-prefix.sh | curl -F "sprunge=<-" http://sprunge.us
-  - travis_wait 60 |& yes "" | ./bootstrap-prefix.sh >> prefix_log.txt
-  - cat prefix_log.txt | curl -F "sprunge=<-" http://sprunge.us
+  - docker pull gentoo/portage
+  - docker run -d -p 127.0.0.1:80:4567 carlad/sinatra /bin/sh -c "pwd; ls; cd gentoo/portage; bundle exec foreman start;"
+  - docker ps -a
+  - docker run carlad/sinatra /bin/sh -c "pwd; ls; cd gentoo/portage; bundle exec rake test"
 before_script:
   - pwd
   - ls

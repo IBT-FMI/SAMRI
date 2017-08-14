@@ -7,9 +7,9 @@ python:
   - "3.5"
 before_install:
   - docker pull gentoo/portage
-  - docker run -d -p 127.0.0.1:80:4567 carlad/sinatra /bin/sh -c "pwd; ls; cd gentoo/portage; bundle exec foreman start;"
+  - docker run -d -p 127.0.0.1:80:4567 gentoo/portage /bin/sh -c "pwd; ls; cd gentoo/portage"
   - docker ps -a
-  - docker run carlad/sinatra /bin/sh -c "pwd; ls; cd gentoo/portage; bundle exec rake test"
+  - docker run carlad/sinatra /bin/sh -c "pwd; ls; cd gentoo/portage"
 before_script:
   - pwd
   - ls

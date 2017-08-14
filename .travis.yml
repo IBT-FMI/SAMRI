@@ -7,9 +7,9 @@ python:
   - "3.5"
 before_install:
   - docker pull gentoo/stage3-amd64
-  - docker run -d -p 127.0.0.1:80:4567 gentoo/stage3-amd64 /bin/sh -c "pwd; ls; cd gentoo/stage3-amd64"
+  - docker run -d -p 127.0.0.1:80:4567 gentoo/stage3-amd64
   - docker ps -a
-  - docker run gentoo/stage3-amd64 /bin/sh -c "pwd; ls; cd gentoo/stage3-amd64"
+  - docker run gentoo/stage3-amd64 /bin/sh -c "pwd; ls; emerge -pv numpy"
 before_script:
   - pwd
   - ls

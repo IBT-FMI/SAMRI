@@ -76,9 +76,6 @@ def write_events_file(scan_dir, scan_type, stim_protocol_dictionary,
 	very_nasty_bruker_delay_hack=False,
 	):
 
-	if scan_type in ["EPI_CBV", "EPI_BOLD"] or "rest" in scan_type:
-		return
-
 	import csv
 	import sys
 	from copy import deepcopy
@@ -133,8 +130,13 @@ def write_events_file(scan_dir, scan_type, stim_protocol_dictionary,
 
 		subject_delay = delay_seconds + dummy_scans_ms/1000
 
+	try:
+		trial_code = stim_protocol_dictionary[scan_type]
+	except KeyError:
+		return
+
 	session, engine = loadSession(db_path)
-	sql_query=session.query(LaserStimulationProtocol).filter(LaserStimulationProtocol.code==stim_protocol_dictionary[scan_type])
+	sql_query=session.query(LaserStimulationProtocol).filter(LaserStimulationProtocol.code==trial_code)
 	mystring = sql_query.statement
 	mydf = pd.read_sql_query(mystring,engine)
 	delay = int(mydf["stimulation_onset"][0])

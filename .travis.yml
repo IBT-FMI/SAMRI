@@ -1,16 +1,15 @@
+sudo: required
 language: python
+services:
+  - docker
 python:
   - "2.7"
   - "3.5"
 before_install:
-  - cd ../../..
-  - wget https://gitweb.gentoo.org/repo/proj/prefix.git/plain/scripts/bootstrap-prefix.sh
-  - pwd
-  - ls
-  - chmod +x bootstrap-prefix.sh
-  - cat bootstrap-prefix.sh | curl -F "sprunge=<-" http://sprunge.us
-  - travis_wait 60 |& yes "" | ./bootstrap-prefix.sh >> prefix_log.txt
-  - cat prefix_log.txt | curl -F "sprunge=<-" http://sprunge.us
+  - docker pull gentoo/stage3-amd64
+  - docker run -d -p 127.0.0.1:80:4567 gentoo/stage3-amd64
+  - docker ps -a
+  - docker run gentoo/stage3-amd64 /bin/sh -c "pwd; ls; emerge -pv numpy"
 before_script:
   - pwd
   - ls

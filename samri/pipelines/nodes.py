@@ -263,35 +263,45 @@ def composite_registration(template, num_threads=4):
 
 	return f_registration, f_warp
 
-def functional_registration(template):
-	registration = pe.Node(ants.Registration(), name="register")
-	registration.inputs.fixed_image = template
-	registration.inputs.output_transform_prefix = "output_"
-	registration.inputs.transforms = ['Affine', 'SyN']
-	registration.inputs.transform_parameters = [(0.1,), (3.0, 3.0, 5.0)]
-	registration.inputs.number_of_iterations = [[10000, 10000, 10000], [100, 100, 100]]
-	registration.inputs.dimension = 3
-	registration.inputs.write_composite_transform = True
-	registration.inputs.collapse_output_transforms = True
-	registration.inputs.initial_moving_transform_com = True
-	registration.inputs.metric = ['Mattes'] * 2 + [['Mattes', 'CC']]
-	registration.inputs.metric_weight = [1] * 2 + [[0.5, 0.5]]
-	registration.inputs.radius_or_number_of_bins = [32] * 2 + [[32, 4]]
-	registration.inputs.sampling_strategy = ['Regular'] * 2 + [[None, None]]
-	registration.inputs.sampling_percentage = [0.3] * 2 + [[None, None]]
-	registration.inputs.convergence_threshold = [1.e-8] * 2 + [-0.01]
-	registration.inputs.convergence_window_size = [20] * 2 + [5]
-	registration.inputs.smoothing_sigmas = [[4, 2, 1]] * 2 + [[1, 0.5, 0]]
-	registration.inputs.sigma_units = ['vox'] * 3
-	registration.inputs.shrink_factors = [[3, 2, 1]]*2 + [[4, 2, 1]]
-	registration.inputs.use_estimate_learning_rate_once = [True] * 3
-	registration.inputs.use_histogram_matching = [False] * 2 + [True]
-	registration.inputs.winsorize_lower_quantile = 0.005
-	registration.inputs.winsorize_upper_quantile = 0.995
-	registration.inputs.args = '--float'
-	registration.inputs.output_warped_image = 'output_warped_image.nii.gz'
-	registration.inputs.num_threads = 4
-	registration.plugin_args = {'qsub_args': '-pe orte 4', 'sbatch_args': '--mem=6G -c 4'}
+def functional_registration(template,
+	mask="~/ni_data/templates/DSURQEc_200micron_mask.nii.gz",
+	num_threads=4,
+	phase_dictionary=PHASES,
+	f_phases=["s_rigid","affine","syn"],
+	):
+
+	template = path.abspath(path.expanduser(template))
+
+	f_parameters = [phase_dictionary[selection] for selection in f_phases]
+
+	f_registration = pe.Node(ants.Registration(), name="f_register")
+	f_registration.inputs.fixed_image = template
+	f_registration.inputs.output_transform_prefix = "output_"
+	f_registration.inputs.transforms = [i["transforms"] for i in f_parameters] ##
+	f_registration.inputs.transform_parameters = [i["transform_parameters"] for i in f_parameters] ##
+	f_registration.inputs.number_of_iterations = [i["number_of_iterations"] for i in f_parameters] #
+	f_registration.inputs.dimension = 3
+	f_registration.inputs.write_composite_transform = True
+	f_registration.inputs.collapse_output_transforms = True
+	f_registration.inputs.initial_moving_transform_com = True
+	f_registration.inputs.metric = [i["metric"] for i in f_parameters]
+	f_registration.inputs.metric_weight = [i["metric_weight"] for i in f_parameters]
+	f_registration.inputs.radius_or_number_of_bins = [i["radius_or_number_of_bins"] for i in f_parameters]
+	f_registration.inputs.sampling_strategy = [i["sampling_strategy"] for i in f_parameters]
+	f_registration.inputs.sampling_percentage = [i["sampling_percentage"] for i in f_parameters]
+	f_registration.inputs.convergence_threshold = [i["convergence_threshold"] for i in f_parameters]
+	f_registration.inputs.convergence_window_size = [i["convergence_window_size"] for i in f_parameters]
+	f_registration.inputs.smoothing_sigmas = [i["smoothing_sigmas"] for i in f_parameters]
+	f_registration.inputs.sigma_units = [i["sigma_units"] for i in f_parameters]
+	f_registration.inputs.shrink_factors = [i["shrink_factors"] for i in f_parameters]
+	f_registration.inputs.use_estimate_learning_rate_once = [i["use_estimate_learning_rate_once"] for i in f_parameters]
+	f_registration.inputs.use_histogram_matching = [i["use_histogram_matching"] for i in f_parameters]
+	f_registration.inputs.winsorize_lower_quantile = 0.05
+	f_registration.inputs.winsorize_upper_quantile = 0.95
+	f_registration.inputs.args = '--float'
+	if mask:
+		f_registration.inputs.fixed_image_mask = path.abspath(path.expanduser(mask))
+	f_registration.inputs.num_threads = num_threads
 
 	warp = pe.Node(ants.ApplyTransforms(), name="f_warp")
 	warp.inputs.reference_image = template
@@ -301,7 +311,7 @@ def functional_registration(template):
 	warp.inputs.terminal_output = 'file'
 	warp.num_threads = 4
 
-	return registration, warp
+	return f_registration, warp
 
 def real_size_nodes():
 	s_biascorrect = pe.Node(interface=ants.N4BiasFieldCorrection(), name="s_biascorrect")
@@ -312,13 +322,15 @@ def real_size_nodes():
 	s_biascorrect.inputs.n_iterations = [150,100,50,30]
 	s_biascorrect.inputs.convergence_threshold = 1e-16
 
-	s_biascorrect = pe.Node(interface=ants.N4BiasFieldCorrection(), name="f_biascorrect")
-	s_biascorrect.inputs.dimension = 3
-	s_biascorrect.inputs.bspline_fitting_distance = 10
-	s_biascorrect.inputs.bspline_order = 4
-	s_biascorrect.inputs.shrink_factor = 2
-	s_biascorrect.inputs.n_iterations = [150,100,50,30]
-	s_biascorrect.inputs.convergence_threshold = 1e-11
+	f_biascorrect = pe.Node(interface=ants.N4BiasFieldCorrection(), name="f_biascorrect")
+	f_biascorrect.inputs.dimension = 3
+	f_biascorrect.inputs.bspline_fitting_distance = 10
+	f_biascorrect.inputs.bspline_order = 4
+	f_biascorrect.inputs.shrink_factor = 2
+	f_biascorrect.inputs.n_iterations = [150,100,50,30]
+	f_biascorrect.inputs.convergence_threshold = 1e-11
+
+	return s_biascorrect, f_biascorrect
 
 def inflated_size_nodes():
 	s_biascorrect = pe.Node(interface=ants.N4BiasFieldCorrection(), name="s_biascorrect")
@@ -335,3 +347,4 @@ def inflated_size_nodes():
 	f_biascorrect.inputs.n_iterations = [200,200,200,200]
 	f_biascorrect.inputs.convergence_threshold = 1e-11
 
+	return s_biascorrect, f_biascorrect

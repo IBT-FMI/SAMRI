@@ -59,7 +59,7 @@ def bruker(measurements_base,
 	strict=False,
 	):
 
-	measurements_base = os.path.abspath(os.path.expanduser(measurements_base))
+	measurements_base = path.abspath(path.expanduser(measurements_base))
 
 	#select all functional/sturctural scan types unless specified
 	if not functional_scan_types or not structural_scan_types:
@@ -83,7 +83,7 @@ def bruker(measurements_base,
 		sessions = set(list(data_selection["session"]))
 
 	# we currently only support one structural scan type per session
-	if structural_registration:
+	if structural_registration and structural_scan_types:
 		structural_scan_types = [structural_scan_types[0]]
 
 	# we start to define nipype workflow elements (nodes, connections, meta)
@@ -105,8 +105,6 @@ def bruker(measurements_base,
 	dummy_scans.inputs.desired_dummy_scans = DUMMY_SCANS
 
 	events_file = pe.Node(name='events_file', interface=util.Function(function=write_events_file,input_names=inspect.getargspec(write_events_file)[0], output_names=['out_file']))
-	if not strict:
-		events_file.inputs.ignore_exception = True
 	events_file.inputs.dummy_scans_ms = DUMMY_SCANS * tr * 1000
 	events_file.inputs.stim_protocol_dictionary = STIM_PROTOCOL_DICTIONARY
 	events_file.inputs.very_nasty_bruker_delay_hack = very_nasty_bruker_delay_hack
@@ -125,6 +123,8 @@ def bruker(measurements_base,
 	bids_stim_filename.inputs.extension = ".tsv"
 
 	datasink = pe.Node(nio.DataSink(), name='datasink')
+	if not strict:
+		datasink.inputs.ignore_exception = True
 	datasink.inputs.base_directory = path.join(measurements_base,"preprocessing",workflow_name)
 	datasink.inputs.parameterization = False
 
@@ -159,6 +159,11 @@ def bruker(measurements_base,
 			])
 
 	#ADDING SELECTABLE NODES AND EXTENDING WORKFLOW AS APPROPRIATE:
+	if actual_size:
+		s_biascorrect, f_biascorrect = real_size_nodes()
+	else:
+		s_biascorrect, f_biascorrect = inflated_size_nodes()
+
 	if structural_scan_types:
 		get_s_scan = pe.Node(name='get_s_scan', interface=util.Function(function=get_scan, input_names=inspect.getargspec(get_scan)[0], output_names=['scan_path','scan_type']))
 		if not strict:
@@ -175,7 +180,6 @@ def bruker(measurements_base,
 		s_bids_filename.inputs.scan_prefix = False
 
 		if actual_size:
-			real_size_nodes()
 			s_register, s_warp, _, _ = DSURQEc_structural_registration(template, registration_mask)
 			#TODO: incl. in func registration
 			if autorotate:
@@ -190,9 +194,6 @@ def bruker(measurements_base,
 					(s_bru2nii, s_warp, [('nii_file', 'input_image')]),
 					(s_warp, datasink, [('output_image', 'anat')]),
 					])
-		else:
-			inflated_size_nodes()
-
 			s_reg_biascorrect = pe.Node(interface=ants.N4BiasFieldCorrection(), name="s_reg_biascorrect")
 			s_reg_biascorrect.inputs.dimension = 3
 			s_reg_biascorrect.inputs.bspline_fitting_distance = 95
@@ -297,19 +298,20 @@ def bruker(measurements_base,
 
 		temporal_mean = pe.Node(interface=fsl.MeanImage(), name="temporal_mean")
 
-		f_cutoff = pe.Node(interface=fsl.ImageMaths(), name="f_cutoff")
-		f_cutoff.inputs.op_string = "-thrP 30"
+		#f_cutoff = pe.Node(interface=fsl.ImageMaths(), name="f_cutoff")
+		#f_cutoff.inputs.op_string = "-thrP 30"
 
-		f_BET = pe.Node(interface=fsl.BET(), name="f_BET")
-		f_BET.inputs.mask = True
-		f_BET.inputs.frac = 0.5
+		#f_BET = pe.Node(interface=fsl.BET(), name="f_BET")
+		#f_BET.inputs.mask = True
+		#f_BET.inputs.frac = 0.5
 
 		workflow_connections.extend([
 			(temporal_mean, f_biascorrect, [('out_file', 'input_image')]),
-			(f_biascorrect, f_cutoff, [('output_image', 'in_file')]),
-			(f_cutoff, f_BET, [('out_file', 'in_file')]),
-			(f_BET, register, [('out_file', 'moving_image')]),
-			(register, f_warp, [('composite_transform', 'transforms')]),
+			#(f_biascorrect, f_cutoff, [('output_image', 'in_file')]),
+			#(f_cutoff, f_BET, [('out_file', 'in_file')]),
+			#(f_BET, f_register, [('out_file', 'moving_image')]),
+			(f_biascorrect, f_register, [('output_image', 'moving_image')]),
+			(f_register, f_warp, [('composite_transform', 'transforms')]),
 			])
 		if realign:
 			workflow_connections.extend([

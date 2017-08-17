@@ -30,6 +30,7 @@ emerge --sync >> .debug/emerge_sync.txt
 emerge wgetpaste >> /dev/null
 
 echo ""
+echo ""
 echo "Pastebinning Large Logs:"
 echo "~~~~~~~~~~~~~~~~~~~~~~~~"
 echo "emerge_sync.txt : "

@@ -63,11 +63,11 @@ def diagnose(measurements_base,
 	):
 	'''
 
-	realign: str
-	Parameter that dictates slictiming correction and realignment of slices. "time" (FSL.SliceTimer) is default, since it works safely. Use others only with caution!
+	realign: {"space","time","spacetime",""}
+		Parameter that dictates slictiming correction and realignment of slices. "time" (FSL.SliceTimer) is default, since it works safely. Use others only with caution!
 
 	'''
-
+	
 	measurements_base = path.abspath(path.expanduser(measurements_base))
 
 	#select all functional/sturctural scan types unless specified

@@ -1,20 +1,25 @@
-sudo: required
-language: python
-services:
-  - docker
-python:
-  - "2.7"
-  - "3.5"
-before_install:
-  - docker pull gentoo/stage3-amd64
-  - docker run -d -p 127.0.0.1:80:4567 gentoo/stage3-amd64
-  - docker ps -a
-  - docker run gentoo/stage3-amd64 /bin/sh -c "pwd; ls; emerge -pv numpy"
-before_script:
-  - pwd
-  - ls
-script:
-  - pwd
-  - ls
-  - emerge -pv numpy
-  - ./../spinner.sh "python ../portage-portage-${PORTAGE_VER}/repoman/bin/repoman full -d"
+branches:
+  only:
+    - master
+
+cache:
+  directories:
+    - $HOME/.portage-pkgdir
+
+matrix:
+  include:
+    - os: linux
+      services: docker
+      language: generic
+      sudo: required
+      script:
+        - 'if [ "${TRAVIS_EVENT_TYPE}" != "cron" ]; then
+          docker run --rm -ti -v "${HOME}"/.portage-pkgdir:/usr/portage/packages -v "${PWD}":/usr/local/portage -w /usr/local/portage gentoo/stage3-amd64:latest; fi'
+    - os: linux
+      env: BUILD_TYPE=newversioncheck # marker environment variable to make the build matrix more readable in the UI
+      services: docker
+      language: generic
+      sudo: required
+      script:
+        - 'if [ "${TRAVIS_EVENT_TYPE}" == "cron" ]; then
+          docker run --rm -ti -v "${HOME}"/.portage-pkgdir:/usr/portage/packages -v "${PWD}":/usr/local/portage -w /usr/local/portage gentoo/stage3-amd64:latest; fi'

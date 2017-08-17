@@ -14,7 +14,7 @@ matrix:
       sudo: required
       script:
         - 'if [ "${TRAVIS_EVENT_TYPE}" != "cron" ]; then
-          docker run --rm -ti -v "${HOME}"/.portage-pkgdir:/usr/portage/packages -v "${PWD}":/home/myhome/SAMRI -w /home/myhome/SAMRI gentoo/stage3-amd64:latest /home/myhome/SAMRI/installdeps.sh; fi'
+          docker run --rm -ti -v "${HOME}"/.portage-pkgdir:/usr/portage/packages -v "${PWD}":${HOME}/SAMRI -w ${HOME}/SAMRI gentoo/stage3-amd64:latest ${HOME}/SAMRI/installdeps.sh; fi'
         - echo isntcron
         - pwd
         - ls

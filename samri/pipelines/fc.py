@@ -214,11 +214,11 @@ def correlation_matrix(ts,
 		)
 
         #TODO: test confounds with physiological signals
-        if(confounds):
-	    confounds = path.abspath(path.expanduser(confounds))
-            timeseries = labels_masker.fit_transform(ts, confounds=confounds)
-        else:
-        timeseries = labels_masker.fit_transform(ts)
+	if(confounds):
+		confounds = path.abspath(path.expanduser(confounds))
+		timeseries = labels_masker.fit_transform(ts, confounds=confounds)
+	else:
+		timeseries = labels_masker.fit_transform(ts)
 
 	correlation_measure = ConnectivityMeasure(kind='correlation')
 	correlation_matrix = correlation_measure.fit_transform([timeseries])[0]

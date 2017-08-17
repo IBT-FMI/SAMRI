@@ -82,7 +82,33 @@ def bids_substitution_iterator(sessions, subjects, scans, data_dir, preprocessin
 	l1_workdir=None,
 	preprocessing_workdir=None,
 	):
-	"""A convenience layer to the SAMRI data structure"""
+	"""Returns a list of dictionaries, which can be used together with a template string to identify large sets of input data files for SAMRI functions.
+
+	Parameters
+	----------
+
+	sessions : list
+		A list of session identifiers to include in the iterator.
+	subjects : list
+		A list of subject identifiers to include in the iterator.
+	scans : list
+		A list of scan types (by BIDS nomenclature, "trials") to include in the iterator.
+	data_dir : str
+		Path to the data root (this is where SAMRI creates e.g. `preprocessing`, `l1`, or `l2` directories.
+	preprocessing_dir : str, optional
+		String identifying the preprocessing pipeline name from which to provide an iterator.
+	l1_dir : str, optional
+		String identifying the level 1 pipeline name from which to provide an iterator. If `None` the level 1 pipeline name is assumed to correspond to the preprocessing pipeline name (`preprocessing_dir`)
+	l1_workdir : str, optional
+		String identifying the level 1 work directory name from which to provide an iterator. If `None` the level 1 work directory name is assumed to be the level 1 pipeline name (`l1_dir`) suffixed with the string `"_work"`.
+	preprocessing_workdir : str, optional
+		String identifying the preprocessing work directory name from which to provide an iterator. If `None` the preprocessing work directory name is assumed to be the preprocessing pipeline name (`preprocessing_dir`) suffixed with the string `"_work"`.
+
+	Returns
+	-------
+	list of dictionaries
+		With the keys being `"data_dir"`, `"l1_dir"`, `"l1_workdir"`, `"preprocessing_dir"`, `"preprocessing_workdir"`, `"scan"`, `"session"`, and `"subject"`.
+	"""
 	if not l1_dir:
 		l1_dir = preprocessing_dir
 	if not l1_workdir:

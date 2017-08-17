@@ -23,6 +23,7 @@ echo "/home"
 echo "are:"
 ls "/home" 
 echo ""
+echo "${HOME}"
 
 emerge --sync >> _emerge_sync.txt
 echo "======================="

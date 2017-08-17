@@ -44,10 +44,12 @@ def blur_kernel_compare_dr(conditions=["ofM","ofM_aF","ofM_cF1","ofM_cF2","ofM_p
 		maps.stat(stat_maps, cut_coords=(-49,8,43), threshold=threshold, interpolation="none", template="~/ni_data/templates/hires_QBI_chr.nii.gz", save_as=pp, figure_title=condition, subplot_titles=parameters)
 	pp.close()
 
-def roi_per_session(l1_dir, roi, color,
+def plot_roi_per_session(l1_dir, roi_mask, color,
 	roi_mask_normalize="",
 	):
 	from samri.plotting import summary
+	from samri.report import roi
+	
 	substitutions = bids_substitution_iterator(
 		["ofM","ofM_aF","ofM_cF1","ofM_cF2","ofM_pF"],
 		# ["5689","5690","5691"],
@@ -60,20 +62,19 @@ def roi_per_session(l1_dir, roi, color,
 		"",
 		l1_dir=l1_dir,
 		)
+	
 	if isinstance(roi, list) and not "/" in roi[0]:
 		roi = roi_from_atlaslabel("~/ni_data/templates/roi/DSURQEc_200micron_labels.nii",
 			mapping="~/ni_data/templates/roi/DSURQE_mapping.csv",
 			label_names=roi,
 			)
-	fit, anova = summary.roi_per_session(substitutions,
+	fit, anova, subjectdf, voxeldf = roi.roi_per_session(substitutions,
 		t_file_template="{data_dir}/l1/{l1_dir}/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_trial-{scan}_tstat.nii.gz",
-		legend_loc=2,
-		# figure="per-voxel",
-		figure="per-participant",
-		roi_mask=roi,
+		roi_mask=roi_mask,
 		roi_mask_normalize=roi_mask_normalize,
-		color=color,
 		)
+	summary.plot_roi_per_session(subjectdf, voxeldf, legend_loc=2, figure="per-participant", color=color, saveas="~/test.png")
+
 	print(anova)
 
 def p_clusters(mask):
@@ -294,7 +295,7 @@ if __name__ == '__main__':
 	# roi_per_session("as_composite", "~/ni_data/templates/roi/DSURQEc_ctx.nii.gz", "#56B4E9",
 	# 	roi_mask_normalize="~/ni_data/templates/roi/DSURQEc_dr.nii.gz",
 	# 	)
-	# roi_per_session("as_composite", "~/ni_data/templates/roi/DSURQEc_dr.nii.gz", "#E69F00")
+	plot_roi_per_session("as_composite", "~/ni_data/templates/roi/DSURQEc_dr.nii.gz", "#E69F00")
 	# roi_per_session("as_composite", "~/ni_data/templates/roi/f_dr_chr_bin.nii.gz", "#E69F00")
 	# p_clusters("~/ni_data/templates/ds_QBI_chr_bin.nii.gz")
 	# roi(roi_path="~/ni_data/templates/roi/f_dr_chr_bin.nii.gz")
@@ -311,4 +312,4 @@ if __name__ == '__main__':
 	# qc_regressor(["ofM_cF1"],["4011"],["EPI_CBV_jb_long"],"as_composite","~/ni_data/templates/roi/DSURQEc_ctx.nii.gz")
 	# network.simple_dr(output="~/ntw1.png", graphsize=800, scale=1.8)
 	#plt.show()
-	functional_connectivity()
+	#functional_connectivity()

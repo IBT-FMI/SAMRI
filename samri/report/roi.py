@@ -5,6 +5,65 @@ from os import path
 from nilearn.input_data import NiftiMasker
 from scipy.io import loadmat
 from samri.utilities import add_roi_data
+from joblib import Parallel, delayed
+
+import statsmodels.formula.api as smf
+import multiprocessing as mp
+import pandas as pd
+
+def roi_per_session(substitutions, roi_mask,
+	t_file_template="~/ni_data/ofM.dr/l1/{l1_dir}/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_trial-{scan}_tstat.nii.gz",
+	roi_mask_normalize="",
+	obfuscate=False,
+	):
+
+	if isinstance(roi_mask,str):
+		roi_mask = path.abspath(path.expanduser(roi_mask))
+	masker = NiftiMasker(mask_img=roi_mask)
+
+	n_jobs = mp.cpu_count()-2
+	roi_data = Parallel(n_jobs=n_jobs, verbose=0, backend="threading")(map(delayed(add_roi_data),
+		[t_file_template]*len(substitutions),
+		[masker]*len(substitutions),
+		substitutions,
+		))
+	subject_dfs, voxel_dfs = zip(*roi_data)
+	subjectdf = pd.concat(subject_dfs)
+	voxeldf = pd.concat(voxel_dfs)
+	if roi_mask_normalize:
+		#figure="per-participant"
+		if isinstance(roi_mask_normalize,str):
+			mask_normalize = path.abspath(path.expanduser(roi_mask_normalize))
+		masker_normalize = NiftiMasker(mask_img=mask_normalize)
+		roi_data = Parallel(n_jobs=n_jobs, verbose=0, backend="threading")(map(delayed(add_roi_data),
+			[t_file_template]*len(substitutions),
+			[masker_normalize]*len(substitutions),
+			substitutions,
+			))
+		subject_dfs_normalize, _ = zip(*roi_data)
+		subjectdf_normalize = pd.concat(subject_dfs_normalize)
+
+		subjectdf['t'] = subjectdf['t']/subjectdf_normalize['t']
+		#this is a nasty hack to mitigate +/-inf values appearing if the normalization ROI mean is close to 0
+		subjectdf_ = deepcopy(subjectdf)
+		subjectdf_= subjectdf_.replace([np.inf, -np.inf], np.nan).dropna(subset=["t"], how="all")
+		subjectdf=subjectdf.replace([-np.inf], subjectdf_[['t']].min(axis=0)[0])
+		subjectdf=subjectdf.replace([np.inf], subjectdf_[['t']].max(axis=0)[0])
+
+	if obfuscate:
+		obf_session = {"ofM":"_pre","ofM_aF":"t1","ofM_cF1":"t2","ofM_cF2":"t3","ofM_pF":"post"}
+		subjectdf = subjectdf.replace({"session": obf_session})
+		subjectdf.to_csv("~/MixedLM_data.csv")
+
+	model = smf.mixedlm("t ~ session", subjectdf, groups=subjectdf["subject"])
+	fit = model.fit()
+	report = fit.summary()
+
+	# create a restriction for every regressor - except intercept (first) and random effects (last)
+	omnibus_tests = np.eye(len(fit.params))[1:-1]
+	anova = fit.f_test(omnibus_tests)
+
+	return fit, anova, subjectdf, voxeldf
 
 
 def roi_mean(img_path, mask_path):

@@ -1,3 +1,5 @@
+#!/usr/bin/env bash
+
 echo "This is installdeps.sh"
 ls
 pwd

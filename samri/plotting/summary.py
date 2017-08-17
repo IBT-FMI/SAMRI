@@ -36,6 +36,7 @@ def roi_per_session(substitutions, roi_mask,
 	xy_label=[],
 	obfuscate=False,
 	color="#E69F00",
+	saveas="~/test.png"
 	):
 	"""Plot a ROI t-values over the session timecourse
 
@@ -115,6 +116,9 @@ def roi_per_session(substitutions, roi_mask,
 			ax1.set(xlabel=xy_label[0], ylabel=xy_label[1])
 			ax2.set(xlabel=xy_label[0], ylabel=xy_label[1])
 
+	if(saveas):
+		plt.savefig(path.abspath(path.expanduser(saveas)))
+
 	return fit, anova
 
 def analytic_pattern_per_session(substitutions, analytic_pattern,
@@ -126,6 +130,7 @@ def analytic_pattern_per_session(substitutions, analytic_pattern,
 	xy_label=[],
 	obfuscate=False,
 	color="#E69F00",
+	saveas=False,
 	):
 	"""Plot a ROI t-values over the session timecourse
 
@@ -180,6 +185,9 @@ def analytic_pattern_per_session(substitutions, analytic_pattern,
 	ax = sns.pointplot(x="session", y="t", data=subjectdf, ci=68.3, dodge=True, jitter=True, legend_out=False, units="subject", color=color)
 	if xy_label:
 		ax.set(xlabel=xy_label[0], ylabel=xy_label[1])
+
+	if(saveas):
+		plt.savefig(saveas)
 
 	return fit, anova
 

@@ -38,14 +38,9 @@ def plot_roi_per_session(subjectdf, voxeldf,
 	):
 	"""Plot a ROI t-values over the session timecourse
 
-	roi_mask : str
-	Path to the ROI mask for which to select the t-values.
-
 	figure : {"per-participant", "per-voxel", "both"}
 	At what level to resolve the t-values. Per-participant compares participant means, per-voxel compares all voxel values, both creates two plots covering the aforementioned cases.
 
-	roi_mask_normalize : str
-	Path to a ROI mask by the mean of whose t-values to normalite the t-values in roi_mask.
 	"""
 
 	names_for_plotting = {"ofM":u"naïve", "ofM_aF":"acute", "ofM_cF1":"chronic (2w)", "ofM_cF2":"chronic (4w)", "ofM_pF":"post"}

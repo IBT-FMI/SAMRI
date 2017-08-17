@@ -17,6 +17,14 @@ def roi_per_session(substitutions, roi_mask,
 	obfuscate=False,
 	):
 
+	"""
+	roi_mask : str
+	Path to the ROI mask for which to select the t-values.
+
+	roi_mask_normalize : str
+	Path to a ROI mask by the mean of whose t-values to normalite the t-values in roi_mask.
+	"""
+	
 	if isinstance(roi_mask,str):
 		roi_mask = path.abspath(path.expanduser(roi_mask))
 	masker = NiftiMasker(mask_img=roi_mask)
@@ -31,6 +39,7 @@ def roi_per_session(substitutions, roi_mask,
 	subjectdf = pd.concat(subject_dfs)
 	voxeldf = pd.concat(voxel_dfs)
 	if roi_mask_normalize:
+		#TODO: how relay this back to plot?
 		#figure="per-participant"
 		if isinstance(roi_mask_normalize,str):
 			mask_normalize = path.abspath(path.expanduser(roi_mask_normalize))

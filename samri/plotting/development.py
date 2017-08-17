@@ -73,7 +73,7 @@ def plot_roi_per_session(l1_dir, roi_mask, color,
 		roi_mask=roi_mask,
 		roi_mask_normalize=roi_mask_normalize,
 		)
-	summary.plot_roi_per_session(subjectdf, voxeldf, legend_loc=2, figure="per-participant", color=color, saveas="~/test.png")
+	summary.plot_roi_per_session(subjectdf, voxeldf, legend_loc=2, figure="per-participant", color=color, save_as="~/test.png")
 
 	print(anova)
 

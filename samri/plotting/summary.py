@@ -34,7 +34,7 @@ def plot_roi_per_session(subjectdf, voxeldf,
 	tabref="tab",
 	xy_label=[],
 	color="#E69F00",
-	saveas=False
+	save_as=False
 	):
 	"""Plot a ROI t-values over the session timecourse
 
@@ -63,8 +63,8 @@ def plot_roi_per_session(subjectdf, voxeldf,
 			ax1.set(xlabel=xy_label[0], ylabel=xy_label[1])
 			ax2.set(xlabel=xy_label[0], ylabel=xy_label[1])
 
-	if(saveas):
-		plt.savefig(path.abspath(path.expanduser(saveas)))
+	if(save_as):
+		plt.savefig(path.abspath(path.expanduser(save_as)))
 
 
 def analytic_pattern_per_session(substitutions, analytic_pattern,

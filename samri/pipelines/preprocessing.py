@@ -48,7 +48,7 @@ def bruker(measurements_base,
 	lowpass_sigma=None,
 	negative_contrast_agent=False,
 	n_procs=N_PROCS,
-	realign=True,
+	realign="time",
 	registration_mask=False,
 	template="/home/chymera/ni_data/templates/ds_QBI_chr.nii.gz",
 	tr=1,
@@ -58,7 +58,13 @@ def bruker(measurements_base,
 	autorotate=False,
 	strict=False,
 	):
+	'''
 
+	realign: str
+	Parameter that dictates slictiming correction and realignment of slices. "time" (FSL.SliceTimer) is default, since it works safely. Use others only with caution!
+
+	'''
+	
 	measurements_base = path.abspath(path.expanduser(measurements_base))
 
 	#select all functional/sturctural scan types unless specified
@@ -148,16 +154,35 @@ def bruker(measurements_base,
 		(bandpass, datasink, [('out_file', 'func')]),
 		]
 
-	if realign:
+	if realign == "space":
+		realigner = pe.Node(interface=spm.Realign(), name="realigner")
+		realigner.inputs.register_to_mean = True
+		workflow_connections.extend([
+			(dummy_scans, realigner, [('out_file', 'in_file')]),
+			(realigner, melodic, [('out_file', 'in_files')]),
+			])
+
+	elif realign == "spacetime":
 		realigner = pe.Node(interface=nipy.SpaceTimeRealigner(), name="realigner")
 		realigner.inputs.slice_times = "asc_alt_2"
 		realigner.inputs.tr = tr
-		realigner.inputs.slice_info = 3	#coronal (2=horizontal, 1=sagittal)
-
+		realigner.inputs.slice_info = 3 #3 for coronal slices (2 for horizontal, 1 for sagittal)
 		workflow_connections.extend([
 			(dummy_scans, realigner, [('out_file', 'in_file')]),
+			(realigner, melodic, [('out_file', 'in_files')]),
 			])
-
+	
+	elif realign == "time":
+		realigner = pe.Node(interface=fsl.SliceTimer(), name="slicetimer")
+		realigner.inputs.time_repetition = tr
+		workflow_connections.extend([
+			(dummy_scans, realigner, [('out_file', 'in_file')]),
+			(realigner, melodic, [('slice_time_corrected_file', 'in_files')]),
+			])
+	else:
+		workflow_connections.extend([
+			(dummy_scans, melodic, [('out_file', 'in_files')]),
+	
 	#ADDING SELECTABLE NODES AND EXTENDING WORKFLOW AS APPROPRIATE:
 	if actual_size:
 		s_biascorrect, f_biascorrect = real_size_nodes()

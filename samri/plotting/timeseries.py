@@ -30,7 +30,7 @@ def plot_fsl_design(file_path):
 	axes : matplotlib.AxesSubplot or np.array of them.
 	"""
 
-df = pd.read_csv(file_path, skiprows=5, sep="\t", header=None, names=[1,2,3,4,5,6], index_col=False)
+	df = pd.read_csv(file_path, skiprows=5, sep="\t", header=None, names=[1,2,3,4,5,6], index_col=False)
 	df.plot()
 
 def plot_stim_design(file_path,stim):

@@ -16,8 +16,13 @@ echo "are:"
 ls "/home" 
 echo ""
 
-emerge --sync >> _emerge_sync.txt
+mkdir .debug
+emerge --sync >> .debug/emerge_sync.txt
+emerge wgetpaste
+wgetpaste .debug/emerge_sync.txt
 
+echo ""
+echo ""
 echo "======================="
 echo "That was installdeps.sh"
 echo "======================="

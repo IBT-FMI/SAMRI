@@ -1,0 +1,6 @@
+[science]
+location = /usr/local/portage/sci
+sync-type = git
+sync-uri = https://github.com/gentoo-science/sci.git
+priority = 7777
+

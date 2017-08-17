@@ -15,6 +15,8 @@ matrix:
       script:
         - 'if [ "${TRAVIS_EVENT_TYPE}" != "cron" ]; then
           docker run --rm -ti -v "${HOME}"/.portage-pkgdir:/usr/portage/packages -v "${PWD}":/usr/local/portage -w /usr/local/portage gentoo/stage3-amd64:latest; fi'
+        - echo isntcron
+        - emerge -vp nipy
     - os: linux
       env: BUILD_TYPE=newversioncheck # marker environment variable to make the build matrix more readable in the UI
       services: docker
@@ -23,3 +25,5 @@ matrix:
       script:
         - 'if [ "${TRAVIS_EVENT_TYPE}" == "cron" ]; then
           docker run --rm -ti -v "${HOME}"/.portage-pkgdir:/usr/portage/packages -v "${PWD}":/usr/local/portage -w /usr/local/portage gentoo/stage3-amd64:latest; fi'
+        - echo iscron
+        - emerge -vp scipy

@@ -259,6 +259,8 @@ def functional_connectivity(ts="~/ni_data/ofM.dr/preprocessing/as_composite/sub-
 	figsize = (50,50)
 	# incl. plotting
 	correlation_matrix = fc.correlation_matrix(ts, labels_img, save_as = '~/correlation_matrix.csv')
+        #TODO: to test with confounds 
+	#correlation_matrix = fc.correlation_matrix(ts, '~/confounds.csv', labels_img, save_as = '~/correlation_matrix.csv')
 	connectivity.plot_connectivity_matrix(correlation_matrix, figsize, labels, save_as = '~/correlation_matrix.png')
 
 
@@ -298,14 +300,15 @@ if __name__ == '__main__':
 	# roi(roi_path="~/ni_data/templates/roi/f_dr_chr_bin.nii.gz")
 	# roi_teaching()
 	# check_responders()
-	qc_regressor(
-		["ofM","ofM_aF","ofM_cF1","ofM_cF2"],
-		["5687","5689","5690",],
-		["EPI_CBV_jb_long","EPI_CBV_chr_longSOA"],
-		"as_composite",
-		"~/ni_data/templates/roi/DSURQEc_dr.nii.gz",
-		save_as="qc_regressor.pdf",
-		)
+	#qc_regressor(
+	#	["ofM","ofM_aF","ofM_cF1","ofM_cF2"],
+	#	["5687","5689","5690",],
+	#	["EPI_CBV_jb_long","EPI_CBV_chr_longSOA"],
+	#	"as_composite",
+	#	"~/ni_data/templates/roi/DSURQEc_dr.nii.gz",
+	#	save_as="qc_regressor.pdf",
+	#	)
 	# qc_regressor(["ofM_cF1"],["4011"],["EPI_CBV_jb_long"],"as_composite","~/ni_data/templates/roi/DSURQEc_ctx.nii.gz")
 	# network.simple_dr(output="~/ntw1.png", graphsize=800, scale=1.8)
-	plt.show()
+	#plt.show()
+        functional_connectivity()

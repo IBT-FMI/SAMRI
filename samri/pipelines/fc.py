@@ -181,7 +181,7 @@ def seed_based_connectivity(ts, seed_mask,
 	return seed_based_correlation_img
 
 def correlation_matrix(ts,
-        confounds=None,
+	confounds=None,
 	labels_img='',
 	loud = False,
 	save_as = '',
@@ -199,8 +199,8 @@ def correlation_matrix(ts,
 
 	safe_as : str
 
-        confounds : 2D array OR path to CSV file
-        Array/CSV file containing confounding time-series to be regressed out before FC analysis.
+	confounds : 2D array OR path to CSV file
+	Array/CSV file containing confounding time-series to be regressed out before FC analysis.
 
 	"""
 	ts = path.abspath(path.expanduser(ts))
@@ -213,7 +213,7 @@ def correlation_matrix(ts,
 		verbose=5
 		)
 
-        #TODO: test confounds with physiological signals
+	#TODO: test confounds with physiological signals
 	if(confounds):
 		confounds = path.abspath(path.expanduser(confounds))
 		timeseries = labels_masker.fit_transform(ts, confounds=confounds)

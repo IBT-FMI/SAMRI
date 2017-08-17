@@ -182,7 +182,7 @@ def seed_based_connectivity(ts, seed_mask,
 	return seed_based_correlation_img
 
 def correlation_matrix(ts,
-        confounds,
+        confounds=None,
 	labels_img='',
 	loud = False,
 	save_as = '',
@@ -206,7 +206,6 @@ def correlation_matrix(ts,
 	"""
 	ts = path.abspath(path.expanduser(ts))
 	labels_img = path.abspath(path.expanduser(labels_img))
-        confounds = path.abspath(path.expanduser(confounds))
 
 	labels_masker = NiftiLabelsMasker(
 		labels_img=labels_img,
@@ -216,9 +215,10 @@ def correlation_matrix(ts,
 		)
 
         #TODO: test confounds with physiological signals
-        #if(confounds):
-	#    timeseries = labels_masker.fit_transform(ts, confounds=confounds)
-        #else:
+        if(confounds):
+	    confounds = path.abspath(path.expanduser(confounds))
+            timeseries = labels_masker.fit_transform(ts, confounds=confounds)
+        else:
         timeseries = labels_masker.fit_transform(ts)
 
 	correlation_measure = ConnectivityMeasure(kind='correlation')

@@ -57,10 +57,16 @@ def diagnose(measurements_base,
 	keep_work=False,
 	loud=False,
 	n_procs=N_PROCS,
-	realign="spacetime",
+	realign="time",
 	tr=1,
 	workflow_name="diagnostic",
 	):
+	'''
+
+	realign: str
+	Parameter that dictates slictiming correction and realignment of slices. "time" (FSL.SliceTimer) is default, since it works safely. Use others only with caution!
+
+	'''
 
 	measurements_base = path.abspath(path.expanduser(measurements_base))
 
@@ -151,7 +157,6 @@ def diagnose(measurements_base,
 			(s_bru2nii, datasink, [('nii_file', 'anat')]),
 			])
 
-	#TODO: case: "space" - melodic ICAs don't break, case: "spacetime" - melodic ICAs break
 	if realign == "space":
 		realigner = pe.Node(interface=spm.Realign(), name="realigner")
 		realigner.inputs.register_to_mean = True

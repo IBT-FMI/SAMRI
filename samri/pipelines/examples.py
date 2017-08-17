@@ -90,10 +90,10 @@ def test_dual_regression(group_level="migp"):
 
 def run_level1_glm():
 	glm.l1(preprocessing_dir='~/bandpass_ni_data/rsfM/preprocessing/composite',
-	    workflow_name='as_composite',
-	    habituation='confound',
-	    mask="/home/chymera/ni_data/templates/DSURQEc_200micron_mask.nii.gz",
-	    keep_work=True)
+		workflow_name='as_composite',
+		habituation='confound',
+		mask="/home/chymera/ni_data/templates/DSURQEc_200micron_mask.nii.gz",
+		keep_work=True)
 
 if __name__ == '__main__':
 	# test_dual_regression()

@@ -14,10 +14,12 @@ matrix:
       sudo: required
       script:
         - 'if [ "${TRAVIS_EVENT_TYPE}" != "cron" ]; then
-          docker run --rm -ti -v "${HOME}"/.portage-pkgdir:/usr/portage/packages -v "${PWD}":/usr/local/portage -w /usr/local/portage gentoo/stage3-amd64:latest pwd ls; fi'
+          docker run --rm -ti -v "${HOME}"/.portage-pkgdir:/usr/portage/packages -v "${PWD}":/usr/local/portage -w /usr/local/portage gentoo/stage3-amd64:latest emerge --sync; fi'
         - echo isntcron
         - pwd
         - ls
+        - ls "${HOME}"
+        - ls "${HOME}"/.portage-pkgdir
     - os: linux
       env: BUILD_TYPE=newversioncheck # marker environment variable to make the build matrix more readable in the UI
       services: docker
@@ -25,7 +27,7 @@ matrix:
       sudo: required
       script:
         - 'if [ "${TRAVIS_EVENT_TYPE}" == "cron" ]; then
-          docker run --rm -ti -v "${HOME}"/.portage-pkgdir:/usr/portage/packages -v "${PWD}":/usr/local/portage -w /usr/local/portage gentoo/stage3-amd64:latest ls pwd; fi'
+          docker run --rm -ti -v "${HOME}"/.portage-pkgdir:/usr/portage/packages -v "${PWD}":/usr/local/portage -w /usr/local/portage gentoo/stage3-amd64:latest installdeps.sh; fi'
         - echo iscron
         - ls
         - pwd

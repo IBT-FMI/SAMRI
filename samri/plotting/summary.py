@@ -29,7 +29,7 @@ except NameError:
 
 def roi_per_session(substitutions, roi_mask,
 	legend_loc="best",
-	t_file_template="~/ni_data/ofM.dr/l1/{l1_dir}/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_trial-{scan}_tstat.nii.gz",
+	t_file_template="~/{data_dir}/l1/{l1_dir}/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_trial-{scan}_tstat.nii.gz",
 	roi_mask_normalize="",
 	figure="per-participant",
 	tabref="tab",

@@ -182,6 +182,7 @@ def bruker(measurements_base,
 	else:
 		workflow_connections.extend([
 			(dummy_scans, melodic, [('out_file', 'in_files')]),
+			])
 	
 	#ADDING SELECTABLE NODES AND EXTENDING WORKFLOW AS APPROPRIATE:
 	if actual_size:

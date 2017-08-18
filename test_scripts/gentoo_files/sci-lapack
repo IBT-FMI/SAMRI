@@ -1,0 +1,15 @@
+## mask packages superseded by science overlay
+app-admin/eselect::gentoo
+app-admin/eselect-blas
+app-admin/eselect-cblas
+app-admin/eselect-lapack
+virtual/blas::gentoo
+virtual/cblas::gentoo
+virtual/lapack::gentoo
+sci-libs/gsl::gentoo
+app-doc/blas-docs::gentoo
+app-doc/lapack-docs::gentoo
+sci-libs/blas-reference::gentoo
+sci-libs/cblas-reference::gentoo
+sci-libs/lapack-reference::gentoo
+sci-libs/mkl::gentoo

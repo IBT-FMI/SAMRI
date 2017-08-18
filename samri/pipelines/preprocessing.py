@@ -159,7 +159,7 @@ def bruker(measurements_base,
 		realigner.inputs.register_to_mean = True
 		workflow_connections.extend([
 			(dummy_scans, realigner, [('out_file', 'in_file')]),
-			(realigner, melodic, [('out_file', 'in_files')]),
+			(realigner, f_warp, [('out_file', 'input_image')]),
 			])
 
 	elif realign == "spacetime":
@@ -169,7 +169,7 @@ def bruker(measurements_base,
 		realigner.inputs.slice_info = 3 #3 for coronal slices (2 for horizontal, 1 for sagittal)
 		workflow_connections.extend([
 			(dummy_scans, realigner, [('out_file', 'in_file')]),
-			(realigner, melodic, [('out_file', 'in_files')]),
+			(realigner, f_warp, [('out_file', 'input_image')]),
 			])
 
 	elif realign == "time":
@@ -177,11 +177,11 @@ def bruker(measurements_base,
 		realigner.inputs.time_repetition = tr
 		workflow_connections.extend([
 			(dummy_scans, realigner, [('out_file', 'in_file')]),
-			(realigner, melodic, [('slice_time_corrected_file', 'in_files')]),
+			(realigner, f_warp, [('out_file', 'input_image')]),
 			])
 	else:
 		workflow_connections.extend([
-			(dummy_scans, melodic, [('out_file', 'in_files')]),
+			(dummy_scans, f_warp, [('out_file', 'input_image')]),
 			])
 
 	#ADDING SELECTABLE NODES AND EXTENDING WORKFLOW AS APPROPRIATE:

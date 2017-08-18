@@ -274,9 +274,17 @@ def bruker(measurements_base,
 		workflow_connections.extend([
 			(s_register, f_warp, [('composite_transform', 'transforms')]),
 			])
-		if realign:
+		if realign == "space":
+			workflow_connections.extend([
+				(realigner, f_warp, [('realigned_files', 'input_image')]),
+				])
+		elif realign == "spacetime":
 			workflow_connections.extend([
 				(realigner, f_warp, [('out_file', 'input_image')]),
+				])
+		elif realign == "time":
+			workflow_connections.extend([
+				(realigner, f_warp, [('slice_time_corrected_file', 'input_image')]),
 				])
 		else:
 			workflow_connections.extend([
@@ -301,14 +309,24 @@ def bruker(measurements_base,
 			(s_register, merge, [('composite_transform', 'in2')]),
 			(merge, f_warp, [('out', 'transforms')]),
 			])
-		if realign:
+		if realign == "space":
+			workflow_connections.extend([
+				(realigner, temporal_mean, [('realigned_files', 'in_file')]),
+				(realigner, f_warp, [('realigned_files', 'input_image')]),
+				])
+		elif realign == "spacetime":
 			workflow_connections.extend([
 				(realigner, temporal_mean, [('out_file', 'in_file')]),
 				(realigner, f_warp, [('out_file', 'input_image')]),
 				])
+		elif realign == "time":
+			workflow_connections.extend([
+				(realigner, temporal_mean, [('slice_time_corrected_file', 'in_file')]),
+				(realigner, f_warp, [('slice_time_corrected_file', 'input_image')]),
+				])
 		else:
 			workflow_connections.extend([
-				(dummy_scans, temporal_mean, [('out_file', 'input_image')]),
+				(dummy_scans, temporal_mean, [('out_file', 'in_file')]),
 				(dummy_scans, f_warp, [('out_file', 'input_image')]),
 				])
 

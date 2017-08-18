@@ -4,10 +4,17 @@ echo ""
 echo "=================="
 echo "Gentoo Test Script"
 echo "=================="
+
+echo ""
+echo "Setting up Directory Structure:"
+echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+mkdir .debug
+mkdir /etc/portage/repos.conf
+mkdir /etc/portage/package.mask
+
 echo ""
 echo "Preparing Environment:"
 echo "~~~~~~~~~~~~~~~~~~~~~~"
-mkdir .debug
 export FEATURES="-news"
 
 echo ""

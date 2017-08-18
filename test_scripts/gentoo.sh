@@ -15,7 +15,10 @@ echo ""
 echo "Preparing Environment:"
 echo "~~~~~~~~~~~~~~~~~~~~~~"
 export FEATURES="-news"
+emerge dev-vcs/git >> dev/null
 cp "test_scripts/gentoo_files/science" "/etc/portage/repos.conf/"
+emerge --sync >> .debug/emerge_sync.txt
+emerge wgetpaste >> /dev/null
 
 #Link to the workaroud we reproduce in this section : https://wiki.gentoo.org/wiki/User_talk:Houseofsuns#Migration_to_science_overlay_from_main_tree
 #Efforts to more permanently address the issue: https://github.com/gentoo/sci/issues/805
@@ -32,8 +35,6 @@ echo ""
 echo "Environment Ready, Emerging:"
 echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
 
-emerge --sync >> .debug/emerge_sync.txt
-emerge wgetpaste >> /dev/null
 
 echo ""
 echo ""

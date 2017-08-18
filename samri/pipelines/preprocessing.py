@@ -64,7 +64,7 @@ def bruker(measurements_base,
 		Parameter that dictates slictiming correction and realignment of slices. "time" (FSL.SliceTimer) is default, since it works safely. Use others only with caution!
 
 	'''
-	
+
 	measurements_base = path.abspath(path.expanduser(measurements_base))
 
 	#select all functional/sturctural scan types unless specified
@@ -171,7 +171,7 @@ def bruker(measurements_base,
 			(dummy_scans, realigner, [('out_file', 'in_file')]),
 			(realigner, melodic, [('out_file', 'in_files')]),
 			])
-	
+
 	elif realign == "time":
 		realigner = pe.Node(interface=fsl.SliceTimer(), name="slicetimer")
 		realigner.inputs.time_repetition = tr
@@ -183,7 +183,7 @@ def bruker(measurements_base,
 		workflow_connections.extend([
 			(dummy_scans, melodic, [('out_file', 'in_files')]),
 			])
-	
+
 	#ADDING SELECTABLE NODES AND EXTENDING WORKFLOW AS APPROPRIATE:
 	if actual_size:
 		s_biascorrect, f_biascorrect = real_size_nodes()

@@ -10,8 +10,6 @@ echo "Setting up Directory Structure:"
 echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
 mkdir .debug
 mkdir /etc/portage/repos.conf
-cat /etc/portage/package.mask
-mkdir /etc/portage/package.mask
 
 echo ""
 echo "Preparing Environment:"
@@ -25,7 +23,10 @@ echo ""
 echo "Setting Up Eselect for Gentoo Science:"
 echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
 cp "${HOME}/SAMRI/test_scripts/gentoo_files/sci-lapack" "/etc/portage/package.mask/"
-
+ls "${HOME}/SAMRI/test_scripts/gentoo_files"
+ls "${HOME}/SAMRI/test_scripts/"
+ls "${HOME}/SAMRI/"
+ls "${HOME}"
 
 echo ""
 echo "Environment Ready, Emerging:"

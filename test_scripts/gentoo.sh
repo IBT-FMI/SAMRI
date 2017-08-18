@@ -15,7 +15,7 @@ echo ""
 echo "Preparing Environment:"
 echo "~~~~~~~~~~~~~~~~~~~~~~"
 export FEATURES="-news"
-emerge dev-vcs/git >> dev/null
+emerge dev-vcs/git >> /dev/null
 cp "test_scripts/gentoo_files/science" "/etc/portage/repos.conf/"
 emerge --sync >> .debug/emerge_sync.txt
 emerge wgetpaste >> /dev/null
@@ -26,10 +26,11 @@ echo ""
 echo "Setting Up Eselect for Gentoo Science:"
 echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
 cp "${HOME}/SAMRI/test_scripts/gentoo_files/sci-lapack" "/etc/portage/package.mask/"
-ls "${HOME}/SAMRI/test_scripts/gentoo_files"
-ls "${HOME}/SAMRI/test_scripts/"
-ls "${HOME}/SAMRI/"
-ls "${HOME}"
+ls "${HOME}/SAMRI/test_scripts/gentoo_files -lah"
+ls "${HOME}/SAMRI/test_scripts/ -lah"
+ls "${HOME}/SAMRI/ -lah"
+ls "${HOME} -lah"
+pwd
 
 echo ""
 echo "Environment Ready, Emerging:"

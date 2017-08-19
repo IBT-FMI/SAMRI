@@ -57,6 +57,7 @@ def bruker(measurements_base,
 	keep_work=False,
 	autorotate=False,
 	strict=False,
+	verbose=False,
 	):
 	'''
 
@@ -129,7 +130,7 @@ def bruker(measurements_base,
 	bids_stim_filename.inputs.extension = ".tsv"
 
 	datasink = pe.Node(nio.DataSink(), name='datasink')
-	if not strict:
+	if not (strict or verbose):
 		datasink.inputs.ignore_exception = True
 	datasink.inputs.base_directory = path.join(measurements_base,"preprocessing",workflow_name)
 	datasink.inputs.parameterization = False

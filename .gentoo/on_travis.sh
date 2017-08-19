@@ -23,7 +23,7 @@ echo 'ACCEPT_LICENSE="*"' >> /etc/portage/make.conf
 echo 'EMERGE_DEFAULT_OPTS="--quiet-build"' >> /etc/portage/make.conf
 emerge --sync >> .debug/emerge_sync.txt
 emerge dev-vcs/git >> /dev/null
-cp "test_scripts/gentoo_files/science" "/etc/portage/repos.conf/"
+cp ".gentoo/files/science" "/etc/portage/repos.conf/"
 emaint sync --repo science
 emerge wgetpaste >> /dev/null
 
@@ -32,7 +32,7 @@ emerge wgetpaste >> /dev/null
 echo ""
 echo "Setting Up Eselect for Gentoo Science:"
 echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
-cp "test_scripts/gentoo_files/sci-lapack" "/etc/portage/package.mask/"
+cp ".gentoo/files/sci-lapack" "/etc/portage/package.mask/"
 emerge --oneshot --ask --verbose app-admin/eselect::science >> /dev/null
 FEATURES="-preserve-libs" emerge --oneshot --ask --verbose sci-libs/blas-reference::science >> /dev/null
 eselect blas set reference

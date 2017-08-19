@@ -32,7 +32,15 @@ echo ""
 echo "Setting Up Eselect for Gentoo Science:"
 echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
 cp "test_scripts/gentoo_files/sci-lapack" "/etc/portage/package.mask/"
-
+emerge --oneshot --ask --verbose app-admin/eselect::science >> /dev/null
+FEATURES="-preserve-libs" emerge --oneshot --ask --verbose sci-libs/blas-reference::science >> /dev/null
+eselect blas set reference
+FEATURES="-preserve-libs" emerge --oneshot --ask --verbose sci-libs/cblas-reference::science >> /dev/null
+eselect cblas set reference
+FEATURES="-preserve-libs" emerge --oneshot --ask --verbose sci-libs/lapack-reference::science >> /dev/null
+eselect lapack set reference
+FEATURES="-preserve-libs" emerge --oneshot --ask --verbose --exclude sci-libs/blas-reference --exclude sci-libs/cblas-reference --exclude sci-libs/lapack-reference `eix --only-names --installed --in-overlay science` >> /dev/null
+revdep-rebuild >> /dev/null
 echo ""
 echo "Environment Ready, Emerging:"
 echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~"

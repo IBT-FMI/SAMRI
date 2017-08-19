@@ -14,7 +14,7 @@ matrix:
       sudo: required
       script:
         - 'if [ "${TRAVIS_EVENT_TYPE}" != "cron" ]; then
-          docker run --rm -ti -v "${HOME}"/.portage-pkgdir:/usr/portage/packages -v "${PWD}":${HOME}/SAMRI -w ${HOME}/SAMRI gentoo/stage3-amd64:latest ${HOME}/SAMRI/test_scripts/gentoo.sh; fi'
+          docker run --rm -ti -v "${HOME}"/.portage-pkgdir:/usr/portage/packages -v "${PWD}":${HOME}/SAMRI -w ${HOME}/SAMRI gentoo/stage3-amd64:latest ${HOME}/SAMRI/.gentoo/on_travis.sh; fi'
     - os: linux
       env: BUILD_TYPE=newversioncheck # marker environment variable to make the build matrix more readable in the UI
       services: docker
@@ -22,4 +22,4 @@ matrix:
       sudo: required
       script:
         - 'if [ "${TRAVIS_EVENT_TYPE}" == "cron" ]; then
-          docker run --rm -ti -v "${HOME}"/.portage-pkgdir:/usr/portage/packages -v "${PWD}":${HOME}/SAMRI -w ${HOME}/SAMRI gentoo/stage3-amd64:latest ${HOME}/SAMRI/test_scripts/gentoo.sh; fi'
+          docker run --rm -ti -v "${HOME}"/.portage-pkgdir:/usr/portage/packages -v "${PWD}":${HOME}/SAMRI -w ${HOME}/SAMRI gentoo/stage3-amd64:latest ${HOME}/SAMRI/.gentoo/on_travis.sh; fi'

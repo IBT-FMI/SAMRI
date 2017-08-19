@@ -20,6 +20,7 @@ echo "~~~~~~~~~~~~~~~~~~~~~~"
 export FEATURES="-news"
 echo 'ACCEPT_KEYWORDS="~amd64"' >> /etc/portage/make.conf
 echo 'ACCEPT_LICENSE="*"' >> /etc/portage/make.conf
+echo 'EMERGE_DEFAULT_OPTS="--quiet-build"' >> /etc/portage/make.conf
 emerge --sync >> .debug/emerge_sync.txt
 emerge dev-vcs/git >> /dev/null
 cp "test_scripts/gentoo_files/science" "/etc/portage/repos.conf/"
@@ -32,7 +33,7 @@ echo ""
 echo "Setting Up Eselect for Gentoo Science:"
 echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
 cp "test_scripts/gentoo_files/sci-lapack" "/etc/portage/package.mask/"
-travis_wait emerge --oneshot --ask --verbose app-admin/eselect::science >> /dev/null
+emerge --oneshot --ask --verbose app-admin/eselect::science >> /dev/null
 FEATURES="-preserve-libs" emerge --oneshot --ask --verbose sci-libs/blas-reference::science >> /dev/null
 eselect blas set reference
 FEATURES="-preserve-libs" emerge --oneshot --ask --verbose sci-libs/cblas-reference::science >> /dev/null

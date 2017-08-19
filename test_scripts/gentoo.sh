@@ -32,6 +32,7 @@ echo ""
 echo "Setting Up Eselect for Gentoo Science:"
 echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
 cp "test_scripts/gentoo_files/sci-lapack" "/etc/portage/package.mask/"
+cat /etc/portage/make.conf
 emerge --oneshot --ask --verbose app-admin/eselect::science >> /dev/null
 FEATURES="-preserve-libs" emerge --oneshot --ask --verbose sci-libs/blas-reference::science >> /dev/null
 eselect blas set reference

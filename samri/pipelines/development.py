@@ -22,6 +22,7 @@ def dbu(
 		template="~/ni_data/templates/DSURQEc_200micron_average.nii",
 		registration_mask="~/ni_data/templates/DSURQEc_200micron_mask.nii.gz",
 		actual_size=True,
+		verbose=True,
 		)
 
 def rs(

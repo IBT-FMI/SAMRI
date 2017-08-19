@@ -17,11 +17,11 @@ pwd
 echo ""
 echo "Preparing Environment:"
 echo "~~~~~~~~~~~~~~~~~~~~~~"
-eselect profile set 1
 export FEATURES="-news"
+emerge --sync >> .debug/emerge_sync.txt
 emerge dev-vcs/git >> /dev/null
 cp "test_scripts/gentoo_files/science" "/etc/portage/repos.conf/"
-emerge --sync >> .debug/emerge_sync.txt
+emaint sync --repo science
 emerge wgetpaste >> /dev/null
 echo "PWD:"
 pwd
@@ -31,13 +31,7 @@ pwd
 echo ""
 echo "Setting Up Eselect for Gentoo Science:"
 echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
-cp "${HOME}/SAMRI/test_scripts/gentoo_files/sci-lapack" "/etc/portage/package.mask/"
-ls "${HOME}/SAMRI/test_scripts/gentoo_files" -lah
-ls "${HOME}/SAMRI/test_scripts/" -lah
-ls "${HOME}/SAMRI/" -lah
-ls "${HOME}" -lah
-echo "PWD:"
-pwd
+cp "test_scripts/gentoo_files/sci-lapack" "/etc/portage/package.mask/"
 
 echo ""
 echo "Environment Ready, Emerging:"

@@ -25,8 +25,6 @@ emerge dev-vcs/git >> /dev/null
 cp "test_scripts/gentoo_files/science" "/etc/portage/repos.conf/"
 emaint sync --repo science
 emerge wgetpaste >> /dev/null
-echo "PWD:"
-pwd
 
 #Link to the workaroud we reproduce in this section : https://wiki.gentoo.org/wiki/User_talk:Houseofsuns#Migration_to_science_overlay_from_main_tree
 #Efforts to more permanently address the issue: https://github.com/gentoo/sci/issues/805
@@ -34,7 +32,7 @@ echo ""
 echo "Setting Up Eselect for Gentoo Science:"
 echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
 cp "test_scripts/gentoo_files/sci-lapack" "/etc/portage/package.mask/"
-emerge --oneshot --ask --verbose app-admin/eselect::science >> /dev/null
+travis_wait emerge --oneshot --ask --verbose app-admin/eselect::science >> /dev/null
 FEATURES="-preserve-libs" emerge --oneshot --ask --verbose sci-libs/blas-reference::science >> /dev/null
 eselect blas set reference
 FEATURES="-preserve-libs" emerge --oneshot --ask --verbose sci-libs/cblas-reference::science >> /dev/null

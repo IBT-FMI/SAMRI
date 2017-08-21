@@ -1,0 +1,15 @@
+dev-python/argh
+dev-python/joblib
+>=dev-python/matplotlib-2.0.2
+dev-python/numpy
+dev-python/pandas
+dev-python/seaborn
+dev-python/sqlalchemy
+dev-python/statsmodels
+>=sci-biology/fsl-5.0.9
+sci-biology/bru2nii
+sci-libs/nibabel
+>=sci-libs/nipy-0.4.1
+=sci-libs/nipype-9999
+sci-libs/scipy
+sci-biology/nilearn

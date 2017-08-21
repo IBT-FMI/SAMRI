@@ -19,10 +19,10 @@ echo 'ACCEPT_KEYWORDS="~amd64"' >> /etc/portage/make.conf
 echo 'ACCEPT_LICENSE="*"' >> /etc/portage/make.conf
 echo 'EMERGE_DEFAULT_OPTS="--quiet-build"' >> /etc/portage/make.conf
 emerge --sync >> .debug/emerge_sync.txt
-emerge dev-vcs/git
+emerge dev-vcs/git wgetpaste eix
+cp ".gentoo/files/neurogentoo" "/etc/portage/repos.conf/"
 cp ".gentoo/files/science" "/etc/portage/repos.conf/"
-emaint sync --repo science
-emerge wgetpaste >> /dev/null
+emaint sync --repo science neurogentoo
 
 #Link to the workaroud we reproduce in this section : https://wiki.gentoo.org/wiki/User_talk:Houseofsuns#Migration_to_science_overlay_from_main_tree
 #Efforts to more permanently address the issue: https://github.com/gentoo/sci/issues/805

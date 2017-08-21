@@ -24,6 +24,7 @@ cp ".gentoo/files/neurogentoo" "/etc/portage/repos.conf/"
 cp ".gentoo/files/science" "/etc/portage/repos.conf/"
 emaint sync --repo science
 emaint sync --repo neurogentoo 
+eix-update
 
 #Link to the workaroud we reproduce in this section : https://wiki.gentoo.org/wiki/User_talk:Houseofsuns#Migration_to_science_overlay_from_main_tree
 #Efforts to more permanently address the issue: https://github.com/gentoo/sci/issues/805

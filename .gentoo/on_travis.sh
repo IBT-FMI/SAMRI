@@ -45,7 +45,7 @@ revdep-rebuild
 echo ""
 echo "Environment Ready, Emerging:"
 echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
-
+emerge emerge $(<.gentoo/deps)
 
 echo ""
 echo ""

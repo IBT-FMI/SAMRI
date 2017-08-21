@@ -10,9 +10,6 @@ echo "Setting up Directory Structure:"
 echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
 mkdir .debug
 mkdir /etc/portage/repos.conf
-ls -lah /etc/portage/repos.conf
-echo "PWD:"
-pwd
 
 echo ""
 echo "Preparing Environment:"

@@ -44,7 +44,7 @@ revdep-rebuild
 echo ""
 echo "Environment Ready, Emerging:"
 echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
-emerge emerge $(<.gentoo/deps)
+emerge --autounmask=y --autounmask-continue=y $(<.gentoo/deps)
 
 echo ""
 echo ""

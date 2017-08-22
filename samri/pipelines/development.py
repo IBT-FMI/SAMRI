@@ -52,7 +52,8 @@ def cbv_composite(data_path,workflow_name,
 		#exclude_measurements=['20151027_121613_4013_1_1'],
 		functional_scan_types=["EPI_CBV_chr_longSOA","EPI_CBV_jb_long"],
 		#subjects=["4007","4008","4011","4012","5687","5688","5695","5689","5690","5691","5703","5704","5706"],
-		subjects=["4007","4008","4011","5687","5688","5704"],
+		subjects=["4007","4008","5687","5688","5704",
+			"5692","6262","5694","5700","6255","5699"],
 		#subjects=["4007","4008","4009","4011","4012","5689","5690","5691","5703","5704","5706"],
 		workflow_name=workflow_name,
 		lowpass_sigma=2,
@@ -66,20 +67,20 @@ def cbv_composite(data_path,workflow_name,
 		registration_mask="~/ni_data/templates/DSURQEc_200micron_mask.nii.gz",
 		actual_size=True,
 		)
-#	glm.l1(path.join(data_path,preprocessing_dir,workflow_name),
-#		workflow_name=workflow_name,
-#		# include={"subjects":["5689","5690","5691"]},
-#		habituation="confound",
-#		mask="/home/chymera/ni_data/templates/DSURQEc_200micron_mask.nii.gz",
-#		keep_work=True,
-#		)
-#	glm.l2_common_effect(path.join(data_path,l1_dir,workflow_name),
-#		workflow_name="composite_sessions_best_responders",
-#		exclude={"scans":["EPI_BOLD_"],"subjects":["4001","4002","4003","4004","4006","4008","4009","5674","5703","5704","5706","4005","5687"]},
-#		groupby="session",
-#		keep_work=True,
-#		mask="/home/chymera/ni_data/templates/DSURQEc_200micron_mask.nii.gz",
-#		)
+	glm.l1(path.join(data_path,preprocessing_dir,workflow_name),
+		workflow_name=workflow_name,
+		# include={"subjects":["5689","5690","5691"]},
+		habituation="confound",
+		mask="/home/chymera/ni_data/templates/DSURQEc_200micron_mask.nii.gz",
+		keep_work=True,
+		)
+	glm.l2_common_effect(path.join(data_path,l1_dir,workflow_name),
+		workflow_name="composite_subjects",
+		exclude={"scans":["EPI_BOLD_"],},
+		groupby="subject",
+		keep_work=True,
+		mask="/home/chymera/ni_data/templates/DSURQEc_200micron_mask.nii.gz",
+		)
 #	glm.l2_common_effect(path.join(data_path,l1_dir,workflow_name),
 #		workflow_name="composite_sessions_responders",
 #		exclude={"scans":["EPI_BOLD_"],"subjects":["4001","4002","4003","4004","4006","4008","4009","5674","5703","5704","5706"]},
@@ -137,7 +138,6 @@ def run_level1_glm():
 if __name__ == '__main__':
 	# test_dual_regression()
 #	vta_composite()
-#	cbv_composite("~/ni_data/ofM.dr/","composite")
-	dbu("~/ni_data/test/","functional_registration")
+	cbv_composite("~/ni_data/ofM.dr/","composite")
 #	dr_only()
 #	run_level1_glm()

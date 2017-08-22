@@ -11,6 +11,8 @@ matrix:
     - language: python
       python:
         - "2.7"
+        - "3.5"
+      services: docker
       script:
         - python hello.py
     - os: linux

@@ -28,12 +28,10 @@ cd SAMRI
 python setup.py install --user
 ````
 
-If you are getting a `Permission denied (publickey)` error upon trying to clone, please try pulling via the HTTPS link:
+If you are getting a `Permission denied (publickey)` error upon trying to clone, you can either:
 
-```
-git clone https://github.com/IBT-FMI/SAMRI.git
-```
-
+* [Add an SSH key](https://help.github.com/articles/adding-a-new-ssh-key-to-your-github-account/) to your GitHub account.
+* Pull via the HTTPS link `git clone https://github.com/IBT-FMI/SAMRI.git`.
 
 ### Python Package Manager (Developers)
 Python's `setuptools` allows you to install Python packages independently of your distribution (or operating system, even);
@@ -51,11 +49,10 @@ source ~/.bashrc
 python setup.py develop --install-dir ~/.python_develop/
 ````
 
-If you are getting a `Permission denied (publickey)` error upon trying to clone, please try pulling via the HTTPS link:
+If you are getting a `Permission denied (publickey)` error upon trying to clone, you can either:
 
-```
-git clone https://github.com/IBT-FMI/SAMRI.git
-```
+* [Add an SSH key](https://help.github.com/articles/adding-a-new-ssh-key-to-your-github-account/) to your GitHub account.
+* Pull via the HTTPS link `git clone https://github.com/IBT-FMI/SAMRI.git`.
 
 ## Dependencies:
 

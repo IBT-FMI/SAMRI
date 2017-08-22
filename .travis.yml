@@ -6,10 +6,10 @@ cache:
   directories:
     - $HOME/.portage-pkgdir
 
-language: python
-
-python:
-  - "2.7"
-
-script: 
-  - python hello.py
+matrix:
+  include:
+    language: python
+    python:
+      - "2.7"
+    script: 
+      - python hello.py

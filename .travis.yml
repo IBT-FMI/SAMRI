@@ -1,3 +1,11 @@
+branches:
+  only:
+    - master
+
+cache:
+  directories:
+    - $HOME/.portage-pkgdir
+
 language: python
 
 python:

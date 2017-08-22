@@ -90,7 +90,7 @@ def bruker(measurements_base,
 		sessions = set(list(data_selection["session"]))
 
 	# we currently only support one structural scan type per session
-	if structural_registration and structural_scan_types:
+	if functional_registration_method in ("structural", "composite") and structural_scan_types:
 		structural_scan_types = [structural_scan_types[0]]
 
 	# we start to define nipype workflow elements (nodes, connections, meta)
@@ -214,6 +214,7 @@ def bruker(measurements_base,
 					(s_bru2nii, s_warp, [('nii_file', 'input_image')]),
 					(s_warp, datasink, [('output_image', 'anat')]),
 					])
+		else:
 			s_reg_biascorrect = pe.Node(interface=ants.N4BiasFieldCorrection(), name="s_reg_biascorrect")
 			s_reg_biascorrect.inputs.dimension = 3
 			s_reg_biascorrect.inputs.bspline_fitting_distance = 95

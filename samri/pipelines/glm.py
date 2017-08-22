@@ -12,7 +12,6 @@ from nipype.interfaces import fsl
 from nipype.interfaces.fsl.model import Level1Design
 
 from extra_interfaces import SpecifyModel
-from preprocessing import bruker
 from utils import sss_to_source, ss_to_path, iterfield_selector, datasource_exclude
 
 def l1(preprocessing_dir,

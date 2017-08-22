@@ -1,32 +1,7 @@
-branches:
-  only:
-    - master
+language: python
 
-cache:
-  directories:
-    - $HOME/.portage-pkgdir
+python:
+  - "2.7"
 
-matrix:
-  include:
-    - language: python
-      python:
-        - "2.7"
-        - "3.5"
-      services: docker
-      script:
-        - python hello.py
-    - os: linux
-      services: docker
-      language: generic
-      sudo: required
-      script:
-        - 'if [ "${TRAVIS_EVENT_TYPE}" != "cron" ]; then
-          docker run --rm -ti -v "${HOME}"/.portage-pkgdir:/usr/portage/packages -v "${PWD}":${HOME}/SAMRI -w ${HOME}/SAMRI gentoo/stage3-amd64:latest ${HOME}/SAMRI/.gentoo/on_travis.sh; fi'
-    - os: linux
-      env: BUILD_TYPE=newversioncheck # marker environment variable to make the build matrix more readable in the UI
-      services: docker
-      language: generic
-      sudo: required
-      script:
-        - 'if [ "${TRAVIS_EVENT_TYPE}" == "cron" ]; then
-          docker run --rm -ti -v "${HOME}"/.portage-pkgdir:/usr/portage/packages -v "${PWD}":${HOME}/SAMRI -w ${HOME}/SAMRI gentoo/stage3-amd64:latest ${HOME}/SAMRI/.gentoo/on_travis.sh; fi'
+script: 
+  - python hello.py

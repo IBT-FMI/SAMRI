@@ -5,3 +5,6 @@ from samri.pipelines import *
 from samri.plotting import connectivity,examples,maps,qc,summary,timeseries,utilities
 from samri.report import *
 from samri import utilities
+
+def test_placeholder():
+    pass

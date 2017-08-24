@@ -10,3 +10,4 @@ nipype>=0.12.1
 nipy>=0.4.1
 scipy>=0.19.1
 nilearn>=0.2.6
+pkgutil>=0.1.1

@@ -13,5 +13,6 @@ matrix:
   include:
     language: python
     python: 2.7
-    script: 
+    script:
+      - pytest
       - python hello.py

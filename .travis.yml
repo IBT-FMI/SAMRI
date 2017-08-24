@@ -15,4 +15,3 @@ matrix:
     python: 2.7
     script:
       - pytest
-      - python hello.py

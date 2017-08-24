@@ -1,6 +1,7 @@
 # trying to import all current samri modules
 from samri.optimization import *
 from samri.pipelines import *
-from samri.plotting import *
+# leaving out network because of graph_tool
+from samri.plotting import connectivity,examples,maps,qc,summary,timeseries,utilities
 from samri.report import *
-import samri.utilities
+from samri import utilities

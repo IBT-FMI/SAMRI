@@ -7,6 +7,6 @@ sqlalchemy>=1.0.17
 statsmodels>=0.8.0
 nibabel>=2.1.0
 nipype>=0.12.1
-nipy>=0.12.1
+nipy>=0.4.1
 scipy>=0.19.1
 nilearn>=0.2.6

@@ -1,6 +1,6 @@
 branches:
   only:
-    - master
+    - weekly_m_test
 
 cache:
   directories:

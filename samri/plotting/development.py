@@ -49,7 +49,7 @@ def plot_roi_per_session(l1_dir, roi_mask, color,
 	):
 	from samri.plotting import summary
 	from samri.report import roi
-	
+
 	substitutions = bids_substitution_iterator(
 		["ofM","ofM_aF","ofM_cF1","ofM_cF2","ofM_pF"],
 		# ["5689","5690","5691"],
@@ -62,7 +62,7 @@ def plot_roi_per_session(l1_dir, roi_mask, color,
 		"",
 		l1_dir=l1_dir,
 		)
-	
+
 	if isinstance(roi, list) and not "/" in roi[0]:
 		roi = roi_from_atlaslabel("~/ni_data/templates/roi/DSURQEc_200micron_labels.nii",
 			mapping="~/ni_data/templates/roi/DSURQE_mapping.csv",
@@ -140,7 +140,7 @@ def qc_regressor(sessions, subjects, scans, workflow_name, mask,
 	save_as="",
 	):
 	from samri.plotting import summary, timeseries
-	plt.style.use('samri_mts.conf')
+	plt.style.use('samri_multiple-ts.conf')
 
 	substitutions = bids_substitution_iterator(sessions,subjects,scans,data_dir,workflow_name)
 	timecourses, designs, stat_maps, events_dfs, subplot_titles = summary.ts_overviews(substitutions, mask,
@@ -260,7 +260,7 @@ def functional_connectivity(ts="~/ni_data/ofM.dr/preprocessing/as_composite/sub-
 	figsize = (50,50)
 	# incl. plotting
 	correlation_matrix = fc.correlation_matrix(ts, labels_img, save_as = '~/correlation_matrix.csv')
-	#TODO: to test with confounds 
+	#TODO: to test with confounds
 	#correlation_matrix = fc.correlation_matrix(ts, '~/confounds.csv', labels_img, save_as = '~/correlation_matrix.csv')
 	connectivity.plot_connectivity_matrix(correlation_matrix, figsize, labels, save_as = '~/correlation_matrix.png')
 

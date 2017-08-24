@@ -12,6 +12,7 @@ def plot_t_value_hist(
 	save_as='~/qc_tvalues.pdf',
 	):
 	"""Make t-value histogram plot"""
+
 	f, axarr = plt.subplots(1, sharex=True)
 
 	roi = nib.load(path.expanduser(roi_path))

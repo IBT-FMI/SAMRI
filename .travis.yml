@@ -6,6 +6,9 @@ cache:
   directories:
     - $HOME/.portage-pkgdir
 
+install:
+  - travis_wait 20 pip install -r requirements.txt
+
 matrix:
   include:
     language: python

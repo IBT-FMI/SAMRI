@@ -3,6 +3,7 @@ joblib>=0.11
 matplotlib>=2.0.2
 numpy>=1.13.1
 pandas>=0.20.3
+seaborn>=0.8.0
 sqlalchemy>=1.0.17
 statsmodels>=0.8.0
 nibabel>=2.1.0

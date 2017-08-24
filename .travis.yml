@@ -14,18 +14,12 @@ matrix:
       python: 2.7
       script:
         - pytest
-    - os: linux
-      services: docker
-      language: generic
-      sudo: required
-      script:
-        - 'if [ "${TRAVIS_EVENT_TYPE}" != "cron" ]; then
-          docker run --rm -ti -v "${HOME}"/.portage-pkgdir:/usr/portage/packages -v "${PWD}":${HOME}/SAMRI -w ${HOME}/SAMRI gentoo/stage3-amd64:latest ${HOME}/SAMRI/.gentoo/on_travis.sh; fi'
-    - os: linux
-      env: BUILD_TYPE=newversioncheck # marker environment variable to make the build matrix more readable in the UI
-      services: docker
-      language: generic
-      sudo: required
-      script:
-        - 'if [ "${TRAVIS_EVENT_TYPE}" == "cron" ]; then
-          docker run --rm -ti -v "${HOME}"/.portage-pkgdir:/usr/portage/packages -v "${PWD}":${HOME}/SAMRI -w ${HOME}/SAMRI gentoo/stage3-amd64:latest ${HOME}/SAMRI/.gentoo/on_travis.sh; fi'
+        
+# The following code attempts to build a Gentoo system from scratch and install all SAMRI deps via portage. This works as far as we can tell, but the free TravisCI plan is limited to 50' jobs - which we overshoot here in the emerge process alone. 
+#    - os: linux
+#      services: docker
+#      language: generic
+#      sudo: required
+#      script:
+#        - 'if [ "${TRAVIS_EVENT_TYPE}" != "cron" ]; then
+#          docker run --rm -ti -v "${HOME}"/.portage-pkgdir:/usr/portage/packages -v "${PWD}":${HOME}/SAMRI -w ${HOME}/SAMRI gentoo/stage3-amd64:latest ${HOME}/SAMRI/.gentoo/on_travis.sh; fi'

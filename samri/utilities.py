@@ -77,7 +77,7 @@ def add_pattern_data(substitution,img_path,pattern,
 		sdf = pd.DataFrame(subject_data, index=[None])
 		return sdf, vdf
 
-def bids_substitution_iterator(sessions, subjects, scans, data_dir, preprocessing_dir,
+def bids_substitution_iterator(sessions, subjects, trials, data_dir, preprocessing_dir,
 	l1_dir=None,
 	l1_workdir=None,
 	preprocessing_workdir=None,
@@ -91,8 +91,8 @@ def bids_substitution_iterator(sessions, subjects, scans, data_dir, preprocessin
 		A list of session identifiers to include in the iterator.
 	subjects : list
 		A list of subject identifiers to include in the iterator.
-	scans : list
-		A list of scan types (by BIDS nomenclature, "trials") to include in the iterator.
+	trials : list
+		A list of scan types to include in the iterator.
 	data_dir : str
 		Path to the data root (this is where SAMRI creates e.g. `preprocessing`, `l1`, or `l2` directories.
 	preprocessing_dir : str, optional
@@ -116,14 +116,14 @@ def bids_substitution_iterator(sessions, subjects, scans, data_dir, preprocessin
 	if not preprocessing_workdir:
 		preprocessing_workdir = preprocessing_dir+"_work"
 	substitutions=[]
-	for subject, session, scan in product(subjects, sessions, scans):
+	for subject, session, trial in product(subjects, sessions, trials):
 		substitution={}
 		substitution["data_dir"] = data_dir
 		substitution["l1_dir"] = l1_dir
 		substitution["l1_workdir"] = l1_workdir
 		substitution["preprocessing_dir"] = preprocessing_dir
 		substitution["preprocessing_workdir"] = preprocessing_workdir
-		substitution["scan"] = scan
+		substitution["trial"] = trial
 		substitution["session"] = session
 		substitution["subject"] = subject
 		substitutions.append(substitution)

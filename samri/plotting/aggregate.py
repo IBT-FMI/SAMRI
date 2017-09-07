@@ -2,38 +2,6 @@ import matplotlib.pyplot as plt
 import pandas as pd
 from os import path
 
-def inline_anova(df, factor,
-	style="python",
-	):
-	"""Typeset factor summary from statsmodels-style anova DataFrame for inline mention.
-
-	Parameters
-	----------
-	df : pandas.DataFrame
-		Pandas DataFrame object containing an ANOVA summary.
-	factor : str
-		String indicating the factor of interest from the summary given by `df`.
-	style : {"python", "tex"}
-		What formatting to apply to the string. A simple Python compatible string is returned when selecting "python", whereas a fancier output (decorated with TeX syntax) is returned if selecting "tex".
-	"""
-
-	if style == "python":
-		inline = "F({},{})={}, p={}".format(
-			int(df["df"][factor]),
-			int(df["df"]["Residual"]),
-			df["F"][factor],
-			df["PR(>F)"][factor],
-			)
-	elif style == "tex":
-		inline = "F({},{})={}, p={}".format(
-			df["df"][factor],
-			df["df"]["Residual"],
-			df["F"][factor],
-			df["PR(>F)"][factor],
-			)
-
-	return inline
-
 def registration_qc(df,
 	samri_style=True,
 	show=True,
@@ -42,6 +10,7 @@ def registration_qc(df,
 	repeat={"ses":"Session"},
 	print_model=False,
 	print_anova=False,
+	save_as=False,
 	):
 	"""Aggregate plot of similarity metrics for registration quality control
 
@@ -92,22 +61,7 @@ def registration_qc(df,
 
 	if show:
 		sns.plt.show()
+	if save_as:
+		plt.savefig(path.abspath(path.expanduser(save_as)), bbox_inches='tight')
 
 	return anova_summary
-
-if __name__ == "__main__":
-	anova_summary = registration_qc("../../example_data/f_reg_quality.csv", show=False)
-
-	subject_anova_summary = "F({},{})={}, p={}".format(
-		anova_summary["df"]["C(Subject)"],
-		anova_summary["df"]["Residual"],
-		anova_summary["F"]["C(Subject)"],
-		anova_summary["PR(>F)"]["C(Subject)"],
-		)
-	session_anova_summary = "F({},{})={}, p={}".format(
-		anova_summary["df"]["C(Session)"],
-		anova_summary["df"]["Residual"],
-		anova_summary["F"]["C(Session)"],
-		anova_summary["PR(>F)"]["C(Session)"],
-		)
-	print(subject_anova_summary,session_anova_summary)

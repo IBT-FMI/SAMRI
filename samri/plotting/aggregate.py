@@ -44,9 +44,9 @@ def registration_qc(df,
 	column_renames.update(repeat)
 	df = df.rename(columns=column_renames)
 
-	value = value.values()[0]
-	group = group.values()[0]
-	repeat = repeat.values()[0]
+	value = list(value.values())[0]
+	group = list(group.values())[0]
+	repeat = list(repeat.values())[0]
 
 	model = "{value} ~ C({group}) + C({repeat}) -1".format(value=value, group=group, repeat=repeat)
 	regression_model = smf.ols(model, data=df).fit()

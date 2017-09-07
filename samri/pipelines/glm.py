@@ -11,8 +11,8 @@ from itertools import product
 from nipype.interfaces import fsl
 from nipype.interfaces.fsl.model import Level1Design
 
-from extra_interfaces import SpecifyModel
-from utils import sss_to_source, ss_to_path, iterfield_selector, datasource_exclude
+from samri.pipelines.extra_interfaces import SpecifyModel
+from samri.pipelines.utils import sss_to_source, ss_to_path, iterfield_selector, datasource_exclude
 
 def l1(preprocessing_dir,
 	highpass_sigma=225,

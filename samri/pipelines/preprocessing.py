@@ -17,9 +17,8 @@ import nipype.pipeline.engine as pe				# pypeline engine
 import pandas as pd
 from nipype.interfaces import afni, bru2nii, fsl, nipy
 
-from nodes import *
-from utils import ss_to_path, sss_filename, fslmaths_invert_values
-from utils import STIM_PROTOCOL_DICTIONARY
+from samri.pipelines.nodes import *
+from samri.pipelines.utils import ss_to_path, sss_filename, fslmaths_invert_values, STIM_PROTOCOL_DICTIONARY
 from samri.utilities import N_PROCS
 
 DUMMY_SCANS=10

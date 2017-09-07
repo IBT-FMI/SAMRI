@@ -7,7 +7,14 @@ from joblib import Parallel, delayed
 import nipype.interfaces.io as nio
 from nipype.interfaces import ants, fsl
 
-def measure_sim(image, ses, sub, trial, modality, reference):
+def measure_sim(image, ses, sub, trial, modality, reference,
+	metric="MI",
+	radius_or_number_of_bins = 8,
+	sampling_strategy = "None",
+	sampling_percentage=0.3,
+	):
+	"""Return a similarity metric score for two 3d images"""
+
 	file_data = {}
 	file_data["path"] = image
 	file_data["ses"] = ses
@@ -39,8 +46,13 @@ def measure_sim(image, ses, sub, trial, modality, reference):
 
 def get_scores(bids_dir, reference,
 	modality="func",
+	metric="MI",
+	radius_or_number_of_bins = 8,
+	sampling_strategy = "None",
+	sampling_percentage=0.3,
 	save_as=False,
 	):
+	"""Create a `pandas.DataFrame` (optionally savable as `.csv`), containing the similarity scores and BIDS identifier fields for images from a BIDS directory."""
 
 	#ideally at some point, we would also support dwi
 	allowed_modalities = ("func","anat")
@@ -69,6 +81,10 @@ def get_scores(bids_dir, reference,
                 datafind_res.outputs.trial,
                 [modality]*len(datafind_res.outputs.out_paths),
                 [reference]*len(datafind_res.outputs.out_paths),
+                [metric]*len(datafind_res.outputs.out_paths),
+                [radius_or_number_of_bins]*len(datafind_res.outputs.out_paths),
+                [sampling_strategy]*len(datafind_res.outputs.out_paths),
+                [sampling_percentage]*len(datafind_res.outputs.out_paths),
                 ))
 
 	df = pd.DataFrame.from_dict(similarity_data)
@@ -81,7 +97,7 @@ def get_scores(bids_dir, reference,
 			raise ValueError("Please specify an output path ending in any one of "+",".join((".csv",))+".")
 
 if __name__ == '__main__':
-	get_scores("~/composite", "~/ni_data/templates/DSURQEc_200micron_average.nii",
+	get_scores("~/ni_data/ofM.dr/preprocessing/composite", "~/ni_data/templates/DSURQEc_200micron_average.nii",
 		#modality="anat",
 		save_as="f_reg_quality.csv"
 		)

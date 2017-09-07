@@ -51,14 +51,14 @@ def fetch_mouse_DSURQE(data_dir="~/.samri_files/templates/mouse/DSURQE", verbose
 
         more information:
         https://wiki.mouseimaging.ca/display/MICePub/Mouse+Brain+Atlases
-	
+
 	"""
 
 	# Get template
 	url_template = 'http://repo.mouseimaging.ca/repo/DSURQE_40micron_nifti/DSURQE_40micron_average.nii'
 	template = _fetch_files(path.abspath(path.expanduser(data_dir)), [('DSURQE_40micron_average.nii', url_template, {})],
 			verbose=verbose)[0]
-
+	
 	# Get atlas
 	url_atlas = 'http://repo.mouseimaging.ca/repo/DSURQE_40micron_nifti/DSURQE_40micron_mask.nii'
 	atlas = _fetch_files(path.abspath(path.expanduser(data_dir)), [('DSURQE_40micron_mask.nii', url_atlas, {})],

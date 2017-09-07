@@ -1,5 +1,5 @@
 from os import path
-import preprocessing, glm, fc
+from samri.pipelines import preprocessing, glm, fc
 try:
 	from ..utilities import bids_substitution_iterator
 except (SystemError, ValueError):

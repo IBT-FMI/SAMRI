@@ -9,15 +9,19 @@ cache:
 matrix:
   include:
     - language: python
-      install:
-        - travis_wait 20 pip install -r requirements.txt
-        - pip install .
       python: 2.7
-      script:
-        - pytest
-        - export MPLBACKEND="agg"
-        - cd samri/examples
-        - for f in *.py ; do python "$f" ; done
+    - language: python
+      python: 3.4
+
+install:
+  - travis_wait 20 pip install -r requirements.txt
+  - pip install .
+
+script:
+  - pytest
+  - export MPLBACKEND="agg"
+  - cd samri/examples
+  - for f in *.py ; do python "$f" ; done
         
 # The following code attempts to build a Gentoo system from scratch and install all SAMRI deps via portage. This works as far as we can tell, but the free TravisCI plan is limited to 50' jobs - which we overshoot here in the emerge process alone. 
 #    - os: linux

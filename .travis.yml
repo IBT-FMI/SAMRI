@@ -11,6 +11,7 @@ matrix:
     - language: python
       install:
         - travis_wait 20 pip install -r requirements.txt
+        - pip install .
       python: 2.7
       script:
         - pytest

@@ -79,11 +79,25 @@ def add_pattern_data(substitution,img_path,pattern,
 		return sdf, vdf
 
 def bids_autofind(bids_dir,modality):
-	"""Automatically generate a BIDS path template and substitution iterator (list of dicts, produced by `samri.utilities.bids_substitution_iterator`) from a BIDS-respecting directory."""
+	"""Automatically generate a BIDS path template and a substitution iterator (list of dicts, as produced by `samri.utilities.bids_substitution_iterator`, and used as a standard input SAMRI function input) from a BIDS-respecting directory.
+
+	Parameters
+	----------
+	bids_dir : str
+		Path to BIDS-formatted directory
+	modality : {"func", "anat"}
+		Which modality to source data for (corrently only supports "func", and "anat" - ideally we could extend this to include "dwi").
+
+	Returns
+	-------
+	path_template : str
+		String which can be formatted with any of the dictionaries in `substitutions`
+	substitutions : list of dicti
+		A substitution iterator usable as a standard SAMRI function input, which (together with `path_template`) unambiguoulsy identifies input files for analysis.
+	"""
 
 	bids_dir = path.abspath(path.expanduser(bids_dir))
 
-	#ideally at some point, we would also support dwi
 	allowed_modalities = ("func","anat")
 	if modality not in allowed_modalities:
 	       raise ValueError("modality parameter needs to be one of "+", ".join(allowed_modalities)+".")

@@ -9,13 +9,17 @@ anova_summary = registration_qc(df_path,
 	value={"similarity":"Similarity"},
 	group={"sub":"Subject"},
 	repeat={"ses":"Session"},
-	show=False,
+	extra={"trial":"Type"},
+	model="{value} ~ C({extra}) + C({repeat}) + C({group}) -1",
 	save_as="registration_qc.png",
+	print_model=True,
+	print_anova=True,
+	show=False,
 	)
 
 print(inline_anova(anova_summary,"C(Subject)",style="python"))
 print(inline_anova(anova_summary,"C(Session)",style="python", max_len=2))
-print(inline_anova(anova_summary,"C(Scan Type)",style="python"))
+print(inline_anova(anova_summary,"C(Type)",style="python"))
 print(inline_anova(anova_summary,"C(Subject)",style="tex"))
 print(inline_anova(anova_summary,"C(Session)",style="tex", max_len=2))
-print(inline_anova(anova_summary,"C(Scan Type)",style="tex"))
+print(inline_anova(anova_summary,"C(Type)",style="tex"))

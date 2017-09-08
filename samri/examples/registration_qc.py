@@ -15,5 +15,7 @@ anova_summary = registration_qc(df_path,
 
 print(inline_anova(anova_summary,"C(Subject)",style="python"))
 print(inline_anova(anova_summary,"C(Session)",style="python", max_len=2))
+print(inline_anova(anova_summary,"C(Scan Type)",style="python"))
 print(inline_anova(anova_summary,"C(Subject)",style="tex"))
 print(inline_anova(anova_summary,"C(Session)",style="tex", max_len=2))
+print(inline_anova(anova_summary,"C(Scan Type)",style="tex"))

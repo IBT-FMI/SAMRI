@@ -8,6 +8,7 @@ def registration_qc(df,
 	value={"similarity":"Similarity"},
 	group={"sub":"Subject"},
 	repeat={"ses":"Session"},
+	extra_factor={"trial":"Scan Type"},
 	print_model=False,
 	print_anova=False,
 	save_as=False,
@@ -42,13 +43,17 @@ def registration_qc(df,
 	column_renames.update(value)
 	column_renames.update(group)
 	column_renames.update(repeat)
+	column_renames.update(extra_factor)
 	df = df.rename(columns=column_renames)
 
 	value = list(value.values())[0]
 	group = list(group.values())[0]
 	repeat = list(repeat.values())[0]
+	extra_factor = list(extra_factor.values())[0]
 
-	model = "{value} ~ C({group}) + C({repeat}) -1".format(value=value, group=group, repeat=repeat)
+	print(df)
+
+	model = "{value} ~ C({group}) + C({repeat}) +C({extra_factor}) -1".format(value=value, group=group, repeat=repeat, extra_factor=extra_factor)
 	regression_model = smf.ols(model, data=df).fit()
 	if print_model:
 		print(regression_model.summary())

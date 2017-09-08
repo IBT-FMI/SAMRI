@@ -28,14 +28,18 @@ def measure_sim(path_template, substitutions, reference,
 	file_data["sub"] = substitutions["subject"]
 	file_data["trial"] = substitutions["trial"]
 
-	image_name = path.basename(file_data["path"])
-
 	if "/func/" in path_template or "/dwi/" in path_template:
-		temporal_mean = fsl.MeanImage()
-		temporal_mean.inputs.in_file = image_path
-		temporal_mean.inputs.out_file = path.join("/tmp",image_name)
-		temporal_mean_res = temporal_mean.run()
-		image_path = temporal_mean_res.outputs.out_file
+		image_name = path.basename(file_data["path"])
+		merged_image_name = "merged_"+image_name
+		merged_image_path = path.join("/tmp",merged_image_name)
+		if not path.isfile(merged_image_path):
+			temporal_mean = fsl.MeanImage()
+			temporal_mean.inputs.in_file = image_path
+			temporal_mean.inputs.out_file = merged_image_path
+			temporal_mean_res = temporal_mean.run()
+			image_path = temporal_mean_res.outputs.out_file
+		else:
+			image_path = merged_image_path
 
 	sim = ants.MeasureImageSimilarity()
 	sim.inputs.dimension = 3

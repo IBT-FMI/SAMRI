@@ -18,6 +18,7 @@ def registration_qc(df,
 	save_as=False,
 	cmap="Set3",
 	extra_cmap=EXTRA_COLORSET,
+	anova_type=3,
 	):
 	"""Aggregate plot of similarity metrics for registration quality control
 
@@ -63,7 +64,7 @@ def registration_qc(df,
 	if print_model:
 		print(regression_model.summary())
 
-	anova_summary = sm.stats.anova_lm(regression_model, typ=2) # Type 2 ANOVA DataFrame
+	anova_summary = sm.stats.anova_lm(regression_model, typ=anova_type)
 	if print_anova:
 		print(anova_summary)
 

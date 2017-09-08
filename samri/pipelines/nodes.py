@@ -173,7 +173,7 @@ def DSURQEc_structural_registration(template,
 	s_registration.inputs.winsorize_upper_quantile = 0.95
 	s_registration.inputs.args = '--float'
 	if mask:
-		s_registration.inputs.fixed_image_mask = path.abspath(path.expanduser(mask))
+		s_registration.inputs.fixed_image_masks = [path.abspath(path.expanduser(mask))]
 	s_registration.inputs.num_threads = num_threads
 
 	f_parameters = [phase_dictionary[selection] for selection in f_phases]
@@ -204,7 +204,7 @@ def DSURQEc_structural_registration(template,
 	f_registration.inputs.winsorize_upper_quantile = 0.95
 	f_registration.inputs.args = '--float'
 	if mask:
-		f_registration.inputs.fixed_image_mask = path.abspath(path.expanduser(mask))
+		f_registration.inputs.fixed_image_masks = [path.abspath(path.expanduser(mask))]
 	f_registration.inputs.num_threads = num_threads
 
 
@@ -300,7 +300,7 @@ def functional_registration(template,
 	f_registration.inputs.winsorize_upper_quantile = 0.95
 	f_registration.inputs.args = '--float'
 	if mask:
-		f_registration.inputs.fixed_image_mask = path.abspath(path.expanduser(mask))
+		f_registration.inputs.fixed_image_masks = [path.abspath(path.expanduser(mask))]
 	f_registration.inputs.num_threads = num_threads
 
 	warp = pe.Node(ants.ApplyTransforms(), name="f_warp")

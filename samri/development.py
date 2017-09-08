@@ -51,7 +51,7 @@ def reg_cc10():
 		save_as="f_reg_quality.csv",
 		)
 
-	anova_summary = registration_qc(df_path,
+	anova_summary = registration_qc(df,
 		value={"similarity":"Similarity"},
 		group={"sub":"Subject"},
 		repeat={"ses":"Session"},

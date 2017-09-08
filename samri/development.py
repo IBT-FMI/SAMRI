@@ -93,6 +93,8 @@ def reg_cc10():
 	print("Session Main Effect: {}".format(session_effect))
 
 def test_autofind():
+	"""We may be able to turn this into a CI function, if we put together a data fetching script for dummy (empty) BIDS-formatted data.
+	"""
 	from samri.utilities import bids_autofind
 	from samri.plotting.aggregate import registration_qc
 	from samri.report.registration import get_scores

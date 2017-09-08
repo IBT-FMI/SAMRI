@@ -1,6 +1,7 @@
 import multiprocessing
 import numpy as np
 import nibabel as nib
+import nipype.interfaces.io as nio
 import pandas as pd
 from copy import deepcopy
 from itertools import product
@@ -76,6 +77,42 @@ def add_pattern_data(substitution,img_path,pattern,
 		subject_data["t"]=pattern_score
 		sdf = pd.DataFrame(subject_data, index=[None])
 		return sdf, vdf
+
+def bids_autofind(bids_dir,modality):
+	"""Automatically generate a BIDS path template and substitution iterator (list of dicts, produced by `samri.utilities.bids_substitution_iterator`) from a BIDS-respecting directory."""
+
+	bids_dir = path.abspath(path.expanduser(bids_dir))
+
+	#ideally at some point, we would also support dwi
+	allowed_modalities = ("func","anat")
+	if modality not in allowed_modalities:
+	       raise ValueError("modality parameter needs to be one of "+", ".join(allowed_modalities)+".")
+
+	if modality in ("func","dwi"):
+	       match_regex = '.+/sub-(?P<sub>.+)/ses-(?P<ses>.+)/'+modality+'/.*?_trial-(?P<trial>.+)\.nii.gz'
+	elif modality == "anat":
+	       match_regex = '.+/sub-(?P<sub>.+)/ses-(?P<ses>.+)/anat/.*?_(?P<trial>.+)\.nii.gz'
+
+	path_template = bids_dir+"/sub-{subject}/ses-{session}/"+modality+"/sub-{subject}_ses-{session}_trial-{trial}.nii.gz"
+
+	datafind = nio.DataFinder()
+	datafind.inputs.root_paths = bids_dir
+	datafind.inputs.match_regex = match_regex
+	datafind_res = datafind.run()
+
+	substitutions = []
+	for ix, i in enumerate(datafind_res.outputs.out_paths):
+		substitution = {}
+		substitution["subject"] = datafind_res.outputs.sub[ix]
+		substitution["session"] = datafind_res.outputs.ses[ix]
+		substitution["trial"] = datafind_res.outputs.trial[ix]
+		if path_template.format(**substitution) != i:
+			print("Original DataFinder path: "+i)
+			print("Reconstructed path: "+path_template.format(**substitution))
+			raise ValueError("The reconstructed file path based on the substitution dictionary and the path template, is not identical to the corresponding path, found by `nipype.interfaces.io.DataFinder`. See string values above.")
+		substitutions.append(substitution)
+
+	return path_template, substitutions
 
 def bids_substitution_iterator(sessions, subjects, trials, data_dir, preprocessing_dir,
 	l1_dir=None,

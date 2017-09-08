@@ -1,6 +1,9 @@
 import matplotlib.pyplot as plt
 import pandas as pd
 from os import path
+from matplotlib import rcParams
+
+EXTRA_COLORSET = ["#797979","#000000","#505050","#FFFFFF","#B0B0B0",]
 
 def registration_qc(df,
 	samri_style=True,
@@ -8,10 +11,13 @@ def registration_qc(df,
 	value={"similarity":"Similarity"},
 	group={"sub":"Subject"},
 	repeat={"ses":"Session"},
-	extra_factor={"trial":"Scan Type"},
+	extra=False,
+	model="{value} ~ C({extra_factor}) + C({group}) + C({repeat}) -1",
 	print_model=False,
 	print_anova=False,
 	save_as=False,
+	cmap="Set3",
+	extra_cmap=EXTRA_COLORSET,
 	):
 	"""Aggregate plot of similarity metrics for registration quality control
 
@@ -28,7 +34,8 @@ def registration_qc(df,
 	import statsmodels.formula.api as smf
 
 	if samri_style:
-		plt.style.use('ggplot')
+		this_path = path.dirname(path.realpath(__file__))
+		plt.style.use(path.join(this_path,"samri.conf"))
 
 	try:
 		if isinstance(df, basestring):
@@ -43,17 +50,15 @@ def registration_qc(df,
 	column_renames.update(value)
 	column_renames.update(group)
 	column_renames.update(repeat)
-	column_renames.update(extra_factor)
-	df = df.rename(columns=column_renames)
-
 	value = list(value.values())[0]
 	group = list(group.values())[0]
 	repeat = list(repeat.values())[0]
-	extra_factor = list(extra_factor.values())[0]
+	if extra:
+		column_renames.update(extra)
+		extra = list(extra.values())[0]
+	df = df.rename(columns=column_renames)
 
-	print(df)
-
-	model = "{value} ~ C({group}) + C({repeat}) +C({extra_factor}) -1".format(value=value, group=group, repeat=repeat, extra_factor=extra_factor)
+	model = model.format(value=value, group=group, repeat=repeat, extra=extra)
 	regression_model = smf.ols(model, data=df).fit()
 	if print_model:
 		print(regression_model.summary())
@@ -62,7 +67,16 @@ def registration_qc(df,
 	if print_anova:
 		print(anova_summary)
 
-	myplot = sns.swarmplot(x=group, y=value, hue=repeat, data=df)
+	if extra:
+		myplot = sns.swarmplot(x=group, y=value, hue=extra, data=df,
+			size=rcParams["lines.markersize"]*1.4,
+			palette=sns.color_palette(extra_cmap),
+			)
+	myplot = sns.swarmplot(x=group, y=value, hue=repeat, data=df,
+		edgecolor=(1, 1, 1, 0.0),
+		linewidth=rcParams["lines.markersize"]*.4,
+		palette=sns.color_palette(cmap),
+		)
 
 	if show:
 		sns.plt.show()

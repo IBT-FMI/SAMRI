@@ -4,7 +4,6 @@ import pandas as pd
 from os import path
 from joblib import Parallel, delayed
 
-import nipype.interfaces.io as nio
 from nipype.interfaces import ants, fsl
 
 def measure_sim(path_template, substitutions, reference,
@@ -54,25 +53,6 @@ def measure_sim(path_template, substitutions, reference,
 	file_data["similarity"] = sim_res.outputs.similarity
 
 	return file_data
-
-# This should be reimplemented as a sort of autofind utility to be used in order to auto-generate a template string andsubstitutions list.
-#	#ideally at some point, we would also support dwi
-#	allowed_modalities = ("func","anat")
-#	if modality not in allowed_modalities:
-#		raise ValueError("modality parameter needs to be one of "+", ".join(allowed_modalities)+".")
-#
-#	bids_dir = path.abspath(path.expanduser(bids_dir))
-#	reference = path.abspath(path.expanduser(reference))
-#
-#	if modality in ("func","dwi"):
-#		match_regex = '.+/sub-(?P<sub>.+)/ses-(?P<ses>.+)/'+modality+'/.*?_trial-(?P<trial>.+)\.nii.gz'
-#	elif modality == "anat":
-#		match_regex = '.+/sub-(?P<sub>.+)/ses-(?P<ses>.+)/anat/.*?_(?P<trial>.+)\.nii.gz'
-#
-#	datafind = nio.DataFinder()
-#        datafind.inputs.root_paths = bids_dir
-#        datafind.inputs.match_regex = match_regex
-#	datafind_res = datafind.run()
 
 def get_scores(file_template, substitutions, reference,
 	metric="MI",

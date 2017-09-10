@@ -83,7 +83,7 @@ def write_events_file(scan_dir, scan_type, stim_protocol_dictionary,
 	from os import path
 	import pandas as pd
 	import numpy as np
-	from labbookdb.db.query import loadSession
+	from labbookdb.db.query import load_session
 	from labbookdb.db.common_classes import LaserStimulationProtocol
 
 	out_file = path.abspath(path.expanduser(out_file))
@@ -135,7 +135,7 @@ def write_events_file(scan_dir, scan_type, stim_protocol_dictionary,
 	except KeyError:
 		return
 
-	session, engine = loadSession(db_path)
+	session, engine = load_session(db_path)
 	sql_query=session.query(LaserStimulationProtocol).filter(LaserStimulationProtocol.code==trial_code)
 	mystring = sql_query.statement
 	mydf = pd.read_sql_query(mystring,engine)
@@ -168,11 +168,11 @@ def get_subjectinfo(subject_delay, scan_type, scan_types):
 	from copy import deepcopy
 	import sys
 	sys.path.append('/home/chymera/src/LabbookDB/db/')
-	from query import loadSession
+	from query import load_session
 	from common_classes import LaserStimulationProtocol
 	db_path="~/syncdata/meta.db"
 
-	session, engine = loadSession(db_path)
+	session, engine = load_session(db_path)
 
 	sql_query=session.query(LaserStimulationProtocol).filter(LaserStimulationProtocol.code==scan_types[scan_type])
 	mystring = sql_query.statement

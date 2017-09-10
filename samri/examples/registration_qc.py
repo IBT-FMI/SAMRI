@@ -5,31 +5,8 @@ from samri.typesetting import inline_anova
 
 data_dir = path.join(path.dirname(path.realpath(__file__)),"../../example_data/")
 df_path = path.join(data_dir,"f_reg_quality.csv")
-anova_summaryC = registration_qc(df_path,
-	value={"similarity":"Similarity"},
-	group={"sub":"Subject"},
-	repeat={"ses":"Session"},
-	extra={"trial":"Type"},
-	model="{value} ~ C({repeat}) -1",
-	save_as="registration_qc.png",
-	print_model=True,
-	print_anova=True,
-	show=False,
-	anova_type=2,
-	)
-anova_summaryCA = registration_qc(df_path,
-	value={"similarity":"Similarity"},
-	group={"sub":"Subject"},
-	repeat={"ses":"Session"},
-	extra={"trial":"Type"},
-	model="{value} ~ C({extra}) + C({repeat}) -1",
-	save_as="registration_qc.png",
-	print_model=True,
-	print_anova=True,
-	show=False,
-	anova_type=2,
-	)
-anova_summaryCAB = registration_qc(df_path,
+
+anova_summary = registration_qc(df_path,
 	value={"similarity":"Similarity"},
 	group={"sub":"Subject"},
 	repeat={"ses":"Session"},
@@ -41,9 +18,6 @@ anova_summaryCAB = registration_qc(df_path,
 	show=False,
 	anova_type=2,
 	)
-
-print(anova_summaryCA.compare_ftest(anova_summaryC))
-print(anova_summaryCAB.compare_ftest(anova_summaryCA))
 
 print(inline_anova(anova_summary,"C(Subject)",style="python"))
 print(inline_anova(anova_summary,"C(Session)",style="python", max_len=2))

@@ -72,16 +72,16 @@ def get_scores(file_template, substitutions, reference,
 	reference = path.abspath(path.expanduser(reference))
 
 	n_jobs = mp.cpu_count()-2
-        similarity_data = Parallel(n_jobs=n_jobs, verbose=0, backend="threading")(map(delayed(measure_sim),
-                [file_template]*len(substitutions),
+	similarity_data = Parallel(n_jobs=n_jobs, verbose=0, backend="threading")(map(delayed(measure_sim),
+		[file_template]*len(substitutions),
 		substitutions,
-                [reference]*len(substitutions),
-                [metric]*len(substitutions),
-                [radius_or_number_of_bins]*len(substitutions),
-                [sampling_strategy]*len(substitutions),
-                [sampling_percentage]*len(substitutions),
-                [mask]*len(substitutions),
-                ))
+		[reference]*len(substitutions),
+		[metric]*len(substitutions),
+		[radius_or_number_of_bins]*len(substitutions),
+		[sampling_strategy]*len(substitutions),
+		[sampling_percentage]*len(substitutions),
+		[mask]*len(substitutions),
+		))
 
 	df = pd.DataFrame.from_dict(similarity_data)
 

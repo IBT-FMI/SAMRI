@@ -84,6 +84,7 @@ def get_scores(file_template, substitutions, reference,
 		))
 
 	df = pd.DataFrame.from_dict(similarity_data)
+	df.dropna(axis=0, how='all',) #some rows will be emtpy
 
 	if save_as:
 		save_as = path.abspath(path.expanduser(save_as))

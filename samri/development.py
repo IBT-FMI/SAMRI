@@ -27,7 +27,7 @@ def reg_gc():
 	session_effect = inline_anova(anova_summary,"C(Session)",style="python")
 	print("Session Main Effect: {}".format(session_effect))
 
-def reg_cc10():
+def reg_cc(radius=5):
 	from samri.plotting.aggregate import registration_qc
 	from samri.report.registration import get_scores
 	from samri.typesetting import inline_anova
@@ -35,7 +35,7 @@ def reg_cc10():
 
 	substitutions = bids_substitution_iterator(
 		["ofM", "ofM_aF", "ofM_cF1", "ofM_cF2", "ofM_pF"],
-		["4007","4008","5692","5694","5699","5700","5704","6255","6262"],
+		["4001","4007","4008","4011","5692","5694","5699","5700","5704","6255","6262"],
 		["EPI_CBV_chr_longSOA","EPI_CBV_jb_long"],
 		"~/ni_data/ofM.dr/",
 		"composite",
@@ -45,7 +45,7 @@ def reg_cc10():
 	df = get_scores(file_template, substitutions,
 		"~/ni_data/templates/DSURQEc_200micron_average.nii",
 		metric="CC",
-		radius_or_number_of_bins=10,
+		radius_or_number_of_bins=radius,
 		sampling_strategy="Regular",
 		sampling_percentage=0.33,
 		save_as="f_reg_quality.csv",

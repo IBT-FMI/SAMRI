@@ -27,22 +27,29 @@ def reg_gc():
 	session_effect = inline_anova(anova_summary,"C(Session)",style="python")
 	print("Session Main Effect: {}".format(session_effect))
 
-def reg_cc(radius=5):
+def reg_cc(
+	radius=5,
+	autofind=True,
+	):
+	from samri.utilities import bids_autofind
 	from samri.plotting.aggregate import registration_qc
 	from samri.report.registration import get_scores
 	from samri.typesetting import inline_anova
 	from samri.utilities import bids_substitution_iterator
 
-	substitutions = bids_substitution_iterator(
-		["ofM", "ofM_aF", "ofM_cF1", "ofM_cF2", "ofM_pF"],
-		["4001","4007","4008","4011","5692","5694","5699","5700","5704","6255","6262"],
-		["EPI_CBV_chr_longSOA","EPI_CBV_jb_long"],
-		"~/ni_data/ofM.dr/",
-		"composite",
+	if autofind:
+		path_template, substitutions = bids_autofind("~/ni_data/ofM.dr/preprocessing/composite","func")
+	else:
+		substitutions = bids_substitution_iterator(
+			["ofM", "ofM_aF", "ofM_cF1", "ofM_cF2", "ofM_pF"],
+			["4001","4007","4008","4011","5692","5694","5699","5700","5704","6255","6262"],
+			["EPI_CBV_chr_longSOA","EPI_CBV_jb_long"],
+			"~/ni_data/ofM.dr/",
+			"composite",
 		)
-	file_template = "~/ni_data/ofM.dr/preprocessing/{preprocessing_dir}/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_trial-{trial}.nii.gz"
+		path_template = "~/ni_data/ofM.dr/preprocessing/{preprocessing_dir}/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_trial-{trial}.nii.gz"
 
-	df = get_scores(file_template, substitutions,
+	df = get_scores(path_template, substitutions,
 		"~/ni_data/templates/DSURQEc_200micron_average.nii",
 		metric="CC",
 		radius_or_number_of_bins=radius,

@@ -1,4 +1,3 @@
-from sklearn.datasets.base import Bunch
 from nilearn.datasets.utils import _fetch_files
 
 import subprocess
@@ -36,10 +35,10 @@ def fetch_rat_waxholm(template_dir="~/.samri_files/templates/rat/waxholm/", verb
 	labels = _fetch_files(path.abspath(path.expanduser(template_dir)), [('WHS_SD_rat_atlas_v2.label', url_labels, {})],
 			verbose=verbose)[0]
 
-	return Bunch(
-			template=template,
-			atlas=atlas,
-			labels=labels)
+	return dict([
+			("template", template),
+			("atlas", atlas),
+			("labels", labels)])
 	
 	
 def fetch_mouse_DSURQE(template_dir="~/.samri_files/templates/mouse/DSURQE/", verbose=1):
@@ -104,8 +103,8 @@ def fetch_mouse_DSURQE(template_dir="~/.samri_files/templates/mouse/DSURQE/", ve
 		p = subprocess.Popen(command.split(), cwd=path.abspath(path.expanduser(template_dir)), stdout=subprocess.PIPE)
 		p.wait()
 
-	return Bunch(
-			template=path.abspath(path.expanduser(template_dir)) + "DSURQEc_40micron_average.nii",
-			atlas=path.abspath(path.expanduser(template_dir)) + "DSURQEc_40micron_labels.nii",
-			mask=path.abspath(path.expanduser(template_dir)) + "DSURQEc_40micron_mask.nii",
-			labels=labels)
+	return dict([
+			("template", path.abspath(path.expanduser(template_dir)) + "DSURQEc_40micron_average.nii"),
+			("atlas", path.abspath(path.expanduser(template_dir)) + "DSURQEc_40micron_labels.nii"),
+			("mask", path.abspath(path.expanduser(template_dir)) + "DSURQEc_40micron_mask.nii"),
+			("labels", labels)])

@@ -51,7 +51,6 @@ def bruker(measurements_base,
 	realign="time",
 	registration_mask=False,
 	template="",
-	species="",
 	tr=1,
 	very_nasty_bruker_delay_hack=False,
 	workflow_name="generic",
@@ -67,14 +66,15 @@ def bruker(measurements_base,
 
 	'''
 
-	if(template != ""):
-		pass
-	elif(species == "mouse"):
-		template = fetch_mouse_DSURQE().template
-	elif(species == "rat"):
-		template = fetch_rat_waxholm().template
+	if template:
+		if(template == "mouse"):
+			template = fetch_mouse_DSURQE().template
+		elif(template == "rat"):
+			template = fetch_rat_waxholm().template
+		elif:
+			pass
 	else:
-		raise ValueError("No species specified")
+		raise ValueError("No species or template specified")
 		return -1
 
 

@@ -51,13 +51,7 @@ def plot_connectivity_matrix(correlation_matrix,
 
 	plt.figure(figsize=figsize)
 	np.fill_diagonal(correlation_matrix, 0)
-	## seaborn plot routing
-	# sns.heatmap(correlation_matrix,
-	# 	xticklabels=labels_np,
-	# 	yticklabels=labels_np,
-	# 	square = 1,
-	# 	cbar_kws={"shrink": 0.75},
-	# 	)
+	
 	plt.imshow(correlation_matrix,
 		interpolation="nearest",
 		cmap="RdBu_r",

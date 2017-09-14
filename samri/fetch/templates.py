@@ -1,6 +1,7 @@
 from sklearn.datasets.base import Bunch
 from nilearn.datasets.utils import _fetch_files
 
+import subprocess
 from os import path
 
 def fetch_rat_waxholm(template_dir="~/.samri_files/templates/rat/waxholm/", verbose=1):
@@ -72,7 +73,7 @@ def fetch_mouse_DSURQE(template_dir="~/.samri_files/templates/mouse/DSURQE/", ve
 	# Get mask
 
         url_mask = 'http://repo.mouseimaging.ca/repo/DSURQE_40micron_nifti/DSURQE_40micron_mask.nii'
-        atlas = _fetch_files(path.abspath(path.expanduser(template_dir)), [('DSURQE_40micron_mask.nii', url_mask, {})],
+        mask = _fetch_files(path.abspath(path.expanduser(template_dir)), [('DSURQE_40micron_mask.nii', url_mask, {})],
                         verbose=verbose)[0]
 
 	# Get labels
@@ -80,8 +81,31 @@ def fetch_mouse_DSURQE(template_dir="~/.samri_files/templates/mouse/DSURQE/", ve
 	labels = _fetch_files(path.abspath(path.expanduser(template_dir)), [('DSURQE_40micron_itksnap_mapping.txt', url_labels, {})],
 			verbose=verbose)[0]
 
+	# fix orientation issue in nii files - resulting in *c files, afterwards created downsampled atlas
+	commands = ["fslorient -setsform -0.04 0 0 6.27 0 0.04 0 -10.7 0 0 0.04 -7.9 0 0 0 1 DSURQE_40micron_average.nii",
+		"fslorient -copysform2qform DSURQE_40micron_average.nii",
+		"mv DSURQE_40micron_average.nii DSURQEc_40micron_average.nii",
+		"fslorient -setsform -0.04 0 0 6.27 0 0.04 0 -10.7 0 0 0.04 -7.9 0 0 0 1 DSURQE_40micron_mask.nii",
+                "fslorient -copysform2qform DSURQE_40micron_mask.nii",
+                "mv DSURQE_40micron_mask.nii DSURQEc_40micron_mask.nii",
+		"fslorient -setsform -0.04 0 0 6.27 0 0.04 0 -10.7 0 0 0.04 -7.9 0 0 0 1 DSURQE_40micron_labels.nii",
+                "fslorient -copysform2qform DSURQE_40micron_labels.nii",
+                "mv DSURQE_40micron_labels.nii DSURQEc_40micron_labels.nii",
+		"ResampleImage 3 DSURQEc_40micron_average.nii _DSURQEc_200micron_average.nii 0.2x0.2x0.2 size=1 spacing=0 4",	
+		"SmoothImage 3 _DSURQEc_200micron_average.nii 0.4 DSURQEc_200micron_average.nii",
+		"rm _DSURQEc_200micron_average.nii",
+                "ResampleImage 3 DSURQEc_40micron_labels.nii _DSURQEc_200micron_labels.nii 0.2x0.2x0.2 size=1 spacing=0 4",
+                "SmoothImage 3 _DSURQEc_200micron_labels.nii 0.4 DSURQEc_200micron_labels.nii",
+                "rm _DSURQEc_200micron_labels.nii",
+		"ResampleImage 3 DSURQEc_40micron_mask.nii DSURQEc_200micron_mask.nii 0.2x0.2x0.2 size=1 spacing=0 1",
+		"mv DSURQE_40micron_itksnap_mapping.txt DSURQEc_40micron_itksnap_mapping.txt"]	
+	
+	for command in commands:
+		p = subprocess.Popen(command.split(), cwd=path.abspath(path.expanduser(template_dir)), stdout=subprocess.PIPE)
+		p.wait()
+
         return Bunch(                                      
-                        template=template,                 
-                        atlas=atlas,
-			mask=mask,                       
-                        labels=labels) 
+                        template=path.abspath(path.expanduser(template_dir)) + "DSURQEc_40micron_average.nii",                 
+                        atlas=path.abspath(path.expanduser(template_dir)) + "DSURQEc_40micron_labels.nii",
+			mask=path.abspath(path.expanduser(template_dir)) + "DSURQEc_40micron_mask.nii",                       
+                        labels=labels)

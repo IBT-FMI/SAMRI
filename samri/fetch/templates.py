@@ -6,7 +6,7 @@ from os import path
 def fetch_rat_waxholm(template_dir="~/.samri_files/templates/rat/waxholm/", verbose=1):
 	"""Download and load waxholm atlas for Sprague Dawley rat
 
-	Returns:
+	Returns
 	-------
 	dict
 		Dictionary containing template, atlas, labels	
@@ -15,11 +15,10 @@ def fetch_rat_waxholm(template_dir="~/.samri_files/templates/rat/waxholm/", verb
 		labels - labels annotating brain regions for pixelgroups in atlas; csv file 
 
 
-	References:
-	'Papp, Eszter A., et al. "Waxholm Space atlas of the Sprague Dawley rat brain." NeuroImage 97 (2014): 374-386.'
-	
-	more information:
-	https://www.nitrc.org/projects/whs-sd-atlas
+	References
+	----------
+	.. [1] 'Papp, Eszter A., et al. "Waxholm Space atlas of the Sprague Dawley rat brain." NeuroImage 97 (2014): 374-386.'
+	.. [2] https://www.nitrc.org/projects/whs-sd-atlas
 
 	"""
 	# Get template
@@ -47,7 +46,7 @@ def fetch_mouse_DSURQE(template_dir="~/.samri_files/templates/mouse/DSURQE/", ve
 	"""Download and load waxholm atlas for Sprague Dawley rat
 
 
-	Returns:
+	Returns
 	-------
 	dict
 		Dictionary containing template, atlas, labels, mask
@@ -56,11 +55,10 @@ def fetch_mouse_DSURQE(template_dir="~/.samri_files/templates/mouse/DSURQE/", ve
 		labels - labels annotating brain regions for pixelgroups in atlas; csv file 
 		mask - mri anatomy file, stripped off non-brain tissue; nifti file
 
-	References:
-	'A.E. Dorr, et al, High resolution three-dimensional brain atlas using an average magnetic resonance image of 40 adult C57Bl/6J mice, NeuroImage, vol 42, Aug. 2008, pp. 60-69'
-
-	more information:
-	https://wiki.mouseimaging.ca/display/MICePub/Mouse+Brain+Atlases
+	References
+	----------
+	.. [1] 'A.E. Dorr, et al, High resolution three-dimensional brain atlas using an average magnetic resonance image of 40 adult C57Bl/6J mice, NeuroImage, vol 42, Aug. 2008, pp. 60-69'
+	.. [2] https://wiki.mouseimaging.ca/display/MICePub/Mouse+Brain+Atlases
 
 	"""
 

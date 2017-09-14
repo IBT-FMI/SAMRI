@@ -8,10 +8,10 @@ def fetch_rat_waxholm(template_dir="~/.samri_files/templates/rat/waxholm/", verb
 	"""Download and load waxholm atlas for Sprague Dawley rat
 
 	Returns:
-	data:   sklearn.datasets.base.Bunch Dictionary-like object
-		template
-		atlas
-		labels
+	data:   sklearn.datasets.base.Bunch, Dictionary-like object, consisting of
+		template - mri anatomy file; nifti file
+		atlas - pixelvalues of regions are grouped together, with corresponding labels in labels.ccv; nifti file
+		labels - labels annotating brain regions for pixelgroups in atlas; csv file 
 
 
 	References:
@@ -47,10 +47,10 @@ def fetch_mouse_DSURQE(template_dir="~/.samri_files/templates/mouse/DSURQE/", ve
 
 	Returns:
 	data:   sklearn.datasets.base.Bunch Dictionary-like object
-		template
-		atlas
-		mask
-		labels
+		template - mri anatomy file; nifti file
+		atlas - pixelvalues of regions are grouped together, with corresponding labels in labels.ccv; nifti file
+		labels - labels annotating brain regions for pixelgroups in atlas; csv file 
+		mask - mri anatomy file, stripped off non-brain tissue; nifti file
 
 	References:
 	'A.E. Dorr, et al, High resolution three-dimensional brain atlas using an average magnetic resonance image of 40 adult C57Bl/6J mice, NeuroImage, vol 42, Aug. 2008, pp. 60-69'

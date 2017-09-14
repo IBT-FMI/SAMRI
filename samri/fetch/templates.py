@@ -7,7 +7,9 @@ def fetch_rat_waxholm(template_dir="~/.samri_files/templates/rat/waxholm/", verb
 	"""Download and load waxholm atlas for Sprague Dawley rat
 
 	Returns:
-	data:   sklearn.datasets.base.Bunch, Dictionary-like object, consisting of
+	-------
+	dict
+		Dictionary containing template, atlas, labels	
 		template - mri anatomy file; nifti file
 		atlas - pixelvalues of regions are grouped together, with corresponding labels in labels.ccv; nifti file
 		labels - labels annotating brain regions for pixelgroups in atlas; csv file 
@@ -44,8 +46,11 @@ def fetch_rat_waxholm(template_dir="~/.samri_files/templates/rat/waxholm/", verb
 def fetch_mouse_DSURQE(template_dir="~/.samri_files/templates/mouse/DSURQE/", verbose=1):
 	"""Download and load waxholm atlas for Sprague Dawley rat
 
+
 	Returns:
-	data:   sklearn.datasets.base.Bunch Dictionary-like object
+	-------
+	dict
+		Dictionary containing template, atlas, labels, mask
 		template - mri anatomy file; nifti file
 		atlas - pixelvalues of regions are grouped together, with corresponding labels in labels.ccv; nifti file
 		labels - labels annotating brain regions for pixelgroups in atlas; csv file 

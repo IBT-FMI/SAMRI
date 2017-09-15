@@ -265,19 +265,15 @@ def stat(stat_maps,
 		else:
 			fraction = 0.04
 		for ix, ax in enumerate(flat_axes):
+			draw_colorbar=False
 			#create or use conserved colorbar for multiple cnsecutive plots of the same image
 			if conserve_colorbar_steps == 0:
+				draw_colorbar=True
 				while True and conserve_colorbar_steps < len(stat_maps)-ix:
 					if stat_maps[ix+conserve_colorbar_steps] == stat_maps[ix]:
 						conserve_colorbar_steps+=1
 					else:
 						break
-				cax, kw = _draw_colorbar(stat_maps[ix],flat_axes[ix:ix+conserve_colorbar_steps],
-					aspect=cbar_aspect,
-					fraction=fraction,
-					anchor=(2,0.5),
-					)
-			conserve_colorbar_steps-=1
 
 			if subplot_titles:
 				try:
@@ -286,8 +282,14 @@ def stat(stat_maps,
 					title = None
 			else:
 				title = None
-			#enough axes are created to fully populate a grid. This may be more than the available number of subplots.
+			#axes are fully populating the grid - this may exceed the available number of subplots.
 			try:
+				if draw_colorbar:
+					cax, kw = _draw_colorbar(stat_maps[ix],flat_axes[ix:ix+conserve_colorbar_steps],
+						aspect=cbar_aspect,
+						fraction=fraction,
+						anchor=(2,0.5),
+						)
 				display = scaled_plot(stat_maps[ix], template, fig, ax,
 					overlay = overlays[ix],
 					title=title,
@@ -301,7 +303,7 @@ def stat(stat_maps,
 					)
 			except IndexError:
 				ax.axis('off')
-
+			conserve_colorbar_steps-=1
 	if save_as:
 		if isinstance(save_as, str):
 			plt.savefig(path.abspath(path.expanduser(save_as)), dpi=400, bbox_inches='tight')

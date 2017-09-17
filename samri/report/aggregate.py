@@ -22,6 +22,10 @@ def add_fc_roi_data(data_path, seed_masker, brain_masker,
 		data_path = data_path.format(**substitution)
 	data_path = path.abspath(path.expanduser(data_path))
 
+	if not path.isfile(data_path):
+		print("WARNING: File \"{}\" does not exist.".format(data_path))
+		return
+
 	seed_time_series = seed_masker.fit_transform(data_path,).T
 	seed_time_series = np.mean(seed_time_series, axis=0)
 	brain_time_series = brain_masker.fit_transform(data_path,)
@@ -56,9 +60,6 @@ def seed_fc_rois(substitutions, seed, roi,
 	roi_mask_normalize : str
 	Path to a ROI mask by the mean of whose t-values to normalite the t-values in roi_mask.
 	"""
-
-	print(substitutions)
-	print(len(substitutions))
 
 	if isinstance(roi,str):
 		roi_mask = path.abspath(path.expanduser(roi))
@@ -101,6 +102,7 @@ def seed_fc_rois(substitutions, seed, roi,
 		[tr]*len(substitutions),
 		[save_maps]*len(substitutions),
 		))
-	print(fc_maps)
+
+	fc_maps = [i for i in fc_maps if i]
 
 	return fc_maps

@@ -164,7 +164,7 @@ def stat(stat_maps,
 	show_plot=True,
 	dim=0,
 	vmax=None,
-	orientation="portrait",
+	shape="portrait",
 	):
 
 	"""Plot a list of statistical maps.
@@ -173,29 +173,33 @@ def stat(stat_maps,
 	Parameters
 	----------
 
-	stat_maps : list
-	A list of strings giving the paths to the statistical maps to be plotted.
+	stat_maps : list or numpy.array
+		A list of strings containing statistical map paths or statistical map objects to be plotted. If a `numpy.array` is provided, the shape and order is used to place the subplots.
 
 	figure_title : string, optional
-	Title for the entire figure.
+		Title for the entire figure.
 
 	interpolation : string, optional
-	Interpolation to use for plot. Possible values according to matplotlib http://matplotlib.org/examples/images_contours_and_fields/interpolation_methods.html .
+		Interpolation to use for plot. Possible values according to matplotlib http://matplotlib.org/examples/images_contours_and_fields/interpolation_methods.html .
 
 	template : string, optional
-	Path to template onto which to plot the statistical maps.
+		Path to template onto which to plot the statistical maps.
 
 	save_as : string, optional
-	Path under which to save the figure. If None or equivalent, the plot will be shown (via `plt.show()`).
+		Path under which to save the figure. If None or equivalent, the plot will be shown (via `plt.show()`).
 
 	scale : float, optional
-	Allows intelligent scaling of annotation, crosshairs, and title.
+		Allows intelligent scaling of annotation, crosshairs, and title.
 
 	vmax : int or None, optional
-	Allows explicit specificaion of the maximum range of the color bar (the color bar will span +vmax to -vmax).
+		Allows explicit specificaion of the maximum range of the color bar (the color bar will span +vmax to -vmax).
 
-	subplot_titles : list, optional
-	List of titles for sub plots. Must be empty list or strings list of the same length as the stats_maps list.
+	subplot_titles : list or numpy.array, optional
+		List of titles for sub plots. Must be empty list or strings list of the same length as the stats_maps list.
+
+	shape : {"portrait", "landscape"}
+		if the `stat_maps` variable does not have a shape (i.e. if it is simply a list) this variable controls the kind of shape which the function auto-determines.
+		Setting this parameter to "portrait" will force a shape with two columns, whereas setting it to "landscape" will force a shape with two rows.
 
 	Notes
 	-----
@@ -232,6 +236,29 @@ def stat(stat_maps,
 			scale=scale,
 			)
 	else:
+		try:
+			nrows, ncols = stat_maps.shape
+			scale = scale/float(min(nrows, ncols))
+		except AttributeError:
+			if shape == "portrait":
+				ncols = 2
+				#we use inverse floor division to get the ceiling
+				nrows = -(-len(stat_maps)//2)
+				scale = scale/float(ncols)
+			elif shape == "landscape":
+				nrows = 2
+				#we use inverse floor division to get the ceiling
+				ncols = -(-len(stat_maps)//2)
+				scale = scale/float(nrows)
+		fig, axes = plt.subplots(figsize=(6*ncols,2.5*nrows), facecolor='#eeeeee', nrows=nrows, ncols=ncols)
+		if figure_title:
+			fig.suptitle(figure_title, fontsize=scale*30, fontweight='bold')
+		conserve_colorbar_steps = 0
+		# We transform the axes array so that we iterate column-first rather than row-first.
+		# This is done to better share colorbars between consecutive axes.
+		flat_axes = list(axes.T.flatten())
+		stat_maps = list(stat_maps.T.flatten())
+		subplot_titles = list(subplot_titles.T.flatten())
 		if len(overlays) == 1:
 			overlays = overlays*len(stat_maps)
 		elif len(overlays) == 0:
@@ -240,23 +267,8 @@ def stat(stat_maps,
 			cut_coords = cut_coords*len(stat_maps)
 		elif len(cut_coords) == 0:
 			cut_coords = [None]*len(stat_maps)
-		if orientation == "portrait":
-			ncols = 2
-			#we use inverse floor division to get the ceiling
-			nrows = -(-len(stat_maps)//2)
-			scale = scale/float(ncols)
-		if orientation == "landscape":
-			nrows = 2
-			#we use inverse floor division to get the ceiling
-			ncols = -(-len(stat_maps)//2)
-			scale = scale/float(nrows)
-		fig, axes = plt.subplots(figsize=(6*ncols,2.5*nrows), facecolor='#eeeeee', nrows=nrows, ncols=ncols)
-		if figure_title:
-			fig.suptitle(figure_title, fontsize=scale*30, fontweight='bold')
-		conserve_colorbar_steps = 0
-		# We transform the axes array so that we iterate column-first rather than row-first.
-		# This is done to better share colorbars between consecutive axes.
-		flat_axes = list(axes.T.flatten())
+		else:
+			cut_coords = list(cut_coords.T.flatten())
 		cbar_aspect = 30
 		if nrows >=2:
 			fraction = 0.09

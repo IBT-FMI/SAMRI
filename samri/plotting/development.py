@@ -216,32 +216,49 @@ def single_ts_seed_connectivity(
 
 def seed_connectivity_overview(
 	template="~/ni_data/templates/DSURQEc_40micron_masked.nii.gz",
+	cur_coords=[None,[0,-4.9,-3.3]],
 	):
+	import numpy as np
+
 	substitutions = bids_substitution_iterator(
 		# ["ofM_aF",],
 		["ofM","ofM_aF","ofM_cF1","ofM_cF2","ofM_pF"],
 		# ["5689","5690","5691"],
 		# ["4005","5687","4007","4011","4012","5689","5690","5691"],
 		# ["4007","4008","5687","5688","5692","5699","5700"],
-		["5694","5700"],
+		["5690","5691","5694","5700"],
 		# ["4008","4009","4011","4012",],
 		# ["EPI_CBV_jb_long","EPI_CBV_chr_longSOA"],
 		["EPI_CBV_chr_longSOA",],
 		"~/ni_data/ofM.dr/",
 		"composite",
 		)
-	fc_maps = aggregate.seed_fc(substitutions, "~/ni_data/templates/roi/DSURQEc_dr.nii.gz", "~/ni_data/templates/DSURQEc_200micron_mask.nii.gz",
+	fc_results = aggregate.seed_fc(substitutions, "~/ni_data/templates/roi/DSURQEc_dr.nii.gz", "~/ni_data/templates/DSURQEc_200micron_mask.nii.gz",
 		ts_file_template="~/ni_data/ofM.dr/preprocessing/{preprocessing_dir}/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_trial-{trial}.nii.gz",
 		)
-	# Duplicate FC maps
-	fc_maps = [i for i in fc_maps for _ in (0, 1)]
-	subplot_titles = ["{}-{}".format(substitution["subject"], substitution["session"]) for substitution in substitutions]
-	subplot_titles= [i for i in subplot_titles for _ in (0, 1)]
+
+	# Define FC maps matrix
+	fc_maps = []
+	subplot_titles = []
+	cut_coords = []
+	subjects = set([i["subject"] for i in fc_results])
+	for ix, sub in enumerate(subjects):
+		row = [i for i in fc_results if i["subject"]==sub]
+		fc_maps_row = [i["fc"] for i in row]
+		subplot_titles_row = ["{}-{}".format(i["subject"],i["session"]) for i in row]
+		for cut_coord in cur_coords:
+			cut_coords_row = [cut_coord for i in row]
+			cut_coords.append(cut_coords_row)
+			fc_maps.append(fc_maps_row)
+			subplot_titles.append(subplot_titles_row)
+	fc_maps = np.array(fc_maps)
+	subplot_titles = np.array(subplot_titles)
+	cut_coords = np.array(cut_coords)
+
 	maps.stat(fc_maps,
 		template=template,
 		threshold=0.05,
-		orientation="landscape",
-		cut_coords=[None,[0,-4.9,-3.3],None,[0,-4.9,-3.3],None,[0,-4.9,-3.3]],
+		cut_coords=cut_coords,
 		overlays=["~/ni_data/templates/roi/DSURQEc_dr.nii.gz",],
 		save_as="fc.pdf",
 		scale=0.8,

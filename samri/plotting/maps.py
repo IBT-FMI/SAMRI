@@ -294,7 +294,8 @@ def stat(stat_maps,
 					title = None
 			else:
 				title = None
-			#axes are fully populating the grid - this may exceed the available number of subplots.
+			# Axes are fully populating the grid - this may exceed the available number of statistic maps (`stat_maps`).
+			# The missing statistic maps may either be missing (raising an `IndexError`) or `None` (raising an `AttributeError` from `_draw_colorbar` and `TypeError` from `scaled_plot`).
 			try:
 				if draw_colorbar:
 					cax, kw = _draw_colorbar(stat_maps[ix],flat_axes[ix:ix+conserve_colorbar_steps],
@@ -313,7 +314,7 @@ def stat(stat_maps,
 					annotate=annotate,
 					scale=scale,
 					)
-			except IndexError:
+			except (AttributeError, IndexError, TypeError):
 				ax.axis('off')
 			conserve_colorbar_steps-=1
 	if save_as:

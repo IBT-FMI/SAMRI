@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import multiprocessing as mp
 import numpy as np
+from copy import deepcopy
 from joblib import Parallel, delayed
 from os import path
 from nilearn.input_data import NiftiLabelsMasker, NiftiMapsMasker, NiftiMasker
@@ -22,9 +23,12 @@ def add_fc_roi_data(data_path, seed_masker, brain_masker,
 		data_path = data_path.format(**substitution)
 	data_path = path.abspath(path.expanduser(data_path))
 
+	results = deepcopy(substitution)
+
 	if not path.isfile(data_path):
 		print("WARNING: File \"{}\" does not exist.".format(data_path))
-		return
+		results["fc"] = None
+		return results
 
 	seed_time_series = seed_masker.fit_transform(data_path,).T
 	seed_time_series = np.mean(seed_time_series, axis=0)
@@ -35,9 +39,11 @@ def add_fc_roi_data(data_path, seed_masker, brain_masker,
 
 	if save_as:
 		seed_based_correlation_img.to_filename(save_as)
-		return save_as
+		results["fc"] = save_as
 	else:
-		return seed_based_correlation_img
+		results["fc"] = seed_based_correlation_img
+
+	return results
 
 def seed_fc(substitutions, seed, roi,
 	ts_file_template="~/ni_data/ofM.dr/preprocessing/{preprocessing_dir}/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_trial-{trial}.nii.gz",
@@ -102,9 +108,5 @@ def seed_fc(substitutions, seed, roi,
 		[tr]*len(substitutions),
 		[save_maps]*len(substitutions),
 		))
-
-	print(len(fc_maps))
-	fc_maps = [i for i in fc_maps if i]
-	print(len(fc_maps))
 
 	return fc_maps

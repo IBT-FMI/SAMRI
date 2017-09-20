@@ -39,7 +39,7 @@ def add_fc_roi_data(data_path, seed_masker, brain_masker,
 	else:
 		return seed_based_correlation_img
 
-def seed_fc_rois(substitutions, seed, roi,
+def seed_fc(substitutions, seed, roi,
 	ts_file_template="~/ni_data/ofM.dr/preprocessing/{preprocessing_dir}/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_trial-{trial}.nii.gz",
 	smoothing_fwhm=.3,
 	detrend=True,
@@ -103,6 +103,8 @@ def seed_fc_rois(substitutions, seed, roi,
 		[save_maps]*len(substitutions),
 		))
 
+	print(len(fc_maps))
 	fc_maps = [i for i in fc_maps if i]
+	print(len(fc_maps))
 
 	return fc_maps

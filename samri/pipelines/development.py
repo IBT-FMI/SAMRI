@@ -68,27 +68,27 @@ def cbv_composite(data_path,workflow_name,
 		actual_size=True,
 		verbose=True,
 		)
-#	glm.l1(path.join(data_path,preprocessing_dir,workflow_name),
-#		workflow_name=workflow_name,
-#		# include={"subjects":["5689","5690","5691"]},
-#		habituation="confound",
-#		mask="/home/chymera/ni_data/templates/DSURQEc_200micron_mask.nii.gz",
-#		keep_work=True,
-#		)
-#	glm.l2_common_effect(path.join(data_path,l1_dir,workflow_name),
-#		workflow_name="composite_subjects",
-#		exclude={"scans":["EPI_BOLD_"],},
-#		groupby="subject",
-#		keep_work=True,
-#		mask="/home/chymera/ni_data/templates/DSURQEc_200micron_mask.nii.gz",
-#		)
-#	glm.l2_common_effect(path.join(data_path,l1_dir,workflow_name),
-#		workflow_name="composite_sessions_responders",
-#		exclude={"scans":["EPI_BOLD_"],"subjects":["4001","4002","4003","4004","4006","4008","4009","5674","5703","5704","5706"]},
-#		groupby="session",
-#		keep_work=True,
-#		mask="/home/chymera/ni_data/templates/DSURQEc_200micron_mask.nii.gz",
-#		)
+	glm.l1(path.join(data_path,preprocessing_dir,workflow_name),
+		workflow_name=workflow_name,
+		# include={"subjects":["5689","5690","5691"]},
+		habituation="confound",
+		mask="/home/chymera/ni_data/templates/DSURQEc_200micron_mask.nii.gz",
+		keep_work=True,
+		)
+	glm.l2_common_effect(path.join(data_path,l1_dir,workflow_name),
+		workflow_name="composite_subjects",
+		exclude={"scans":["EPI_BOLD_"],},
+		groupby="subject",
+		keep_work=True,
+		mask="/home/chymera/ni_data/templates/DSURQEc_200micron_mask.nii.gz",
+		)
+	glm.l2_common_effect(path.join(data_path,l1_dir,workflow_name),
+		workflow_name="composite_sessions_responders",
+		exclude={"scans":["EPI_BOLD_"],"subjects":["4001","4002","4003","4004","4006","4008","4009","5674","5703","5704","5706"]},
+		groupby="session",
+		keep_work=True,
+		mask="/home/chymera/ni_data/templates/DSURQEc_200micron_mask.nii.gz",
+		)
 
 def dr_only():
 	glm.l1("~/ni_data/ofM.dr/preprocessing/_composite",

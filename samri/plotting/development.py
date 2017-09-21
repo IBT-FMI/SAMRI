@@ -175,12 +175,12 @@ def plot_roi_by_label(label_names,
 
 def single_ts_seed_connectivity(
 	template="~/ni_data/templates/DSURQEc_40micron_masked.nii.gz",
-	save_as=""
+	save_as="fcs.pdf"
 	):
 	# connectivity_img = fc.seed_based_connectivity(
 	# 	"~/ni_data/ofM.dr/preprocessing/as_composite/sub-5689/ses-ofM/func/sub-5689_ses-ofM_trial-EPI_CBV_chr_longSOA.nii.gz",
 	# 	# "~/ni_data/ofM.dr/preprocessing/as_composite/sub-5706/ses-ofM_aF/func/sub-5706_ses-ofM_aF_trial-EPI_CBV_chr_longSOA.nii.gz",
-	# 	# "~/ni_data/ofM.dr/preprocessing/as_composite/sub-5690/ses-ofM/func/sub-5690_ses-ofM_trial-EPI_CBV_chr_longSOA.nii.gz",
+	# 	# "~/ni_data/ofM.dr/preprocessing/as_composite/sub-5694/ses-ofM/func/sub-5694_ses-ofM_trial-EPI_CBV_chr_longSOA.nii.gz",
 	# 	# "~/ni_data/ofM.dr/preprocessing/as_composite/sub-4011/ses-ofM_aF/func/sub-4011_ses-ofM_aF_trial-EPI_CBV_jb_long.nii.gz",
 	# 	"~/ni_data/templates/roi/DSURQEc_dr.nii.gz",
 	# 	save_as="~/fc.nii.gz"
@@ -188,7 +188,7 @@ def single_ts_seed_connectivity(
 	# connectivity_img1 = fc.seed_based_connectivity(
 	# 	# "~/ni_data/ofM.dr/preprocessing/as_composite/sub-5689/ses-ofM/func/sub-5689_ses-ofM_trial-EPI_CBV_chr_longSOA.nii.gz",
 	# 	# "~/ni_data/ofM.dr/preprocessing/as_composite/sub-5706/ses-ofM_aF/func/sub-5706_ses-ofM_aF_trial-EPI_CBV_chr_longSOA.nii.gz",
-	# 	"~/ni_data/ofM.dr/preprocessing/as_composite/sub-5690/ses-ofM/func/sub-5690_ses-ofM_trial-EPI_CBV_chr_longSOA.nii.gz",
+	# 	"~/ni_data/ofM.dr/preprocessing/as_composite/sub-5694/ses-ofM/func/sub-5694_ses-ofM_trial-EPI_CBV_chr_longSOA.nii.gz",
 	# 	# "~/ni_data/ofM.dr/preprocessing/as_composite/sub-4011/ses-ofM_aF/func/sub-4011_ses-ofM_aF_trial-EPI_CBV_jb_long.nii.gz",
 	# 	"~/ni_data/templates/roi/DSURQEc_dr.nii.gz",
 	# 	save_as="~/fc.nii.gz"
@@ -196,21 +196,18 @@ def single_ts_seed_connectivity(
 	connectivity_img2 = fc.seed_based_connectivity(
 		# "~/ni_data/ofM.dr/preprocessing/as_composite/sub-5689/ses-ofM/func/sub-5689_ses-ofM_trial-EPI_CBV_chr_longSOA.nii.gz",
 		# "~/ni_data/ofM.dr/preprocessing/as_composite/sub-5706/ses-ofM_aF/func/sub-5706_ses-ofM_aF_trial-EPI_CBV_chr_longSOA.nii.gz",
-		"~/ni_data/ofM.dr/preprocessing/as_composite/sub-5690/ses-ofM_aF/func/sub-5690_ses-ofM_aF_trial-EPI_CBV_chr_longSOA.nii.gz",
+		"~/ni_data/ofM.dr/preprocessing/composite/sub-5694/ses-ofM_aF/func/sub-5694_ses-ofM_aF_trial-EPI_CBV_chr_longSOA.nii.gz",
 		# "~/ni_data/ofM.dr/preprocessing/as_composite/sub-4011/ses-ofM_aF/func/sub-4011_ses-ofM_aF_trial-EPI_CBV_jb_long.nii.gz",
 		"~/ni_data/templates/roi/DSURQEc_dr.nii.gz",
 		save_as="~/fc.nii.gz"
 	)
-	stat_maps=[connectivity_img2]
+	stat_maps=[connectivity_img2,connectivity_img2]
 	# stat_maps=[connectivity_img,connectivity_img,"~/fc.nii.gz",connectivity_img1,connectivity_img1, connectivity_img2,]
-	# stat_maps=[connectivity_img,connectivity_img,]
 	maps.stat(stat_maps,
 		template=template,
-		threshold=0.1,
+		threshold=0.05,
 		orientation="landscape",
-		# cut_coords=[None,],
-		cut_coords=[None,[0,-4.5,-3.3],None,[0,-4.5,-3.3],None,None],
-		# cut_coords=[None,[0,-4.5,-3.3],],
+		cut_coords=[None,[0,-4.9,-3.3],None,[0,-4.9,-3.3],None,[0,-4.9,-3.3]],
 		overlays=["~/ni_data/templates/roi/DSURQEc_dr.nii.gz",],
 		save_as=save_as,
 		scale=0.8,
@@ -219,36 +216,55 @@ def single_ts_seed_connectivity(
 
 def seed_connectivity_overview(
 	template="~/ni_data/templates/DSURQEc_40micron_masked.nii.gz",
+	cur_coords=[None,[0,-4.9,-3.3]],
 	):
+	import numpy as np
+
 	substitutions = bids_substitution_iterator(
+		# ["ofM_aF",],
 		["ofM","ofM_aF","ofM_cF1","ofM_cF2","ofM_pF"],
 		# ["5689","5690","5691"],
-		["4005","5687","4007","4011","4012","5689","5690","5691"],
-		# ["4007","4011","4012","5689","5690","5691"],
-		# ["4009","4011","4012","5689","5690","5691"],
+		# ["4005","5687","4007","4011","4012","5689","5690","5691"],
+		# ["4007","4008","5687","5688","5692","5699","5700"],
+		["5690","5691","5694","5700"],
 		# ["4008","4009","4011","4012",],
-		["EPI_CBV_jb_long","EPI_CBV_chr_longSOA"],
+		# ["EPI_CBV_jb_long","EPI_CBV_chr_longSOA"],
+		["EPI_CBV_chr_longSOA",],
 		"~/ni_data/ofM.dr/",
-		"as_composite",
+		"composite",
 		)
-	subjectdf, voxeldf = aggregate.seed_fc_rois(substitutions, "~/ni_data/templates/roi/DSURQEc_dr.nii.gz", "~/ni_data/templates/roi/DSURQEc_ctx.nii.gz",
-		ts_file_template="~/ni_data/ofM.dr/preprocessing/{preprocessing_dir}/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_trial-{scan}.nii.gz",
+	fc_results = aggregate.seed_fc(substitutions, "~/ni_data/templates/roi/DSURQEc_dr.nii.gz", "~/ni_data/templates/DSURQEc_200micron_mask.nii.gz",
+		ts_file_template="~/ni_data/ofM.dr/preprocessing/{preprocessing_dir}/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_trial-{trial}.nii.gz",
 		)
 
-	# connectivity_img = fc.seed_based_connectivity(
-	# 	"~/ni_data/ofM.dr/preprocessing/as_composite/sub-5706/ses-ofM_aF/func/sub-5706_ses-ofM_aF_trial-EPI_CBV_chr_longSOA.nii.gz",
-	# 	# "~/ni_data/ofM.dr/preprocessing/as_composite/sub-5690/ses-ofM_aF/func/sub-5690_ses-ofM_aF_trial-EPI_CBV_chr_longSOA.nii.gz",
-	# 	# "~/ni_data/ofM.dr/preprocessing/as_composite/sub-4011/ses-ofM_aF/func/sub-4011_ses-ofM_aF_trial-EPI_CBV_jb_long.nii.gz",
-	# 	"~/ni_data/templates/roi/DSURQEc_dr.nii.gz",
-	# )
-	# stat_maps=[connectivity_img,connectivity_img]
-	# maps.stat(stat_maps,
-	# 	template=template,
-	# 	threshold=0.1,
-	# 	orientation="portrait",
-	# 	cut_coords=[None,[0,-4.5,-3.3]],
-	# 	overlays=["~/ni_data/templates/roi/DSURQEc_dr.nii.gz",],
-	# 	)
+	# Define FC maps matrix
+	fc_maps = []
+	subplot_titles = []
+	cut_coords = []
+	subjects = set([i["subject"] for i in fc_results])
+	for ix, sub in enumerate(subjects):
+		row = [i for i in fc_results if i["subject"]==sub]
+		fc_maps_row = [i["fc"] for i in row]
+		subplot_titles_row = ["{}-{}".format(i["subject"],i["session"]) for i in row]
+		for cut_coord in cur_coords:
+			cut_coords_row = [cut_coord for i in row]
+			cut_coords.append(cut_coords_row)
+			fc_maps.append(fc_maps_row)
+			subplot_titles.append(subplot_titles_row)
+	fc_maps = np.array(fc_maps)
+	subplot_titles = np.array(subplot_titles)
+	cut_coords = np.array(cut_coords)
+
+	maps.stat(fc_maps,
+		template=template,
+		threshold=0.1,
+		cut_coords=cut_coords,
+		overlays=["~/ni_data/templates/roi/DSURQEc_dr.nii.gz",],
+		save_as="fc.pdf",
+		scale=0.8,
+		subplot_titles=subplot_titles,
+		dim=0.8,
+		)
 
 def functional_connectivity(ts="~/ni_data/ofM.dr/preprocessing/as_composite/sub-5690/ses-ofM_aF/func/sub-5690_ses-ofM_aF_trial-EPI_CBV_chr_longSOA.nii.gz",
 	labels_img='~/ni_data/templates/roi/DSURQEc_40micron_labels.nii',

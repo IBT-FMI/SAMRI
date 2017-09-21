@@ -6,6 +6,18 @@ from numpy import genfromtxt
 from os import path
 from pandas import read_csv
 
+def fix_labels_mapping_txt(labels,
+		):
+	
+	ret = {}
+	for idx, item in enumerate(labels):
+		if(idx<14):
+			continue
+		ret[int(item.split()[0])] = " ".join(item.split()[7:])
+	ret = collections.OrderedDict(sorted(ret.items()))
+        ret = np.array(ret.items())[:,1]
+	return ret
+
 def fix_labels(labels,
 	):
 
@@ -42,8 +54,15 @@ def plot_connectivity_matrix(correlation_matrix,
 
 	#TODO: fomatting
 	labels = path.abspath(path.expanduser(labels))
-	labels_np = read_csv(labels)
-	labels_np = fix_labels(labels_np.as_matrix(['Structure','right label','left label']))
+	# fix labels loaded from website (through templates.py)
+	if('itksnap' in labels):
+		with open(labels) as f:
+			content = f.readlines()
+		labels_np = fix_labels_mapping_txt(content)
+	else:
+		labels_np = read_csv(labels)
+		labels_np = fix_labels(labels_np.as_matrix(['Structure','right label','left label']))
+
 	if isinstance(correlation_matrix, str):
 		correlation_matrix = path.abspath(path.expanduser(correlation_matrix))
 		correlation_matrix = genfromtxt(correlation_matrix, delimiter=',')

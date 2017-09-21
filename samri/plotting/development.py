@@ -257,7 +257,7 @@ def seed_connectivity_overview(
 
 	maps.stat(fc_maps,
 		template=template,
-		threshold=0.05,
+		threshold=0.1,
 		cut_coords=cut_coords,
 		overlays=["~/ni_data/templates/roi/DSURQEc_dr.nii.gz",],
 		save_as="fc.pdf",

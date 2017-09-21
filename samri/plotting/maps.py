@@ -220,6 +220,7 @@ def stat(stat_maps,
 			title=None
 
 		cax, kw = _draw_colorbar(stat_maps[0],axes,
+			threshold=threshold,
 			aspect=30,
 			fraction=0.05,
 			anchor=(1.,0.5),
@@ -299,6 +300,7 @@ def stat(stat_maps,
 			try:
 				if draw_colorbar:
 					cax, kw = _draw_colorbar(stat_maps[ix],flat_axes[ix:ix+conserve_colorbar_steps],
+						threshold=threshold,
 						aspect=cbar_aspect,
 						fraction=fraction,
 						anchor=(2,0.5),

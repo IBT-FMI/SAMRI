@@ -16,7 +16,8 @@ if not os.path.exists(path.abspath(path.expanduser(results_dir))):
 template = fetch_mouse_DSURQE()
 
 # run analysis and plot result
-ts= data_dir + "sub-5690_ses-ofM_aF_trial-EPI_CBV_chr_longSOA.nii.gz"
+ts = path.abspath(path.expanduser('~/ni_data/ofM.dr/preprocessing/as_composite/sub-4011/ses-ofM_aF/func/sub-4011_ses-ofM_aF_trial-EPI_CBV_jb_long.nii.gz'))
+#ts= data_dir + "sub-5690_ses-ofM_aF_trial-EPI_CBV_chr_longSOA.nii.gz"
 figsize=(50,50)
 correlation_matrix = fc.correlation_matrix(ts, labels_img = template['atlas'], save_as = results_dir + '/correlation_matrix.csv')
 connectivity.plot_connectivity_matrix(correlation_matrix, figsize = figsize, labels=template['labels'], save_as = results_dir + '/correlation_matrix.png')

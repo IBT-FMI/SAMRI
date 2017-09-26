@@ -219,6 +219,17 @@ def seed_connectivity_overview(
 	cur_coords=[None,[0,-4.9,-3.3]],
 	):
 	import numpy as np
+	from labbookdb.report.tracking import treatment_group, append_external_identifiers
+	db_path = '~/syncdata/meta.db'
+	groups = treatment_group(db_path, ['cFluDW','cFluDW_'], 'cage')
+	groups = append_external_identifiers(db_path, groups, ['Genotype_code'])
+	treatment = groups[
+			(groups['Genotype_code']=="eptg")&
+			(groups['Cage_TreatmentProtocol_code']=="cFluDW")
+			]['ETH/AIC'].tolist()
+
+	print(treatment)
+	return
 
 	substitutions = bids_substitution_iterator(
 		# ["ofM_aF",],

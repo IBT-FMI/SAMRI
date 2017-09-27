@@ -216,10 +216,12 @@ def single_ts_seed_connectivity(
 
 def seed_connectivity_overview(
 	template="~/ni_data/templates/DSURQEc_40micron_masked.nii.gz",
-	cur_coords=[None,[0,-4.9,-3.3]],
+	cut_coords=[None,[0,-4.9,-3.3]],
 	):
 	import numpy as np
 	from labbookdb.report.tracking import treatment_group, append_external_identifiers
+	from samri.plotting.overview import multiplot_matrix
+
 	db_path = '~/syncdata/meta.db'
 	groups = treatment_group(db_path, ['cFluDW','cFluDW_'], 'cage')
 	groups = append_external_identifiers(db_path, groups, ['Genotype_code'])
@@ -227,9 +229,14 @@ def seed_connectivity_overview(
 			(groups['Genotype_code']=="eptg")&
 			(groups['Cage_TreatmentProtocol_code']=="cFluDW")
 			]['ETH/AIC'].tolist()
-
-	print(treatment)
-	return
+	treatment = [treatment[i:i+4] for i in range(0, len(treatment), 4)]
+	no_treatment = groups[
+			(groups['Genotype_code']=="eptg")&
+			(groups['Cage_TreatmentProtocol_code']=="cFluDW_")
+			]['ETH/AIC'].tolist()
+	no_treatment = [no_treatment[i:i+4] for i in range(0, len(no_treatment), 4)]
+	negative_controls = groups[groups['Genotype_code']=="epwt"]['ETH/AIC'].tolist()
+	negative_controls= [negative_controls[i:i+4] for i in range(0, len(negative_controls), 4)]
 
 	substitutions = bids_substitution_iterator(
 		# ["ofM_aF",],
@@ -248,24 +255,7 @@ def seed_connectivity_overview(
 		ts_file_template="~/ni_data/ofM.dr/preprocessing/{preprocessing_dir}/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_trial-{trial}.nii.gz",
 		)
 
-	# Define FC maps matrix
-	fc_maps = []
-	subplot_titles = []
-	cut_coords = []
-	subjects = set([i["subject"] for i in fc_results])
-	for ix, sub in enumerate(subjects):
-		row = [i for i in fc_results if i["subject"]==sub]
-		fc_maps_row = [i["fc"] for i in row]
-		subplot_titles_row = ["{}-{}".format(i["subject"],i["session"]) for i in row]
-		for cut_coord in cur_coords:
-			cut_coords_row = [cut_coord for i in row]
-			cut_coords.append(cut_coords_row)
-			fc_maps.append(fc_maps_row)
-			subplot_titles.append(subplot_titles_row)
-	fc_maps = np.array(fc_maps)
-	subplot_titles = np.array(subplot_titles)
-	cut_coords = np.array(cut_coords)
-
+	fc_maps, subplot_titles, cut_coords = multiplot_matrix(fc_results, 'fc', per_map_cut_coords=cut_coords)
 	maps.stat(fc_maps,
 		template=template,
 		threshold=0.1,

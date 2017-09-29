@@ -55,7 +55,7 @@ def seed_fc(substitutions, seed, roi,
 	low_pass=0.25,
 	high_pass=0.004,
 	tr=1.,
-	save_maps="",
+	save_results="",
 	):
 	"""Plot a ROI t-values over the session timecourse
 
@@ -108,7 +108,7 @@ def seed_fc(substitutions, seed, roi,
 		[low_pass]*len(substitutions),
 		[high_pass]*len(substitutions),
 		[tr]*len(substitutions),
-		[save_maps]*len(substitutions),
+		[save_results]*len(substitutions),
 		))
 
 	return fc_maps

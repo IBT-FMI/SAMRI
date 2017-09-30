@@ -220,33 +220,24 @@ def seed_connectivity_overview(
 	):
 	import numpy as np
 	from labbookdb.report.tracking import treatment_group, append_external_identifiers
-	from samri.plotting.overview import multiplot_matrix
+	from samri.plotting.overview import multiplot_matrix, multipage_plot
 
 	db_path = '~/syncdata/meta.db'
 	groups = treatment_group(db_path, ['cFluDW','cFluDW_'], 'cage')
 	groups = append_external_identifiers(db_path, groups, ['Genotype_code'])
-	treatment = groups[
+	treated_subjects = groups[
 			(groups['Genotype_code']=="eptg")&
 			(groups['Cage_TreatmentProtocol_code']=="cFluDW")
 			]['ETH/AIC'].tolist()
-	treatment = [treatment[i:i+4] for i in range(0, len(treatment), 4)]
 	no_treatment = groups[
 			(groups['Genotype_code']=="eptg")&
 			(groups['Cage_TreatmentProtocol_code']=="cFluDW_")
 			]['ETH/AIC'].tolist()
-	no_treatment = [no_treatment[i:i+4] for i in range(0, len(no_treatment), 4)]
 	negative_controls = groups[groups['Genotype_code']=="epwt"]['ETH/AIC'].tolist()
-	negative_controls= [negative_controls[i:i+4] for i in range(0, len(negative_controls), 4)]
 
 	substitutions = bids_substitution_iterator(
-		# ["ofM_aF",],
 		["ofM","ofM_aF","ofM_cF1","ofM_cF2","ofM_pF"],
-		# ["5689","5690","5691"],
-		# ["4005","5687","4007","4011","4012","5689","5690","5691"],
-		# ["4007","4008","5687","5688","5692","5699","5700"],
-		["5690","5691","5694","5700"],
-		# ["4008","4009","4011","4012",],
-		# ["EPI_CBV_jb_long","EPI_CBV_chr_longSOA"],
+		treated_subjects,
 		["EPI_CBV_chr_longSOA",],
 		"~/ni_data/ofM.dr/",
 		"composite",
@@ -254,17 +245,12 @@ def seed_connectivity_overview(
 	fc_results = aggregate.seed_fc(substitutions, "~/ni_data/templates/roi/DSURQEc_dr.nii.gz", "~/ni_data/templates/DSURQEc_200micron_mask.nii.gz",
 		ts_file_template="~/ni_data/ofM.dr/preprocessing/{preprocessing_dir}/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_trial-{trial}.nii.gz",
 		)
-
-	fc_maps, subplot_titles, cut_coords = multiplot_matrix(fc_results, 'fc', per_map_cut_coords=cut_coords)
-	maps.stat(fc_maps,
+	multipage_plot(fc_results, treated_subjects,
 		template=template,
 		threshold=0.1,
-		cut_coords=cut_coords,
-		overlays=["~/ni_data/templates/roi/DSURQEc_dr.nii.gz",],
+		base_cut_coords=cut_coords,
 		save_as="fc.pdf",
-		scale=0.8,
-		subplot_titles=subplot_titles,
-		dim=0.8,
+		overlays=['~/ni_data/templates/roi/DSURQEc_dr.nii.gz'],
 		)
 
 def functional_connectivity(ts="~/ni_data/ofM.dr/preprocessing/as_composite/sub-5690/ses-ofM_aF/func/sub-5690_ses-ofM_aF_trial-EPI_CBV_chr_longSOA.nii.gz",

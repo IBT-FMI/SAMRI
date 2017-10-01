@@ -1,5 +1,6 @@
 import numpy as np
 from os import path
+from matplotlib import rcParams
 from samri.utilities import bids_substitution_iterator
 from samri.plotting import maps
 
@@ -9,10 +10,13 @@ def multipage_plot(results, subjects,
 	base_cut_coords=[None],
 	save_as="",
 	overlays=[],
-	scale=0.8,
+	scale=0.6,
 	threshold=0.1,
 	dim=0.8,
+	figure_title="",
 	):
+
+	rcParams['axes.titlepad'] = 200
 
 	save_as_base, save_as_ext = path.splitext(save_as)
 	valid_subjects = list(set([i['subject'] for i in results if bool(i['result']) and i['subject'] in subjects]))
@@ -22,6 +26,7 @@ def multipage_plot(results, subjects,
 		my_maps, subplot_titles, cut_coords = multiplot_matrix(results_page, 'result', base_cut_coords=base_cut_coords)
 		save_as_page = save_as_base+str(ix)+save_as_ext
 		maps.stat(my_maps,
+			figure_title=figure_title,
 			template=template,
 			threshold=threshold,
 			cut_coords=cut_coords,

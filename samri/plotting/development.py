@@ -225,7 +225,8 @@ def seed_connectivity_overview(
 	db_path = '~/syncdata/meta.db'
 	groups = treatment_group(db_path, ['cFluDW','cFluDW_'], 'cage')
 	groups = append_external_identifiers(db_path, groups, ['Genotype_code'])
-	treated_subjects = groups[
+	all_subjects = groups['ETH/AIC'].unique()
+	treatment = groups[
 			(groups['Genotype_code']=="eptg")&
 			(groups['Cage_TreatmentProtocol_code']=="cFluDW")
 			]['ETH/AIC'].tolist()
@@ -235,9 +236,10 @@ def seed_connectivity_overview(
 			]['ETH/AIC'].tolist()
 	negative_controls = groups[groups['Genotype_code']=="epwt"]['ETH/AIC'].tolist()
 
+
 	substitutions = bids_substitution_iterator(
 		["ofM","ofM_aF","ofM_cF1","ofM_cF2","ofM_pF"],
-		treated_subjects,
+		all_subjects,
 		["EPI_CBV_chr_longSOA",],
 		"~/ni_data/ofM.dr/",
 		"composite",
@@ -245,12 +247,33 @@ def seed_connectivity_overview(
 	fc_results = aggregate.seed_fc(substitutions, "~/ni_data/templates/roi/DSURQEc_dr.nii.gz", "~/ni_data/templates/DSURQEc_200micron_mask.nii.gz",
 		ts_file_template="~/ni_data/ofM.dr/preprocessing/{preprocessing_dir}/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_trial-{trial}.nii.gz",
 		)
-	multipage_plot(fc_results, treated_subjects,
+
+	#multipage_plot(fc_results, treatment,
+	#	figure_title="Chronic Fluoxetine (drinking water) Treatment Group",
+	#	template=template,
+	#	threshold=0.1,
+	#	base_cut_coords=cut_coords,
+	#	save_as="fc_treatment.pdf",
+	#	overlays=['~/ni_data/templates/roi/DSURQEc_dr.nii.gz'],
+	#	scale=0.4,
+	#	)
+	#multipage_plot(fc_results, no_treatment,
+	#	figure_title="Chronic Fluoxetine (drinking water) Treatment Group",
+	#	template=template,
+	#	threshold=0.1,
+	#	base_cut_coords=cut_coords,
+	#	save_as="fc_no_treatment.pdf",
+	#	overlays=['~/ni_data/templates/roi/DSURQEc_dr.nii.gz'],
+	#	scale=0.4,
+	#	)
+	multipage_plot(fc_results, negative_controls,
+		figure_title="Chronic Fluoxetine (drinking water) Treatment Group",
 		template=template,
 		threshold=0.1,
 		base_cut_coords=cut_coords,
-		save_as="fc.pdf",
+		save_as="fc_negative_control.pdf",
 		overlays=['~/ni_data/templates/roi/DSURQEc_dr.nii.gz'],
+		scale=0.4,
 		)
 
 def functional_connectivity(ts="~/ni_data/ofM.dr/preprocessing/as_composite/sub-5690/ses-ofM_aF/func/sub-5690_ses-ofM_aF_trial-EPI_CBV_chr_longSOA.nii.gz",

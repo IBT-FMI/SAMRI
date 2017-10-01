@@ -170,27 +170,27 @@ def l1(preprocessing_dir,
 def getlen(a):
 	return len(a)
 def add_suffix(name, suffix):
-	"""A function that adds suffix to a variable. 
-		
+	"""A function that adds suffix to a variable.
+
 	Returns converted to string-type  input variable 'name', and string-type converted variable
-	'suffix' added at the end of 'name'. 
+	'suffix' added at the end of 'name'.
 	If variable 'name' is type list, all the elements are being converted to strings and
 	they are being joined.
-		
+
 	Parameters
 	----------
 	name : list or str
-		Will be converted to string and return with suffix		
+		Will be converted to string and return with suffix
 	suffix : str
 		Will be converted to string and will be added at the end of 'name'.
-			
+
 	Returns
 	-------
 	str
 		String type variable 'name' with suffix, the string variable 'suffix'.
-		
+
 	"""
-	
+
 	if type(name) is list:
 		name = "".join([str(i) for i in name])
 	return str(name)+str(suffix)

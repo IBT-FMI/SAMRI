@@ -239,21 +239,21 @@ def stat(stat_maps,
 	else:
 		try:
 			nrows, ncols = stat_maps.shape
-			scale = scale/float(min(nrows, ncols))
+			#scale = scale/float(min(nrows, ncols))
 		except AttributeError:
 			if shape == "portrait":
 				ncols = 2
 				#we use inverse floor division to get the ceiling
 				nrows = -(-len(stat_maps)//2)
-				scale = scale/float(ncols)
+				#scale = scale/float(ncols)
 			elif shape == "landscape":
 				nrows = 2
 				#we use inverse floor division to get the ceiling
 				ncols = -(-len(stat_maps)//2)
-				scale = scale/float(nrows)
+				#scale = scale/float(nrows)
 		fig, axes = plt.subplots(figsize=(6*ncols,2.5*nrows), facecolor='#eeeeee', nrows=nrows, ncols=ncols)
 		if figure_title:
-			fig.suptitle(figure_title, fontsize=scale*30, fontweight='bold')
+			fig.suptitle(figure_title, fontsize=scale*35, fontweight='bold')
 		conserve_colorbar_steps = 0
 		# We transform the axes array so that we iterate column-first rather than row-first.
 		# This is done to better share colorbars between consecutive axes.

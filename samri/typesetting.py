@@ -18,7 +18,7 @@ def float_to_tex(f,
 	else:
 		f_str = "{:e}".format(f)
 		f_decimals, f_exponent = f_str.split("e")
-		f_str = "{} \\times 10^{{{}}}".format(f_decimals[:max_len],f_exponent)
+		f_str = "{} \\times 10^{{{}}}".format(f_decimals[:max_len],int(f_exponent))
 	return f_str
 
 def inline_anova(df, factor,

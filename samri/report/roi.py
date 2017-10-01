@@ -24,7 +24,7 @@ def roi_per_session(substitutions, roi_mask,
 	roi_mask_normalize : str
 	Path to a ROI mask by the mean of whose t-values to normalite the t-values in roi_mask.
 	"""
-	
+
 	if isinstance(roi_mask,str):
 		roi_mask = path.abspath(path.expanduser(roi_mask))
 	masker = NiftiMasker(mask_img=roi_mask)

@@ -1,6 +1,6 @@
 import numpy as np
 import collections
-import seaborn as sns
+import seaborn.apionly as sns
 from matplotlib import pyplot as plt
 from numpy import genfromtxt
 from os import path

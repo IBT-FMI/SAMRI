@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 import multiprocessing as mp
 import numpy as np
+import errno
 from copy import deepcopy
 from joblib import Parallel, delayed
-from os import path
+from os import path, makedirs
 from nilearn.input_data import NiftiLabelsMasker, NiftiMapsMasker, NiftiMasker
 from samri.utilities import add_roi_data, add_pattern_data
 from samri.pipelines import fc
@@ -40,6 +41,14 @@ def add_fc_roi_data(data_path, seed_masker, brain_masker,
 	if save_as:
 		save_as = save_as.format(**substitution)
 		save_as = path.abspath(path.expanduser(save_as))
+		save_as_dir = path.dirname(save_as)
+		try:
+			makedirs(save_as_dir)
+		except OSError as exc:  # Python >2.5
+			if exc.errno == errno.EEXIST and path.isdir(save_as_dir):
+				pass
+			else:
+				raise
 		seed_based_correlation_img.to_filename(save_as)
 		results["result"] = save_as
 	else:

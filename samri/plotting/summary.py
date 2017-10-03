@@ -168,6 +168,8 @@ def analytic_pattern_per_session(substitutions, analytic_pattern,
 	subject_dfs, voxel_dfs = zip(*roi_data)
 	subjectdf = pd.concat(subject_dfs)
 
+	return subjectdf
+
 	if obfuscate:
 		obf_session = {"ofM":"_pre","ofM_aF":"t1","ofM_cF1":"t2","ofM_cF2":"t3","ofM_pF":"post"}
 		subjectdf = subjectdf.replace({"session": obf_session})

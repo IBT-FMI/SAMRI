@@ -17,6 +17,11 @@ except ImportError:
 
 from samri.plotting.utilities import QUALITATIVE_COLORSET
 
+def visualize(fsl_basis_set):
+	df = pd.read_csv(fsl_basis_set, sep='  ', header=None, index_col=False)
+	df.plot()
+	plt.show()
+
 def plot_fsl_design(file_path):
 	"""Returns a plot of a Dataframe resulted from a csv file.
 

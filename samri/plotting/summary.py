@@ -17,7 +17,7 @@ from os import path
 from statsmodels.sandbox.stats.multicomp import multipletests
 
 from samri.report.roi import roi_per_session
-from samri.utilities import add_roi_data, add_pattern_data
+from samri.report.utilities import add_roi_data, add_pattern_data
 from samri.plotting import maps, timeseries
 
 try: FileNotFoundError

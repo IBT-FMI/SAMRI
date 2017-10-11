@@ -90,6 +90,17 @@ def cbv_composite(data_path,workflow_name,
 		mask="/home/chymera/ni_data/templates/DSURQEc_200micron_mask.nii.gz",
 		)
 
+def typical_resp(data_path='~/ni_data/ofM.dr/', l1_dir='l1', workflow_name='composite'):
+	glm.l2_common_effect(path.join(data_path,l1_dir,workflow_name),
+		workflow_name="sessions_best_responders",
+		subjects=["5689","5690","5691","5700","6262","6255","5694","5706"],
+		trials=["EPI_CBV_chr_longSOA"],
+		groupby="session",
+		keep_work=True,
+		mask="/home/chymera/ni_data/templates/DSURQEc_200micron_mask.nii.gz",
+		)
+
+
 def dr_only():
 	glm.l1("~/ni_data/ofM.dr/preprocessing/_composite",
 		mask="/home/chymera/ni_data/templates/roi/f_dr_chr.nii.gz",

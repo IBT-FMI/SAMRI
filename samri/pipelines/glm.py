@@ -205,6 +205,9 @@ def l2_common_effect(l1_dir,
 	nprocs=6,
 	workflow_name="generic",
 	mask="/home/chymera/ni_data/templates/ds_QBI_chr_bin.nii.gz",
+	subjects=[],
+	sessions=[],
+	trials=[],
 	):
 
 	l1_dir = path.expanduser(l1_dir)
@@ -213,11 +216,14 @@ def l2_common_effect(l1_dir,
 
 	datafind = nio.DataFinder()
 	datafind.inputs.root_paths = l1_dir
-	datafind.inputs.match_regex = '.+/sub-(?P<sub>.+)/ses-(?P<ses>.+)/.*?_trial-(?P<scan>.+)_cope\.nii.gz'
+	datafind.inputs.match_regex = '.+/sub-(?P<sub>.+)/ses-(?P<ses>.+)/.*?_trial-(?P<trial>.+)_cope\.nii.gz'
 	datafind_res = datafind.run()
-	subjects = set(datafind_res.outputs.sub)
-	sessions = set(datafind_res.outputs.ses)
-	scans = set(datafind_res.outputs.scan)
+	if not subjects:
+		subjects = set(datafind_res.outputs.sub)
+	if not sessions:
+		sessions = set(datafind_res.outputs.ses)
+	if not trials:
+		trials = set(datafind_res.outputs.trial)
 
 	copemerge = pe.Node(interface=fsl.Merge(dimension='t'),name="copemerge")
 	varcopemerge = pe.Node(interface=fsl.Merge(dimension='t'),name="varcopemerge")
@@ -249,23 +255,23 @@ def l2_common_effect(l1_dir,
 			(infosource, copemerge, [(('iterable',add_suffix,"_cope.nii.gz"), 'merged_file')]),
 			(infosource, varcopemerge, [(('iterable',add_suffix,"_varcb.nii.gz"), 'merged_file')]),
 			]
-	elif groupby == "subject_scan":
+	elif groupby == "subject_trial":
 		#does not currently work, due to missing iterator combinations (same issue as preprocessing)
 		merge = pe.Node(interface=util.Merge(2), name="merge")
-		infosource = pe.Node(interface=util.IdentityInterface(fields=['subject','scan']), name="infosource")
-		infosource.iterables = [('subject', subjects),('scan', scans)]
-		datasource = pe.Node(interface=nio.DataGrabber(infields=["subject","scan",], outfields=["copes", "varcbs"]), name="datasource")
+		infosource = pe.Node(interface=util.IdentityInterface(fields=['subject','trial']), name="infosource")
+		infosource.iterables = [('subject', subjects),('trial', trials)]
+		datasource = pe.Node(interface=nio.DataGrabber(infields=["subject","trial",], outfields=["copes", "varcbs"]), name="datasource")
 		datasource.inputs.template_args = dict(
-			copes=[["subject","subject","scan",]],
-			varcbs=[["subject","subject","scan",]]
+			copes=[["subject","subject","trial",]],
+			varcbs=[["subject","subject","trial",]]
 			)
 		datasource.inputs.field_template = dict(
 			copes="sub-%s/ses-*/sub-%s_ses-*_trial-%s_cope.nii.gz",
 			varcbs="sub-%s/ses-*/sub-%s_ses-*_trial-%s_varcb.nii.gz",
 			)
 		workflow_connections = [
-			(infosource, datasource, [('subject', 'subject'),('scan','scan')]),
-			(infosource, merge, [('subject', 'in1'),('scan','in2')]),
+			(infosource, datasource, [('subject', 'subject'),('trial','trial')]),
+			(infosource, merge, [('subject', 'in1'),('trial','in2')]),
 			(merge, copemerge, [(('out',add_suffix,"_cope.nii.gz"), 'merged_file')]),
 			(merge, varcopemerge, [(('out',add_suffix,"_varcb.nii.gz"), 'merged_file')]),
 			]
@@ -286,9 +292,9 @@ def l2_common_effect(l1_dir,
 			(infosource, copemerge, [(('iterable',add_suffix,"_cope.nii.gz"), 'merged_file')]),
 			(infosource, varcopemerge, [(('iterable',add_suffix,"_varcb.nii.gz"), 'merged_file')]),
 			]
-	elif groupby == "scan":
+	elif groupby == "trial":
 		infosource = pe.Node(interface=util.IdentityInterface(fields=['iterable']), name="infosource")
-		infosource.iterables = [('iterable', scans)]
+		infosource.iterables = [('iterable', trials)]
 		datasource = pe.Node(interface=nio.DataGrabber(infields=["group",], outfields=["copes", "varcbs"]), name="datasource")
 		datasource.inputs.template_args = dict(
 			copes=[['group']],
@@ -334,7 +340,7 @@ def l2_common_effect(l1_dir,
 		try:
 			workflow.run(plugin="MultiProc",  plugin_args={'n_procs' : nprocs})
 		except RuntimeError:
-			print("WARNING: Some expected scans have not been found (or another RuntimeError has occured).")
+			print("WARNING: Some expected trials have not been found (or another RuntimeError has occured).")
 		for f in listdir(getcwd()):
 			if re.search("crash.*?-varcopemerge|-copemerge.*", f):
 				remove(path.join(getcwd(), f))

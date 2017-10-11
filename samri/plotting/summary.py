@@ -17,7 +17,7 @@ from os import path
 from statsmodels.sandbox.stats.multicomp import multipletests
 
 from samri.report.roi import roi_per_session
-from samri.utilities import add_roi_data, add_pattern_data
+from samri.report.utilities import add_roi_data, add_pattern_data
 from samri.plotting import maps, timeseries
 
 try: FileNotFoundError
@@ -70,7 +70,6 @@ def fc_per_session(substitutions, analytic_pattern,
 	figure="per-participant",
 	tabref="tab",
 	xy_label=[],
-	obfuscate=False,
 	color="#E69F00",
 	saveas=False,
 	):
@@ -99,11 +98,6 @@ def fc_per_session(substitutions, analytic_pattern,
 		))
 	subject_dfs, voxel_dfs = zip(*roi_data)
 	subjectdf = pd.concat(subject_dfs)
-
-	if obfuscate:
-		obf_session = {"ofM":"_pre","ofM_aF":"t1","ofM_cF1":"t2","ofM_cF2":"t3","ofM_pF":"post"}
-		subjectdf = subjectdf.replace({"session": obf_session})
-		subjectdf.to_csv("~/MixedLM_data.csv")
 
 	model = smf.mixedlm("t ~ session", subjectdf, groups=subjectdf["subject"])
 	fit = model.fit()
@@ -135,7 +129,6 @@ def analytic_pattern_per_session(substitutions, analytic_pattern,
 	figure="per-participant",
 	tabref="tab",
 	xy_label=[],
-	obfuscate=False,
 	color="#E69F00",
 	saveas=False,
 	):
@@ -168,10 +161,7 @@ def analytic_pattern_per_session(substitutions, analytic_pattern,
 	subject_dfs, voxel_dfs = zip(*roi_data)
 	subjectdf = pd.concat(subject_dfs)
 
-	if obfuscate:
-		obf_session = {"ofM":"_pre","ofM_aF":"t1","ofM_cF1":"t2","ofM_cF2":"t3","ofM_pF":"post"}
-		subjectdf = subjectdf.replace({"session": obf_session})
-		subjectdf.to_csv("~/MixedLM_data.csv")
+	return subjectdf
 
 	model = smf.mixedlm("t ~ session", subjectdf, groups=subjectdf["subject"])
 	fit = model.fit()

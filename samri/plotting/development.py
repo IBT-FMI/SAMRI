@@ -52,12 +52,12 @@ def plot_roi_per_session(l1_dir, roi_mask, color,
 
 	substitutions = bids_substitution_iterator(
 		["ofM","ofM_aF","ofM_cF1","ofM_cF2","ofM_pF"],
-		# ["5689","5690","5691"],
-		["4005","5687","4007","4011","4012","5689","5690","5691"],
+		# ["5689","5690","5700"],
+		["6262","6255","5694","5706",'5704'],
 		# ["4007","4011","4012","5689","5690","5691"],
 		# ["4009","4011","4012","5689","5690","5691"],
 		# ["4008","4009","4011","4012",],
-		["EPI_CBV_jb_long","EPI_CBV_chr_longSOA"],
+		["EPI_CBV_chr_longSOA"],
 		"~/ni_data/ofM.dr/",
 		"",
 		l1_dir=l1_dir,
@@ -69,7 +69,7 @@ def plot_roi_per_session(l1_dir, roi_mask, color,
 			label_names=roi,
 			)
 	fit, anova, subjectdf, voxeldf = roi.roi_per_session(substitutions,
-		t_file_template="{data_dir}/l1/{l1_dir}/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_trial-{scan}_tstat.nii.gz",
+		t_file_template="{data_dir}/l1/{l1_dir}/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_trial-{trial}_tstat.nii.gz",
 		roi_mask=roi_mask,
 		roi_mask_normalize=roi_mask_normalize,
 		)
@@ -323,7 +323,7 @@ if __name__ == '__main__':
 	# roi_per_session("as_composite", "~/ni_data/templates/roi/DSURQEc_ctx.nii.gz", "#56B4E9",
 	# 	roi_mask_normalize="~/ni_data/templates/roi/DSURQEc_dr.nii.gz",
 	# 	)
-	plot_roi_per_session("as_composite", "~/ni_data/templates/roi/DSURQEc_dr.nii.gz", "#E69F00")
+	plot_roi_per_session("composite", "~/ni_data/templates/roi/DSURQEc_dr.nii.gz", "#E69F00")
 	# roi_per_session("as_composite", "~/ni_data/templates/roi/f_dr_chr_bin.nii.gz", "#E69F00")
 	# p_clusters("~/ni_data/templates/ds_QBI_chr_bin.nii.gz")
 	# roi(roi_path="~/ni_data/templates/roi/f_dr_chr_bin.nii.gz")
@@ -339,5 +339,5 @@ if __name__ == '__main__':
 	#	)
 	# qc_regressor(["ofM_cF1"],["4011"],["EPI_CBV_jb_long"],"as_composite","~/ni_data/templates/roi/DSURQEc_ctx.nii.gz")
 	# network.simple_dr(output="~/ntw1.png", graphsize=800, scale=1.8)
-	#plt.show()
+	plt.show()
 	#functional_connectivity()

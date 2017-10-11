@@ -4,7 +4,7 @@ from os import path
 
 from nilearn.input_data import NiftiMasker
 from scipy.io import loadmat
-from samri.utilities import add_roi_data
+from samri.report.utilities import add_roi_data
 from joblib import Parallel, delayed
 
 import statsmodels.formula.api as smf
@@ -12,9 +12,8 @@ import multiprocessing as mp
 import pandas as pd
 
 def roi_per_session(substitutions, roi_mask,
-	t_file_template="~/ni_data/ofM.dr/l1/{l1_dir}/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_trial-{scan}_tstat.nii.gz",
+	filename_template="~/ni_data/ofM.dr/l1/{l1_dir}/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_trial-{scan}_tstat.nii.gz",
 	roi_mask_normalize="",
-	obfuscate=False,
 	):
 
 	"""
@@ -58,11 +57,6 @@ def roi_per_session(substitutions, roi_mask,
 		subjectdf_= subjectdf_.replace([np.inf, -np.inf], np.nan).dropna(subset=["t"], how="all")
 		subjectdf=subjectdf.replace([-np.inf], subjectdf_[['t']].min(axis=0)[0])
 		subjectdf=subjectdf.replace([np.inf], subjectdf_[['t']].max(axis=0)[0])
-
-	if obfuscate:
-		obf_session = {"ofM":"_pre","ofM_aF":"t1","ofM_cF1":"t2","ofM_cF2":"t3","ofM_pF":"post"}
-		subjectdf = subjectdf.replace({"session": obf_session})
-		subjectdf.to_csv("~/MixedLM_data.csv")
 
 	model = smf.mixedlm("t ~ session", subjectdf, groups=subjectdf["subject"])
 	fit = model.fit()

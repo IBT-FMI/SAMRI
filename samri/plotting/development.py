@@ -217,6 +217,7 @@ def single_ts_seed_connectivity(
 def seed_connectivity_overview(
 	template="~/ni_data/templates/DSURQEc_40micron_masked.nii.gz",
 	cut_coords=[None,[0,-4.9,-3.3]],
+	plot=False,
 	):
 	import numpy as np
 	from labbookdb.report.tracking import treatment_group, append_external_identifiers
@@ -235,7 +236,7 @@ def seed_connectivity_overview(
 			(groups['Cage_TreatmentProtocol_code']=="cFluDW_")
 			]['ETH/AIC'].tolist()
 	negative_controls = groups[groups['Genotype_code']=="epwt"]['ETH/AIC'].tolist()
-
+	print(negative_controls)
 
 	substitutions = bids_substitution_iterator(
 		["ofM","ofM_aF","ofM_cF1","ofM_cF2","ofM_pF"],
@@ -248,33 +249,34 @@ def seed_connectivity_overview(
 		ts_file_template="~/ni_data/ofM.dr/preprocessing/{preprocessing_dir}/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_trial-{trial}.nii.gz",
 		)
 
-	#multipage_plot(fc_results, treatment,
-	#	figure_title="Chronic Fluoxetine (drinking water) Treatment Group",
-	#	template=template,
-	#	threshold=0.1,
-	#	base_cut_coords=cut_coords,
-	#	save_as="fc_treatment.pdf",
-	#	overlays=['~/ni_data/templates/roi/DSURQEc_dr.nii.gz'],
-	#	scale=0.4,
-	#	)
-	#multipage_plot(fc_results, no_treatment,
-	#	figure_title="Chronic Fluoxetine (drinking water) Treatment Group",
-	#	template=template,
-	#	threshold=0.1,
-	#	base_cut_coords=cut_coords,
-	#	save_as="fc_no_treatment.pdf",
-	#	overlays=['~/ni_data/templates/roi/DSURQEc_dr.nii.gz'],
-	#	scale=0.4,
-	#	)
-	multipage_plot(fc_results, negative_controls,
-		figure_title="Chronic Fluoxetine (drinking water) Treatment Group",
-		template=template,
-		threshold=0.1,
-		base_cut_coords=cut_coords,
-		save_as="fc_negative_control.pdf",
-		overlays=['~/ni_data/templates/roi/DSURQEc_dr.nii.gz'],
-		scale=0.4,
-		)
+	if plot:
+		#multipage_plot(fc_results, treatment,
+		#	figure_title="Chronic Fluoxetine (drinking water) Treatment Group",
+		#	template=template,
+		#	threshold=0.1,
+		#	base_cut_coords=cut_coords,
+		#	save_as="fc_treatment.pdf",
+		#	overlays=['~/ni_data/templates/roi/DSURQEc_dr.nii.gz'],
+		#	scale=0.4,
+		#	)
+		#multipage_plot(fc_results, no_treatment,
+		#	figure_title="Chronic Fluoxetine (drinking water) Treatment Group",
+		#	template=template,
+		#	threshold=0.1,
+		#	base_cut_coords=cut_coords,
+		#	save_as="fc_no_treatment.pdf",
+		#	overlays=['~/ni_data/templates/roi/DSURQEc_dr.nii.gz'],
+		#	scale=0.4,
+		#	)
+		multipage_plot(fc_results, negative_controls,
+			figure_title="Chronic Fluoxetine (drinking water) Treatment Group",
+			template=template,
+			threshold=0.1,
+			base_cut_coords=cut_coords,
+			save_as="fc_negative_control.pdf",
+			overlays=['~/ni_data/templates/roi/DSURQEc_dr.nii.gz'],
+			scale=0.4,
+			)
 
 def functional_connectivity(ts="~/ni_data/ofM.dr/preprocessing/as_composite/sub-5690/ses-ofM_aF/func/sub-5690_ses-ofM_aF_trial-EPI_CBV_chr_longSOA.nii.gz",
 	labels_img='~/ni_data/templates/roi/DSURQEc_40micron_labels.nii',

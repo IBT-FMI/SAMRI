@@ -132,7 +132,6 @@ def seed_based_connectivity(ts, seed_mask,
 	http://nilearn.github.io/auto_examples/03_connectivity/plot_seed_to_voxel_correlation.html#sphx-glr-auto-examples-03-connectivity-plot-seed-to-voxel-correlation-py
 	"""
 
-	anat_path = path.abspath(path.expanduser(anat_path))
 	brain_mask = path.abspath(path.expanduser(brain_mask))
 	seed_mask = path.abspath(path.expanduser(seed_mask))
 	save_as = path.abspath(path.expanduser(save_as))

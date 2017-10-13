@@ -1,6 +1,5 @@
 import nibabel
 import numpy as np
-import nipype.interfaces.io as nio
 from os import path
 
 

@@ -83,7 +83,6 @@ def get_signal(substitutions_a, substitutions_b,
 	varcopemerge = fsl.Merge(dimension='t')
 
 def seed_based_connectivity(ts, seed_mask,
-	anat_path="~/ni_data/templates/DSURQEc_40micron_masked.nii.gz",
 	brain_mask="~/ni_data/templates/DSURQEc_200micron_mask.nii.gz",
 	smoothing_fwhm=.3,
 	detrend=True,

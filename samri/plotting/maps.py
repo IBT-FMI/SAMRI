@@ -266,8 +266,14 @@ def stat(stat_maps,
 		# We transform the axes array so that we iterate column-first rather than row-first.
 		# This is done to better share colorbars between consecutive axes.
 		flat_axes = list(axes.T.flatten())
-		stat_maps = list(stat_maps.T.flatten())
-		subplot_titles = list(subplot_titles.T.flatten())
+		try:
+			stat_maps = list(stat_maps.T.flatten())
+		except AttributeError:
+			pass
+		try:
+			subplot_titles = list(subplot_titles.T.flatten())
+		except AttributeError:
+			pass
 		if len(overlays) == 1:
 			overlays = overlays*len(stat_maps)
 		elif len(overlays) == 0:
@@ -277,7 +283,10 @@ def stat(stat_maps,
 		elif len(cut_coords) == 0:
 			cut_coords = [None]*len(stat_maps)
 		else:
-			cut_coords = list(cut_coords.T.flatten())
+			try:
+				cut_coords = list(cut_coords.T.flatten())
+			except AttributeError:
+				pass
 		cbar_aspect = 30
 		if nrows >=2:
 			fraction = 0.09

@@ -177,40 +177,20 @@ def single_ts_seed_connectivity(
 	template="~/ni_data/templates/DSURQEc_40micron_masked.nii.gz",
 	save_as="fcs.pdf"
 	):
-	# connectivity_img = fc.seed_based_connectivity(
-	# 	"~/ni_data/ofM.dr/preprocessing/as_composite/sub-5689/ses-ofM/func/sub-5689_ses-ofM_trial-EPI_CBV_chr_longSOA.nii.gz",
-	# 	# "~/ni_data/ofM.dr/preprocessing/as_composite/sub-5706/ses-ofM_aF/func/sub-5706_ses-ofM_aF_trial-EPI_CBV_chr_longSOA.nii.gz",
-	# 	# "~/ni_data/ofM.dr/preprocessing/as_composite/sub-5694/ses-ofM/func/sub-5694_ses-ofM_trial-EPI_CBV_chr_longSOA.nii.gz",
-	# 	# "~/ni_data/ofM.dr/preprocessing/as_composite/sub-4011/ses-ofM_aF/func/sub-4011_ses-ofM_aF_trial-EPI_CBV_jb_long.nii.gz",
-	# 	"~/ni_data/templates/roi/DSURQEc_dr.nii.gz",
-	# 	save_as="~/fc.nii.gz"
-	# )
-	# connectivity_img1 = fc.seed_based_connectivity(
-	# 	# "~/ni_data/ofM.dr/preprocessing/as_composite/sub-5689/ses-ofM/func/sub-5689_ses-ofM_trial-EPI_CBV_chr_longSOA.nii.gz",
-	# 	# "~/ni_data/ofM.dr/preprocessing/as_composite/sub-5706/ses-ofM_aF/func/sub-5706_ses-ofM_aF_trial-EPI_CBV_chr_longSOA.nii.gz",
-	# 	"~/ni_data/ofM.dr/preprocessing/as_composite/sub-5694/ses-ofM/func/sub-5694_ses-ofM_trial-EPI_CBV_chr_longSOA.nii.gz",
-	# 	# "~/ni_data/ofM.dr/preprocessing/as_composite/sub-4011/ses-ofM_aF/func/sub-4011_ses-ofM_aF_trial-EPI_CBV_jb_long.nii.gz",
-	# 	"~/ni_data/templates/roi/DSURQEc_dr.nii.gz",
-	# 	save_as="~/fc.nii.gz"
-	# )
 	connectivity_img2 = fc.seed_based_connectivity(
-		# "~/ni_data/ofM.dr/preprocessing/as_composite/sub-5689/ses-ofM/func/sub-5689_ses-ofM_trial-EPI_CBV_chr_longSOA.nii.gz",
-		# "~/ni_data/ofM.dr/preprocessing/as_composite/sub-5706/ses-ofM_aF/func/sub-5706_ses-ofM_aF_trial-EPI_CBV_chr_longSOA.nii.gz",
-		"~/ni_data/ofM.dr/preprocessing/composite/sub-5694/ses-ofM_aF/func/sub-5694_ses-ofM_aF_trial-EPI_CBV_chr_longSOA.nii.gz",
-		# "~/ni_data/ofM.dr/preprocessing/as_composite/sub-4011/ses-ofM_aF/func/sub-4011_ses-ofM_aF_trial-EPI_CBV_jb_long.nii.gz",
+		"~/ni_data/ofM.dr/preprocessing/composite/sub-6255/ses-ofM/func/sub-6255_ses-ofM_trial-EPI_CBV_chr_longSOA.nii.gz",
 		"~/ni_data/templates/roi/DSURQEc_dr.nii.gz",
 		save_as="~/fc.nii.gz"
 	)
 	stat_maps=[connectivity_img2,connectivity_img2]
-	# stat_maps=[connectivity_img,connectivity_img,"~/fc.nii.gz",connectivity_img1,connectivity_img1, connectivity_img2,]
 	maps.stat(stat_maps,
 		template=template,
-		threshold=0.05,
-		orientation="landscape",
-		cut_coords=[None,[0,-4.9,-3.3],None,[0,-4.9,-3.3],None,[0,-4.9,-3.3]],
+		threshold=0.1,
+		shape="landscape",
+		cut_coords=[None,[0,-4.9,-3.3]],
 		overlays=["~/ni_data/templates/roi/DSURQEc_dr.nii.gz",],
 		save_as=save_as,
-		scale=0.8,
+		scale=0.6,
 		dim=0.8,
 		)
 

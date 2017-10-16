@@ -68,7 +68,8 @@ def write_function_call(frame, target_path):
 	target.write(function_call)
 	target.close()
 
-def write_events_file(scan_dir, scan_type, stim_protocol_dictionary,
+def write_events_file(scan_dir, scan_type,
+	stim_protocol_dictionary={},
 	db_path="~/syncdata/meta.db",
 	out_file="events.tsv",
 	dummy_scans_ms="determine",
@@ -78,13 +79,10 @@ def write_events_file(scan_dir, scan_type, stim_protocol_dictionary,
 
 	import csv
 	import sys
-	from copy import deepcopy
 	from datetime import datetime
 	from os import path
 	import pandas as pd
 	import numpy as np
-	from labbookdb.db.query import load_session
-	from labbookdb.db.common_classes import LaserStimulationProtocol
 
 	out_file = path.abspath(path.expanduser(out_file))
 
@@ -129,35 +127,15 @@ def write_events_file(scan_dir, scan_type, stim_protocol_dictionary,
 					break #prevent loop from going on forever
 
 		subject_delay = delay_seconds + dummy_scans_ms/1000
-
 	try:
 		trial_code = stim_protocol_dictionary[scan_type]
 	except KeyError:
-		return
+		trial_code = scan_type
 
-	session, engine = load_session(db_path)
-	sql_query=session.query(LaserStimulationProtocol).filter(LaserStimulationProtocol.code==trial_code)
-	mystring = sql_query.statement
-	mydf = pd.read_sql_query(mystring,engine)
-	delay = int(mydf["stimulation_onset"][0])
-	inter_stimulus_duration = int(mydf["inter_stimulus_duration"][0])
-	stimulus_duration = mydf["stimulus_duration"][0]
-	stimulus_repetitions = mydf["stimulus_repetitions"][0]
-
-	onsets=[]
-	names=[]
-	with open(out_file, 'w') as tsvfile:
-		field_names =["onset","duration","stimulation_frequency"]
-		writer = csv.DictWriter(tsvfile, fieldnames=field_names, delimiter=str("\t")) #we use str() to avoid `TypeError: "delimiter" must be string, not unicode`
-
-		writer.writeheader()
-		for i in range(stimulus_repetitions):
-			events={}
-			onset = delay+(inter_stimulus_duration+stimulus_duration)*i
-			events["onset"] = onset-subject_delay
-			events["duration"] = stimulus_duration
-			events["stimulation_frequency"] = stimulus_duration
-			writer.writerow(events)
+	from labbookdb.report.tracking import bids_eventsfile
+	mydf = bids_eventsfile(db_path, trial_code)
+	mydf['onset'] = mydf['onset'] - subject_delay
+	mydf.to_csv(out_file, sep='\t', index=False)
 
 	return out_file
 
@@ -169,12 +147,12 @@ def get_subjectinfo(subject_delay, scan_type, scan_types):
 	import sys
 	sys.path.append('/home/chymera/src/LabbookDB/db/')
 	from query import load_session
-	from common_classes import LaserStimulationProtocol
+	from common_classes import StimulationProtocol
 	db_path="~/syncdata/meta.db"
 
 	session, engine = load_session(db_path)
 
-	sql_query=session.query(LaserStimulationProtocol).filter(LaserStimulationProtocol.code==scan_types[scan_type])
+	sql_query=session.query(StimulationProtocol).filter(StimulationProtocol.code==scan_types[scan_type])
 	mystring = sql_query.statement
 	mydf = pd.read_sql_query(mystring,engine)
 	delay = int(mydf["stimulation_onset"][0])
@@ -243,7 +221,33 @@ def get_scan(measurements_base, data_selection, scan_type, selector=None, subjec
 	scan_path = os.path.join(measurements_base,measurement_path,scan_subdir)
 	return scan_path, scan_type
 
-def get_data_selection(workflow_base, sessions=[], scan_types=[], subjects=[], exclude_subjects=[], measurements=[], exclude_measurements=[]):
+#contrast_matchings = {
+#	('EPI','epi'):'EPI',
+#	('seEPI','se_EPI','se-EPI','spinechoEPI','spinecho_EPI','spinecho-EPI','spinEPI','spin_EPI','spin-EPI'):'seEPI',
+#	('geEPI','ge_EPI','ge-EPI','gradientechoEPI','gradientecho_EPI','gradientecho-EPI','gradientEPI','gradient_EPI','gradient-EPI'):'seEPI',
+#	('','epi','Epi'):'EPI',
+#	}
+contrast_matching = {
+	('BOLD','bold','Bold'):'bold',
+	('CBV','cbv','Cbv'):'cbv',
+	}
+
+def get_data_selection(workflow_base,
+	sessions=[],
+	scan_types=[],
+	subjects=[],
+	exclude_subjects=[],
+	measurements=[],
+	exclude_measurements=[],
+	):
+	"""
+	Return a `pandas.DaaFrame` object of the Bruker measurement directories located under a given base directory, and their respective scans, subjects, and trials.
+
+	Parameters
+	----------
+	workflow_base : str
+		The path in which to query for Bruker measurement directories.
+	"""
 	import os
 
 	workflow_base = os.path.abspath(os.path.expanduser(workflow_base))
@@ -257,7 +261,7 @@ def get_data_selection(workflow_base, sessions=[], scan_types=[], subjects=[], e
 	#populate a list of lists with acceptable subject names, sessions, and sub_dir's
 	for sub_dir in measurement_path_list:
 		if sub_dir not in exclude_measurements:
-			selected_measurement = []
+			selected_measurement = {}
 			try:
 				state_file = open(os.path.join(workflow_base,sub_dir,"subject"), "r")
 				read_variables=0 #count variables so that breaking takes place after both have been read
@@ -269,39 +273,43 @@ def get_data_selection(workflow_base, sessions=[], scan_types=[], subjects=[], e
 							if len(subjects) > 0 and entry not in subjects:
 								break
 							else:
-								selected_measurement.append(entry)
+								selected_measurement['subject'] = entry
 						else:
 							break
 						read_variables +=1 #count recorded variables
 					if "##$SUBJECT_study_name=" in current_line:
 						entry=re.sub("[<>\n]", "", state_file.readline())
 						if entry in sessions or len(sessions) == 0:
-							selected_measurement.append(entry)
+							selected_measurement['session'] = entry
 						else:
 							break
 						read_variables +=1 #count recorded variables
 					if read_variables == 2:
-						selected_measurement.append(sub_dir)
+						selected_measurement['measurement'] = sub_dir
 						#if the directory passed both the subject and sessions tests, append a line for it
 						if not scan_types:
 							#add two empty entries to fill columns otherwise dedicated to the scan program
-							selected_measurement.extend(["",""])
 							selected_measurements.append(selected_measurement)
 						#if various scan types are selected extend and copy lines to accommodate:
 						else:
 							for scan_type in scan_types:
-								#make a shallow copy of the list:
-								measurement_copy = selected_measurement[:]
+								measurement_copy = deepcopy(selected_measurement)
 								scan_number=None
 								try:
 									scan_program_file_path = os.path.join(workflow_base,sub_dir,"ScanProgram.scanProgram")
 									scan_program_file = open(scan_program_file_path, "r")
-									syntax_adjusted_scan_type = ">"+scan_type+" "
+									indicator_line_matches = ['<displayName>', '</displayName>\n', '(', ')']
+									suffix_scan_type = scan_type+' '
 									while True:
 										current_line = scan_program_file.readline()
-										if syntax_adjusted_scan_type in current_line:
-											scan_number = current_line.split(syntax_adjusted_scan_type)[1].strip("(E").strip(")</displayName>\n")
-											measurement_copy.extend([scan_type, scan_number])
+										if all(i in current_line for i in indicator_line_matches) and suffix_scan_type in current_line:
+											acquisition, paravision_numbering = current_line.split(suffix_scan_type)
+											scan_number = paravision_numbering.strip("(E").strip(")</displayName>\n")
+											measurement_copy['scan_type'] = scan_type
+											measurement_copy['scan'] = scan_number
+											for key in contrast_matching:
+												if any(i in acquisition for i in key):
+													measurement_copy['contrast'] = contrast_matching[key]
 											selected_measurements.append(measurement_copy)
 											break
 										#avoid infinite while loop:
@@ -319,7 +327,11 @@ def get_data_selection(workflow_base, sessions=[], scan_types=[], subjects=[], e
 											acqp_file = os.path.join(workflow_base,sub_dir,sub_sub_dir,"acqp")
 											if "<"+scan_type+">" in open(acqp_file).read():
 												scan_number = sub_sub_dir
-												measurement_copy.extend([scan_type, scan_number])
+												measurement_copy['scan_type'] = scan_type
+												measurement_copy['scan'] = scan_number
+												for key in contrast_matching:
+													if any(i in acquisition for i in key):
+														measurement_copy['contrast'] = contrast_matching[key]
 												selected_measurements.append(measurement_copy)
 										except IOError:
 											pass
@@ -327,7 +339,7 @@ def get_data_selection(workflow_base, sessions=[], scan_types=[], subjects=[], e
 			except IOError:
 				pass
 
-	data_selection = pd.DataFrame(selected_measurements, columns=["subject", "session", "measurement", "scan_type", "scan"])
+	data_selection = pd.DataFrame(selected_measurements)
 
 	#drop subjects which do not have measurements for all sessions
 	if len(sessions) > 1:

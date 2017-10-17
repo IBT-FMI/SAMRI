@@ -18,7 +18,7 @@ import pandas as pd
 from nipype.interfaces import afni, bru2nii, fsl, nipy
 
 from samri.pipelines.nodes import *
-from samri.pipelines.utils import ss_to_path, sss_filename, fslmaths_invert_values, STIM_PROTOCOL_DICTIONARY
+from samri.pipelines.utils import bids_naming, ss_to_path, sss_filename, fslmaths_invert_values, STIM_PROTOCOL_DICTIONARY
 from samri.utilities import N_PROCS
 
 DUMMY_SCANS=10
@@ -82,7 +82,7 @@ def bruker(measurements_base,
 	# define measurement directories to be processed, and populate the list either with the given include_measurements, or with an intelligent selection
 	scan_types = deepcopy(functional_scan_types)
 	scan_types.extend(structural_scan_types)
-	data_selection=get_data_selection(measurements_base, sessions, scan_types=scan_types, subjects=subjects, exclude_subjects=exclude_subjects, measurements=measurements, exclude_measurements=exclude_measurements)
+	data_selection = get_data_selection(measurements_base, sessions, scan_types=scan_types, subjects=subjects, exclude_subjects=exclude_subjects, measurements=measurements, exclude_measurements=exclude_measurements)
 	if not subjects:
 		subjects = set(list(data_selection["subject"]))
 	if not sessions:
@@ -117,7 +117,9 @@ def bruker(measurements_base,
 	else:
 		bandpass.inputs.lowpass_sigma = tr
 
-	bids_filename = pe.Node(name='bids_filename', interface=util.Function(function=sss_filename,input_names=inspect.getargspec(sss_filename)[0], output_names=['filename']))
+	#bids_filename = pe.Node(name='bids_filename', interface=util.Function(function=sss_filename,input_names=inspect.getargspec(sss_filename)[0], output_names=['filename']))
+	bids_filename = pe.Node(name='bids_filename', interface=util.Function(function=bids_naming,input_names=inspect.getargspec(bids_naming)[0], output_names=['filename']))
+	bids_filename.inputs.metadata = data_selection
 
 	bids_stim_filename = pe.Node(name='bids_stim_filename', interface=util.Function(function=sss_filename,input_names=inspect.getargspec(sss_filename)[0], output_names=['filename']))
 	bids_stim_filename.inputs.suffix = "events"
@@ -151,7 +153,7 @@ def bruker(measurements_base,
 		(bids_stim_filename, events_file, [('filename', 'out_file')]),
 		(infosource, datasink, [(('subject_session',ss_to_path), 'container')]),
 		(infosource, bids_filename, [('subject_session', 'subject_session')]),
-		(get_f_scan, bids_filename, [('scan_type', 'scan')]),
+		(get_f_scan, bids_filename, [('scan_type', 'scan_type')]),
 		(bids_filename, bandpass, [('filename', 'out_file')]),
 		(bandpass, datasink, [('out_file', 'func')]),
 		]

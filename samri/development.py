@@ -79,6 +79,11 @@ def reg_cc(
 		type_effect = inline_anova(anova_summary,"C(Type)",style="python")
 		print("Scan Type Main Effect: {}".format(type_effect))
 
+def metadata():
+	from samri.pipelines.extra_functions import get_data_selection
+	info = get_data_selection('~/ni_data/test')
+	print(info)
+
 def test_autofind():
 	"""We may be able to turn this into a CI function, if we put together a data fetching script for dummy (empty) BIDS-formatted data.
 	"""

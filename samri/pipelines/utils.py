@@ -108,6 +108,21 @@ def sss_to_source(source_format, subject=False, session=False, scan=False, subje
 		source = path.join(base_directory, source)
 	return source
 
+def bids_naming(subject_session, scan_type, metadata,
+	extension='.nii.gz',
+	):
+	"""
+	Generate a BIDS filename from a subject-and-session iterator, a scan type, and a `pandas.DataFrame` metadata container.
+	"""
+	subject, session = subject_session
+	contrast = metadata[(metadata['subject']==subject)&(metadata['session']==session)&(metadata['scan_type']==scan_type)]['contrast'].item()
+	filename = 'sub-{0}_ses-{1}_trial-{2}'.format(subject, session, scan_type)
+	if contrast:
+		filename += '_'+contrast
+	filename += extension
+
+	return filename
+
 def sss_filename(subject_session, scan, scan_prefix="trial", suffix="", extension=".nii.gz"):
 	"""Concatenate subject-condition and scan inputs to a BIDS-style filename
 

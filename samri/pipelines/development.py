@@ -44,6 +44,23 @@ def rs(
 		actual_size=True,
 		)
 
+def bids_test():
+	preprocessing.bruker('~/ni_data/test/',
+		functional_scan_types=["chr_longSOA","jb_long"],
+		workflow_name='composite',
+		lowpass_sigma=2,
+		highpass_sigma=225,
+		very_nasty_bruker_delay_hack=True,
+		negative_contrast_agent=True,
+		functional_blur_xy=.4,
+		functional_registration_method="composite",
+		keep_work=True,
+		template="~/ni_data/templates/DSURQEc_200micron_average.nii",
+		registration_mask="~/ni_data/templates/DSURQEc_200micron_mask.nii.gz",
+		actual_size=True,
+		verbose=True,
+		)
+
 def cbv_composite(data_path,workflow_name,
 	preprocessing_dir="preprocessing",
 	l1_dir="l1",

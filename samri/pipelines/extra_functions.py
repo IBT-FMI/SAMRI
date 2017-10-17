@@ -3,6 +3,7 @@ import inspect
 import os
 import re
 
+from copy import deepcopy
 import nibabel as nb
 import pandas as pd
 try:
@@ -135,7 +136,7 @@ def write_events_file(scan_dir, scan_type,
 	from labbookdb.report.tracking import bids_eventsfile
 	mydf = bids_eventsfile(db_path, trial_code)
 	mydf['onset'] = mydf['onset'] - subject_delay
-	mydf.to_csv(out_file, sep='\t', index=False)
+	mydf.to_csv(out_file, sep=str('\t'), index=False)
 
 	return out_file
 
@@ -248,7 +249,6 @@ def get_data_selection(workflow_base,
 	workflow_base : str
 		The path in which to query for Bruker measurement directories.
 	"""
-	import os
 
 	workflow_base = os.path.abspath(os.path.expanduser(workflow_base))
 

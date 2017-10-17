@@ -109,6 +109,7 @@ def sss_to_source(source_format, subject=False, session=False, scan=False, subje
 	return source
 
 def bids_naming(subject_session, scan_type, metadata,
+	extra=['acq'],
 	extension='.nii.gz',
 	):
 	"""
@@ -116,9 +117,15 @@ def bids_naming(subject_session, scan_type, metadata,
 	"""
 	subject, session = subject_session
 	contrast = metadata[(metadata['subject']==subject)&(metadata['session']==session)&(metadata['scan_type']==scan_type)]['contrast'].item()
-	filename = 'sub-{0}_ses-{1}_trial-{2}'.format(subject, session, scan_type)
+	filename = 'sub-{}'.format(subject)
+	filename += '_ses-{}'.format(session)
+	if 'acq' in extra:
+		acq = metadata[(metadata['subject']==subject)&(metadata['session']==session)&(metadata['scan_type']==scan_type)]['acq'].item()
+		if acq:
+			filename += '_acq-{}'.format(acq)
+	filename += '_trial-{}'.format(scan_type)
 	if contrast:
-		filename += '_'+contrast
+		filename += '_{}'.format(contrast)
 	filename += extension
 
 	return filename

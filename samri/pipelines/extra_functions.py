@@ -11,6 +11,11 @@ try:
 except ImportError:
 	from .utils import STIM_PROTOCOL_DICTIONARY
 
+CONTRAST_MATCHING = {
+	('BOLD','bold','Bold'):'bold',
+	('CBV','cbv','Cbv'):'cbv',
+	}
+
 def force_dummy_scans(in_file, scan_dir,
 	desired_dummy_scans=10,
 	out_file="forced_dummy_scans_file.nii.gz",
@@ -222,16 +227,12 @@ def get_scan(measurements_base, data_selection, scan_type, selector=None, subjec
 	scan_path = os.path.join(measurements_base,measurement_path,scan_subdir)
 	return scan_path, scan_type
 
-#contrast_matchings = {
+#CONTRAST_MATCHINGs = {
 #	('EPI','epi'):'EPI',
 #	('seEPI','se_EPI','se-EPI','spinechoEPI','spinecho_EPI','spinecho-EPI','spinEPI','spin_EPI','spin-EPI'):'seEPI',
 #	('geEPI','ge_EPI','ge-EPI','gradientechoEPI','gradientecho_EPI','gradientecho-EPI','gradientEPI','gradient_EPI','gradient-EPI'):'seEPI',
 #	('','epi','Epi'):'EPI',
 #	}
-contrast_matching = {
-	('BOLD','bold','Bold'):'bold',
-	('CBV','cbv','Cbv'):'cbv',
-	}
 
 def get_data_selection(workflow_base,
 	sessions=[],
@@ -304,37 +305,57 @@ def get_data_selection(workflow_base,
 										current_line = scan_program_file.readline()
 										if all(i in current_line for i in indicator_line_matches) and suffix_scan_type in current_line:
 											acquisition, paravision_numbering = current_line.split(suffix_scan_type)
+											acquisition = acquisition.split('<displayName>')[1]
 											scan_number = paravision_numbering.strip("(E").strip(")</displayName>\n")
 											measurement_copy['scan_type'] = scan_type
 											measurement_copy['scan'] = scan_number
-											for key in contrast_matching:
-												if any(i in acquisition for i in key):
-													measurement_copy['contrast'] = contrast_matching[key]
+											for key in CONTRAST_MATCHING:
+												for i in key:
+													if i in acquisition:
+														measurement_copy['contrast'] = CONTRAST_MATCHING[key]
+														acquisition = acquisition.replace(i,'')
+														break
+											acq = ''.join(ch for ch in acquisition if ch.isalnum())
+											measurement_copy['acq'] = acq
 											selected_measurements.append(measurement_copy)
 											break
 										#avoid infinite while loop:
 										if "</de.bruker.mri.entities.scanprogram.StudyScanProgramEntity>" in current_line:
 											break
+									#If the ScanProgram.scanProgram file is small in size and the scan_type could not be matched, that may be because ParaVision failed
+									#to write all the information into the file. This happens occasionally.
+									#Thus we scan the individual acquisition protocols as well. These are a suboptimal and second choice, because acqp scans **also**
+									#keep the original names the sequences had on import (and may thus be misleading, if the name was changed by the user after import).
+									if os.stat(scan_program_file_path).st_size <= 700 and not scan_number:
+										raise(IOError)
 								except IOError:
-									pass
-								#If the ScanProgram.scanProgram file is small in size and the scan_type could not be matched, that may be because ParaVision failed
-								#to write all the information into the file. This happens occasionally.
-								#Thus we scan the individual acquisition protocols as well. These are a suboptimal and second choice, because acqp scans **also**
-								#keep the original names the sequences had on import (and may thus be misleading, if the name was changed by the user after import).
-								if os.stat(scan_program_file_path).st_size <= 700 and not scan_number:
 									for sub_sub_dir in os.listdir(os.path.join(workflow_base,sub_dir)):
 										try:
-											acqp_file = os.path.join(workflow_base,sub_dir,sub_sub_dir,"acqp")
-											if "<"+scan_type+">" in open(acqp_file).read():
-												scan_number = sub_sub_dir
-												measurement_copy['scan_type'] = scan_type
-												measurement_copy['scan'] = scan_number
-												for key in contrast_matching:
-													if any(i in acquisition for i in key):
-														measurement_copy['contrast'] = contrast_matching[key]
-												selected_measurements.append(measurement_copy)
+											acqp_file_path = os.path.join(workflow_base,sub_dir,sub_sub_dir,"acqp")
+											acqp_file = open(acqp_file_path,'r')
+											while True:
+												current_line = acqp_file.readline()
+												if scan_type+">" in current_line:
+													scan_number = sub_sub_dir
+													acquisition = current_line.split(scan_type+'>')[0]
+													measurement_copy['scan_type'] = scan_type
+													measurement_copy['scan'] = scan_number
+													for key in CONTRAST_MATCHING:
+														for i in key:
+															if i in acquisition:
+																measurement_copy['contrast'] = CONTRAST_MATCHING[key]
+																acquisition = acquisition.replace(i,'')
+																break
+													acq = ''.join(ch for ch in acquisition if ch.isalnum())
+													measurement_copy['acq'] = acq
+													selected_measurements.append(measurement_copy)
+													break
+												if '##END=' in current_line:
+													break
 										except IOError:
 											pass
+										if scan_number:
+											break
 						break #prevent loop from going on forever
 			except IOError:
 				pass

@@ -11,7 +11,15 @@ try:
 except ImportError:
 	from .utils import STIM_PROTOCOL_DICTIONARY
 
-CONTRAST_MATCHING = {
+STRUCTURAL_CONTRAST_MATCHING = {
+	('T1','t1'):'T1w',
+	('T2','t2'):'T2w',
+	}
+BEST_GUESS_STRUCTURAL_CONTRAST_MATCHING = {
+	('FLASH',):'T1w',
+	('TurboRARE','TRARE'):'T2w',
+	}
+FUNCTIONAL_CONTRAST_MATCHING = {
 	('BOLD','bold','Bold'):'bold',
 	('CBV','cbv','Cbv'):'cbv',
 	}
@@ -213,7 +221,28 @@ def get_level2_inputs(input_root, categories=[], participants=[], scan_types=[])
 
 	return l2_inputs
 
-def get_scan(measurements_base, data_selection, scan_type, selector=None, subject=None, session=None):
+def get_scan(measurements_base, data_selection, scan_type,
+	selector=None,
+	subject=None,
+	session=None,
+	):
+	"""Return the path to a Bruker scan selected by subject, session, and scan type, based on metadata previously extracted with `samri.preprocessing.extra_functions.get_data_selection()`.
+
+	Parameters
+	----------
+	measurements_base : str
+		Path to the measurements base path (this is simply prepended to the variable part of the path).
+	data_selection : pandas.DataFrame
+		A `pandas.DataFrame` object as produced by `samri.preprocessing.extra_functions.get_data_selection()`.
+	scan_type : str
+		The type of scan for which to determine the directory. This value will first be queried on the `data_selection` "trial" column, and if ounsuccesful on the "acq" column (corresponding to functional and structural scans respectively).
+	selector : iterable, optional
+		The first method of selecting the subject and scan, this value should be a length-2 list or tuple containing the subject and sthe session to be selected.
+	subject : string, optional
+		This has to be defined if `selector` is not defined. The subject for which to return a scan directory.
+	session : string, optional
+		This has to be defined if `selector` is not defined. The session for which to return a scan directory.
+	"""
 	import os #for some reason the import outside the function fails
 	import pandas as pd
 	scan_paths = []
@@ -222,17 +251,13 @@ def get_scan(measurements_base, data_selection, scan_type, selector=None, subjec
 	if not session:
 		session = selector[1]
 	filtered_data = data_selection[(data_selection["session"] == session)&(data_selection["subject"] == subject)&(data_selection["scan_type"] == scan_type)]
-	measurement_path = filtered_data["measurement"].tolist()[0]
-	scan_subdir = filtered_data["scan"].tolist()[0]
+	if filtered_data.empty:
+		filtered_data = data_selection[(data_selection["session"] == session)&(data_selection["subject"] == subject)&(data_selection["acq"] == scan_type)]
+	measurement_path = filtered_data["measurement"].item()
+	scan_subdir = filtered_data["scan"].item()
 	scan_path = os.path.join(measurements_base,measurement_path,scan_subdir)
-	return scan_path, scan_type
 
-#CONTRAST_MATCHINGs = {
-#	('EPI','epi'):'EPI',
-#	('seEPI','se_EPI','se-EPI','spinechoEPI','spinecho_EPI','spinecho-EPI','spinEPI','spin_EPI','spin-EPI'):'seEPI',
-#	('geEPI','ge_EPI','ge-EPI','gradientechoEPI','gradientecho_EPI','gradientecho-EPI','gradientEPI','gradient_EPI','gradient-EPI'):'seEPI',
-#	('','epi','Epi'):'EPI',
-#	}
+	return scan_path, scan_type
 
 def get_data_selection(workflow_base,
 	sessions=[],
@@ -241,6 +266,7 @@ def get_data_selection(workflow_base,
 	exclude_subjects=[],
 	measurements=[],
 	exclude_measurements=[],
+	scan_type_category="functional",
 	):
 	"""
 	Return a `pandas.DaaFrame` object of the Bruker measurement directories located under a given base directory, and their respective scans, subjects, and trials.
@@ -300,25 +326,22 @@ def get_data_selection(workflow_base,
 									scan_program_file_path = os.path.join(workflow_base,sub_dir,"ScanProgram.scanProgram")
 									scan_program_file = open(scan_program_file_path, "r")
 									indicator_line_matches = ['<displayName>', '</displayName>\n', '(', ')']
-									suffix_scan_type = scan_type+' '
 									while True:
 										current_line = scan_program_file.readline()
-										if all(i in current_line for i in indicator_line_matches) and suffix_scan_type in current_line:
-											acquisition, paravision_numbering = current_line.split(suffix_scan_type)
-											acquisition = acquisition.split('<displayName>')[1]
-											scan_number = paravision_numbering.strip("(E").strip(")</displayName>\n")
-											measurement_copy['scan_type'] = scan_type
-											measurement_copy['scan'] = scan_number
-											for key in CONTRAST_MATCHING:
-												for i in key:
-													if i in acquisition:
-														measurement_copy['contrast'] = CONTRAST_MATCHING[key]
-														acquisition = acquisition.replace(i,'')
-														break
-											acq = ''.join(ch for ch in acquisition if ch.isalnum())
-											measurement_copy['acq'] = acq
-											selected_measurements.append(measurement_copy)
-											break
+										if scan_type_category == 'functional':
+											# we need to make sure that the trial identifier is a suffix, and not e.g. a subset of a different trial identifier string,
+											# therefore we pad the string
+											if all(i in current_line for i in indicator_line_matches) and scan_type+' ' in current_line:
+												measurement_copy = scanprogram_functional_scan_info(scan_type, current_line, measurement_copy)
+												selected_measurements.append(measurement_copy)
+												break
+										elif scan_type_category == 'structural':
+											# we need to make sure that the acquisition identifier is a prefix, and not e.g. a subset of a different acquisition identifier string,
+											# therefore we pad the string
+											if all(i in current_line for i in indicator_line_matches) and '>'+scan_type in current_line:
+												measurement_copy = scanprogram_structural_scan_info(scan_type, current_line, measurement_copy)
+												selected_measurements.append(measurement_copy)
+												break
 										#avoid infinite while loop:
 										if "</de.bruker.mri.entities.scanprogram.StudyScanProgramEntity>" in current_line:
 											break
@@ -335,21 +358,20 @@ def get_data_selection(workflow_base,
 											acqp_file = open(acqp_file_path,'r')
 											while True:
 												current_line = acqp_file.readline()
-												if scan_type+">" in current_line:
-													scan_number = sub_sub_dir
-													acquisition = current_line.split(scan_type+'>')[0]
-													measurement_copy['scan_type'] = scan_type
-													measurement_copy['scan'] = scan_number
-													for key in CONTRAST_MATCHING:
-														for i in key:
-															if i in acquisition:
-																measurement_copy['contrast'] = CONTRAST_MATCHING[key]
-																acquisition = acquisition.replace(i,'')
-																break
-													acq = ''.join(ch for ch in acquisition if ch.isalnum())
-													measurement_copy['acq'] = acq
-													selected_measurements.append(measurement_copy)
-													break
+												if scan_type_category == 'functional':
+													if scan_type+">" in current_line:
+														scan_number = sub_sub_dir
+														measurement_copy['scan'] = scan_number
+														measurement_copy = acqp_functional_scan_info(scan_type, current_line, measurement_copy)
+														selected_measurements.append(measurement_copy)
+														break
+												elif scan_type_category == 'structural':
+													if "<"+scan_type in current_line:
+														scan_number = sub_sub_dir
+														measurement_copy['scan'] = scan_number
+														measurement_copy = acqp_structural_scan_info(scan_type, current_line, measurement_copy)
+														selected_measurements.append(measurement_copy)
+														break
 												if '##END=' in current_line:
 													break
 										except IOError:
@@ -369,3 +391,69 @@ def get_data_selection(workflow_base,
 				data_selection = data_selection[(data_selection["subject"] != subject)]
 
 	return data_selection
+
+
+def scanprogram_structural_scan_info(scan_type, current_line, measurement_copy):
+	acq = scan_type
+	acquisition, paravision_numbering = current_line.split(" (E")
+	scan_number = paravision_numbering.strip(")</displayName>\n")
+	measurement_copy['scan'] = str(int(scan_number))
+	measurement_copy['acq'] = acq
+	measurement_copy['contrast'] = None
+	for key in STRUCTURAL_CONTRAST_MATCHING:
+		for i in key:
+			if i in acquisition:
+				measurement_copy['contrast'] = STRUCTURAL_CONTRAST_MATCHING[key]
+				break
+	if not measurement_copy['contrast']:
+		for key in BEST_GUESS_STRUCTURAL_CONTRAST_MATCHING:
+			for i in key:
+				if i in acquisition:
+					measurement_copy['contrast'] = BEST_GUESS_STRUCTURAL_CONTRAST_MATCHING[key]
+					break
+	return measurement_copy
+
+def scanprogram_functional_scan_info(scan_type, current_line, measurement_copy):
+	acquisition, paravision_numbering = current_line.split(scan_type)
+	acquisition = acquisition.split('<displayName>')[1]
+	scan_number = paravision_numbering.strip(" (E").strip(")</displayName>\n")
+	measurement_copy['scan'] = str(int(scan_number))
+	measurement_copy['scan_type'] = scan_type
+	for key in FUNCTIONAL_CONTRAST_MATCHING:
+		for i in key:
+			if i in acquisition:
+				measurement_copy['contrast'] = FUNCTIONAL_CONTRAST_MATCHING[key]
+				acquisition = acquisition.replace(i,'')
+				break
+	acq = ''.join(ch for ch in acquisition if ch.isalnum())
+	measurement_copy['acq'] = acq
+	return measurement_copy
+
+def acqp_structural_scan_info(scan_type, current_line, measurement_copy):
+	measurement_copy['acq'] = scan_type
+	measurement_copy['contrast'] = None
+	for key in STRUCTURAL_CONTRAST_MATCHING:
+		for i in key:
+			if i in current_line:
+				measurement_copy['contrast'] = STRUCTURAL_CONTRAST_MATCHING[key]
+				break
+	if not measurement_copy['contrast']:
+		for key in BEST_GUESS_STRUCTURAL_CONTRAST_MATCHING:
+			for i in key:
+				if i in current_line:
+					measurement_copy['contrast'] = BEST_GUESS_STRUCTURAL_CONTRAST_MATCHING[key]
+					break
+	return measurement_copy
+
+def acqp_functional_scan_info(scan_type, current_line, measurement_copy):
+	acquisition = current_line.split(scan_type+'>')[0]
+	measurement_copy['scan_type'] = scan_type
+	for key in FUNCTIONAL_CONTRAST_MATCHING:
+		for i in key:
+			if i in acquisition:
+				measurement_copy['contrast'] = FUNCTIONAL_CONTRAST_MATCHING[key]
+				acquisition = acquisition.replace(i,'')
+				break
+	acq = ''.join(ch for ch in acquisition if ch.isalnum())
+	measurement_copy['acq'] = acq
+	return measurement_copy

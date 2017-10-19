@@ -46,7 +46,7 @@ def rs(
 
 def bids_test():
 	preprocessing.bruker('~/ni_data/test/',
-		functional_scan_types=["chr_longSOA","jb_long"],
+		functional_scan_types=["CogB","CogB2m","jb_long"],
 		workflow_name='composite',
 		lowpass_sigma=2,
 		highpass_sigma=225,

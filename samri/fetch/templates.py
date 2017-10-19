@@ -84,13 +84,13 @@ def fetch_mouse_DSURQE(template_dir="~/.samri_files/templates/mouse/DSURQE/", ve
 			verbose=verbose)[0]
 
 	# fix orientation issue in nii files - resulting in *c files, afterwards created downsampled atlas
-	commands = ["fslorient -setsform -0.04 0 0 6.27 0 0.04 0 -10.7 0 0 0.04 -7.9 0 0 0 1 DSURQE_40micron_average.nii",
+	commands = ["fslorient -setsform -0.04 0 0 6.27 0 0.04 0 -10.6 0 0 0.04 -7.88 0 0 0 1 DSURQE_40micron_average.nii",
 		"fslorient -copysform2qform DSURQE_40micron_average.nii",
 		"mv DSURQE_40micron_average.nii DSURQEc_40micron_average.nii",
-		"fslorient -setsform -0.04 0 0 6.27 0 0.04 0 -10.7 0 0 0.04 -7.9 0 0 0 1 DSURQE_40micron_mask.nii",
+		"fslorient -setsform -0.04 0 0 6.27 0 0.04 0 -10.6 0 0 0.04 -7.88 0 0 0 1 DSURQE_40micron_mask.nii",
 		"fslorient -copysform2qform DSURQE_40micron_mask.nii",
 		"mv DSURQE_40micron_mask.nii DSURQEc_40micron_mask.nii",
-		"fslorient -setsform -0.04 0 0 6.27 0 0.04 0 -10.7 0 0 0.04 -7.9 0 0 0 1 DSURQE_40micron_labels.nii",
+		"fslorient -setsform -0.04 0 0 6.27 0 0.04 0 -10.6 0 0 0.04 -7.88 0 0 0 1 DSURQE_40micron_labels.nii",
 		"fslorient -copysform2qform DSURQE_40micron_labels.nii",
 		"mv DSURQE_40micron_labels.nii DSURQEc_40micron_labels.nii",
 		"ResampleImage 3 DSURQEc_40micron_average.nii _DSURQEc_200micron_average.nii 0.2x0.2x0.2 size=1 spacing=0 4",

@@ -9,10 +9,10 @@ def fetch_rat_waxholm(template_dir="~/.samri_files/templates/rat/waxholm/", verb
 	Returns
 	-------
 	dict
-		Dictionary containing template, atlas, labels	
+		Dictionary containing template, atlas, labels
 		template - mri anatomy file; nifti file
 		atlas - pixelvalues of regions are grouped together, with corresponding labels in labels.ccv; nifti file
-		labels - labels annotating brain regions for pixelgroups in atlas; csv file 
+		labels - labels annotating brain regions for pixelgroups in atlas; csv file
 
 
 	References
@@ -40,8 +40,8 @@ def fetch_rat_waxholm(template_dir="~/.samri_files/templates/rat/waxholm/", verb
 			("template", template),
 			("atlas", atlas),
 			("labels", labels)])
-	
-	
+
+
 def fetch_mouse_DSURQE(template_dir="~/.samri_files/templates/mouse/DSURQE/", verbose=1):
 	"""Download and load waxholm atlas for Sprague Dawley rat
 
@@ -52,7 +52,7 @@ def fetch_mouse_DSURQE(template_dir="~/.samri_files/templates/mouse/DSURQE/", ve
 		Dictionary containing template, atlas, labels, mask
 		template - mri anatomy file; nifti file
 		atlas - pixelvalues of regions are grouped together, with corresponding labels in labels.ccv; nifti file
-		labels - labels annotating brain regions for pixelgroups in atlas; csv file 
+		labels - labels annotating brain regions for pixelgroups in atlas; csv file
 		mask - mri anatomy file, stripped off non-brain tissue; nifti file
 
 	References
@@ -66,7 +66,7 @@ def fetch_mouse_DSURQE(template_dir="~/.samri_files/templates/mouse/DSURQE/", ve
 	url_template = 'http://repo.mouseimaging.ca/repo/DSURQE_40micron_nifti/DSURQE_40micron_average.nii'
 	template = _fetch_files(path.abspath(path.expanduser(template_dir)), [('DSURQE_40micron_average.nii', url_template, {})],
 			verbose=verbose)[0]
-	
+
 	# Get atlas
 	url_atlas = 'http://repo.mouseimaging.ca/repo/DSURQE_40micron_nifti/DSURQE_40micron_labels.nii'
 	atlas = _fetch_files(path.abspath(path.expanduser(template_dir)), [('DSURQE_40micron_labels.nii', url_atlas, {})],
@@ -93,15 +93,15 @@ def fetch_mouse_DSURQE(template_dir="~/.samri_files/templates/mouse/DSURQE/", ve
 		"fslorient -setsform -0.04 0 0 6.27 0 0.04 0 -10.7 0 0 0.04 -7.9 0 0 0 1 DSURQE_40micron_labels.nii",
 		"fslorient -copysform2qform DSURQE_40micron_labels.nii",
 		"mv DSURQE_40micron_labels.nii DSURQEc_40micron_labels.nii",
-		"ResampleImage 3 DSURQEc_40micron_average.nii _DSURQEc_200micron_average.nii 0.2x0.2x0.2 size=1 spacing=0 4",	
+		"ResampleImage 3 DSURQEc_40micron_average.nii _DSURQEc_200micron_average.nii 0.2x0.2x0.2 size=1 spacing=0 4",
 		"SmoothImage 3 _DSURQEc_200micron_average.nii 0.4 DSURQEc_200micron_average.nii",
 		"rm _DSURQEc_200micron_average.nii",
 		"ResampleImage 3 DSURQEc_40micron_labels.nii _DSURQEc_200micron_labels.nii 0.2x0.2x0.2 size=1 spacing=0 4",
 		"SmoothImage 3 _DSURQEc_200micron_labels.nii 0.4 DSURQEc_200micron_labels.nii",
 		"rm _DSURQEc_200micron_labels.nii",
 		"ResampleImage 3 DSURQEc_40micron_mask.nii DSURQEc_200micron_mask.nii 0.2x0.2x0.2 size=1 spacing=0 1",
-		"mv DSURQE_40micron_itksnap_mapping.txt DSURQEc_40micron_itksnap_mapping.txt"]	
-	
+		"mv DSURQE_40micron_itksnap_mapping.txt DSURQEc_40micron_itksnap_mapping.txt"]
+
 	for command in commands:
 		p = subprocess.Popen(command.split(), cwd=path.abspath(path.expanduser(template_dir)), stdout=subprocess.PIPE)
 		p.wait()

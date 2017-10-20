@@ -8,14 +8,14 @@ from pandas import read_csv
 
 def fix_labels_mapping_txt(labels,
 		):
-	
+
 	ret = {}
 	for idx, item in enumerate(labels):
 		if(idx<14):
 			continue
 		ret[int(item.split()[0])] = " ".join(item.split()[7:])
 	ret = collections.OrderedDict(sorted(ret.items()))
-        ret = np.array(ret.items())[:,1]
+	ret = np.array(ret.items())[:,1]
 	return ret
 
 def fix_labels(labels,
@@ -70,7 +70,7 @@ def plot_connectivity_matrix(correlation_matrix,
 
 	plt.figure(figsize=figsize)
 	np.fill_diagonal(correlation_matrix, 0)
-	
+
 	plt.imshow(correlation_matrix,
 		interpolation="nearest",
 		cmap="RdBu_r",

@@ -1,4 +1,4 @@
-# This example illustrates how to generate a functional connectivity matrix and it's respective plot
+# This example illustrates how to generate a functional connectivity matrix and its respective plot
 
 import os
 from os import path
@@ -10,7 +10,7 @@ from samri.fetch.templates import fetch_mouse_DSURQE
 data_dir = path.join(path.dirname(path.realpath(__file__)),"../../example_data/")
 results_dir = path.abspath(path.expanduser('~/.samri_files/results/fc/'))
 # check if results dir exists, otherwise create
-if not os.path.exists(path.abspath(path.expanduser(results_dir))):	
+if not os.path.exists(path.abspath(path.expanduser(results_dir))):
 	os.makedirs(path.abspath(path.expanduser(results_dir)))
 
 template = fetch_mouse_DSURQE()

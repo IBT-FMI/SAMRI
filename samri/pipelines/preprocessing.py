@@ -18,7 +18,7 @@ import pandas as pd
 from nipype.interfaces import afni, bru2nii, fsl, nipy
 
 from samri.pipelines.nodes import *
-from samri.pipelines.utils import ss_to_path, sss_filename, fslmaths_invert_values, STIM_PROTOCOL_DICTIONARY
+from samri.pipelines.utils import bids_naming, ss_to_path, sss_filename, fslmaths_invert_values, STIM_PROTOCOL_DICTIONARY
 from samri.utilities import N_PROCS
 from samri.fetch.templates import fetch_rat_waxholm, fetch_mouse_DSURQE
 
@@ -93,9 +93,9 @@ def bruker(measurements_base,
 		structural_scan_types = []
 
 	# define measurement directories to be processed, and populate the list either with the given include_measurements, or with an intelligent selection
-	scan_types = deepcopy(functional_scan_types)
-	scan_types.extend(structural_scan_types)
-	data_selection=get_data_selection(measurements_base, sessions, scan_types=scan_types, subjects=subjects, exclude_subjects=exclude_subjects, measurements=measurements, exclude_measurements=exclude_measurements)
+	s_data_selection = get_data_selection(measurements_base, sessions, scan_types=structural_scan_types, subjects=subjects, exclude_subjects=exclude_subjects, measurements=measurements, exclude_measurements=exclude_measurements, scan_type_category='structural')
+	f_data_selection = get_data_selection(measurements_base, sessions, scan_types=functional_scan_types, subjects=subjects, exclude_subjects=exclude_subjects, measurements=measurements, exclude_measurements=exclude_measurements, scan_type_category='functional')
+	data_selection = pd.concat([s_data_selection,f_data_selection])
 	if not subjects:
 		subjects = set(list(data_selection["subject"]))
 	if not sessions:
@@ -130,7 +130,9 @@ def bruker(measurements_base,
 	else:
 		bandpass.inputs.lowpass_sigma = tr
 
-	bids_filename = pe.Node(name='bids_filename', interface=util.Function(function=sss_filename,input_names=inspect.getargspec(sss_filename)[0], output_names=['filename']))
+	#bids_filename = pe.Node(name='bids_filename', interface=util.Function(function=sss_filename,input_names=inspect.getargspec(sss_filename)[0], output_names=['filename']))
+	bids_filename = pe.Node(name='bids_filename', interface=util.Function(function=bids_naming,input_names=inspect.getargspec(bids_naming)[0], output_names=['filename']))
+	bids_filename.inputs.metadata = data_selection
 
 	bids_stim_filename = pe.Node(name='bids_stim_filename', interface=util.Function(function=sss_filename,input_names=inspect.getargspec(sss_filename)[0], output_names=['filename']))
 	bids_stim_filename.inputs.suffix = "events"
@@ -164,7 +166,7 @@ def bruker(measurements_base,
 		(bids_stim_filename, events_file, [('filename', 'out_file')]),
 		(infosource, datasink, [(('subject_session',ss_to_path), 'container')]),
 		(infosource, bids_filename, [('subject_session', 'subject_session')]),
-		(get_f_scan, bids_filename, [('scan_type', 'scan')]),
+		(get_f_scan, bids_filename, [('scan_type', 'scan_type')]),
 		(bids_filename, bandpass, [('filename', 'out_file')]),
 		(bandpass, datasink, [('out_file', 'func')]),
 		]
@@ -210,8 +212,9 @@ def bruker(measurements_base,
 		s_bru2nii.inputs.force_conversion=True
 		s_bru2nii.inputs.actual_size=actual_size
 
-		s_bids_filename = pe.Node(name='s_bids_filename', interface=util.Function(function=sss_filename,input_names=inspect.getargspec(sss_filename)[0], output_names=['filename']))
-		s_bids_filename.inputs.scan_prefix = False
+		#s_bids_filename = pe.Node(name='s_bids_filename', interface=util.Function(function=sss_filename,input_names=inspect.getargspec(sss_filename)[0], output_names=['filename']))
+		s_bids_filename = pe.Node(name='s_bids_filename', interface=util.Function(function=bids_naming,input_names=inspect.getargspec(bids_naming)[0], output_names=['filename']))
+		s_bids_filename.inputs.metadata = data_selection
 
 		if actual_size:
 			s_register, s_warp, _, _ = DSURQEc_structural_registration(template, registration_mask)
@@ -277,7 +280,7 @@ def bruker(measurements_base,
 			(infosource, get_s_scan, [('subject_session', 'selector')]),
 			(infosource, s_bids_filename, [('subject_session', 'subject_session')]),
 			(get_s_scan, s_bru2nii, [('scan_path','input_dir')]),
-			(get_s_scan, s_bids_filename, [('scan_type', 'scan')]),
+			(get_s_scan, s_bids_filename, [('scan_type', 'scan_type')]),
 			(s_bids_filename, s_warp, [('filename','output_image')]),
 			(s_bru2nii, s_biascorrect, [('nii_file', 'input_image')]),
 			])

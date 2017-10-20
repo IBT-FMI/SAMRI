@@ -108,6 +108,37 @@ def sss_to_source(source_format, subject=False, session=False, scan=False, subje
 		source = path.join(base_directory, source)
 	return source
 
+def bids_naming(subject_session, scan_type, metadata,
+	extra=['acq'],
+	extension='.nii.gz',
+	):
+	"""
+	Generate a BIDS filename from a subject-and-session iterator, a scan type, and a `pandas.DataFrame` metadata container.
+	"""
+	scan_type_is_trial = True
+	subject, session = subject_session
+	try:
+		contrast = metadata[(metadata['subject']==subject)&(metadata['session']==session)&(metadata['scan_type']==scan_type)]['contrast'].item()
+	except ValueError:
+		contrast = metadata[(metadata['subject']==subject)&(metadata['session']==session)&(metadata['acq']==scan_type)]['contrast'].item()
+	filename = 'sub-{}'.format(subject)
+	filename += '_ses-{}'.format(session)
+	if 'acq' in extra:
+		try:
+			acq = metadata[(metadata['subject']==subject)&(metadata['session']==session)&(metadata['scan_type']==scan_type)]['acq'].item()
+			if acq:
+				filename += '_acq-{}'.format(acq)
+		except ValueError:
+			filename += '_acq-{}'.format(scan_type)
+			scan_type_is_trial = False
+	if scan_type_is_trial:
+		filename += '_trial-{}'.format(scan_type)
+	if contrast:
+		filename += '_{}'.format(contrast)
+	filename += extension
+
+	return filename
+
 def sss_filename(subject_session, scan, scan_prefix="trial", suffix="", extension=".nii.gz"):
 	"""Concatenate subject-condition and scan inputs to a BIDS-style filename
 

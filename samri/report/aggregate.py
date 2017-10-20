@@ -1,11 +1,12 @@
 # -*- coding: utf-8 -*-
 import multiprocessing as mp
 import numpy as np
+import errno
 from copy import deepcopy
 from joblib import Parallel, delayed
-from os import path
+from os import path, makedirs
 from nilearn.input_data import NiftiLabelsMasker, NiftiMapsMasker, NiftiMasker
-from samri.utilities import add_roi_data, add_pattern_data
+from samri.report.utilities import add_roi_data, add_pattern_data
 from samri.pipelines import fc
 
 def add_fc_roi_data(data_path, seed_masker, brain_masker,
@@ -27,7 +28,7 @@ def add_fc_roi_data(data_path, seed_masker, brain_masker,
 
 	if not path.isfile(data_path):
 		print("WARNING: File \"{}\" does not exist.".format(data_path))
-		results["fc"] = None
+		results["result"] = None
 		return results
 
 	seed_time_series = seed_masker.fit_transform(data_path,).T
@@ -38,10 +39,20 @@ def add_fc_roi_data(data_path, seed_masker, brain_masker,
 	seed_based_correlation_img = brain_masker.inverse_transform(seed_based_correlations_fisher_z.T)
 
 	if save_as:
+		save_as = save_as.format(**substitution)
+		save_as = path.abspath(path.expanduser(save_as))
+		save_as_dir = path.dirname(save_as)
+		try:
+			makedirs(save_as_dir)
+		except OSError as exc:  # Python >2.5
+			if exc.errno == errno.EEXIST and path.isdir(save_as_dir):
+				pass
+			else:
+				raise
 		seed_based_correlation_img.to_filename(save_as)
-		results["fc"] = save_as
+		results["result"] = save_as
 	else:
-		results["fc"] = seed_based_correlation_img
+		results["result"] = seed_based_correlation_img
 
 	return results
 
@@ -53,7 +64,7 @@ def seed_fc(substitutions, seed, roi,
 	low_pass=0.25,
 	high_pass=0.004,
 	tr=1.,
-	save_maps=False,
+	save_results="",
 	):
 	"""Plot a ROI t-values over the session timecourse
 
@@ -106,7 +117,7 @@ def seed_fc(substitutions, seed, roi,
 		[low_pass]*len(substitutions),
 		[high_pass]*len(substitutions),
 		[tr]*len(substitutions),
-		[save_maps]*len(substitutions),
+		[save_results]*len(substitutions),
 		))
 
 	return fc_maps

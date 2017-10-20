@@ -17,11 +17,8 @@ from os import path
 from statsmodels.sandbox.stats.multicomp import multipletests
 
 from samri.report.roi import roi_per_session
-from samri.utilities import add_roi_data, add_pattern_data
-try:
-	import maps, timeseries
-except ImportError:
-	from ..plotting import maps, timeseries
+from samri.report.utilities import add_roi_data, add_pattern_data
+from samri.plotting import maps, timeseries
 
 try: FileNotFoundError
 except NameError:
@@ -67,6 +64,64 @@ def plot_roi_per_session(subjectdf, voxeldf,
 		plt.savefig(path.abspath(path.expanduser(save_as)))
 
 
+def fc_per_session(substitutions, analytic_pattern,
+	legend_loc="best",
+	t_file_template="~/ni_data/ofM.dr/l1/{l1_dir}/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_trial-{scan}_tstat.nii.gz",
+	figure="per-participant",
+	tabref="tab",
+	xy_label=[],
+	color="#E69F00",
+	saveas=False,
+	):
+	"""Plot a ROI t-values over the session timecourse
+
+	analytic_pattern : str
+	Path to the analytic pattern by which to multiply the per-participant per-session t-statistic maps.
+	"""
+
+	if isinstance(analytic_pattern,str):
+		analytic_pattern = path.abspath(path.expanduser(analytic_pattern))
+	analytic_pattern = nib.load(analytic_pattern)
+	pattern_data = analytic_pattern.get_data()
+
+	if figure == "per-participant":
+		voxels = False
+	else:
+		voxels = True
+
+	n_jobs = mp.cpu_count()-2
+	roi_data = Parallel(n_jobs=n_jobs, verbose=0, backend="threading")(map(delayed(add_pattern_data),
+		substitutions,
+		[t_file_template]*len(substitutions),
+		[pattern_data]*len(substitutions),
+		[voxels]*len(substitutions),
+		))
+	subject_dfs, voxel_dfs = zip(*roi_data)
+	subjectdf = pd.concat(subject_dfs)
+
+	model = smf.mixedlm("t ~ session", subjectdf, groups=subjectdf["subject"])
+	fit = model.fit()
+	report = fit.summary()
+
+	# create a restriction for every regressor - except intercept (first) and random effects (last)
+	omnibus_tests = np.eye(len(fit.params))[1:-1]
+	anova = fit.f_test(omnibus_tests)
+
+	names_for_plotting = {"ofM":u"naïve", "ofM_aF":"acute", "ofM_cF1":"chronic (2w)", "ofM_cF2":"chronic (4w)", "ofM_pF":"post"}
+	if voxels:
+		voxeldf = pd.concat(voxel_dfs)
+		voxeldf = voxeldf.replace({"session": names_for_plotting})
+	subjectdf = subjectdf.replace({"session": names_for_plotting})
+
+	ax = sns.pointplot(x="session", y="t", data=subjectdf, ci=68.3, dodge=True, jitter=True, legend_out=False, units="subject", color=color)
+	if xy_label:
+		ax.set(xlabel=xy_label[0], ylabel=xy_label[1])
+
+	if(saveas):
+		plt.savefig(saveas)
+
+	return fit, anova
+
 def analytic_pattern_per_session(substitutions, analytic_pattern,
 	legend_loc="best",
 	t_file_template="~/ni_data/ofM.dr/l1/{l1_dir}/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_trial-{scan}_tstat.nii.gz",
@@ -74,7 +129,6 @@ def analytic_pattern_per_session(substitutions, analytic_pattern,
 	figure="per-participant",
 	tabref="tab",
 	xy_label=[],
-	obfuscate=False,
 	color="#E69F00",
 	saveas=False,
 	):
@@ -107,10 +161,7 @@ def analytic_pattern_per_session(substitutions, analytic_pattern,
 	subject_dfs, voxel_dfs = zip(*roi_data)
 	subjectdf = pd.concat(subject_dfs)
 
-	if obfuscate:
-		obf_session = {"ofM":"_pre","ofM_aF":"t1","ofM_cF1":"t2","ofM_cF2":"t3","ofM_pF":"post"}
-		subjectdf = subjectdf.replace({"session": obf_session})
-		subjectdf.to_csv("~/MixedLM_data.csv")
+	return subjectdf
 
 	model = smf.mixedlm("t ~ session", subjectdf, groups=subjectdf["subject"])
 	fit = model.fit()

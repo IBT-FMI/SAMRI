@@ -17,6 +17,11 @@ except ImportError:
 
 from samri.plotting.utilities import QUALITATIVE_COLORSET
 
+def visualize(fsl_basis_set):
+	df = pd.read_csv(fsl_basis_set, sep='  ', header=None, index_col=False)
+	df.plot()
+	plt.show()
+
 def plot_fsl_design(file_path):
 	"""Returns a plot of a Dataframe resulted from a csv file.
 
@@ -149,6 +154,7 @@ def multi(timecourses, designs, stat_maps, events_dfs, subplot_titles,
 	figure="maps",
 	quantitative=True,
 	save_as="",
+	samri_style=True,
 	):
 	if figure == "maps":
 		maps.stat(stat_maps, template="~/ni_data/templates/ds_QBI_chr.nii.gz", threshold=0.1, interpolation="gaussian", subplot_titles=subplot_titles)
@@ -158,7 +164,10 @@ def multi(timecourses, designs, stat_maps, events_dfs, subplot_titles,
 			#we use inverse floor division to get the ceiling
 			max_rows = (len(timecourses) // ncols) + 1
 			min_rows = len(timecourses) % max_rows
-			fig, axes = plt.subplots(figsize=(10*max_rows,7*ncols), facecolor='#eeeeee', nrows=max_rows*min_rows, ncols=ncols)
+			if samri_style:
+				fig, axes = plt.subplots(figsize=(10*max_rows,7*ncols), facecolor='#eeeeee', nrows=max_rows*min_rows, ncols=ncols)
+			else:
+				fig, axes = plt.subplots(facecolor='#eeeeee', nrows=max_rows*min_rows, ncols=ncols)
 			xlabel_positive = [(i*max_rows)-1 for i in range(1,ncols)]
 			xlabel_positive.append(len(timecourses)-1)
 			max_ylim = [0,0]
@@ -192,7 +201,7 @@ def multi(timecourses, designs, stat_maps, events_dfs, subplot_titles,
 				ax.set_xlim([0,len(timecourse)])
 				ax.set_ylabel(subplot_title)
 		else:
-			fig, ax = plt.subplots(figsize=(10,2), facecolor='#eeeeee')
+			fig, ax = plt.subplots(facecolor='#eeeeee')
 
 			timecourse = timecourses[0]
 			design = designs[0]

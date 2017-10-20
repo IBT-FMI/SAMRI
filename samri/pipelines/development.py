@@ -44,6 +44,23 @@ def rs(
 		actual_size=True,
 		)
 
+def bids_test():
+	preprocessing.bruker('~/ni_data/test/',
+		functional_scan_types=["CogB","CogB2m","jb_long"],
+		workflow_name='composite',
+		lowpass_sigma=2,
+		highpass_sigma=225,
+		very_nasty_bruker_delay_hack=True,
+		negative_contrast_agent=True,
+		functional_blur_xy=.4,
+		functional_registration_method="composite",
+		keep_work=True,
+		template="~/ni_data/templates/DSURQEc_200micron_average.nii",
+		registration_mask="~/ni_data/templates/DSURQEc_200micron_mask.nii.gz",
+		actual_size=True,
+		verbose=True,
+		)
+
 def cbv_composite(data_path,workflow_name,
 	preprocessing_dir="preprocessing",
 	l1_dir="l1",
@@ -89,6 +106,17 @@ def cbv_composite(data_path,workflow_name,
 		keep_work=True,
 		mask="/home/chymera/ni_data/templates/DSURQEc_200micron_mask.nii.gz",
 		)
+
+def typical_resp(data_path='~/ni_data/ofM.dr/', l1_dir='l1', workflow_name='composite'):
+	glm.l2_common_effect(path.join(data_path,l1_dir,workflow_name),
+		workflow_name="sessions_best_responders",
+		subjects=["5689","5690","5691","5700","6262","6255","5694","5706"],
+		trials=["EPI_CBV_chr_longSOA"],
+		groupby="session",
+		keep_work=True,
+		mask="/home/chymera/ni_data/templates/DSURQEc_200micron_mask.nii.gz",
+		)
+
 
 def dr_only():
 	glm.l1("~/ni_data/ofM.dr/preprocessing/_composite",

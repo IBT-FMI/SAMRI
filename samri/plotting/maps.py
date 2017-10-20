@@ -165,6 +165,7 @@ def stat(stat_maps,
 	dim=0,
 	vmax=None,
 	shape="portrait",
+	draw_colorbar=True,
 	):
 
 	"""Plot a list of statistical maps.
@@ -208,8 +209,10 @@ def stat(stat_maps,
 	To avoid starting a shared colorbar at the end of a column, please ensure that the length of statistical maps to be plotted is divisible both by the group size and the number of columns.
 	"""
 
+
+	fig = plt.figure()
 	if len(stat_maps) == 1:
-		fig, axes = plt.subplots(figsize=(14,5), facecolor='#eeeeee')
+		fig, axes = plt.subplots(facecolor='#eeeeee')
 
 		if figure_title:
 			fig.suptitle(figure_title, fontsize=scale*20, fontweight='bold')
@@ -219,14 +222,19 @@ def stat(stat_maps,
 		else:
 			title=None
 
-		cax, kw = _draw_colorbar(stat_maps[0],axes,
-			threshold=threshold,
-			aspect=30,
-			fraction=0.05,
-			anchor=(1.,0.5),
-			)
+		if draw_colorbar:
+			cax, kw = _draw_colorbar(stat_maps[0],axes,
+				threshold=threshold,
+				aspect=30,
+				fraction=0.05,
+				anchor=(1.,0.5),
+				)
+		if overlays:
+			my_overlay = overlays[0]
+		else:
+			my_overlay = None
 		display = scaled_plot(stat_maps[0], template, fig, axes,
-			overlay= overlays[0],
+			overlay=my_overlay,
 			title=title,
 			threshold=threshold,
 			cut=cut_coords[0],
@@ -239,27 +247,33 @@ def stat(stat_maps,
 	else:
 		try:
 			nrows, ncols = stat_maps.shape
-			scale = scale/float(min(nrows, ncols))
+			#scale = scale/float(min(nrows, ncols))
 		except AttributeError:
 			if shape == "portrait":
 				ncols = 2
 				#we use inverse floor division to get the ceiling
 				nrows = -(-len(stat_maps)//2)
-				scale = scale/float(ncols)
+				#scale = scale/float(ncols)
 			elif shape == "landscape":
 				nrows = 2
 				#we use inverse floor division to get the ceiling
 				ncols = -(-len(stat_maps)//2)
-				scale = scale/float(nrows)
+				#scale = scale/float(nrows)
 		fig, axes = plt.subplots(figsize=(6*ncols,2.5*nrows), facecolor='#eeeeee', nrows=nrows, ncols=ncols)
 		if figure_title:
-			fig.suptitle(figure_title, fontsize=scale*30, fontweight='bold')
+			fig.suptitle(figure_title, fontsize=scale*35, fontweight='bold')
 		conserve_colorbar_steps = 0
 		# We transform the axes array so that we iterate column-first rather than row-first.
 		# This is done to better share colorbars between consecutive axes.
 		flat_axes = list(axes.T.flatten())
-		stat_maps = list(stat_maps.T.flatten())
-		subplot_titles = list(subplot_titles.T.flatten())
+		try:
+			stat_maps = list(stat_maps.T.flatten())
+		except AttributeError:
+			pass
+		try:
+			subplot_titles = list(subplot_titles.T.flatten())
+		except AttributeError:
+			pass
 		if len(overlays) == 1:
 			overlays = overlays*len(stat_maps)
 		elif len(overlays) == 0:
@@ -269,7 +283,10 @@ def stat(stat_maps,
 		elif len(cut_coords) == 0:
 			cut_coords = [None]*len(stat_maps)
 		else:
-			cut_coords = list(cut_coords.T.flatten())
+			try:
+				cut_coords = list(cut_coords.T.flatten())
+			except AttributeError:
+				pass
 		cbar_aspect = 30
 		if nrows >=2:
 			fraction = 0.09
@@ -363,7 +380,9 @@ def atlas_label(atlas,
 
 	cm = ListedColormap([color], name="my_atlas_label_cmap", N=None)
 
-	display = nilearn.plotting.plot_roi(roi, bg_img=anat, black_bg=black_bg, annotate=False, draw_cross=False, cmap=cm, dim=dim)
+	fig = plt.figure()
+
+	display = nilearn.plotting.plot_roi(roi, bg_img=anat, black_bg=black_bg, annotate=False, draw_cross=False, cmap=cm, dim=dim, figure=fig)
 	if draw_cross:
 		display.draw_cross(linewidth=scale*1.6, alpha=0.4)
 	if annotate:

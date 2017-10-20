@@ -34,6 +34,7 @@ thisscriptspath = path.dirname(path.realpath(__file__))
 scan_classification_file_path = path.join(thisscriptspath,"scan_type_classification.csv")
 
 def bruker(measurements_base,
+	template,
 	functional_scan_types=[],
 	structural_scan_types=[],
 	sessions=[],
@@ -50,7 +51,6 @@ def bruker(measurements_base,
 	n_procs=N_PROCS,
 	realign="time",
 	registration_mask=False,
-	template="",
 	tr=1,
 	very_nasty_bruker_delay_hack=False,
 	workflow_name="generic",
@@ -65,18 +65,16 @@ def bruker(measurements_base,
 		Parameter that dictates slictiming correction and realignment of slices. "time" (FSL.SliceTimer) is default, since it works safely. Use others only with caution!
 
 	'''
-
 	if template:
 		if template == "mouse":
-			template = fetch_mouse_DSURQE().template
+			template = fetch_mouse_DSURQE()['template']
 		elif template == "rat":
-			template = fetch_rat_waxholm().template
+			template = fetch_rat_waxholm()['template']
 		else:
 			pass
 	else:
 		raise ValueError("No species or template specified")
 		return -1
-
 
 	measurements_base = path.abspath(path.expanduser(measurements_base))
 

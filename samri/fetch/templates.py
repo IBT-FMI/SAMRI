@@ -116,6 +116,8 @@ def fetch_mouse_DSURQE(template_dir="~/.samri_files/templates/mouse/DSURQE/", ve
 		print(os.listdir(cwd))
 
 		for command in commands:
+			print(command)
+			print(os.listdir(cwd))
 			p = subprocess.Popen(command.split(), cwd=cwd, stdout=subprocess.PIPE)
 			p.wait()
 

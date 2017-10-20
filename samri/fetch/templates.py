@@ -62,7 +62,7 @@ def fetch_mouse_DSURQE(template_dir="~/.samri_files/templates/mouse/DSURQE/", ve
 
 	"""
 
-	if(template_dir + 'DSURQEc_40micron_labels.nii'):
+	if(path.isfile(path.abspath(path.expanduser(template_dir + 'DSURQEc_40micron_labels.nii')))):
 		return dict([
 			        ("template", path.abspath(path.expanduser(template_dir)) + "/DSURQEc_40micron_average.nii"),
 				("atlas", path.abspath(path.expanduser(template_dir)) + "/DSURQEc_40micron_labels.nii"),

@@ -91,7 +91,7 @@ def fetch_mouse_DSURQE(template_dir="~/.samri_files/templates/mouse/DSURQE/", ve
 				verbose=verbose)[0]
 
 		# fix orientation issue in nii files - resulting in *c files, afterwards created downsampled atlas
-		commands = ["cd" + path.abspath(path.expanduser(template_dir)),
+		commands = ["cd " + path.abspath(path.expanduser(template_dir)),
 			"fslorient -setsform -0.04 0 0 6.27 0 0.04 0 -10.6 0 0 0.04 -7.88 0 0 0 1 DSURQE_40micron_average.nii",
 			"fslorient -copysform2qform DSURQE_40micron_average.nii",
 			"mv DSURQE_40micron_average.nii DSURQEc_40micron_average.nii",

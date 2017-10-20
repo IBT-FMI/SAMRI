@@ -2,6 +2,7 @@ from nilearn.datasets.utils import _fetch_files
 
 import subprocess
 from os import path
+import os
 
 def fetch_rat_waxholm(template_dir="~/.samri_files/templates/rat/waxholm/", verbose=1):
 	"""Download and load waxholm atlas for Sprague Dawley rat

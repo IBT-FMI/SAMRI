@@ -109,9 +109,13 @@ def fetch_mouse_DSURQE(template_dir="~/.samri_files/templates/mouse/DSURQE/", ve
 			"ResampleImage 3 DSURQEc_40micron_mask.nii DSURQEc_200micron_mask.nii 0.2x0.2x0.2 size=1 spacing=0 1",
 			"mv DSURQE_40micron_itksnap_mapping.txt DSURQEc_40micron_itksnap_mapping.txt"]
 
+		cwd=path.abspath(path.expanduser(template_dir))
+
+		print(cwd)
+		print(os.listdir(cwd))
 
 		for command in commands:
-			p = subprocess.Popen(command.split(), cwd=path.abspath(path.expanduser(template_dir)), stdout=subprocess.PIPE)
+			p = subprocess.Popen(command.split(), cwd=cwd, stdout=subprocess.PIPE)
 			p.wait()
 
 		return dict([

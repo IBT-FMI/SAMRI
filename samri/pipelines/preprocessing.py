@@ -67,9 +67,9 @@ def bruker(measurements_base,
 	'''
 
 	if template:
-		if(template == "mouse"):
+		if template == "mouse":
 			template = fetch_mouse_DSURQE().template
-		elif(template == "rat"):
+		elif template == "rat":
 			template = fetch_rat_waxholm().template
 		elif:
 			pass

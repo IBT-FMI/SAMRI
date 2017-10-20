@@ -1,1 +1,1 @@
-__all__ = ["local"]
+__all__ = ["local", "templates"]

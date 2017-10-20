@@ -69,9 +69,9 @@ def bruker(measurements_base,
 	if template:
 		if(template == "mouse"):
 			template = fetch_mouse_DSURQE().template
-		else if(template == "rat"):
+		elif(template == "rat"):
 			template = fetch_rat_waxholm().template
-		else if:
+		elif:
 			pass
 	else:
 		raise ValueError("No species or template specified")

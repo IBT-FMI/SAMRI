@@ -1,9 +1,22 @@
 from os import path
+import pandas as pd
 import preprocessing, glm, fc
 try:
 	from ..utilities import bids_substitution_iterator
 except (SystemError, ValueError):
 	from samri.utilities import bids_substitution_iterator
+
+def bids_infoextraction(
+	):
+	from samri.pipelines.extra_functions import get_data_selection
+	from samri.pipelines.utils import bids_naming
+	f_data_selection = get_data_selection('~/ni_data/test',scan_types=['CogB','CogB2m',],scan_type_category='functional')
+	s_data_selection = get_data_selection('~/ni_data/test',scan_types=['TurboRARE'],scan_type_category='structural')
+	data_selection = pd.concat([s_data_selection,f_data_selection])
+	print(data_selection)
+
+	print(bids_naming(metadata=data_selection,scan_type='EPI_CBV_CogB', subject_session=('5706','ofMpF')))
+	return
 
 def dbu(
 	data_path="~/ni_data/DBu/",
@@ -46,7 +59,7 @@ def rs(
 
 def bids_test():
 	preprocessing.bruker('~/ni_data/test/',
-		functional_scan_types=["CogB","CogB2m","jb_long"],
+		functional_scan_types=["CogB","CogB2m",'JogB'],
 		workflow_name='composite',
 		lowpass_sigma=2,
 		highpass_sigma=225,

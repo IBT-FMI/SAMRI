@@ -105,22 +105,6 @@ def test_model(base_dir, plot=False, workflow_name="test_model_wf"):
 		matfile = path.join(base_dir,workflow_name,"modelgen/run0.mat")
 		plotmodel(matfile)
 
-def get_scan(c,s,d):
-	result = str(c)+str(s)+str(d)
-	return result, d
-def firstfunction(c,s,d):
-	result = str(c)+str(s)+str(d)
-	return result
-def secondfunction(e,f):
-	result = str(e)+"|"+str(f)
-	return result
-def bru2nii(input_dir,f):
-	result = str(input_dir)+str(f)
-	return result
-def final_function(inp):
-	result = "final"+str(inp)
-	return result
-
 def test_multiconnection():
 	infosource = pe.Node(interface=util.IdentityInterface(fields=['condition','subject']), name="infosource")
 	infosource.iterables = [('condition',["a","b","c"]), ('subject',[1,2,3])]

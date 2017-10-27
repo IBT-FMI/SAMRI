@@ -59,7 +59,8 @@ def rs(
 
 def bids_test():
 	preprocessing.bruker('~/ni_data/test/',
-		functional_scan_types=["CogB","CogB2m",'JogB'],
+		functional_match={'trial':['CogB','CogB2m','JogB']},
+		structural_match={'acquisition':['TurboRARE','TurboRARElowcov']},
 		workflow_name='composite',
 		lowpass_sigma=2,
 		highpass_sigma=225,

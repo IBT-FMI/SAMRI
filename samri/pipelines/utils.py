@@ -108,7 +108,7 @@ def sss_to_source(source_format, subject=False, session=False, scan=False, subje
 		source = path.join(base_directory, source)
 	return source
 
-def _bids_naming(subject_session, scan_type, metadata,
+def bids_naming(subject_session, scan_type, metadata,
 	extra=['acq'],
 	extension='.nii.gz',
 	suffix='',
@@ -143,7 +143,7 @@ def _bids_naming(subject_session, scan_type, metadata,
 
 	return filename
 
-def bids_naming(subject_session, scan_type, metadata,
+def _bids_naming(subject_session, scan_type, metadata,
 	extra=['acq'],
 	extension='.nii.gz',
 	suffix='',

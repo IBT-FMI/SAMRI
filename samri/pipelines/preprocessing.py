@@ -35,13 +35,12 @@ scan_classification_file_path = path.join(thisscriptspath,"scan_type_classificat
 
 def bruker(measurements_base,
 	template,
-	functional_scan_types=[],
-	structural_scan_types=[],
+	functional_match={},
+	structural_match={},
 	sessions=[],
 	subjects=[],
 	measurements=[],
-	exclude_subjects=[],
-	exclude_measurements=[],
+	exclude={},
 	actual_size=False,
 	functional_blur_xy=False,
 	functional_registration_method="structural",
@@ -78,24 +77,40 @@ def bruker(measurements_base,
 
 	measurements_base = path.abspath(path.expanduser(measurements_base))
 
-	#select all functional/sturctural scan types unless specified
-	if not functional_scan_types or not structural_scan_types:
-		scan_classification = pd.read_csv(scan_classification_file_path)
-		if not functional_scan_types:
-			functional_scan_types = list(scan_classification[(scan_classification["categories"] == "functional")]["scan_type"])
-		if not structural_scan_types:
-			structural_scan_types = list(scan_classification[(scan_classification["categories"] == "structural")]["scan_type"])
+	# select all functional/sturctural scan types unless specified
+	#if not functional_scan_types or not structural_scan_types:
+	#	scan_classification = pd.read_csv(scan_classification_file_path)
+	#	if not functional_scan_types:
+	#		functional_scan_types = list(scan_classification[(scan_classification["categories"] == "functional")]["scan_type"])
+	#	if not structural_scan_types:
+	#		structural_scan_types = list(scan_classification[(scan_classification["categories"] == "structural")]["scan_type"])
 
 	#hack to allow structural scan type disabling:
-	if structural_scan_types == -1:
-		structural_scan_types = []
+	#if structural_scan_types == -1:
+	#	structural_scan_types = []
+
+	# add subject and session filters if present
+	if subjects:
+		structural_scan_types['subject'] = subjects
+	if sessions:
+		structural_scan_types['session'] = sessions
 
 	# define measurement directories to be processed, and populate the list either with the given include_measurements, or with an intelligent selection
-	s_data_selection = get_data_selection(measurements_base, sessions, scan_types=structural_scan_types, subjects=subjects, exclude_subjects=exclude_subjects, measurements=measurements, exclude_measurements=exclude_measurements, scan_type_category='structural')
-	structural_scan_types = s_data_selection['scan_type'].unique()
-	f_data_selection = get_data_selection(measurements_base, sessions, scan_types=functional_scan_types, subjects=subjects, exclude_subjects=exclude_subjects, measurements=measurements, exclude_measurements=exclude_measurements, scan_type_category='functional')
-	functional_scan_types = f_data_selection['scan_type'].unique()
-	data_selection = pd.concat([s_data_selection,f_data_selection])
+	data_selection = pd.DataFrame([])
+	if structural_match:
+		s_data_selection = get_data_selection(measurements_base,
+			match=structural_match,
+			exclude=exclude,
+			)
+		structural_scan_types = s_data_selection['scan_type'].unique()
+		data_selection = pd.concat([data_selection,s_data_selection])
+	if functional_match:
+		f_data_selection = get_data_selection(measurements_base,
+			match=functional_match,
+			exclude=exclude,
+			)
+		functional_scan_types = f_data_selection['scan_type'].unique()
+		data_selection = pd.concat([data_selection,f_data_selection])
 	if not subjects:
 		subjects = set(list(data_selection["subject"]))
 	if not sessions:

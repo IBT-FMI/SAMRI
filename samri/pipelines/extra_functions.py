@@ -278,7 +278,7 @@ def get_scan(measurements_base, data_selection, scan_type,
 
 	return scan_path, scan_type
 
-def get_data_selection(workflow_base,
+def _get_data_selection(workflow_base,
 	sessions=[],
 	scan_types=[],
 	subjects=[],
@@ -404,7 +404,7 @@ def get_data_selection(workflow_base,
 
 	return data_selection
 
-def match_exclude_record(entry, match, exclude, record, key):
+def match_exclude_ss(entry, match, exclude, record, key):
 	try:
 		exclude_list = exclude[key]
 	except KeyError:
@@ -417,7 +417,7 @@ def match_exclude_record(entry, match, exclude, record, key):
 		if len(match_list) > 0 and entry not in match_list:
 			return False
 		else:
-			record[key] = entry
+			record[key] = str(entry).strip(' ')
 		return True
 	else:
 		return False
@@ -455,16 +455,16 @@ def assign_contrast(scan_type, record):
 
 	return record
 
-def _match_exclude_record(key, values, record, scan_type, number):
+def match_exclude_bids(key, values, record, scan_type, number):
 	key_alternatives = BIDS_KEY_DICTIONARY[key]
 	for alternative in key_alternatives:
 		if alternative in scan_type:
 			for value in values:
 				match_string = r'(^|.*?_|.*? ){alternative}-{value}( .*?|_.*?|$)'.format(alternative=alternative,value=value)
 				if re.match(match_string, scan_type):
-					record['scan_type'] = scan_type
+					record['scan_type'] = str(scan_type).strip(' ')
 					record['scan'] = str(int(number))
-					record[key] = value
+					record[key] = str(value).strip(' ')
 					record = assign_contrast(scan_type, record)
 					for key_ in BIDS_KEY_DICTIONARY:
 						for alternative_ in BIDS_KEY_DICTIONARY[key_]:
@@ -472,11 +472,11 @@ def _match_exclude_record(key, values, record, scan_type, number):
 								match_string_ = r'(^|.*?_|.*? ){}-(?P<value>\w+?)( .*?|_.*?|$)'.format(alternative_)
 								m = re.match(match_string_, scan_type)
 								value_ = m.groupdict()['value']
-								record[key_] = value_
+								record[key_] = str(value_).strip(' ')
 					return True
 	return False
 
-def _get_data_selection(workflow_base,
+def get_data_selection(workflow_base,
 	match={},
 	exclude={},
 	measurements=[],
@@ -489,6 +489,17 @@ def _get_data_selection(workflow_base,
 	----------
 	workflow_base : str
 		The path in which to query for Bruker measurement directories.
+	match : dict
+		A dictionary of matching criteria.
+		The keys of this dictionary must be full BIDS key names (e.g. "trial" or "acquisition"), and the values must be strings (e.g. "CogB") which, combined with the respective BIDS key, identify scans to be included (e.g. scans, the names of which containthe string "trial-CogB" - delimited on either side by an underscore or the limit of the string).
+	exclude : dict, optional
+		A dictionary of exclusion criteria.
+		The keys of this dictionary must be full BIDS key names (e.g. "trial" or "acquisition"), and the values must be strings (e.g. "CogB") which, combined with the respective BIDS key, identify scans to be excluded(e.g. a scans, the names of which contain the string "trial-CogB" - delimited on either side by an underscore or the limit of the string).
+	measurements : list of str, optional
+		A list of measurement directory names to be included exclusively (i.e. whitelist).
+		If the list is empty, all directories (unless explicitly excluded via `exclude_measurements`) will be queried.
+	exclude_measurements : list of str, optional
+		A list of measurement directory names to be excluded from querying (i.e. a blacklist).
 	"""
 
 	workflow_base = os.path.abspath(os.path.expanduser(workflow_base))
@@ -510,12 +521,12 @@ def _get_data_selection(workflow_base,
 					current_line = state_file.readline()
 					if "##$SUBJECT_name_string=" in current_line:
 						entry=re.sub("[<>\n]", "", state_file.readline())
-						if not match_exclude_record(entry, match, exclude, selected_measurement, 'subject'):
+						if not match_exclude_ss(entry, match, exclude, selected_measurement, 'subject'):
 							break
 						read_variables +=1 #count recorded variables
 					if "##$SUBJECT_study_name=" in current_line:
 						entry=re.sub("[<>\n]", "", state_file.readline())
-						if not match_exclude_record(entry, match, exclude, selected_measurement, 'session'):
+						if not match_exclude_ss(entry, match, exclude, selected_measurement, 'session'):
 							break
 						read_variables +=1 #count recorded variables
 					if read_variables == 2:
@@ -525,23 +536,42 @@ def _get_data_selection(workflow_base,
 							with open(scan_program_file) as search:
 								for line in search:
 									measurement_copy = deepcopy(selected_measurement)
-									if re.match(r'^[ \t]+<displayName>.*?\(E\d+\)</displayName>[\r\n]+', line):
+									if re.match(r'^[ \t]+<displayName>.+?\(E\d+\)</displayName>[\r\n]+', line):
 										m = re.match(r'^[ \t]+<displayName>(?P<scan_type>.*?)\(E(?P<number>\d+)\)</displayName>[\r\n]+', line)
 										number = m.groupdict()['number']
 										scan_type = m.groupdict()['scan_type']
 										for key in match:
-											if _match_exclude_record(key, match[key], measurement_copy, scan_type, number):
+											if match_exclude_bids(key, match[key], measurement_copy, scan_type, number):
 												selected_measurements.append(measurement_copy)
 												break
 						except IOError:
-							print(scan_program_file)
-							pass
+							for sub_sub_dir in os.listdir(os.path.join(workflow_base,sub_dir)):
+								measurement_copy = deepcopy(selected_measurement)
+								acqp_file_path = os.path.join(workflow_base,sub_dir,sub_sub_dir,"acqp")
+								scan_dir_resolved = False
+								while scan_dir_resolved == False:
+									try:
+										with open(acqp_file_path,'r') as search:
+											for line in search:
+												if re.match(r'^(?!/)<.+?>[\r\n]+', line):
+													number = sub_sub_dir
+													m = re.match(r'^(?!/)<(?P<scan_type>.+?)>[\r\n]+', line)
+													scan_type = m.groupdict()['scan_type']
+													for key in match:
+														if match_exclude_bids(key, match[key], measurement_copy, scan_type, number):
+															selected_measurements.append(measurement_copy)
+															scan_dir_resolved = True
+															break
+												if scan_dir_resolved:
+													break
+											scan_dir_resolved = True
+									except IOError:
+										scan_dir_resolved = True
 						break #prevent loop from going on forever
 			except IOError:
 				pass
 
 	data_selection = pd.DataFrame(selected_measurements)
-	print(data_selection)
 	return data_selection
 
 

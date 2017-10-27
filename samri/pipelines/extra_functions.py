@@ -445,15 +445,15 @@ def assign_contrast(scan_type, record):
 		for contrast_string in contrast_group:
 			if contrast_string in scan_type:
 				record['contrast'] = FUNCTIONAL_CONTRAST_MATCHING[contrast_group]
-				return record
+				scan_type = scan_type.replace(contrast_string,'')
+				return scan_type, record
 	for contrast_group in BEST_GUESS_STRUCTURAL_CONTRAST_MATCHING:
 		for contrast_string in contrast_group:
 			if contrast_string in scan_type:
 				record['contrast'] = BEST_GUESS_STRUCTURAL_CONTRAST_MATCHING[contrast_group]
-				return record
 	BEST_GUESS_STRUCTURAL_CONTRAST_MATCHING
 
-	return record
+	return scan_type, record
 
 def match_exclude_bids(key, values, record, scan_type, number):
 	key_alternatives = BIDS_KEY_DICTIONARY[key]
@@ -465,14 +465,18 @@ def match_exclude_bids(key, values, record, scan_type, number):
 					record['scan_type'] = str(scan_type).strip(' ')
 					record['scan'] = str(int(number))
 					record[key] = str(value).strip(' ')
-					record = assign_contrast(scan_type, record)
+					scan_type, record = assign_contrast(scan_type, record)
 					for key_ in BIDS_KEY_DICTIONARY:
 						for alternative_ in BIDS_KEY_DICTIONARY[key_]:
 							if alternative_ in scan_type:
 								match_string_ = r'(^|.*?_|.*? ){}-(?P<value>\w+?)( .*?|_.*?|$)'.format(alternative_)
 								m = re.match(match_string_, scan_type)
-								value_ = m.groupdict()['value']
-								record[key_] = str(value_).strip(' ')
+								try:
+									value_ = m.groupdict()['value']
+								except AttributeError:
+									pass
+								else:
+									record[key_] = str(value_).strip(' ')
 					return True
 	return False
 

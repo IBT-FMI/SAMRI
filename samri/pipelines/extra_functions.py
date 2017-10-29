@@ -151,7 +151,7 @@ def write_events_file(scan_dir, scan_type,
 		try:
 			scan_dir_contents = os.listdir(scan_dir)
 			sequence_files = [i for i in scan_dir_contents if "sequence" in i and "tsv" in i]
-			sequence_file = sequence_files[0]
+			sequence_file = os.path.join(scan_dir, sequence_files[0])
 			mydf = pd.read_csv(sequence_file, sep="\s")
 		except IndexError:
 			from labbookdb.report.tracking import bids_eventsfile
@@ -163,7 +163,7 @@ def write_events_file(scan_dir, scan_type,
 		except ImportError:
 			scan_dir_contents = os.listdir(scan_dir)
 			sequence_files = [i for i in scan_dir_contents if "sequence" in i and "tsv" in i]
-			sequence_file = sequence_files[0]
+			sequence_file = os.path.join(scan_dir, sequence_files[0])
 			mydf = pd.read_csv(sequence_file, sep="\s")
 
 	mydf['onset'] = mydf['onset'] - subject_delay

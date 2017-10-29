@@ -6,12 +6,12 @@ try:
 except (SystemError, ValueError):
 	from samri.utilities import bids_substitution_iterator
 
-def bids_infoextraction(
+def bi(
 	):
 	from samri.pipelines.extra_functions import get_data_selection
 	from samri.pipelines.utils import bids_naming
-	f_data_selection = get_data_selection('~/ni_data/test',scan_types=['CogB','CogB2m',],scan_type_category='functional')
-	s_data_selection = get_data_selection('~/ni_data/test',scan_types=['TurboRARE'],scan_type_category='structural')
+	f_data_selection = get_data_selection('~/ni_data/ss',match={'trial':['FshSbu','FshSbb']})
+	s_data_selection = get_data_selection('~/ni_data/ss',match={'acquisition':['TurboRARE']})
 	data_selection = pd.concat([s_data_selection,f_data_selection])
 	print(data_selection)
 
@@ -55,6 +55,24 @@ def rs(
 		template="~/ni_data/templates/DSURQEc_200micron_average.nii",
 		registration_mask="~/ni_data/templates/DSURQEc_200micron_mask.nii.gz",
 		actual_size=True,
+		)
+
+def ss():
+	preprocessing.bruker('~/ni_data/ss/',
+		functional_match={'trial':['FshSbu','FshSbb']},
+		structural_match={'acquisition':['TurboRARE']},
+		workflow_name='composite',
+		lowpass_sigma=2,
+		highpass_sigma=225,
+		very_nasty_bruker_delay_hack=True,
+		negative_contrast_agent=True,
+		functional_blur_xy=.4,
+		functional_registration_method="composite",
+		keep_work=True,
+		template="~/ni_data/templates/DSURQEc_200micron_average.nii",
+		registration_mask="~/ni_data/templates/DSURQEc_200micron_mask.nii.gz",
+		actual_size=True,
+		verbose=True,
 		)
 
 def bids_test():

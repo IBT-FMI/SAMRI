@@ -20,6 +20,7 @@ from nipype.interfaces import afni, bru2nii, fsl, nipy
 from samri.pipelines.nodes import *
 from samri.pipelines.utils import bids_naming, ss_to_path, sss_filename, fslmaths_invert_values, STIM_PROTOCOL_DICTIONARY
 from samri.utilities import N_PROCS
+from samri.fetch.templates import fetch_rat_waxholm, fetch_mouse_DSURQE
 
 DUMMY_SCANS=10
 N_PROCS=max(N_PROCS-4, 2)
@@ -33,14 +34,14 @@ thisscriptspath = path.dirname(path.realpath(__file__))
 scan_classification_file_path = path.join(thisscriptspath,"scan_type_classification.csv")
 
 def bruker(measurements_base,
-	functional_scan_types=[],
-	structural_scan_types=[],
+	template,
+	functional_match={},
+	structural_match={},
 	sessions=[],
 	subjects=[],
 	measurements=[],
-	exclude_subjects=[],
-	exclude_measurements=[],
-	actual_size=False,
+	exclude={},
+	actual_size=True,
 	functional_blur_xy=False,
 	functional_registration_method="structural",
 	highpass_sigma=225,
@@ -49,7 +50,6 @@ def bruker(measurements_base,
 	n_procs=N_PROCS,
 	realign="time",
 	registration_mask=False,
-	template="/home/chymera/ni_data/templates/ds_QBI_chr.nii.gz",
 	tr=1,
 	very_nasty_bruker_delay_hack=False,
 	workflow_name="generic",
@@ -64,33 +64,61 @@ def bruker(measurements_base,
 		Parameter that dictates slictiming correction and realignment of slices. "time" (FSL.SliceTimer) is default, since it works safely. Use others only with caution!
 
 	'''
+	if template:
+		if template == "mouse":
+			template = fetch_mouse_DSURQE()['template']
+		elif template == "rat":
+			template = fetch_rat_waxholm()['template']
+		else:
+			pass
+	else:
+		raise ValueError("No species or template specified")
+		return -1
 
 	measurements_base = path.abspath(path.expanduser(measurements_base))
 
-	#select all functional/sturctural scan types unless specified
-	if not functional_scan_types or not structural_scan_types:
-		scan_classification = pd.read_csv(scan_classification_file_path)
-		if not functional_scan_types:
-			functional_scan_types = list(scan_classification[(scan_classification["categories"] == "functional")]["scan_type"])
-		if not structural_scan_types:
-			structural_scan_types = list(scan_classification[(scan_classification["categories"] == "structural")]["scan_type"])
+	# select all functional/sturctural scan types unless specified
+	#if not functional_scan_types or not structural_scan_types:
+	#	scan_classification = pd.read_csv(scan_classification_file_path)
+	#	if not functional_scan_types:
+	#		functional_scan_types = list(scan_classification[(scan_classification["categories"] == "functional")]["scan_type"])
+	#	if not structural_scan_types:
+	#		structural_scan_types = list(scan_classification[(scan_classification["categories"] == "structural")]["scan_type"])
 
 	#hack to allow structural scan type disabling:
-	if structural_scan_types == -1:
-		structural_scan_types = []
+	#if structural_scan_types == -1:
+	#	structural_scan_types = []
+
+	# add subject and session filters if present
+	if subjects:
+		structural_scan_types['subject'] = subjects
+	if sessions:
+		structural_scan_types['session'] = sessions
 
 	# define measurement directories to be processed, and populate the list either with the given include_measurements, or with an intelligent selection
-	scan_types = deepcopy(functional_scan_types)
-	scan_types.extend(structural_scan_types)
-	data_selection = get_data_selection(measurements_base, sessions, scan_types=scan_types, subjects=subjects, exclude_subjects=exclude_subjects, measurements=measurements, exclude_measurements=exclude_measurements)
+	data_selection = pd.DataFrame([])
+	if structural_match:
+		s_data_selection = get_data_selection(measurements_base,
+			match=structural_match,
+			exclude=exclude,
+			)
+		structural_scan_types = s_data_selection['scan_type'].unique()
+		data_selection = pd.concat([data_selection,s_data_selection])
+	if functional_match:
+		f_data_selection = get_data_selection(measurements_base,
+			match=functional_match,
+			exclude=exclude,
+			)
+		functional_scan_types = f_data_selection['scan_type'].unique()
+		data_selection = pd.concat([data_selection,f_data_selection])
 	if not subjects:
 		subjects = set(list(data_selection["subject"]))
 	if not sessions:
 		sessions = set(list(data_selection["session"]))
 
 	# we currently only support one structural scan type per session
-	if functional_registration_method in ("structural", "composite") and structural_scan_types:
-		structural_scan_types = [structural_scan_types[0]]
+	#if functional_registration_method in ("structural", "composite") and structural_scan_types:
+	#	structural_scan_types = [structural_scan_types[0]]
 
 	# we start to define nipype workflow elements (nodes, connections, meta)
 	subjects_sessions = data_selection[["subject","session"]].drop_duplicates().values.tolist()
@@ -121,9 +149,11 @@ def bruker(measurements_base,
 	bids_filename = pe.Node(name='bids_filename', interface=util.Function(function=bids_naming,input_names=inspect.getargspec(bids_naming)[0], output_names=['filename']))
 	bids_filename.inputs.metadata = data_selection
 
-	bids_stim_filename = pe.Node(name='bids_stim_filename', interface=util.Function(function=sss_filename,input_names=inspect.getargspec(sss_filename)[0], output_names=['filename']))
+	#bids_stim_filename = pe.Node(name='bids_stim_filename', interface=util.Function(function=sss_filename,input_names=inspect.getargspec(sss_filename)[0], output_names=['filename']))
+	bids_stim_filename = pe.Node(name='bids_stim_filename', interface=util.Function(function=bids_naming,input_names=inspect.getargspec(bids_naming)[0], output_names=['filename']))
 	bids_stim_filename.inputs.suffix = "events"
 	bids_stim_filename.inputs.extension = ".tsv"
+	bids_stim_filename.inputs.metadata = data_selection
 
 	events_file = pe.Node(name='events_file', interface=util.Function(function=write_events_file,input_names=inspect.getargspec(write_events_file)[0], output_names=['out_file']))
 	events_file.inputs.dummy_scans_ms = DUMMY_SCANS * tr * 1000
@@ -141,7 +171,7 @@ def bruker(measurements_base,
 	workflow_connections = [
 		(infosource, get_f_scan, [('subject_session', 'selector')]),
 		(infosource, bids_stim_filename, [('subject_session', 'subject_session')]),
-		(get_f_scan, bids_stim_filename, [('scan_type', 'scan')]),
+		(get_f_scan, bids_stim_filename, [('scan_type', 'scan_type')]),
 		(get_f_scan, f_bru2nii, [('scan_path', 'input_dir')]),
 		(f_bru2nii, dummy_scans, [('nii_file', 'in_file')]),
 		(get_f_scan, dummy_scans, [('scan_path', 'scan_dir')]),
@@ -187,7 +217,7 @@ def bruker(measurements_base,
 	else:
 		s_biascorrect, f_biascorrect = inflated_size_nodes()
 
-	if structural_scan_types:
+	if structural_scan_types.any():
 		get_s_scan = pe.Node(name='get_s_scan', interface=util.Function(function=get_scan, input_names=inspect.getargspec(get_scan)[0], output_names=['scan_path','scan_type']))
 		if not strict:
 			get_s_scan.inputs.ignore_exception = True
@@ -199,8 +229,9 @@ def bruker(measurements_base,
 		s_bru2nii.inputs.force_conversion=True
 		s_bru2nii.inputs.actual_size=actual_size
 
-		s_bids_filename = pe.Node(name='s_bids_filename', interface=util.Function(function=sss_filename,input_names=inspect.getargspec(sss_filename)[0], output_names=['filename']))
-		s_bids_filename.inputs.scan_prefix = False
+		#s_bids_filename = pe.Node(name='s_bids_filename', interface=util.Function(function=sss_filename,input_names=inspect.getargspec(sss_filename)[0], output_names=['filename']))
+		s_bids_filename = pe.Node(name='s_bids_filename', interface=util.Function(function=bids_naming,input_names=inspect.getargspec(bids_naming)[0], output_names=['filename']))
+		s_bids_filename.inputs.metadata = data_selection
 
 		if actual_size:
 			s_register, s_warp, _, _ = DSURQEc_structural_registration(template, registration_mask)
@@ -266,12 +297,10 @@ def bruker(measurements_base,
 			(infosource, get_s_scan, [('subject_session', 'selector')]),
 			(infosource, s_bids_filename, [('subject_session', 'subject_session')]),
 			(get_s_scan, s_bru2nii, [('scan_path','input_dir')]),
-			(get_s_scan, s_bids_filename, [('scan_type', 'scan')]),
+			(get_s_scan, s_bids_filename, [('scan_type', 'scan_type')]),
 			(s_bids_filename, s_warp, [('filename','output_image')]),
 			(s_bru2nii, s_biascorrect, [('nii_file', 'input_image')]),
 			])
-
-
 
 	if functional_registration_method == "structural":
 		if not structural_scan_types:
@@ -298,7 +327,7 @@ def bruker(measurements_base,
 
 
 	if functional_registration_method == "composite":
-		if not structural_scan_types:
+		if not structural_scan_types.any():
 			raise ValueError('The option `registration="composite"` requires there to be a structural scan type.')
 		_, _, f_register, f_warp = DSURQEc_structural_registration(template, registration_mask)
 

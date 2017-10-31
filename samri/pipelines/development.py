@@ -1,9 +1,22 @@
 from os import path
+import pandas as pd
 import preprocessing, glm, fc
 try:
 	from ..utilities import bids_substitution_iterator
 except (SystemError, ValueError):
 	from samri.utilities import bids_substitution_iterator
+
+def bi(
+	):
+	from samri.pipelines.extra_functions import get_data_selection
+	from samri.pipelines.utils import bids_naming
+	f_data_selection = get_data_selection('~/ni_data/ss',match={'trial':['FshSbu','FshSbb']})
+	s_data_selection = get_data_selection('~/ni_data/ss',match={'acquisition':['TurboRARE']})
+	data_selection = pd.concat([s_data_selection,f_data_selection])
+	print(data_selection)
+
+	print(bids_naming(metadata=data_selection,scan_type='EPI_CBV_CogB', subject_session=('5706','ofMpF')))
+	return
 
 def dbu(
 	data_path="~/ni_data/DBu/",
@@ -44,9 +57,28 @@ def rs(
 		actual_size=True,
 		)
 
+def ss():
+	preprocessing.bruker('~/ni_data/ss/',
+		functional_match={'trial':['FshSbu','FshSbb']},
+		structural_match={'acquisition':['TurboRARE']},
+		workflow_name='composite',
+		lowpass_sigma=2,
+		highpass_sigma=225,
+		very_nasty_bruker_delay_hack=True,
+		negative_contrast_agent=True,
+		functional_blur_xy=.4,
+		functional_registration_method="composite",
+		keep_work=True,
+		template="~/ni_data/templates/DSURQEc_200micron_average.nii",
+		registration_mask="~/ni_data/templates/DSURQEc_200micron_mask.nii.gz",
+		actual_size=True,
+		verbose=True,
+		)
+
 def bids_test():
 	preprocessing.bruker('~/ni_data/test/',
-		functional_scan_types=["chr_longSOA","jb_long"],
+		functional_match={'trial':['CogB','CogB2m','JogB']},
+		structural_match={'acquisition':['TurboRARE','TurboRARElowcov']},
 		workflow_name='composite',
 		lowpass_sigma=2,
 		highpass_sigma=225,

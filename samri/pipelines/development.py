@@ -195,10 +195,3 @@ def run_level1_glm():
 		habituation='confound',
 		mask="/home/chymera/ni_data/templates/DSURQEc_200micron_mask.nii.gz",
 		keep_work=True)
-
-if __name__ == '__main__':
-	# test_dual_regression()
-#	vta_composite()
-	cbv_composite("~/ni_data/ofM.dr/","composite")
-#	dr_only()
-#	run_level1_glm()

@@ -10,11 +10,11 @@ except NameError:
 
 def structural_per_participant_test(participant,
 	conditions=["","_aF","_cF1","_cF2","_pF"],
-	template="/home/chymera/ni_data/templates/ds_QBI_chr.nii.gz",
+	template="~/ni_data/templates/ds_QBI_chr.nii.gz",
 	):
 
 	for i in conditions:
-		image_dir = "/home/chymera/ni_data/ofM.dr/preprocessing/generic_work/_subject_session_{}.ofM{}/_scan_type_T2_TurboRARE/s_bru2nii/".format(participant,i)
+		image_dir = "~/ni_data/ofM.dr/preprocessing/generic_work/_subject_session_{}.ofM{}/_scan_type_T2_TurboRARE/s_bru2nii/".format(participant,i)
 		print(image_dir)
 		try:
 			for myfile in os.listdir(image_dir):
@@ -283,9 +283,9 @@ def structural_rigid(template="/Users/marksm/GitHub/mriPipeline/ants_test/templa
 
 def functional_per_participant_test():
 	for i in ["","_aF","_cF1","_cF2","_pF"]:
-		template = "/home/chymera/ni_data/templates/ds_QBI_chr.nii.gz"
+		template = "~/ni_data/templates/ds_QBI_chr.nii.gz"
 		participant = "4008"
-		image_dir = "/home/chymera/ni_data/ofM.dr/preprocessing/generic_work/_subject_session_{}.ofM{}/_scan_type_7_EPI_CBV/temporal_mean/".format(participant,i)
+		image_dir = "~/ni_data/ofM.dr/preprocessing/generic_work/_subject_session_{}.ofM{}/_scan_type_7_EPI_CBV/temporal_mean/".format(participant,i)
 		try:
 			for myfile in os.listdir(image_dir):
 				if myfile.endswith(".nii.gz"):

@@ -143,7 +143,7 @@ def structural(substitutions, parameters,
 			struct_registration.inputs.winsorize_lower_quantile = 0.05
 			struct_registration.inputs.winsorize_upper_quantile = 0.95
 			struct_registration.inputs.args = '--float'
-			struct_registration.inputs.fixed_image_mask = "/home/chymera/ni_data/templates/DSURQEc_200micron_mask.nii"
+			struct_registration.inputs.fixed_image_mask = "~/ni_data/templates/DSURQEc_200micron_mask.nii"
 			struct_registration.inputs.num_threads = threads
 			struct_registration.inputs.output_warped_image = os.path.join(workdir,'{subject}_{session}.nii.gz'.format(**substitution))
 			struct_registration.inputs.moving_image = n4_out

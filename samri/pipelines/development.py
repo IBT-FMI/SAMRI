@@ -93,13 +93,15 @@ def bids_test():
 		verbose=True,
 		)
 
-def cbv_composite(data_path,workflow_name,
+def cbv_composite(data_path="~/ni_data/ofM.dr/",
+	workflow_name='composite',
 	preprocessing_dir="preprocessing",
 	l1_dir="l1",
 	):
 	preprocessing.bruker(data_path,
 		#exclude_measurements=['20151027_121613_4013_1_1'],
-		functional_scan_types=["EPI_CBV_chr_longSOA","EPI_CBV_jb_long"],
+		functional_match={'trial':['CogB','JogB']},
+		structural_match={'acquisition':['TurboRARE','TurboRARElowcov']},
 		#subjects=["4007","4008","4011","4012","5687","5688","5695","5689","5690","5691","5703","5704","5706"],
 		#subjects=["4007","4008","5687","5688","5704",
 		#	"5692","6262","5694","5700","6255","5699"],

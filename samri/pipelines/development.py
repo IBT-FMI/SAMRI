@@ -1,10 +1,7 @@
 from os import path
 import pandas as pd
-import preprocessing, glm, fc
-try:
-	from ..utilities import bids_substitution_iterator
-except (SystemError, ValueError):
-	from samri.utilities import bids_substitution_iterator
+from samri.pipelines import preprocessing, glm, fc
+from samri.utilities import bids_substitution_iterator
 
 def bi(
 	):

@@ -33,14 +33,13 @@ fsl.FSLCommand.set_default_output_type('NIFTI_GZ')
 thisscriptspath = path.dirname(path.realpath(__file__))
 scan_classification_file_path = path.join(thisscriptspath,"scan_type_classification.csv")
 
-def bruker(measurements_base,
-	template,
+def bruker(measurements_base, template,
+	debug=False,
+	exclude={},
 	functional_match={},
 	structural_match={},
 	sessions=[],
 	subjects=[],
-	measurements=[],
-	exclude={},
 	actual_size=True,
 	functional_blur_xy=False,
 	functional_registration_method="structural",
@@ -111,10 +110,6 @@ def bruker(measurements_base,
 			)
 		functional_scan_types = f_data_selection['scan_type'].unique()
 		data_selection = pd.concat([data_selection,f_data_selection])
-	if not subjects:
-		subjects = set(list(data_selection["subject"]))
-	if not sessions:
-		sessions = set(list(data_selection["session"]))
 
 	# we currently only support one structural scan type per session
 	#if functional_registration_method in ("structural", "composite") and structural_scan_types:
@@ -122,7 +117,12 @@ def bruker(measurements_base,
 
 	# we start to define nipype workflow elements (nodes, connections, meta)
 	subjects_sessions = data_selection[["subject","session"]].drop_duplicates().values.tolist()
-	infosource = pe.Node(interface=util.IdentityInterface(fields=['subject_session']), name="infosource")
+	if debug:
+		print('Data selection:')
+		print(data_selection)
+		print('Iterating over:')
+		print(subjects_sessions)
+	infosource = pe.Node(interface=util.IdentityInterface(fields=['subject_session'], mandatory_inputs=False), name="infosource")
 	infosource.iterables = [('subject_session', subjects_sessions)]
 
 	get_f_scan = pe.Node(name='get_f_scan', interface=util.Function(function=get_scan,input_names=inspect.getargspec(get_scan)[0], output_names=['scan_path','scan_type']))
@@ -436,14 +436,24 @@ def bruker(measurements_base,
 			(f_warp, bandpass, [('output_image', 'in_file')]),
 			])
 
+	workflow_config = {'execution': {'crashdump_dir': path.join(measurements_base,'preprocessing/crashdump'),}}
+	if debug:
+		workflow_config['logging'] = {
+			'workflow_level':'DEBUG',
+			'utils_level':'DEBUG',
+			'interface_level':'DEBUG',
+			'filemanip_level':'DEBUG',
+			'log_to_file':'true',
+			}
+
 	workdir_name = workflow_name+"_work"
 	workflow = pe.Workflow(name=workdir_name)
 	workflow.connect(workflow_connections)
 	workflow.base_dir = path.join(measurements_base,"preprocessing")
-	workflow.config = {"execution": {"crashdump_dir": path.join(measurements_base,"preprocessing/crashdump")}}
+	workflow.config = workflow_config
 	workflow.write_graph(dotfilename=path.join(workflow.base_dir,workdir_name,"graph.dot"), graph2use="hierarchical", format="png")
 
-	workflow.run(plugin="MultiProc",  plugin_args={'n_procs' : n_procs})
+	workflow.run(plugin="MultiProc", plugin_args={'n_procs' : n_procs})
 	if not keep_work:
 		shutil.rmtree(path.join(workflow.base_dir,workdir_name))
 

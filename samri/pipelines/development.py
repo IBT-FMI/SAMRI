@@ -123,7 +123,7 @@ def cbv_composite(data_path="~/ni_data/ofM.dr/",
 		workflow_name=workflow_name,
 		# include={"subjects":["5689","5690","5691"]},
 		habituation="confound",
-		mask="/home/chymera/ni_data/templates/DSURQEc_200micron_mask.nii.gz",
+		mask="~/ni_data/templates/DSURQEc_200micron_mask.nii.gz",
 		keep_work=True,
 		)
 	glm.l2_common_effect(path.join(data_path,l1_dir,workflow_name),
@@ -131,14 +131,14 @@ def cbv_composite(data_path="~/ni_data/ofM.dr/",
 		exclude={"scans":["EPI_BOLD_"],},
 		groupby="subject",
 		keep_work=True,
-		mask="/home/chymera/ni_data/templates/DSURQEc_200micron_mask.nii.gz",
+		mask="~/ni_data/templates/DSURQEc_200micron_mask.nii.gz",
 		)
 	glm.l2_common_effect(path.join(data_path,l1_dir,workflow_name),
 		workflow_name="composite_sessions_responders",
 		exclude={"scans":["EPI_BOLD_"],"subjects":["4001","4002","4003","4004","4006","4008","4009","5674","5703","5704","5706"]},
 		groupby="session",
 		keep_work=True,
-		mask="/home/chymera/ni_data/templates/DSURQEc_200micron_mask.nii.gz",
+		mask="~/ni_data/templates/DSURQEc_200micron_mask.nii.gz",
 		)
 
 def typical_resp(data_path='~/ni_data/ofM.dr/', l1_dir='l1', workflow_name='composite'):
@@ -148,13 +148,13 @@ def typical_resp(data_path='~/ni_data/ofM.dr/', l1_dir='l1', workflow_name='comp
 		trials=["EPI_CBV_chr_longSOA"],
 		groupby="session",
 		keep_work=True,
-		mask="/home/chymera/ni_data/templates/DSURQEc_200micron_mask.nii.gz",
+		mask="~/ni_data/templates/DSURQEc_200micron_mask.nii.gz",
 		)
 
 
 def dr_only():
 	glm.l1("~/ni_data/ofM.dr/preprocessing/_composite",
-		mask="/home/chymera/ni_data/templates/roi/f_dr_chr.nii.gz",
+		mask="~/ni_data/templates/roi/f_dr_chr.nii.gz",
 		workflow_name="dr",
 		# include={"subjects":["5689","5690","5691"]},
 		habituation="confound",
@@ -162,14 +162,14 @@ def dr_only():
 		)
 
 def dr_composite():
-	preprocessing.bruker("/home/chymera/ni_data/ofM.dr/",exclude_measurements=['20151027_121613_4013_1_1'], workflow_name="composite", very_nasty_bruker_delay_hack=True, negative_contrast_agent=True, functional_blur_xy=4, functional_registration_method="composite")
-	glm.l1("~/ni_data/ofM.dr/preprocessing/composite", workflow_name="composite", include={"subjects":[i for i in range(4001,4010)]+[4011,4012]}, habituation="confound",mask="/home/chymera/ni_data/templates/ds_QBI_chr_bin.nii.gz",keep_work=True)
-	glm.l1("~/ni_data/ofM.dr/preprocessing/composite", workflow_name="composite_dr", include={"subjects":[i for i in range(4001,4010)]+[4011,4012]}, habituation="confound",mask="/home/chymera/ni_data/templates/roi/f_dr_chr_bin.nii.gz",)
+	preprocessing.bruker("~/ni_data/ofM.dr/",exclude_measurements=['20151027_121613_4013_1_1'], workflow_name="composite", very_nasty_bruker_delay_hack=True, negative_contrast_agent=True, functional_blur_xy=4, functional_registration_method="composite")
+	glm.l1("~/ni_data/ofM.dr/preprocessing/composite", workflow_name="composite", include={"subjects":[i for i in range(4001,4010)]+[4011,4012]}, habituation="confound",mask="~/ni_data/templates/ds_QBI_chr_bin.nii.gz",keep_work=True)
+	glm.l1("~/ni_data/ofM.dr/preprocessing/composite", workflow_name="composite_dr", include={"subjects":[i for i in range(4001,4010)]+[4011,4012]}, habituation="confound",mask="~/ni_data/templates/roi/f_dr_chr_bin.nii.gz",)
 	glm.l2_common_effect("~/ni_data/ofM.dr/l1/composite", workflow_name="subjectwise_composite", groupby="subject")
 	glm.l2_common_effect("~/ni_data/ofM.dr/l1/composite", workflow_name="sessionwise_composite", groupby="session", exclude={"subjects":["4001","4002","4003","4004","4005","4006","4009","4011","4013"]})
 	glm.l2_common_effect("~/ni_data/ofM.dr/l1/composite", workflow_name="sessionwise_composite_w4011", groupby="session", exclude={"subjects":["4001","4002","4003","4004","4005","4006","4009","4013"]})
 def vta_composite():
-	preprocessing.bruker("/home/chymera/ni_data/ofM.vta/",workflow_name="composite", very_nasty_bruker_delay_hack=False, negative_contrast_agent=True, functional_blur_xy=4, functional_registration_method="composite")
+	preprocessing.bruker("~/ni_data/ofM.vta/",workflow_name="composite", very_nasty_bruker_delay_hack=False, negative_contrast_agent=True, functional_blur_xy=4, functional_registration_method="composite")
 
 def test_dual_regression(group_level="migp"):
 	substitutions_a = bids_substitution_iterator(
@@ -195,12 +195,5 @@ def run_level1_glm():
 	glm.l1(preprocessing_dir='~/bandpass_ni_data/rsfM/preprocessing/composite',
 		workflow_name='as_composite',
 		habituation='confound',
-		mask="/home/chymera/ni_data/templates/DSURQEc_200micron_mask.nii.gz",
+		mask="~/ni_data/templates/DSURQEc_200micron_mask.nii.gz",
 		keep_work=True)
-
-if __name__ == '__main__':
-	# test_dual_regression()
-#	vta_composite()
-	cbv_composite("~/ni_data/ofM.dr/","composite")
-#	dr_only()
-#	run_level1_glm()

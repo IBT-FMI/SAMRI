@@ -14,7 +14,7 @@ def get_subjectinfo(subject_delay, scan_type, scan_types):
 	import pandas as pd
 	from copy import deepcopy
 	import sys
-	sys.path.append('/home/chymera/src/LabbookDB/db/')
+	sys.path.append('~/src/LabbookDB/db/')
 	from query import loadSession
 	from common_classes import LaserStimulationProtocol
 	db_path="~/meta.db"
@@ -75,7 +75,7 @@ def test_model(base_dir, plot=False, workflow_name="test_model_wf"):
 
 	specify_model = pe.Node(interface=SpecifyModel(), name="specify_model")
 	specify_model.inputs.input_units = 'secs'
-	specify_model.inputs.functional_runs = ["/home/chymera/ni_data/ofM.dr/level1/Preprocessing/_condition_ofM_subject_4011/functional_bandpass/corr_16_trans_filt.nii.gz"]
+	specify_model.inputs.functional_runs = ["~/ni_data/ofM.dr/level1/Preprocessing/_condition_ofM_subject_4011/functional_bandpass/corr_16_trans_filt.nii.gz"]
 	specify_model.inputs.time_repetition = 1
 	specify_model.inputs.high_pass_filter_cutoff = 0 #switch to 240
 	specify_model.inputs.subject_info = subjectinfo(49.55)
@@ -127,7 +127,7 @@ def test_multiconnection():
 	workflow.connect(workflow_connections)
 	workflow.write_graph(dotfilename="graph.dot", graph2use="flat", format="png")
 
-	workflow.base_dir = "/home/chymera/test"
+	workflow.base_dir = "~/test"
 	workflow.run(plugin="MultiProc",  plugin_args={'n_procs' : 4})
 
 def test_connections():
@@ -158,13 +158,13 @@ def test_connections():
 	workflow.connect(workflow_connections)
 	workflow.write_graph(dotfilename="graph.dot", graph2use="flat", format="png")
 
-	workflow.base_dir = "/home/chymera/test"
+	workflow.base_dir = "~/test"
 	workflow.run(plugin="MultiProc",  plugin_args={'n_procs' : 4})
 
 
 if __name__ == '__main__':
-	# plotmodel("/home/chymera/src/chyMRI/tests/test_model_wf/level1design/run0.mat")
-	# test_model("/home/chymera/src/chyMRI/tests", plot=True)
+	# plotmodel("~/src/chyMRI/tests/test_model_wf/level1design/run0.mat")
+	# test_model("~/src/chyMRI/tests", plot=True)
 	test_multiconnection()
 	# scan_type = "EPI_CBV_jin10"
 	# scan_types = {'EPI_CBV_jin10': 'jin10', 'EPI_CBV_jin60': 'jin60'}

@@ -177,7 +177,7 @@ def get_subjectinfo(subject_delay, scan_type, scan_types):
 	import numpy as np
 	from copy import deepcopy
 	import sys
-	sys.path.append('/home/chymera/src/LabbookDB/db/')
+	sys.path.append('~/src/LabbookDB/db/')
 	from query import load_session
 	from common_classes import StimulationProtocol
 	db_path="~/syncdata/meta.db"

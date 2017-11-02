@@ -105,7 +105,7 @@ def l1(preprocessing_dir,
 	glm.inputs.out_t_name = "t_stat.nii.gz"
 	glm.inputs.out_p_name = "p_stat.nii.gz"
 	if mask:
-		glm.inputs.mask = mask
+		glm.inputs.mask = path.abspath(path.expanduser(mask))
 
 	cope_filename = pe.Node(name='cope_filename', interface=util.Function(function=sss_to_source,input_names=inspect.getargspec(sss_to_source)[0], output_names=['filename']))
 	cope_filename.inputs.source_format = "sub-{0}_ses-{1}_trial-{2}_cope.nii.gz"

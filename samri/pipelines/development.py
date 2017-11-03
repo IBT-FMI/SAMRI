@@ -69,7 +69,7 @@ def ss():
 		verbose=True,
 		)
 
-def bids_test():
+def aic():
 	preprocessing.bruker('~/ni_data/test/',
 		functional_match={'trial':['CogB','CogB2m','JogB']},
 		structural_match={'acquisition':['TurboRARE','TurboRARElowcov']},
@@ -85,6 +85,13 @@ def bids_test():
 		registration_mask="~/ni_data/templates/DSURQEc_200micron_mask.nii.gz",
 		actual_size=True,
 		verbose=True,
+		)
+	glm.l1('~/ni_data/test/preprocessing/composite',
+		workflow_name='higher',
+		# include={"subjects":["5689","5690","5691"]},
+		habituation="confound",
+		mask="~/ni_data/templates/DSURQEc_200micron_mask.nii.gz",
+		keep_work=True,
 		)
 
 def cbv_composite(data_path="~/ni_data/ofM.dr/",

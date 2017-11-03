@@ -28,6 +28,7 @@ def l1(preprocessing_dir,
 	habituation="",
 	tr=1,
 	workflow_name="generic",
+	bf_path = '~/ni_data/irfs/chr_beta1.txt',
 	):
 	"""Calculate subject level GLM statistics.
 
@@ -81,7 +82,9 @@ def l1(preprocessing_dir,
 
 	level1design = pe.Node(interface=Level1Design(), name="level1design")
 	level1design.inputs.interscan_interval = tr
-	level1design.inputs.bases = {"custom": {"bfcustompath":"/mnt/data/ni_data/irfs/chr_beta1.txt"}}
+	if bf_path:
+		bf_path = path.abspath(path.expanduser(bf_path))
+		level1design.inputs.bases = {"custom": {"bfcustompath":bf_path}}
 	# level1design.inputs.bases = {'gamma': {'derivs':False, 'gammasigma':10, 'gammadelay':5}}
 	level1design.inputs.orthogonalization = {1: {0:0,1:0,2:0}, 2: {0:1,1:1,2:0}}
 	level1design.inputs.model_serial_correlations = True

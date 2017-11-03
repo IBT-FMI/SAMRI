@@ -42,7 +42,17 @@ def gen_info(run_event_files, one_condition_file, habituation_regressor):
 				eventfile_data = list(csv.reader(tsv, delimiter="\t"))
 				if isinstance(eventfile_data[0][0], str):
 					eventfile_data = eventfile_data[1:]
-				eventfile_data = [[round(float(i)) for i in sublist] for sublist in eventfile_data]
+				eventfile_data_ = []
+				for sublist in eventfile_data:
+					sublist_ = []
+					for i in sublist:
+						try:
+							i_ = round(float(i))
+						except ValueError:
+							i_ = i
+						sublist_.append(i_)
+					eventfile_data_.append(sublist_)
+				eventfile_data = eventfile_data_
 				if one_condition_file:
 					name = "e0"
 					onsets = [i[0] for i in eventfile_data]

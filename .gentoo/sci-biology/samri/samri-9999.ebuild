@@ -5,12 +5,10 @@ EAPI=6
 
 PYTHON_COMPAT=( python{2_7,3_4,3_5} )
 
-inherit distutils-r1 git-r3
+inherit distutils-r1
 
 DESCRIPTION="Small Animal Magnetic Resonance Imaging"
 HOMEPAGE="https://github.com/IBT-FMI/SAMRI"
-SRC_URI=""
-EGIT_REPO_URI="https://github.com/IBT-FMI/SAMRI"
 
 LICENSE="GPL-3"
 SLOT="0"
@@ -38,3 +36,8 @@ RDEPEND="
 	sci-biology/afni
 	sci-biology/nilearn[${PYTHON_USEDEP}]
 	"
+
+src_unpack() {
+	cp -r -L "$DOTGENTOO_PACKAGE_ROOT" "$S"
+}
+

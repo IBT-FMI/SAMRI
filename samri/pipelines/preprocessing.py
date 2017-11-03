@@ -125,7 +125,7 @@ def bruker(measurements_base, template,
 	infosource = pe.Node(interface=util.IdentityInterface(fields=['subject_session'], mandatory_inputs=False), name="infosource")
 	infosource.iterables = [('subject_session', subjects_sessions)]
 
-	get_f_scan = pe.Node(name='get_f_scan', interface=util.Function(function=get_scan,input_names=inspect.getargspec(get_scan)[0], output_names=['scan_path','scan_type']))
+	get_f_scan = pe.Node(name='get_f_scan', interface=util.Function(function=get_scan,input_names=inspect.getargspec(get_scan)[0], output_names=['scan_path','scan_type','trial']))
 	if not strict:
 		get_f_scan.inputs.ignore_exception = True
 	get_f_scan.inputs.data_selection = data_selection
@@ -176,7 +176,7 @@ def bruker(measurements_base, template,
 		(f_bru2nii, dummy_scans, [('nii_file', 'in_file')]),
 		(get_f_scan, dummy_scans, [('scan_path', 'scan_dir')]),
 		(get_f_scan, events_file, [
-			('scan_type', 'scan_type'),
+			('trial', 'trial'),
 			('scan_path', 'scan_dir')
 			]),
 		(events_file, datasink, [('out_file', 'func.@events')]),
@@ -218,7 +218,7 @@ def bruker(measurements_base, template,
 		s_biascorrect, f_biascorrect = inflated_size_nodes()
 
 	if structural_scan_types.any():
-		get_s_scan = pe.Node(name='get_s_scan', interface=util.Function(function=get_scan, input_names=inspect.getargspec(get_scan)[0], output_names=['scan_path','scan_type']))
+		get_s_scan = pe.Node(name='get_s_scan', interface=util.Function(function=get_scan, input_names=inspect.getargspec(get_scan)[0], output_names=['scan_path','scan_type','trial']))
 		if not strict:
 			get_s_scan.inputs.ignore_exception = True
 		get_s_scan.inputs.data_selection = data_selection

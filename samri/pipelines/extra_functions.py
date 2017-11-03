@@ -82,7 +82,7 @@ def write_function_call(frame, target_path):
 	target.write(function_call)
 	target.close()
 
-def write_events_file(scan_dir, scan_type,
+def write_events_file(scan_dir, trial,
 	stim_protocol_dictionary={},
 	db_path="~/syncdata/meta.db",
 	out_file="events.tsv",
@@ -143,9 +143,9 @@ def write_events_file(scan_dir, scan_type,
 
 		subject_delay = delay_seconds + dummy_scans_ms/1000
 	try:
-		trial_code = stim_protocol_dictionary[scan_type]
+		trial_code = stim_protocol_dictionary[trial]
 	except KeyError:
-		trial_code = scan_type
+		trial_code = trial
 
 	if not prefer_labbookdb:
 		try:
@@ -240,10 +240,12 @@ def get_level2_inputs(input_root, categories=[], participants=[], scan_types=[])
 	scan_paths = []
 	return l2_inputs
 
-def get_scan(measurements_base, data_selection, scan_type,
+def get_scan(measurements_base, data_selection,
+	scan_type=False,
 	selector=None,
 	subject=None,
 	session=None,
+	trial=False,
 	):
 	"""Return the path to a Bruker scan selected by subject, session, and scan type, based on metadata previously extracted with `samri.preprocessing.extra_functions.get_data_selection()`.
 
@@ -269,14 +271,19 @@ def get_scan(measurements_base, data_selection, scan_type,
 		subject = selector[0]
 	if not session:
 		session = selector[1]
-	filtered_data = data_selection[(data_selection["session"] == session)&(data_selection["subject"] == subject)&(data_selection["scan_type"] == scan_type)]
-	if filtered_data.empty:
-		filtered_data = data_selection[(data_selection["session"] == session)&(data_selection["subject"] == subject)&(data_selection["acq"] == scan_type)]
+	filtered_data = data_selection[(data_selection["session"] == session)&(data_selection["subject"] == subject)]
+	if trial:
+		filtered_data = filtered_data[filtered_data["trial"] == trial]
+	if scan_type:
+		filtered_data = filtered_data[filtered_data["scan_type"] == scan_type]
 	measurement_path = filtered_data["measurement"].item()
 	scan_subdir = filtered_data["scan"].item()
 	scan_path = os.path.join(measurements_base,measurement_path,scan_subdir)
 
-	return scan_path, scan_type
+	if not trial:
+		trial = filtered_data['trial'].item()
+
+	return scan_path, scan_type, trial
 
 def _get_data_selection(workflow_base,
 	sessions=[],
@@ -577,6 +584,37 @@ def get_data_selection(workflow_base,
 
 	data_selection = pd.DataFrame(selected_measurements)
 	return data_selection
+
+
+def select_from_datafind_df(df,
+	subject_session_trial=False,
+	subject=False,
+	session=False,
+	trial=False,
+	acquisition=False,
+	modality=False,
+	output='path',
+	failsafe=False,
+	):
+
+	if subject_session_trial:
+		subject, session, trial = subject_session_trial
+	if subject:
+		df = df[df['subject']==subject]
+	if session:
+		df = df[df['session']==session]
+	if trial:
+		df = df[df['trial']==trial]
+	if acquisition:
+		df = df[df['acquisition']==acquisition]
+	if modality:
+		df = df[df['modality']==modality]
+
+	if failsafe:
+		df = df.iloc[0]
+	selection = df[output].item()
+
+	return selection
 
 
 def scanprogram_structural_scan_info(scan_type, current_line, measurement_copy):

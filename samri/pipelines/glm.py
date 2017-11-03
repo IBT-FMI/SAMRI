@@ -56,10 +56,9 @@ def l1(preprocessing_dir,
 	datafind.inputs.match_regex = '.+/sub-(?P<sub>[a-zA-Z0-9]+)/ses-(?P<ses>[a-zA-Z0-9]+)/func/.*?_acq-(?P<acq>[a-zA-Z0-9]+)_trial-(?P<trial>[a-zA-Z0-9]+)_(?P<mod>[a-zA-Z0-9]+)\.(?:tsv|nii|nii\.gz)'
 	datafind_res = datafind.run()
 	data_selection = zip(*[datafind_res.outputs.sub, datafind_res.outputs.ses, datafind_res.outputs.acq, datafind_res.outputs.trial, datafind_res.outputs.mod, datafind_res.outputs.out_paths])
+	data_selection = [list(i) for i in data_selection]
 	data_selection = pd.DataFrame(data_selection,columns=('subject','session','acquisition','trial','modality','path'))
-	print(data_selection)
 
-	return
 	subjects_sessions_trials = data_selection[['subject','session','trial']].drop_duplicates().values.tolist()
 
 	infosource = pe.Node(interface=util.IdentityInterface(fields=['subject_session_trial']), name="infosource")

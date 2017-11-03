@@ -78,7 +78,6 @@ def aic():
 		highpass_sigma=225,
 		very_nasty_bruker_delay_hack=True,
 		negative_contrast_agent=True,
-		functional_blur_xy=.4,
 		functional_registration_method="composite",
 		keep_work=True,
 		template="~/ni_data/templates/DSURQEc_200micron_average.nii",
@@ -87,7 +86,7 @@ def aic():
 		verbose=True,
 		)
 	glm.l1('~/ni_data/test/preprocessing/composite',
-		workflow_name='higher',
+		workflow_name='composite',
 		# include={"subjects":["5689","5690","5691"]},
 		habituation="confound",
 		mask="~/ni_data/templates/DSURQEc_200micron_mask.nii.gz",

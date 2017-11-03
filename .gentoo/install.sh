@@ -2,12 +2,15 @@
 
 ROOT="$(realpath "$(dirname "$0")")"
 
-function localmerge(){
-	PORTDIR_OVERLAY="$ROOT" DOTGENTOO_PACKAGE_ROOT="$ROOT/../" emerge $*
+function localexec(){
+	prog="$1"
+	shift
+	PORTDIR_OVERLAY="$ROOT" DOTGENTOO_PACKAGE_ROOT="$ROOT/../" $prog "$@"
 }
 
 EBUILD="$(find . -name "*.ebuild" | head -n1)"
 
 echo "Installing ebuild $EBUILD"
 
-localmerge "$@" "$EBUILD"
+localexec ebuild "$EBUILD" manifest
+localexec emerge "$@" "$EBUILD"

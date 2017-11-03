@@ -2,6 +2,7 @@ from os import path, listdir, getcwd, remove
 from samri.pipelines.extra_functions import get_level2_inputs, get_subjectinfo, write_function_call, bids_inputs
 
 import inspect
+import pandas as pd
 import re
 import shutil
 import nipype.interfaces.io as nio
@@ -12,6 +13,7 @@ from nipype.interfaces import fsl
 from nipype.interfaces.fsl.model import Level1Design
 
 from samri.pipelines.extra_interfaces import SpecifyModel
+from samri.pipelines.extra_functions import select_from_datafind_df
 from samri.pipelines.utils import sss_to_source, ss_to_path, iterfield_selector, datasource_exclude
 
 def l1(preprocessing_dir,
@@ -51,25 +53,25 @@ def l1(preprocessing_dir,
 
 	datafind = nio.DataFinder()
 	datafind.inputs.root_paths = preprocessing_dir
-	datafind.inputs.match_regex = '.+/sub-(?P<sub>.+)/ses-(?P<ses>.+)/func/.*?_trial-(?P<scan>.+)\.nii.gz'
+	datafind.inputs.match_regex = '.+/sub-(?P<sub>[a-zA-Z0-9]+)/ses-(?P<ses>[a-zA-Z0-9]+)/func/.*?_acq-(?P<acq>[a-zA-Z0-9]+)_trial-(?P<trial>[a-zA-Z0-9]+)_(?P<mod>[a-zA-Z0-9]+)\.(?:tsv|nii|nii\.gz)'
 	datafind_res = datafind.run()
-	iterfields = zip(*[datafind_res.outputs.sub, datafind_res.outputs.ses, datafind_res.outputs.scan])
+	data_selection = zip(*[datafind_res.outputs.sub, datafind_res.outputs.ses, datafind_res.outputs.acq, datafind_res.outputs.trial, datafind_res.outputs.mod, datafind_res.outputs.out_paths])
+	data_selection = pd.DataFrame(data_selection,columns=('subject','session','acquisition','trial','modality','path'))
+	print(data_selection)
 
-	if include:
-		iterfields = iterfield_selector(iterfields, include, "include")
-	if exclude:
-		iterfields = iterfield_selector(iterfields, exclude, "exclude")
+	return
+	subjects_sessions_trials = data_selection[['subject','session','trial']].drop_duplicates().values.tolist()
 
-	infosource = pe.Node(interface=util.IdentityInterface(fields=['subject_session_scan']), name="infosource")
-	infosource.iterables = [('subject_session_scan', iterfields)]
+	infosource = pe.Node(interface=util.IdentityInterface(fields=['subject_session_trial']), name="infosource")
+	infosource.iterables = [('subject_session_trial', subjects_sessions_trials)]
 
-	datafile_source = pe.Node(name='datafile_source', interface=util.Function(function=sss_to_source,input_names=inspect.getargspec(sss_to_source)[0], output_names=['out_file']))
-	datafile_source.inputs.base_directory = preprocessing_dir
-	datafile_source.inputs.source_format = "sub-{0}/ses-{1}/func/sub-{0}_ses-{1}_trial-{2}.nii.gz"
+	datafile_source = pe.Node(name='datafile_source', interface=util.Function(function=select_from_datafind_df, input_names=inspect.getargspec(select_from_datafind_df)[0], output_names=['out_file']))
+	datafile_source.inputs.modality = 'cbv'
+	datafile_source.inputs.df = data_selection
 
-	eventfile_source = pe.Node(name='eventfile_source', interface=util.Function(function=sss_to_source,input_names=inspect.getargspec(sss_to_source)[0], output_names=['out_file']))
-	eventfile_source.inputs.base_directory = preprocessing_dir
-	eventfile_source.inputs.source_format = "sub-{0}/ses-{1}/func/sub-{0}_ses-{1}_trial-{2}_events.tsv"
+	eventfile_source = pe.Node(name='eventfile_source', interface=util.Function(function=select_from_datafind_df, input_names=inspect.getargspec(select_from_datafind_df)[0], output_names=['out_file']))
+	eventfile_source.inputs.modality = 'events'
+	eventfile_source.inputs.df = data_selection
 
 	specify_model = pe.Node(interface=SpecifyModel(), name="specify_model")
 	specify_model.inputs.input_units = 'secs'
@@ -125,8 +127,8 @@ def l1(preprocessing_dir,
 	datasink.inputs.parameterization = False
 
 	workflow_connections = [
-		(infosource, datafile_source, [('subject_session_scan', 'subject_session_scan')]),
-		(infosource, eventfile_source, [('subject_session_scan', 'subject_session_scan')]),
+		(infosource, datafile_source, [('subject_session_trial', 'subject_session_trial')]),
+		(infosource, eventfile_source, [('subject_session_trial', 'subject_session_trial')]),
 		(eventfile_source, specify_model, [('out_file', 'event_files')]),
 		(datafile_source, specify_model, [('out_file', 'functional_runs')]),
 		(specify_model, level1design, [('session_info', 'session_info')]),
@@ -135,13 +137,13 @@ def l1(preprocessing_dir,
 		(datafile_source, glm, [('out_file', 'in_file')]),
 		(modelgen, glm, [('design_file', 'design')]),
 		(modelgen, glm, [('con_file', 'contrasts')]),
-		(infosource, datasink, [(('subject_session_scan',ss_to_path), 'container')]),
-		(infosource, cope_filename, [('subject_session_scan', 'subject_session_scan')]),
-		(infosource, varcb_filename, [('subject_session_scan', 'subject_session_scan')]),
-		(infosource, tstat_filename, [('subject_session_scan', 'subject_session_scan')]),
-		(infosource, zstat_filename, [('subject_session_scan', 'subject_session_scan')]),
-		(infosource, pstat_filename, [('subject_session_scan', 'subject_session_scan')]),
-		(infosource, pfstat_filename, [('subject_session_scan', 'subject_session_scan')]),
+		(infosource, datasink, [(('subject_session_trial',ss_to_path), 'container')]),
+		(infosource, cope_filename, [('subject_session_trial', 'subject_session_scan')]),
+		(infosource, varcb_filename, [('subject_session_trial', 'subject_session_scan')]),
+		(infosource, tstat_filename, [('subject_session_trial', 'subject_session_scan')]),
+		(infosource, zstat_filename, [('subject_session_trial', 'subject_session_scan')]),
+		(infosource, pstat_filename, [('subject_session_trial', 'subject_session_scan')]),
+		(infosource, pfstat_filename, [('subject_session_trial', 'subject_session_scan')]),
 		(cope_filename, glm, [('filename', 'out_cope')]),
 		(varcb_filename, glm, [('filename', 'out_varcb_name')]),
 		(tstat_filename, glm, [('filename', 'out_t_name')]),

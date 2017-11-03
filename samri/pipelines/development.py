@@ -3,17 +3,14 @@ import pandas as pd
 from samri.pipelines import preprocessing, glm, fc
 from samri.utilities import bids_substitution_iterator
 
-def bi(
-	):
-	from samri.pipelines.extra_functions import get_data_selection
-	from samri.pipelines.utils import bids_naming
-	f_data_selection = get_data_selection('~/ni_data/ss',match={'trial':['FshSbu','FshSbb']})
-	s_data_selection = get_data_selection('~/ni_data/ss',match={'acquisition':['TurboRARE']})
-	data_selection = pd.concat([s_data_selection,f_data_selection])
-	print(data_selection)
-
-	print(bids_naming(metadata=data_selection,scan_type='EPI_CBV_CogB', subject_session=('5706','ofMpF')))
-	return
+def higher():
+	glm.l1('~/ni_data/test/preprocessing/composite',
+		workflow_name='higher',
+		# include={"subjects":["5689","5690","5691"]},
+		habituation="confound",
+		mask="~/ni_data/templates/DSURQEc_200micron_mask.nii.gz",
+		keep_work=True,
+		)
 
 def dbu(
 	data_path="~/ni_data/DBu/",

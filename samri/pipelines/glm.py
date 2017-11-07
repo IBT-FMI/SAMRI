@@ -219,16 +219,28 @@ def l2_common_effect(l1_dir,
 	if not l2_dir:
 		l2_dir = path.abspath(path.join(l1_dir,"..","..","l2"))
 
+	mask=path.abspath(path.expanduser(mask))
+
 	datafind = nio.DataFinder()
 	datafind.inputs.root_paths = l1_dir
-	datafind.inputs.match_regex = '.+/sub-(?P<sub>.+)/ses-(?P<ses>.+)/.*?_trial-(?P<trial>.+)_cope\.nii.gz'
+	datafind.inputs.match_regex = '.+/sub-(?P<sub>[a-zA-Z0-9]+)/ses-(?P<ses>[a-zA-Z0-9]+)/.*?_acq-(?P<acq>[a-zA-Z0-9]+)_trial-(?P<trial>[a-zA-Z0-9]+)_(?P<mod>[a-zA-Z0-9]+)_(?P<stat>[a-zA-Z0-9]+)\.(?:tsv|nii|nii\.gz)'
 	datafind_res = datafind.run()
-	if not subjects:
-		subjects = set(datafind_res.outputs.sub)
-	if not sessions:
-		sessions = set(datafind_res.outputs.ses)
-	if not trials:
-		trials = set(datafind_res.outputs.trial)
+	data_selection = zip(*[datafind_res.outputs.sub, datafind_res.outputs.ses, datafind_res.outputs.acq, datafind_res.outputs.trial, datafind_res.outputs.mod, datafind_res.outputs.out_paths])
+	data_selection = [list(i) for i in data_selection]
+	data_selection = pd.DataFrame(data_selection,columns=('subject','session','acquisition','trial','modality','path'))
+
+	#bids_dictionary = data_selection[data_selection['modality']=='cbv'].drop_duplicates().T.to_dict().values()
+
+	#datafind = nio.DataFinder()
+	#datafind.inputs.root_paths = l1_dir
+	#datafind.inputs.match_regex = '.+/sub-(?P<sub>.+)/ses-(?P<ses>.+)/.*?_trial-(?P<trial>.+)_cope\.nii.gz'
+	#datafind_res = datafind.run()
+	#if not subjects:
+	#	subjects = set(datafind_res.outputs.sub)
+	#if not sessions:
+	#	sessions = set(datafind_res.outputs.ses)
+	#if not trials:
+	#	trials = set(datafind_res.outputs.trial)
 
 	copemerge = pe.Node(interface=fsl.Merge(dimension='t'),name="copemerge")
 	varcopemerge = pe.Node(interface=fsl.Merge(dimension='t'),name="varcopemerge")
@@ -244,6 +256,8 @@ def l2_common_effect(l1_dir,
 	datasink.inputs.substitutions = [('_iterable_', ''),]
 
 	if groupby == "subject":
+		subjects = data_selection[['subject']].drop_duplicates().values.tolist()
+
 		infosource = pe.Node(interface=util.IdentityInterface(fields=['iterable']), name="infosource")
 		infosource.iterables = [('iterable', subjects)]
 		datasource = pe.Node(interface=nio.DataGrabber(infields=["group",], outfields=["copes", "varcbs"]), name="datasource")
@@ -281,6 +295,8 @@ def l2_common_effect(l1_dir,
 			(merge, varcopemerge, [(('out',add_suffix,"_varcb.nii.gz"), 'merged_file')]),
 			]
 	elif groupby == "session":
+		sessions = data_selection[['sessions']].drop_duplicates().values.tolist()
+
 		infosource = pe.Node(interface=util.IdentityInterface(fields=['iterable']), name="infosource")
 		infosource.iterables = [('iterable', sessions)]
 		datasource = pe.Node(interface=nio.DataGrabber(infields=["group",], outfields=["copes", "varcbs"]), name="datasource")

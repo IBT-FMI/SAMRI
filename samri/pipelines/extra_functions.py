@@ -587,32 +587,30 @@ def get_data_selection(workflow_base,
 
 
 def select_from_datafind_df(df,
-	subject_session_trial=False,
-	subject=False,
-	session=False,
-	trial=False,
-	acquisition=False,
-	modality=False,
-	output='path',
+	bids_dictionary=False,
+	bids_dictionary_override=False,
+	output_key='path',
 	failsafe=False,
 	):
 
-	if subject_session_trial:
-		subject, session, trial = subject_session_trial
-	if subject:
-		df = df[df['subject']==subject]
-	if session:
-		df = df[df['session']==session]
-	if trial:
-		df = df[df['trial']==trial]
-	if acquisition:
-		df = df[df['acquisition']==acquisition]
-	if modality:
-		df = df[df['modality']==modality]
+
+	if bids_dictionary_override:
+		override = [i for i in bids_dictionary_override.keys()]
+	else:
+		override = []
+	override.append(output_key)
+
+	if bids_dictionary:
+		for key in bids_dictionary:
+			if not key in override:
+				df=df[df[key]==bids_dictionary[key]]
+	if bids_dictionary_override:
+		for key in bids_dictionary_override:
+				df=df[df[key]==bids_dictionary_override[key]]
 
 	if failsafe:
 		df = df.iloc[0]
-	selection = df[output].item()
+	selection = df[output_key].item()
 
 	return selection
 

@@ -1,6 +1,7 @@
 from os import path
 import pandas as pd
-from samri.pipelines import preprocessing, glm, fc
+from samri.analysis import fc
+from samri.pipelines import preprocessing, glm
 from samri.utilities import bids_substitution_iterator
 
 def higher():
@@ -126,20 +127,20 @@ def cbv_composite(data_path="~/ni_data/ofM.dr/",
 		mask="~/ni_data/templates/DSURQEc_200micron_mask.nii.gz",
 		keep_work=True,
 		)
-	glm.l2_common_effect(path.join(data_path,l1_dir,workflow_name),
-		workflow_name="composite_subjects",
-		exclude={"scans":["EPI_BOLD_"],},
-		groupby="subject",
-		keep_work=True,
-		mask="~/ni_data/templates/DSURQEc_200micron_mask.nii.gz",
-		)
-	glm.l2_common_effect(path.join(data_path,l1_dir,workflow_name),
-		workflow_name="composite_sessions_responders",
-		exclude={"scans":["EPI_BOLD_"],"subjects":["4001","4002","4003","4004","4006","4008","4009","5674","5703","5704","5706"]},
-		groupby="session",
-		keep_work=True,
-		mask="~/ni_data/templates/DSURQEc_200micron_mask.nii.gz",
-		)
+	#glm.l2_common_effect(path.join(data_path,l1_dir,workflow_name),
+	#	workflow_name="composite_subjects",
+	#	exclude={"scans":["EPI_BOLD_"],},
+	#	groupby="subject",
+	#	keep_work=True,
+	#	mask="~/ni_data/templates/DSURQEc_200micron_mask.nii.gz",
+	#	)
+	#glm.l2_common_effect(path.join(data_path,l1_dir,workflow_name),
+	#	workflow_name="composite_sessions_responders",
+	#	exclude={"scans":["EPI_BOLD_"],"subjects":["4001","4002","4003","4004","4006","4008","4009","5674","5703","5704","5706"]},
+	#	groupby="session",
+	#	keep_work=True,
+	#	mask="~/ni_data/templates/DSURQEc_200micron_mask.nii.gz",
+	#	)
 
 def typical_resp(data_path='~/ni_data/ofM.dr/', l1_dir='l1', workflow_name='composite'):
 	glm.l2_common_effect(path.join(data_path,l1_dir,workflow_name),

@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 def ctx_connectivity():
+	import pandas as pd
+	from behaviopy.plotting import qualitative_times
 	from samri.plotting import summary
 	from samri.report import roi
 	from samri.utilities import bids_substitution_iterator
-	from behaviopy.plotting import qualitative_times
 	from samri.fetch.local import roi_from_atlaslabel
 
 	my_roi = roi_from_atlaslabel("~/ni_data/templates/roi/DSURQEc_200micron_labels.nii",

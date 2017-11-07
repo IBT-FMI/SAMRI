@@ -14,7 +14,8 @@ from nipype.interfaces.fsl.model import Level1Design
 
 from samri.pipelines.extra_interfaces import SpecifyModel
 from samri.pipelines.extra_functions import select_from_datafind_df
-from samri.pipelines.utils import sss_to_source, ss_to_path, iterfield_selector, datasource_exclude
+from samri.pipelines.utils import bids_dict_to_source, ss_to_path, iterfield_selector, datasource_exclude, bids_dict_to_dir
+
 
 def l1(preprocessing_dir,
 	highpass_sigma=225,
@@ -60,17 +61,17 @@ def l1(preprocessing_dir,
 	data_selection = [list(i) for i in data_selection]
 	data_selection = pd.DataFrame(data_selection,columns=('subject','session','acquisition','trial','modality','path'))
 
-	subjects_sessions_trials = data_selection[['subject','session','trial']].drop_duplicates().values.tolist()
+	bids_dictionary = data_selection[data_selection['modality']=='cbv'].drop_duplicates().T.to_dict().values()
 
-	infosource = pe.Node(interface=util.IdentityInterface(fields=['subject_session_trial']), name="infosource")
-	infosource.iterables = [('subject_session_trial', subjects_sessions_trials)]
+	infosource = pe.Node(interface=util.IdentityInterface(fields=['bids_dictionary']), name="infosource")
+	infosource.iterables = [('bids_dictionary', bids_dictionary)]
 
 	datafile_source = pe.Node(name='datafile_source', interface=util.Function(function=select_from_datafind_df, input_names=inspect.getargspec(select_from_datafind_df)[0], output_names=['out_file']))
-	datafile_source.inputs.modality = 'cbv'
+	datafile_source.inputs.bids_dictionary_override = {'modality':'cbv'}
 	datafile_source.inputs.df = data_selection
 
 	eventfile_source = pe.Node(name='eventfile_source', interface=util.Function(function=select_from_datafind_df, input_names=inspect.getargspec(select_from_datafind_df)[0], output_names=['out_file']))
-	eventfile_source.inputs.modality = 'events'
+	eventfile_source.inputs.bids_dictionary_override = {'modality':'events'}
 	eventfile_source.inputs.df = data_selection
 
 	specify_model = pe.Node(interface=SpecifyModel(), name="specify_model")
@@ -111,26 +112,26 @@ def l1(preprocessing_dir,
 	if mask:
 		glm.inputs.mask = path.abspath(path.expanduser(mask))
 
-	cope_filename = pe.Node(name='cope_filename', interface=util.Function(function=sss_to_source,input_names=inspect.getargspec(sss_to_source)[0], output_names=['filename']))
-	cope_filename.inputs.source_format = "sub-{0}_ses-{1}_trial-{2}_cope.nii.gz"
-	varcb_filename = pe.Node(name='varcb_filename', interface=util.Function(function=sss_to_source,input_names=inspect.getargspec(sss_to_source)[0], output_names=['filename']))
-	varcb_filename.inputs.source_format = "sub-{0}_ses-{1}_trial-{2}_varcb.nii.gz"
-	tstat_filename = pe.Node(name='tstat_filename', interface=util.Function(function=sss_to_source,input_names=inspect.getargspec(sss_to_source)[0], output_names=['filename']))
-	tstat_filename.inputs.source_format = "sub-{0}_ses-{1}_trial-{2}_tstat.nii.gz"
-	zstat_filename = pe.Node(name='zstat_filename', interface=util.Function(function=sss_to_source,input_names=inspect.getargspec(sss_to_source)[0], output_names=['filename']))
-	zstat_filename.inputs.source_format = "sub-{0}_ses-{1}_trial-{2}_zstat.nii.gz"
-	pstat_filename = pe.Node(name='pstat_filename', interface=util.Function(function=sss_to_source,input_names=inspect.getargspec(sss_to_source)[0], output_names=['filename']))
-	pstat_filename.inputs.source_format = "sub-{0}_ses-{1}_trial-{2}_pstat.nii.gz"
-	pfstat_filename = pe.Node(name='pfstat_filename', interface=util.Function(function=sss_to_source,input_names=inspect.getargspec(sss_to_source)[0], output_names=['filename']))
-	pfstat_filename.inputs.source_format = "sub-{0}_ses-{1}_trial-{2}_pfstat.nii.gz"
+	cope_filename = pe.Node(name='cope_filename', interface=util.Function(function=bids_dict_to_source,input_names=inspect.getargspec(bids_dict_to_source)[0], output_names=['filename']))
+	cope_filename.inputs.source_format = "sub-{subject}_ses-{session}_acq-{acquisition}_trial-{trial}_{modality}_cope.nii.gz"
+	varcb_filename = pe.Node(name='varcb_filename', interface=util.Function(function=bids_dict_to_source,input_names=inspect.getargspec(bids_dict_to_source)[0], output_names=['filename']))
+	varcb_filename.inputs.source_format = "sub-{subject}_ses-{session}_acq-{acquisition}_trial-{trial}_{modality}_varcb.nii.gz"
+	tstat_filename = pe.Node(name='tstat_filename', interface=util.Function(function=bids_dict_to_source,input_names=inspect.getargspec(bids_dict_to_source)[0], output_names=['filename']))
+	tstat_filename.inputs.source_format = "sub-{subject}_ses-{session}_acq-{acquisition}_trial-{trial}_{modality}_tstat.nii.gz"
+	zstat_filename = pe.Node(name='zstat_filename', interface=util.Function(function=bids_dict_to_source,input_names=inspect.getargspec(bids_dict_to_source)[0], output_names=['filename']))
+	zstat_filename.inputs.source_format = "sub-{subject}_ses-{session}_acq-{acquisition}_trial-{trial}_{modality}_zstat.nii.gz"
+	pstat_filename = pe.Node(name='pstat_filename', interface=util.Function(function=bids_dict_to_source,input_names=inspect.getargspec(bids_dict_to_source)[0], output_names=['filename']))
+	pstat_filename.inputs.source_format = "sub-{subject}_ses-{session}_acq-{acquisition}_trial-{trial}_{modality}_pstat.nii.gz"
+	pfstat_filename = pe.Node(name='pfstat_filename', interface=util.Function(function=bids_dict_to_source,input_names=inspect.getargspec(bids_dict_to_source)[0], output_names=['filename']))
+	pfstat_filename.inputs.source_format = "sub-{subject}_ses-{session}_acq-{acquisition}_trial-{trial}_{modality}_pfstat.nii.gz"
 
 	datasink = pe.Node(nio.DataSink(), name='datasink')
 	datasink.inputs.base_directory = path.join(l1_dir,workflow_name)
 	datasink.inputs.parameterization = False
 
 	workflow_connections = [
-		(infosource, datafile_source, [('subject_session_trial', 'subject_session_trial')]),
-		(infosource, eventfile_source, [('subject_session_trial', 'subject_session_trial')]),
+		(infosource, datafile_source, [('bids_dictionary', 'bids_dictionary')]),
+		(infosource, eventfile_source, [('bids_dictionary', 'bids_dictionary')]),
 		(eventfile_source, specify_model, [('out_file', 'event_files')]),
 		(datafile_source, specify_model, [('out_file', 'functional_runs')]),
 		(specify_model, level1design, [('session_info', 'session_info')]),
@@ -139,13 +140,13 @@ def l1(preprocessing_dir,
 		(datafile_source, glm, [('out_file', 'in_file')]),
 		(modelgen, glm, [('design_file', 'design')]),
 		(modelgen, glm, [('con_file', 'contrasts')]),
-		(infosource, datasink, [(('subject_session_trial',ss_to_path), 'container')]),
-		(infosource, cope_filename, [('subject_session_trial', 'subject_session_scan')]),
-		(infosource, varcb_filename, [('subject_session_trial', 'subject_session_scan')]),
-		(infosource, tstat_filename, [('subject_session_trial', 'subject_session_scan')]),
-		(infosource, zstat_filename, [('subject_session_trial', 'subject_session_scan')]),
-		(infosource, pstat_filename, [('subject_session_trial', 'subject_session_scan')]),
-		(infosource, pfstat_filename, [('subject_session_trial', 'subject_session_scan')]),
+		(infosource, datasink, [(('bids_dictionary',bids_dict_to_dir), 'container')]),
+		(infosource, cope_filename, [('bids_dictionary', 'bids_dictionary')]),
+		(infosource, varcb_filename, [('bids_dictionary', 'bids_dictionary')]),
+		(infosource, tstat_filename, [('bids_dictionary', 'bids_dictionary')]),
+		(infosource, zstat_filename, [('bids_dictionary', 'bids_dictionary')]),
+		(infosource, pstat_filename, [('bids_dictionary', 'bids_dictionary')]),
+		(infosource, pfstat_filename, [('bids_dictionary', 'bids_dictionary')]),
 		(cope_filename, glm, [('filename', 'out_cope')]),
 		(varcb_filename, glm, [('filename', 'out_varcb_name')]),
 		(tstat_filename, glm, [('filename', 'out_t_name')]),

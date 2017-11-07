@@ -1,9 +1,7 @@
 from os import path
-from samri.pipelines import preprocessing, glm, fc
-try:
-	from ..utilities import bids_substitution_iterator
-except (SystemError, ValueError):
-	from samri.utilities import bids_substitution_iterator
+from samri.analysis import fc
+from samri.pipelines import glm, preprocessing
+from samri.utilities import bids_substitution_iterator
 
 def cbv_composite(data_path,workflow_name,
 	preprocessing_dir="preprocessing",

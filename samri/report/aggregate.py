@@ -7,7 +7,7 @@ from joblib import Parallel, delayed
 from os import path, makedirs
 from nilearn.input_data import NiftiLabelsMasker, NiftiMapsMasker, NiftiMasker
 from samri.report.utilities import add_roi_data, add_pattern_data
-from samri.pipelines import fc
+from samri.analysis import fc
 
 def add_fc_roi_data(data_path, seed_masker, brain_masker,
 	substitution=False,

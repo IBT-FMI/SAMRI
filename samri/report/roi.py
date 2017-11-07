@@ -30,7 +30,7 @@ def roi_per_session(substitutions, roi_mask,
 
 	n_jobs = mp.cpu_count()-2
 	roi_data = Parallel(n_jobs=n_jobs, verbose=0, backend="threading")(map(delayed(add_roi_data),
-		[t_file_template]*len(substitutions),
+		[filename_template]*len(substitutions),
 		[masker]*len(substitutions),
 		substitutions,
 		))
@@ -44,7 +44,7 @@ def roi_per_session(substitutions, roi_mask,
 			mask_normalize = path.abspath(path.expanduser(roi_mask_normalize))
 		masker_normalize = NiftiMasker(mask_img=mask_normalize)
 		roi_data = Parallel(n_jobs=n_jobs, verbose=0, backend="threading")(map(delayed(add_roi_data),
-			[t_file_template]*len(substitutions),
+			[filename_template]*len(substitutions),
 			[masker_normalize]*len(substitutions),
 			substitutions,
 			))

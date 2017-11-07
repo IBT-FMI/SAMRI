@@ -7,6 +7,7 @@ def ctx_connectivity():
 	from samri.utilities import bids_substitution_iterator
 	from samri.fetch.local import roi_from_atlaslabel
 
+	workflow_name = 'composite'
 	my_roi = roi_from_atlaslabel("~/ni_data/templates/roi/DSURQEc_200micron_labels.nii",
 		mapping="~/ni_data/templates/roi/DSURQE_mapping.csv",
 		label_names=["cortex"],
@@ -17,7 +18,7 @@ def ctx_connectivity():
 		['5691',"5689","5690","5700"],
                 ["CogB",],
                 "~/ni_data/ofM.dr/",
-                "composite",
+                workflow_name,
                 acquisitions=["EPI",],
                 check_file_format='~/ni_data/ofM.dr/fc/{preprocessing_dir}/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_acq-{acquisition}_trial-{trial}_cbv_zstat.nii.gz',
 		)
@@ -31,7 +32,7 @@ def ctx_connectivity():
 		["6262","6255","5694","5706",'5704'],
                 ["CogB",],
                 "~/ni_data/ofM.dr/",
-                "composite",
+		workflow_name,
                 acquisitions=["EPI",],
                 check_file_format='~/ni_data/ofM.dr/fc/{preprocessing_dir}/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_acq-{acquisition}_trial-{trial}_cbv_zstat.nii.gz',
 		)
@@ -44,23 +45,4 @@ def ctx_connectivity():
 	subjectdf=pd.concat([subjectdf_,subjectdf])
 	subjectdf=subjectdf.rename(columns={'session': 'Session','t':'z'})
 
-	qualitative_times(subjectdf,
-		x='Session',
-		y='z',
-		condition='treatment',
-		unit='subject',
-		order=['naïve','acute','chronic (2w)','chronic (4w)','post'],
-		bp_style=False,
-		palette=["#56B4E9", "#E69F00"],
-		save_as='fc.png',
-		renames={
-			'Session':{
-				'ofM':'naïve',
-				'ofMaF':'acute',
-				'ofMcF1':'chronic (2w)',
-				'ofMcF2':'chronic (4w)',
-				'ofMpF':'post',
-				},
-			},
-		)
-
+	subjectdf.to_csv('~/ni_data/ofM.dr/fc/{}/ctx_summary.csv'.format(workflow_name))

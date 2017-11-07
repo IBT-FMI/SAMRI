@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 from os import path
 
-from samri.pipelines import fc
+from samri.analysis import fc
 from samri.utilities import bids_substitution_iterator
 from samri.fetch.local import roi_from_atlaslabel
 from samri.plotting import maps, connectivity

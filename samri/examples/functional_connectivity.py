@@ -2,7 +2,7 @@
 
 import os
 from os import path
-from samri.pipelines import fc
+from samri.analysis import fc
 from samri.plotting import connectivity
 from samri.fetch.templates import fetch_mouse_DSURQE
 

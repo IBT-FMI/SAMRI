@@ -591,6 +591,7 @@ def select_from_datafind_df(df,
 	bids_dictionary_override=False,
 	output_key='path',
 	failsafe=False,
+	list_output=False,
 	):
 
 
@@ -608,9 +609,12 @@ def select_from_datafind_df(df,
 		for key in bids_dictionary_override:
 				df=df[df[key]==bids_dictionary_override[key]]
 
-	if failsafe:
-		df = df.iloc[0]
-	selection = df[output_key].item()
+	if list_output:
+		selection = df[output_key].tolist()
+	else:
+		if failsafe:
+			df = df.iloc[0]
+		selection = df[output_key].item()
 
 	return selection
 

@@ -370,7 +370,7 @@ def l2_anova(l1_dir,
 	mask="~/ni_data/templates/DSURQEc_200micron_mask.nii.gz",
 	exclude={},
 	include={},
-	match_regex='.+/sub-(?P<sub>[a-zA-Z0-9]+)/ses-(?P<ses>[a-zA-Z0-9]+)/.*?_acq-(?P<acq>[a-zA-Z0-9]+)_trial-(?P<trial>[a-zA-Z0-9]+)_(?P<mod>[a-zA-Z0-9]+)_(?P<stat>(cope|varcb)+)\.(?:tsv|nii|nii\.gz)'
+	match_regex='.+/sub-(?P<sub>[a-zA-Z0-9]+)/ses-(?P<ses>[a-zA-Z0-9]+)/.*?_acq-(?P<acq>[a-zA-Z0-9]+)_trial-(?P<trial>[a-zA-Z0-9]+)_(?P<mod>[a-zA-Z0-9]+)_(?P<stat>(cope|varcb)+)\.(?:nii|nii\.gz)'
 	):
 
 	l1_dir = path.expanduser(l1_dir)
@@ -414,10 +414,11 @@ def l2_anova(l1_dir,
 		regressor = [int(i) for i in regressor]
 		key = "sub-"+str(sub)
 		regressors[key] = regressor
+	reference = str(copeonly['session'].unique()[0])
 	for ses in copeonly['session'].unique()[1:]:
 		regressor = [copeonly['session'] == ses][0]
 		regressor = [int(i) for i in regressor]
-		key = "ses-"+str(ses)
+		key = "ses-("+str(ses)+'-'+reference+')'
 		regressors[key] = regressor
 
 	sessions = [[i,'T',[i], [1]] for i in regressors.keys() if "ses-" in i]

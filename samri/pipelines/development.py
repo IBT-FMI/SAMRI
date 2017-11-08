@@ -142,21 +142,74 @@ def cbv_composite(data_path="~/ni_data/ofM.dr/",
 	#	)
 
 def anova():
+	from samri.fetch.local import roi_from_atlaslabel
+	roi = roi_from_atlaslabel("~/ni_data/templates/roi/DSURQEc_200micron_labels.nii",
+		mapping="~/ni_data/templates/roi/DSURQE_mapping.csv",
+		label_names=["cortex"],
+		save_as="/tmp/ctx.nii.gz")
 	glm.l2_anova("~/ni_data/ofM.dr/l1/composite/",
-		workflow_name="anova",
-		keep_work=True,
-		mask="~/ni_data/templates/DSURQEc_200micron_mask.nii.gz",
+		workflow_name="anova_ctx",
+		keep_work=False,
+		mask="/tmp/ctx.nii.gz",
 		include={
 			'session':['ofM','ofMaF','ofMcF1','ofMcF2','ofMpF'],
 			'subject':['5691',"5689","5690","5700"],
 			},
 		)
+	#glm.l2_anova("~/ni_data/ofM.dr/l1/composite/",
+	#	workflow_name="anova_drs",
+	#	keep_work=False,
+	#	mask="~/ni_data/templates/roi/DSURQEc_drs.nii.gz",
+	#	include={
+	#		'session':['ofM','ofMaF','ofMcF1','ofMcF2','ofMpF'],
+	#		'subject':['5691',"5689","5690","5700"],
+	#		},
+	#	)
+	#glm.l2_anova("~/ni_data/ofM.dr/l1/composite/",
+	#	workflow_name="anova_dr",
+	#	keep_work=False,
+	#	mask="~/ni_data/templates/roi/DSURQEc_dr.nii.gz",
+	#	include={
+	#		'session':['ofM','ofMaF','ofMcF1','ofMcF2','ofMpF'],
+	#		'subject':['5691',"5689","5690","5700"],
+	#		},
+	#	)
+	#glm.l2_anova("~/ni_data/ofM.dr/l1/composite/",
+	#	workflow_name="anova_control",
+	#	keep_work=False,
+	#	mask="~/ni_data/templates/DSURQEc_200micron_mask.nii.gz",
+	#	include={
+	#		'session':['ofM','ofMaF','ofMcF1','ofMcF2','ofMpF'],
+	#		'subject':["6262","6255","5694","5706",'5704'],
+	#		},
+	#	)
+	#glm.l2_anova("~/ni_data/ofM.dr/l1/composite/",
+	#	workflow_name="anova",
+	#	keep_work=False,
+	#	mask="~/ni_data/templates/DSURQEc_200micron_mask.nii.gz",
+	#	include={
+	#		'session':['ofM','ofMaF','ofMcF1','ofMcF2','ofMpF'],
+	#		'subject':['5691',"5689","5690","5700"],
+	#		},
+	#	)
 
 def typical_resp(data_path='~/ni_data/ofM.dr/', l1_dir='l1', workflow_name='composite'):
 	glm.l2_common_effect(path.join(data_path,l1_dir,workflow_name),
-		workflow_name="sessions_best_responders",
-		subjects=["5689","5690","5691","5700","6262","6255","5694","5706"],
-		trials=["EPI_CBV_chr_longSOA"],
+		workflow_name="best_responders_old",
+		include={
+			'subject':["5689","5690","5691","5700","6262","6255","5694","5706"],
+			'trial':["CogB"],
+			},
+		groupby="session",
+		keep_work=True,
+		mask="~/ni_data/templates/DSURQEc_200micron_mask.nii.gz",
+		)
+	glm.l2_common_effect(path.join(data_path,l1_dir,workflow_name),
+		workflow_name="best_responders",
+		include={
+			'subject':["5699","5687","5691","5694","4005","6255","5706"],
+			'trial':["CogB"],
+			},
 		groupby="session",
 		keep_work=True,
 		mask="~/ni_data/templates/DSURQEc_200micron_mask.nii.gz",

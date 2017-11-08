@@ -229,19 +229,6 @@ def l2_common_effect(l1_dir,
 	data_selection = [list(i) for i in data_selection]
 	data_selection = pd.DataFrame(data_selection,columns=('subject','session','acquisition','trial','modality','path'))
 
-	#bids_dictionary = data_selection[data_selection['modality']=='cbv'].drop_duplicates().T.to_dict().values()
-
-	#datafind = nio.DataFinder()
-	#datafind.inputs.root_paths = l1_dir
-	#datafind.inputs.match_regex = '.+/sub-(?P<sub>.+)/ses-(?P<ses>.+)/.*?_trial-(?P<trial>.+)_cope\.nii.gz'
-	#datafind_res = datafind.run()
-	#if not subjects:
-	#	subjects = set(datafind_res.outputs.sub)
-	#if not sessions:
-	#	sessions = set(datafind_res.outputs.ses)
-	#if not trials:
-	#	trials = set(datafind_res.outputs.trial)
-
 	copemerge = pe.Node(interface=fsl.Merge(dimension='t'),name="copemerge")
 	varcopemerge = pe.Node(interface=fsl.Merge(dimension='t'),name="varcopemerge")
 

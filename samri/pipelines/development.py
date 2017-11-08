@@ -141,6 +141,17 @@ def cbv_composite(data_path="~/ni_data/ofM.dr/",
 	#	mask="~/ni_data/templates/DSURQEc_200micron_mask.nii.gz",
 	#	)
 
+def anova():
+	glm.l2_anova("~/ni_data/ofM.dr/l1/composite/",
+		workflow_name="anova",
+		keep_work=True,
+		mask="~/ni_data/templates/DSURQEc_200micron_mask.nii.gz",
+		include={
+			'session':['ofM','ofMaF','ofMcF1','ofMcF2','ofMpF'],
+			'subject':['5691',"5689","5690","5700"],
+			},
+		)
+
 def typical_resp(data_path='~/ni_data/ofM.dr/', l1_dir='l1', workflow_name='composite'):
 	glm.l2_common_effect(path.join(data_path,l1_dir,workflow_name),
 		workflow_name="sessions_best_responders",

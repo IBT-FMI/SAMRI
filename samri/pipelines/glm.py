@@ -8,6 +8,7 @@ import shutil
 import nipype.interfaces.io as nio
 import nipype.interfaces.utility as util
 import nipype.pipeline.engine as pe
+from copy import deepcopy
 from itertools import product
 from nipype.interfaces import fsl
 from nipype.interfaces.fsl.model import Level1Design
@@ -358,3 +359,137 @@ def l2_common_effect(l1_dir,
 
 	if not keep_work:
 		shutil.rmtree(path.join(l2_dir,workdir_name))
+
+def l2_anova(l1_dir,
+	keep_work=False,
+	l2_dir="",
+	loud=False,
+	tr=1,
+	nprocs=6,
+	workflow_name="generic",
+	mask="~/ni_data/templates/ds_QBI_chr_bin.nii.gz",
+	exclude={},
+	include={},
+	):
+
+	l1_dir = path.expanduser(l1_dir)
+	if not l2_dir:
+		l2_dir = path.abspath(path.join(l1_dir,"..","..","l2"))
+
+	mask=path.abspath(path.expanduser(mask))
+
+	datafind = nio.DataFinder()
+	datafind.inputs.root_paths = l1_dir
+	datafind.inputs.match_regex = '.+/sub-(?P<sub>[a-zA-Z0-9]+)/ses-(?P<ses>[a-zA-Z0-9]+)/.*?_acq-(?P<acq>[a-zA-Z0-9]+)_trial-(?P<trial>[a-zA-Z0-9]+)_(?P<mod>[a-zA-Z0-9]+)_(?P<stat>(cope|varcb)+)\.(?:tsv|nii|nii\.gz)'
+	datafind_res = datafind.run()
+
+	data_selection = zip(*[datafind_res.outputs.sub, datafind_res.outputs.ses, datafind_res.outputs.acq, datafind_res.outputs.trial, datafind_res.outputs.mod, datafind_res.outputs.stat, datafind_res.outputs.out_paths])
+	data_selection = [list(i) for i in data_selection]
+	data_selection = pd.DataFrame(data_selection,columns=('subject','session','acquisition','trial','modality','statistic','path'))
+
+	data_selection = data_selection.sort_values(['session', 'subject'], ascending=[1, 1])
+	if exclude:
+		for key in exclude:
+			data_selection = data_selection[~data_selection[key].isin(exclude[key])]
+	if include:
+		for key in include:
+			data_selection = data_selection[data_selection[key].isin(include[key])]
+
+	copes = data_selection[data_selection['statistic']=='cope']['path'].tolist()
+	varcopes = data_selection[data_selection['statistic']=='varcb']['path'].tolist()
+
+	copemerge = pe.Node(interface=fsl.Merge(dimension='t'),name="copemerge")
+	copemerge.inputs.in_files = copes
+	copemerge.inputs.merged_file = 'copes.nii.gz'
+
+	varcopemerge = pe.Node(interface=fsl.Merge(dimension='t'),name="varcopemerge")
+	varcopemerge.inputs.in_files = copes
+	varcopemerge.inputs.merged_file = 'varcopes.nii.gz'
+
+	copeonly = data_selection[data_selection['statistic']=='cope']
+	regressors = {}
+	for sub in copeonly['subject'].unique():
+		regressor = [copeonly['subject'] == sub][0]
+		regressor = [int(i) for i in regressor]
+		key = "sub-"+str(sub)
+		regressors[key] = regressor
+	for ses in copeonly['session'].unique()[1:]:
+		regressor = [copeonly['session'] == ses][0]
+		regressor = [int(i) for i in regressor]
+		key = "ses-"+str(ses)
+		regressors[key] = regressor
+
+	sessions = [[i,'T',[i], [1]] for i in regressors.keys() if "ses-" in i]
+	contrasts = deepcopy(sessions)
+	contrasts.append(['anova', 'F', sessions])
+
+	level2model = pe.Node(interface=fsl.MultipleRegressDesign(),name='level2model')
+	level2model.inputs.regressors = regressors
+	level2model.inputs.contrasts = contrasts
+
+	flameo = pe.Node(interface=fsl.FLAMEO(), name="flameo")
+	flameo.inputs.mask_file = mask
+	flameo.inputs.run_mode = "ols"
+	#flameo.inputs.run_mode = "fe"
+
+	substitutions = []
+	t_counter = 1
+	f_counter = 1
+	for contrast in contrasts:
+		if contrast[1] == 'T':
+			for i in ['cope', 'tstat', 'zstat']:
+				substitutions.append((i+str(t_counter),contrast[0]+"_"+i))
+			t_counter+=1
+		if contrast[1] == 'F':
+			for i in ['zfstat', 'fstat']:
+				substitutions.append((i+str(f_counter),contrast[0]+"_"+i))
+			f_counter+=1
+
+	datasink = pe.Node(nio.DataSink(), name='datasink')
+	datasink.inputs.base_directory = path.join(l2_dir,workflow_name)
+	datasink.inputs.substitutions = substitutions
+
+	workflow_connections = [
+		(copemerge,flameo,[('merged_file','cope_file')]),
+		(varcopemerge,flameo,[('merged_file','var_cope_file')]),
+		(level2model,flameo, [('design_mat','design_file')]),
+		(level2model,flameo, [('design_grp','cov_split_file')]),
+		(level2model,flameo, [('design_fts','f_con_file')]),
+		(level2model,flameo, [('design_con','t_con_file')]),
+		(flameo, datasink, [('copes', '@copes')]),
+		(flameo, datasink, [('tstats', '@tstats')]),
+		(flameo, datasink, [('zstats', '@zstats')]),
+		(flameo, datasink, [('fstats', '@fstats')]),
+		(flameo, datasink, [('zfstats', '@zfstats')]),
+		]
+
+	workdir_name = workflow_name+"_work"
+	workflow = pe.Workflow(name=workdir_name)
+	workflow.connect(workflow_connections)
+	workflow.config = {"execution": {"crashdump_dir": path.join(l2_dir,"crashdump")}}
+	workflow.base_dir = l2_dir
+	workflow.write_graph(dotfilename=path.join(workflow.base_dir,workdir_name,"graph.dot"), graph2use="hierarchical", format="png")
+
+	if not loud:
+		try:
+			workflow.run(plugin="MultiProc",  plugin_args={'n_procs' : nprocs})
+		except RuntimeError:
+			print("WARNING: Some expected trials have not been found (or another RuntimeError has occured).")
+		for f in listdir(getcwd()):
+			if re.search("crash.*?-varcopemerge|-copemerge.*", f):
+				remove(path.join(getcwd(), f))
+	else:
+		workflow.run(plugin="MultiProc",  plugin_args={'n_procs' : nprocs})
+
+
+	if not keep_work:
+		shutil.rmtree(path.join(l2_dir,workdir_name))
+
+def sort_copes(files):
+	numelements = len(files[0])
+	outfiles = []
+	for i in range(numelements):
+		outfiles.insert(i,[])
+		for j, elements in enumerate(files):
+			outfiles[i].append(elements[i])
+	return outfiles

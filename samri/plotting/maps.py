@@ -210,7 +210,8 @@ def stat(stat_maps,
 	"""
 
 
-	fig = plt.figure()
+	if isinstance(stat_maps, str):
+		stat_maps=[stat_maps]
 	if len(stat_maps) == 1:
 		fig, axes = plt.subplots(facecolor='#eeeeee')
 

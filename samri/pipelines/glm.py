@@ -367,9 +367,10 @@ def l2_anova(l1_dir,
 	tr=1,
 	nprocs=6,
 	workflow_name="generic",
-	mask="~/ni_data/templates/ds_QBI_chr_bin.nii.gz",
+	mask="~/ni_data/templates/DSURQEc_200micron_mask.nii.gz",
 	exclude={},
 	include={},
+	match_regex='.+/sub-(?P<sub>[a-zA-Z0-9]+)/ses-(?P<ses>[a-zA-Z0-9]+)/.*?_acq-(?P<acq>[a-zA-Z0-9]+)_trial-(?P<trial>[a-zA-Z0-9]+)_(?P<mod>[a-zA-Z0-9]+)_(?P<stat>(cope|varcb)+)\.(?:tsv|nii|nii\.gz)'
 	):
 
 	l1_dir = path.expanduser(l1_dir)
@@ -380,7 +381,7 @@ def l2_anova(l1_dir,
 
 	datafind = nio.DataFinder()
 	datafind.inputs.root_paths = l1_dir
-	datafind.inputs.match_regex = '.+/sub-(?P<sub>[a-zA-Z0-9]+)/ses-(?P<ses>[a-zA-Z0-9]+)/.*?_acq-(?P<acq>[a-zA-Z0-9]+)_trial-(?P<trial>[a-zA-Z0-9]+)_(?P<mod>[a-zA-Z0-9]+)_(?P<stat>(cope|varcb)+)\.(?:tsv|nii|nii\.gz)'
+	datafind.inputs.match_regex = match_regex
 	datafind_res = datafind.run()
 
 	data_selection = zip(*[datafind_res.outputs.sub, datafind_res.outputs.ses, datafind_res.outputs.acq, datafind_res.outputs.trial, datafind_res.outputs.mod, datafind_res.outputs.stat, datafind_res.outputs.out_paths])
@@ -429,8 +430,9 @@ def l2_anova(l1_dir,
 
 	flameo = pe.Node(interface=fsl.FLAMEO(), name="flameo")
 	flameo.inputs.mask_file = mask
-	flameo.inputs.run_mode = "ols"
-	#flameo.inputs.run_mode = "fe"
+	# Using 'fe' instead of 'ols' is recommended (https://dpaniukov.github.io/2016/07/14/three-level-analysis-with-fsl-and-ants-2.html)
+	# This has also been tested in SAMRI and shown to give better estimates.
+	flameo.inputs.run_mode = "fe"
 
 	substitutions = []
 	t_counter = 1

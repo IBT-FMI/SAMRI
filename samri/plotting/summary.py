@@ -187,7 +187,7 @@ def analytic_pattern_per_session(substitutions, analytic_pattern,
 	return fit, anova
 
 def responders(l2_dir,
-	roi="ctx_chr",
+	roi="DSURQEc_ctx",
 	data_root="~/ni_data/ofM.dr",
 	roi_root="~/ni_data/templates/roi"
 	):
@@ -217,6 +217,7 @@ def responders(l2_dir,
 			voxel_data["t"]=i
 			df_ = pd.DataFrame(voxel_data, index=[None])
 			voxeldf = pd.concat([voxeldf,df_])
+	voxeldf.to_csv('{}/ctx_responders.csv'.format(data_path))
 
 def p_roi_masking(substitution, ts_file_template, beta_file_template, p_file_template, design_file_template, event_file_template, p_level, brain_mask):
 	"""Apply a substitution pattern to timecourse, beta, and design file templates - and mask the data of the former two according to a roi. Subsequently scale the design by the mean beta.

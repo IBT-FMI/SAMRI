@@ -133,7 +133,7 @@ def roi_teaching(roi_path="~/ni_data/templates/roi/f_dr_chr.nii.gz"):
 def check_responders():
 	from samri.plotting import summary
 
-	summary.responders("subjectwise_composite")
+	summary.responders("composite_subjects")
 
 def qc_regressor(sessions, subjects, scans, workflow_name, mask,
 	data_dir="~/ni_data/ofM.dr",

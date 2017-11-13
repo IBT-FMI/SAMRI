@@ -17,7 +17,7 @@ def drs_activity():
                 acquisitions=["EPI",],
                 check_file_format='{data_dir}/l1/{l1_dir}/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_acq-{acquisition}_trial-{trial}_cbv_tstat.nii.gz',
 		)
-	fit, anova, subjectdf, voxeldf = roi.roi_per_session(substitutions,
+	fit, anova, subjectdf, voxeldf = roi.per_session(substitutions,
 		filename_template='{data_dir}/l1/{l1_dir}/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_acq-{acquisition}_trial-{trial}_cbv_tstat.nii.gz',
 		roi_mask="~/ni_data/templates/roi/DSURQEc_drs.nii.gz",
 		)
@@ -31,7 +31,7 @@ def drs_activity():
                 acquisitions=["EPI",],
 		check_file_format='{data_dir}/l1/{l1_dir}/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_acq-{acquisition}_trial-{trial}_cbv_tstat.nii.gz',
 		)
-	fit_, anova_, subjectdf_, voxeldf_ = roi.roi_per_session(substitutions_,
+	fit_, anova_, subjectdf_, voxeldf_ = roi.per_session(substitutions_,
 		filename_template='{data_dir}/l1/{l1_dir}/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_acq-{acquisition}_trial-{trial}_cbv_tstat.nii.gz',
 		roi_mask="~/ni_data/templates/roi/DSURQEc_drs.nii.gz",
 		)
@@ -164,7 +164,7 @@ def ctx_activity():
                 acquisitions=["EPI",],
                 check_file_format='{data_dir}/l1/{l1_dir}/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_acq-{acquisition}_trial-{trial}_cbv_tstat.nii.gz',
 		)
-	fit, anova, subjectdf, voxeldf = roi.roi_per_session(substitutions,
+	fit, anova, subjectdf, voxeldf = roi.per_session(substitutions,
 		filename_template='{data_dir}/l1/{l1_dir}/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_acq-{acquisition}_trial-{trial}_cbv_tstat.nii.gz',
 		roi_mask="~/ni_data/templates/roi/DSURQEc_ctx.nii.gz",
 		)
@@ -178,7 +178,7 @@ def ctx_activity():
                 acquisitions=["EPI",],
 		check_file_format='{data_dir}/l1/{l1_dir}/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_acq-{acquisition}_trial-{trial}_cbv_tstat.nii.gz',
 		)
-	fit_, anova_, subjectdf_, voxeldf_ = roi.roi_per_session(substitutions_,
+	fit_, anova_, subjectdf_, voxeldf_ = roi.per_session(substitutions_,
 		filename_template='{data_dir}/l1/{l1_dir}/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_acq-{acquisition}_trial-{trial}_cbv_tstat.nii.gz',
 		roi_mask="~/ni_data/templates/roi/DSURQEc_ctx.nii.gz",
 		)
@@ -207,7 +207,7 @@ def dr_activity():
                 acquisitions=["EPI",],
                 check_file_format='{data_dir}/l1/{l1_dir}/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_acq-{acquisition}_trial-{trial}_cbv_tstat.nii.gz',
 		)
-	fit, anova, subjectdf, voxeldf = roi.roi_per_session(substitutions,
+	fit, anova, subjectdf, voxeldf = roi.per_session(substitutions,
 		filename_template='{data_dir}/l1/{l1_dir}/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_acq-{acquisition}_trial-{trial}_cbv_tstat.nii.gz',
 		roi_mask="~/ni_data/templates/roi/DSURQEc_dr.nii.gz",
 		)
@@ -221,7 +221,7 @@ def dr_activity():
                 acquisitions=["EPI",],
 		check_file_format='{data_dir}/l1/{l1_dir}/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_acq-{acquisition}_trial-{trial}_cbv_tstat.nii.gz',
 		)
-	fit_, anova_, subjectdf_, voxeldf_ = roi.roi_per_session(substitutions_,
+	fit_, anova_, subjectdf_, voxeldf_ = roi.per_session(substitutions_,
 		filename_template='{data_dir}/l1/{l1_dir}/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_acq-{acquisition}_trial-{trial}_cbv_tstat.nii.gz',
 		roi_mask="~/ni_data/templates/roi/DSURQEc_dr.nii.gz",
 		)
@@ -255,7 +255,7 @@ def ctx_dr_connectivity():
                 acquisitions=["EPI",],
                 check_file_format='~/ni_data/ofM.dr/fc/{preprocessing_dir}/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_acq-{acquisition}_trial-{trial}_cbv_zstat.nii.gz',
 		)
-	fit, anova, subjectdf, voxeldf = roi.roi_per_session(substitutions,
+	fit, anova, subjectdf, voxeldf = roi.per_session(substitutions,
 		filename_template='~/ni_data/ofM.dr/fc/{preprocessing_dir}/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_acq-{acquisition}_trial-{trial}_cbv_zstat.nii.gz',
 		roi_mask=my_roi,
 		)
@@ -269,7 +269,7 @@ def ctx_dr_connectivity():
                 acquisitions=["EPI",],
                 check_file_format='~/ni_data/ofM.dr/fc/{preprocessing_dir}/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_acq-{acquisition}_trial-{trial}_cbv_zstat.nii.gz',
 		)
-	fit_, anova_, subjectdf_, voxeldf_ = roi.roi_per_session(substitutions_,
+	fit_, anova_, subjectdf_, voxeldf_ = roi.per_session(substitutions_,
 		filename_template='~/ni_data/ofM.dr/fc/{preprocessing_dir}/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_acq-{acquisition}_trial-{trial}_cbv_zstat.nii.gz',
 		roi_mask=my_roi,
 		)
@@ -303,7 +303,7 @@ def ctx_drs_connectivity():
                 acquisitions=["EPI",],
                 check_file_format='~/ni_data/ofM.dr/fc/{preprocessing_dir}/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_acq-{acquisition}_trial-{trial}_cbv_zstat.nii.gz',
 		)
-	fit, anova, subjectdf, voxeldf = roi.roi_per_session(substitutions,
+	fit, anova, subjectdf, voxeldf = roi.per_session(substitutions,
 		filename_template='~/ni_data/ofM.dr/fc/{preprocessing_dir}/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_acq-{acquisition}_trial-{trial}_cbv_zstat.nii.gz',
 		roi_mask=my_roi,
 		)
@@ -317,7 +317,7 @@ def ctx_drs_connectivity():
                 acquisitions=["EPI",],
                 check_file_format='~/ni_data/ofM.dr/fc/{preprocessing_dir}/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_acq-{acquisition}_trial-{trial}_cbv_zstat.nii.gz',
 		)
-	fit_, anova_, subjectdf_, voxeldf_ = roi.roi_per_session(substitutions_,
+	fit_, anova_, subjectdf_, voxeldf_ = roi.per_session(substitutions_,
 		filename_template='~/ni_data/ofM.dr/fc/{preprocessing_dir}/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_acq-{acquisition}_trial-{trial}_cbv_zstat.nii.gz',
 		roi_mask=my_roi,
 		)
@@ -350,7 +350,7 @@ def ctx_pattern_drs_connectivity():
                 acquisitions=["EPI",],
                 check_file_format='~/ni_data/ofM.dr/fc/{preprocessing_dir}/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_acq-{acquisition}_trial-{trial}_cbv_zstat.nii.gz',
 		)
-	subjectdf, voxeldf = roi.roi_per_session(substitutions,
+	subjectdf, voxeldf = roi.per_session(substitutions,
 		filename_template='~/ni_data/ofM.dr/fc/{preprocessing_dir}/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_acq-{acquisition}_trial-{trial}_cbv_zstat.nii.gz',
 		roi_mask=my_roi,
 		)
@@ -364,7 +364,7 @@ def ctx_pattern_drs_connectivity():
                 acquisitions=["EPI",],
                 check_file_format='~/ni_data/ofM.dr/fc/{preprocessing_dir}/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_acq-{acquisition}_trial-{trial}_cbv_zstat.nii.gz',
 		)
-	subjectdf_, voxeldf_ = roi.roi_per_session(substitutions_,
+	subjectdf_, voxeldf_ = roi.per_session(substitutions_,
 		filename_template='~/ni_data/ofM.dr/fc/{preprocessing_dir}/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_acq-{acquisition}_trial-{trial}_cbv_zstat.nii.gz',
 		roi_mask=my_roi,
 		)

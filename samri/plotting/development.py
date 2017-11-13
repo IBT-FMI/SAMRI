@@ -68,7 +68,7 @@ def plot_roi_per_session(l1_dir, roi_mask, color,
 			mapping="~/ni_data/templates/roi/DSURQE_mapping.csv",
 			label_names=roi,
 			)
-	fit, anova, subjectdf, voxeldf = roi.roi_per_session(substitutions,
+	fit, anova, subjectdf, voxeldf = roi.per_session(substitutions,
 		t_file_template="{data_dir}/l1/{l1_dir}/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_trial-{trial}_tstat.nii.gz",
 		roi_mask=roi_mask,
 		roi_mask_normalize=roi_mask_normalize,

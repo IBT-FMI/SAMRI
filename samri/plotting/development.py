@@ -102,20 +102,6 @@ def p_clusters(mask):
 	timeseries.multi(timecourses, designs, stat_maps, events_dfs, subplot_titles, figure="timecourses")
 	plt.show()
 
-def roi(roi_path="~/ni_data/templates/roi/f_dr_chr.nii.gz"):
-	from samri.plotting import summary, timeseries
-
-	substitutions = bids_substitution_iterator(
-		["ofM","ofM_aF","ofM_cF1","ofM_cF2","ofM_pF"],
-		[4007,4008,4009,4011,4012],
-		["EPI_CBV_jb_long"],
-		"~/ni_data/ofM.dr/",
-		"composite",
-		)
-	timecourses, designs, stat_maps, subplot_titles = summary.roi_ts(substitutions, roi_path=roi_path,)
-	timeseries.multi(timecourses, designs, stat_maps, subplot_titles, figure="timecourses")
-	plt.show()
-
 def roi_teaching(roi_path="~/ni_data/templates/roi/f_dr_chr.nii.gz"):
 	from samri.plotting import timeseries
 
@@ -155,23 +141,6 @@ def qc_regressor(sessions, subjects, scans, workflow_name, mask,
 		quantitative=False,
 		save_as=save_as,
 		)
-
-def plot_my_roi():
-	maps.atlas_label("~/ni_data/templates/roi/DSURQEc_dr.nii.gz",
-		)
-	plt.show()
-
-def plot_roi_by_label(label_names,
-	save_as="",
-	):
-	roi = roi_from_atlaslabel("~/ni_data/templates/roi/DSURQEc_200micron_labels.nii",
-		mapping="~/ni_data/templates/roi/DSURQE_mapping.csv",
-		label_names=label_names,
-		save_as=save_as
-		)
-	maps.atlas_label(roi)
-	plt.show()
-	# roi_per_session("as_composite", roi, "#e66633")
 
 def single_ts_seed_connectivity(
 	template="~/ni_data/templates/DSURQEc_40micron_masked.nii.gz",
@@ -276,38 +245,11 @@ def functional_connectivity(ts="~/ni_data/ofM.dr/preprocessing/as_composite/sub-
 
 
 if __name__ == '__main__':
-	# overview("as_composite_subjects", ["4001","4005","4007","4008","4009","4011","4012","5687","5689","5690","5691","5703","5704","5706"],) #4001 is a negative control (transgene but no injection
-	# overview("as_composite_subjects", ["4007","4008","4009","4011","4012","5689","5690","5691"],) #4001 is a negative control (transgene but no injection
-	# overview("as_composite_sessions_responders", ["ofM","ofM_aF","ofM_cF1","ofM_cF2","ofM_pF"],cut_coords=[0,-4.3,-3.3])
-	# overview("as_composite_sessions_best_responders", ["ofM","ofM_aF","ofM_cF1","ofM_cF2","ofM_pF"],cut_coords=[0,-4.3,-3.3])
-	# overview("composite_subjects", ["4007","4008","4011","4012","5689","5690","5691"], template="~/ni_data/templates/ds_QBI_chr.nii.gz") #4001 is a negative control (transgene but no injection
-	# overview("composite_subjects", ["4001","4005","4007","4008","4009","4011","4012"]) #4001 is a negative control (transgene but no injection
-	# overview("as_composite_subjects", ["4001","4005","4007","4008","4009","4011","4012"])
-	# overview("as_composite_subjects", ["4012","5687","5689","5690","5691","5703","5704","5706"])
-	# overview("as_composite_subjects", ["4012","5687","5689","5690","5691","5703"])
-	# single_ts_seed_connectivity(save_as="~/11.png")
-	# overview("as_composite_subjects", ["4012"], orientation="landscape",save_as="~/12.png")
-	# overview("as_composite_subjects", ["4012"], orientation="portrait", save_as="~/21.png")
-	# overview("as_composite_subjects", ["4012","5687"], save_as="~/22.png")
-	# overview("as_composite_subjects", ["4012","5687","5689","5690"], save_as="~/42.png")
-	# overview("as_composite_subjects", ["4012","5687","5689","5690","5691","5703"], save_as="~/62.png")
-
 	# seed_connectivity_overview()
 	# single_ts_seed_connectivity(save_as="~/sbfc.pdf")
 
-	# plot_roi_by_label(["medulla","midbrain","pons"],"chr_brainstem")
-	# plot_my_roi()
-
-	# roi_per_session("composite", "~/ni_data/templates/roi/ctx_chr_bin.nii.gz", "#56B4E9")
-	# roi_per_session("as_composite", ["cortex"], "#e66633")
-	# roi_per_session("as_composite", ["frontal","Frontal","orbital","Orbital"], "#e66633")
-	# roi_per_session("as_composite", "~/ni_data/templates/roi/DSURQEc_ctx.nii.gz", "#56B4E9",
-	# 	roi_mask_normalize="~/ni_data/templates/roi/DSURQEc_dr.nii.gz",
-	# 	)
 	plot_roi_per_session("composite", "~/ni_data/templates/roi/DSURQEc_dr.nii.gz", "#E69F00")
-	# roi_per_session("as_composite", "~/ni_data/templates/roi/f_dr_chr_bin.nii.gz", "#E69F00")
 	# p_clusters("~/ni_data/templates/ds_QBI_chr_bin.nii.gz")
-	# roi(roi_path="~/ni_data/templates/roi/f_dr_chr_bin.nii.gz")
 	# roi_teaching()
 	# check_responders()
 	#qc_regressor(
@@ -319,6 +261,4 @@ if __name__ == '__main__':
 	#	save_as="qc_regressor.pdf",
 	#	)
 	# qc_regressor(["ofM_cF1"],["4011"],["EPI_CBV_jb_long"],"as_composite","~/ni_data/templates/roi/DSURQEc_ctx.nii.gz")
-	# network.simple_dr(output="~/ntw1.png", graphsize=800, scale=1.8)
 	plt.show()
-	#functional_connectivity()

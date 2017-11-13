@@ -110,18 +110,10 @@ def per_session(substitutions, roi_mask,
 		subjectdf=subjectdf.replace([-np.inf], subjectdf_[['t']].min(axis=0)[0])
 		subjectdf=subjectdf.replace([np.inf], subjectdf_[['t']].max(axis=0)[0])
 
-	#model = smf.mixedlm("t ~ session", subjectdf, groups=subjectdf["subject"])
-	#fit = model.fit()
-	#report = fit.summary()
-
-	# create a restriction for every regressor - except intercept (first) and random effects (last)
-	#omnibus_tests = np.eye(len(fit.params))[1:-1]
-	#anova = fit.f_test(omnibus_tests)
-
 	return subjectdf, voxeldf
 
 
-def roi_mean(img_path, mask_path):
+def mean(img_path, mask_path):
 	"""Return the mean of the masked region of an image.
 	"""
 	mask = path.abspath(path.expanduser(mask_path))

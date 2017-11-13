@@ -11,9 +11,33 @@ import statsmodels.formula.api as smf
 import multiprocessing as mp
 import pandas as pd
 
-def from_threshold(image, threshold,
-	save_as=False,
+def from_img_threshold(image, threshold,
+	two_tailed=False,
+	save_as='',
 	):
+	"""Create an ROI based on an input volumetric image and a threshold value (absolute).
+
+	Parameters
+	----------
+	image : str or nibabel.nifti1.Nifti1Image
+		Either the path to a NIfTI image, or a NiBabel object containing the image data. Image can have any dimensionality.
+	threshold : int or float
+		Numeric value to use as threshold
+	two_tailed : bool, optional
+		Whether to include voxels with values below the negative of `threshold` in the ROI.
+	save_as : str, optional
+		Path to which to save the otput.
+
+	Returns
+	-------
+	str or nibabel.nifti.Nifti1Image
+		Path to generated ROI file (if `save_as` is specified), or `nibabel.nifti.Nifti1Image` object of the ROI (if `save_as` evaluates to `False`).
+
+	Notes
+	-----
+
+	Percentile support is planned, but not currently implemented.
+	"""
 
 	if isinstance(image,str):
 		image = path.abspath(path.expanduser(image))
@@ -21,10 +45,12 @@ def from_threshold(image, threshold,
 	data = image.get_data()
 	header = image.header
 	affine = image.affine
-	shape = image.shape
 	roi_pos = np.where(data>threshold,[True],[False])
-	roi_neg = np.where(data<-threshold,[True],[False])
-	roi = np.logical_or(roi_pos, roi_neg)
+	if two_tailed:
+		roi_neg = np.where(data<-threshold,[True],[False])
+		roi = np.logical_or(roi_pos, roi_neg)
+	else:
+		roi = roi_pos
 	roi = 1*roi
 	roi = nib.Nifti1Image(roi, affine, header)
 
@@ -34,7 +60,7 @@ def from_threshold(image, threshold,
 
 	return roi
 
-def roi_per_session(substitutions, roi_mask,
+def per_session(substitutions, roi_mask,
 	filename_template="~/ni_data/ofM.dr/l1/{l1_dir}/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_trial-{scan}_tstat.nii.gz",
 	roi_mask_normalize="",
 	):

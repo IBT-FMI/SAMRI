@@ -5,7 +5,7 @@ from samri.analysis import fc
 from samri.utilities import bids_substitution_iterator
 from samri.fetch.local import roi_from_atlaslabel
 from samri.plotting import maps, connectivity
-from samri.report import aggregate
+from samri.analysis import fc
 
 def overview(workflow, identifiers,
 	cut_coords=[None, [0,-4.5,-3.3]],
@@ -193,7 +193,7 @@ def seed_connectivity_overview(
 		"~/ni_data/ofM.dr/",
 		"composite",
 		)
-	fc_results = aggregate.seed_fc(substitutions, "~/ni_data/templates/roi/DSURQEc_dr_xs.nii.gz", "~/ni_data/templates/DSURQEc_200micron_mask.nii.gz",
+	fc_results = fc.seed_based(substitutions, "~/ni_data/templates/roi/DSURQEc_dr_xs.nii.gz", "~/ni_data/templates/DSURQEc_200micron_mask.nii.gz",
 		ts_file_template="~/ni_data/ofM.dr/preprocessing/{preprocessing_dir}/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_trial-{trial}.nii.gz",
 		)
 

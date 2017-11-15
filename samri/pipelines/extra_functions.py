@@ -6,10 +6,7 @@ import re
 from copy import deepcopy
 import nibabel as nb
 import pandas as pd
-try:
-	from utils import STIM_PROTOCOL_DICTIONARY
-except ImportError:
-	from .utils import STIM_PROTOCOL_DICTIONARY
+from samri.pipelines.utils import STIM_PROTOCOL_DICTIONARY
 
 STRUCTURAL_CONTRAST_MATCHING = {
 	('T1','t1'):'T1w',

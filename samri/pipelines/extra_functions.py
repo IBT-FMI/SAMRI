@@ -54,7 +54,8 @@ def force_dummy_scans(in_file, scan_dir,
 	delete_scans = desired_dummy_scans - dummy_scans
 
 	if delete_scans <= 0:
-		out_file = in_file
+		img = nib.load(in_file)
+		nib.save(img,out_file)
 	else:
 		img = nib.load(in_file)
 		img_ = nib.Nifti1Image(img.get_data()[...,delete_scans:], img.affine, img.header)

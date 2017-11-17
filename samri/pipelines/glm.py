@@ -12,42 +12,64 @@ from copy import deepcopy
 from itertools import product
 from nipype.interfaces import fsl
 from nipype.interfaces.fsl.model import Level1Design
+#from nipype.algorithms.modelgen import SpecifyModel
 
 from samri.pipelines.extra_interfaces import SpecifyModel
 from samri.pipelines.extra_functions import select_from_datafind_df
 from samri.pipelines.utils import bids_dict_to_source, ss_to_path, iterfield_selector, datasource_exclude, bids_dict_to_dir
+from samri.utilities import N_PROCS
 
+N_PROCS=max(N_PROCS-2, 2)
 
 def l1(preprocessing_dir,
+	bf_path = '~/ni_data/irfs/chr_beta1.txt',
+	exclude={},
+	habituation='confound',
 	highpass_sigma=225,
 	include={},
-	exclude={},
 	keep_work=False,
 	l1_dir="",
-	nprocs=10,
 	mask="~/ni_data/templates/ds_QBI_chr_bin.nii.gz",
-	per_stimulus_contrast=False,
-	habituation="",
+	match_regex='sub-(?P<sub>[a-zA-Z0-9]+)/ses-(?P<ses>[a-zA-Z0-9]+)/func/.*?_acq-(?P<acq>[a-zA-Z0-9]+)_trial-(?P<trial>[a-zA-Z0-9]+)_(?P<mod>[a-zA-Z0-9]+)\.(?:tsv|nii|nii\.gz)',
+	nprocs=N_PROCS,
 	tr=1,
 	workflow_name="generic",
-	bf_path = '~/ni_data/irfs/chr_beta1.txt',
 	):
-	"""Calculate subject level GLM statistics.
+	"""Calculate subject level GLM statistic scores.
 
 	Parameters
 	----------
 
-	include : dict
-	A dictionary with any combination of "sessions", "subjects", "trials" as keys and corresponding identifiers as values.
-	If this is specified ony matching entries will be included in the analysis.
-
+	bf_path : str, optional
+		Basis set path. It should point to a text file in the so-called FEAT/FSL "#2" format (1 entry per volume).
 	exclude : dict
-	A dictionary with any combination of "sessions", "subjects", "trials" as keys and corresponding identifiers as values.
-	If this is specified ony non-matching entries will be included in the analysis.
-
-	habituation : string
-	One value of "confound", "in_main_contrast", "separate_contrast", "" indicating how the habituation regressor should be handled.
-	"" or any other value which evaluates to False will mean no habituation regressor is used int he model
+		A dictionary with any combination of "sessions", "subjects", "trials" as keys and corresponding identifiers as values.
+		If this is specified ony non-matching entries will be included in the analysis.
+	habituation : {"", "confound", "separate_contrast", "in_main_contrast"}, optional
+		How the habituation regressor should be handled.
+		Anything which evaluates as False (though we recommend "") means no habituation regressor will be introduced.
+	highpass_sigma : int, optional
+		Highpass threshold (in seconds).
+	include : dict
+		A dictionary with any combination of "sessions", "subjects", "trials" as keys and corresponding identifiers as values.
+		If this is specified ony matching entries will be included in the analysis.
+	keep_work : bool, optional
+		Whether to keep the work directory (containing all the intermediaryworkflow steps, as managed by nipypye).
+		This is useful for debugging and quality control.
+	l1_dir : str, optional
+		Path to the directory inside which both the working directory and the output directory will be created.
+	mask : str, optional
+		Path to the brain mask which shall be used to define the brain volume in the analysis.
+		This has to point to an existing NIfTI file containing zero and one values only.
+	match_regex : str, optional
+		Regex matching pattern by which to select input files. Has to contain groups named "sub", "ses", "acq", "trial", and "mod".
+	n_procs : int, optional
+		Maximum number of processes which to simultaneously spawn for the workflow.
+		If not explicitly defined, this is automatically calculated from the number of available cores and under the assumption that the workflow will be the main process running for the duration that it is running.
+	tr : int, optional
+		Repetition time, in seconds.
+	workflow_name : str, optional
+		Name of the workflow; this will also be the name of the final output directory produced under `l1_dir`.
 	"""
 
 	preprocessing_dir = path.expanduser(preprocessing_dir)
@@ -56,9 +78,10 @@ def l1(preprocessing_dir,
 
 	datafind = nio.DataFinder()
 	datafind.inputs.root_paths = preprocessing_dir
-	datafind.inputs.match_regex = '.+/sub-(?P<sub>[a-zA-Z0-9]+)/ses-(?P<ses>[a-zA-Z0-9]+)/func/.*?_acq-(?P<acq>[a-zA-Z0-9]+)_trial-(?P<trial>[a-zA-Z0-9]+)_(?P<mod>[a-zA-Z0-9]+)\.(?:tsv|nii|nii\.gz)'
+	datafind.inputs.match_regex = match_regex
 	datafind_res = datafind.run()
-	data_selection = zip(*[datafind_res.outputs.sub, datafind_res.outputs.ses, datafind_res.outputs.acq, datafind_res.outputs.trial, datafind_res.outputs.mod, datafind_res.outputs.out_paths])
+	out_paths = [path.abspath(path.expanduser(i)) for i in datafind_res.outputs.out_paths]
+	data_selection = zip(*[datafind_res.outputs.sub, datafind_res.outputs.ses, datafind_res.outputs.acq, datafind_res.outputs.trial, datafind_res.outputs.mod, out_paths])
 	data_selection = [list(i) for i in data_selection]
 	data_selection = pd.DataFrame(data_selection,columns=('subject','session','acquisition','trial','modality','path'))
 
@@ -79,7 +102,6 @@ def l1(preprocessing_dir,
 	specify_model.inputs.input_units = 'secs'
 	specify_model.inputs.time_repetition = tr
 	specify_model.inputs.high_pass_filter_cutoff = highpass_sigma
-	specify_model.inputs.one_condition_file = not per_stimulus_contrast
 	specify_model.inputs.habituation_regressor = bool(habituation)
 
 	level1design = pe.Node(interface=Level1Design(), name="level1design")
@@ -90,16 +112,14 @@ def l1(preprocessing_dir,
 	# level1design.inputs.bases = {'gamma': {'derivs':False, 'gammasigma':10, 'gammadelay':5}}
 	level1design.inputs.orthogonalization = {1: {0:0,1:0,2:0}, 2: {0:1,1:1,2:0}}
 	level1design.inputs.model_serial_correlations = True
-	if per_stimulus_contrast:
-		level1design.inputs.contrasts = [('allStim','T', ["e0","e1","e2","e3","e4","e5"],[1,1,1,1,1,1])] #condition names as defined in specify_model
-	elif habituation=="separate_contrast":
+	if habituation=="separate_contrast":
 		level1design.inputs.contrasts = [('allStim','T', ["e0"],[1]),('allStim','T', ["e1"],[1])] #condition names as defined in specify_model
 	elif habituation=="in_main_contrast":
 		level1design.inputs.contrasts = [('allStim','T', ["e0", "e1"],[1,1])] #condition names as defined in specify_model
-	elif habituation=="confound":
+	elif habituation=="confound" or not habituation:
 		level1design.inputs.contrasts = [('allStim','T', ["e0"],[1])] #condition names as defined in specify_model
 	else:
-		level1design.inputs.contrasts = [('allStim','T', ["e0"],[1])] #condition names as defined in specify_model
+		raise ValueError('The value you have provided for the `habituation` parameter, namely "{}", is invalid. Please choose one of: {"confound","in_main_contrast","separate_contrast"}'.format(habituation))
 
 	modelgen = pe.Node(interface=fsl.FEATModel(), name='modelgen')
 

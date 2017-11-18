@@ -17,7 +17,6 @@ from nipype.interfaces import afni, fsl, nipy, bru2nii
 from samri.pipelines.extra_functions import get_data_selection, get_scan, write_events_file, force_dummy_scans
 from samri.pipelines.nodes import functional_registration, structural_registration, composite_registration
 from samri.pipelines.utils import ss_to_path, sss_filename, fslmaths_invert_values
-from samri.pipelines.utils import STIM_PROTOCOL_DICTIONARY
 
 from samri.utilities import N_PROCS
 
@@ -59,7 +58,6 @@ def diagnose(measurements_base,
 		Parameter that dictates slictiming correction and realignment of slices. "time" (FSL.SliceTimer) is default, since it works safely. Use others only with caution!
 
 	'''
-	
 	measurements_base = path.abspath(path.expanduser(measurements_base))
 
 	#select all functional/sturctural scan types unless specified

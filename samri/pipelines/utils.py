@@ -2,21 +2,6 @@
 
 from __future__ import print_function, division, unicode_literals, absolute_import
 
-STIM_PROTOCOL_DICTIONARY={
-	"EPI_BOLD_chr_longSOA":"chr_longSOA",
-	"EPI_BOLD_jb_long":"jb_long",
-	"EPI_CBV_alej":"alej",
-	"EPI_CBV_chr_longSOA":"chr_longSOA",
-	"EPI_CBV_chr_vlongSOA":"chr_vlongSOA",
-	"EPI_CBV_jb_long":"jb_long",
-	"EPI_CBV_jin6":"jin6",
-	"EPI_CBV_jin10":"jin10",
-	"EPI_CBV_jin20":"jin20",
-	"EPI_CBV_jin40":"jin40",
-	"EPI_CBV_jin60":"jin60",
-	"EPI_CBV_jp_phasic":"jp_phasic",
-	}
-
 def fslmaths_invert_values(img_path):
 	"""Calculates the op_string required to make an fsl.ImageMaths() node invert an image"""
 	op_string = "-sub {0} -sub {0}".format(img_path)

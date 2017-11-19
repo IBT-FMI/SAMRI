@@ -1,7 +1,7 @@
 from os import path
 import pandas as pd
 from samri.analysis import fc
-from samri.pipelines import preprocessing, glm
+from samri.pipelines import preprocess, glm
 from samri.utilities import bids_substitution_iterator
 
 def higher():

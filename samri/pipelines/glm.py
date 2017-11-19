@@ -54,7 +54,7 @@ def l1(preprocessing_dir,
 		A dictionary with any combination of "sessions", "subjects", "trials" as keys and corresponding identifiers as values.
 		If this is specified ony matching entries will be included in the analysis.
 	keep_work : bool, optional
-		Whether to keep the work directory (containing all the intermediaryworkflow steps, as managed by nipypye).
+		Whether to keep the work directory (containing all the intermediary workflow steps, as managed by nipypye).
 		This is useful for debugging and quality control.
 	l1_dir : str, optional
 		Path to the directory inside which both the working directory and the output directory will be created.

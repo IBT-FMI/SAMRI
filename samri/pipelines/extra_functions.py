@@ -2,11 +2,11 @@ import csv
 import inspect
 import os
 import re
+import json
 
 from copy import deepcopy
 import nibabel as nb
 import pandas as pd
-from samri.pipelines.utils import STIM_PROTOCOL_DICTIONARY
 
 STRUCTURAL_CONTRAST_MATCHING = {
 	('T1','t1'):'T1w',
@@ -63,6 +63,67 @@ def force_dummy_scans(in_file, scan_dir,
 
 	return out_file
 
+BIDS_METADATA_EXTRACTION_DICTS = [
+	{'field_name':'EchoTime',
+		'query_file':'method',
+		'regex':r'^##\$EchoTime=(?P<value>.*?)$',
+		'scale': 1./1000.,
+		'type': float,
+		},
+	{'field_name':'FlipAngle',
+		'query_file':'visu_pars',
+		'regex':r'^##\$VisuAcqFlipAngle=(?P<value>.*?)$',
+		'type': float,
+		},
+	{'field_name':'Manufacturer',
+		'query_file':'configscan',
+		'regex':r'^##ORIGIN=(?P<value>.*?)$',
+		},
+	{'field_name':'ReceiveCoilName',
+		'query_file':'configscan',
+		'regex':r'.*?,COILTABLE,1#\$Name,(?P<value>.*?)#\$Id.*?',
+		},
+	{'field_name':'PulseSequenceType',
+		'query_file':'method',
+		'regex':r'^##\$Method=<Bruker:(?P<value>.*?)>$',
+		},
+	]
+
+def write_bids_metadata_file(scan_dir, extraction_dicts,
+	out_file="bids_metadata.json",
+	):
+
+	import json
+	import re
+	from os import path
+
+	out_file = path.abspath(path.expanduser(out_file))
+	scan_dir = path.abspath(path.expanduser(scan_dir))
+	metadata = {}
+	for extraction_dict in extraction_dicts:
+		query_file = path.abspath(path.join(scan_dir,extraction_dict['query_file']))
+		with open(query_file) as search:
+			for line in search:
+				if re.match(extraction_dict['regex'], line):
+					m = re.match(extraction_dict['regex'], line)
+					value = m.groupdict()['value']
+					try:
+						value = extraction_dict['type'](value)
+					except KeyError:
+						pass
+					try:
+						value = value * extraction_dict['scale']
+					except KeyError:
+						pass
+					metadata[extraction_dict['field_name']] = value
+					break
+	with open(out_file, 'w') as out_file_writeable:
+		json.dump(metadata, out_file_writeable, indent=1)
+		out_file_writeable.write("\n")  # `json.dump` does not add a newline at the end; we do it here.
+
+	return out_file
+
+
 def write_function_call(frame, target_path):
 	args, _, _, values = inspect.getargvalues(frame)
 	function_name = inspect.getframeinfo(frame)[2]
@@ -81,13 +142,13 @@ def write_function_call(frame, target_path):
 	target.close()
 
 def write_events_file(scan_dir, trial,
-	stim_protocol_dictionary={},
 	db_path="~/syncdata/meta.db",
 	out_file="events.tsv",
 	dummy_scans_ms="determine",
 	subject_delay=False,
 	very_nasty_bruker_delay_hack=False,
 	prefer_labbookdb=False,
+	unchanged=True,
 	):
 
 	import csv
@@ -100,7 +161,26 @@ def write_events_file(scan_dir, trial,
 	out_file =os.path.abspath(os.path.expanduser(out_file))
 	scan_dir =os.path.abspath(os.path.expanduser(scan_dir))
 
-	if not subject_delay:
+	if not prefer_labbookdb:
+		try:
+			scan_dir_contents = os.listdir(scan_dir)
+			sequence_files = [i for i in scan_dir_contents if "sequence" in i and "tsv" in i]
+			sequence_file = os.path.join(scan_dir, sequence_files[0])
+			mydf = pd.read_csv(sequence_file, sep="\s")
+		except IndexError:
+			from labbookdb.report.tracking import bids_eventsfile
+			mydf = bids_eventsfile(db_path, trial)
+	else:
+		try:
+			from labbookdb.report.tracking import bids_eventsfile
+			mydf = bids_eventsfile(db_path, trial)
+		except ImportError:
+			scan_dir_contents = os.listdir(scan_dir)
+			sequence_files = [i for i in scan_dir_contents if "sequence" in i and "tsv" in i]
+			sequence_file = os.path.join(scan_dir, sequence_files[0])
+			mydf = pd.read_csv(sequence_file, sep="\s")
+
+	if not subject_delay and not unchanged:
 		state_file_path = os.path.join(scan_dir,"AdjStatePerScan")
 
 		#Here we read the `AdjStatePerScan` file, which may be missing if no adjustments were run at the beginning of this scan
@@ -140,31 +220,10 @@ def write_events_file(scan_dir, trial,
 					break #prevent loop from going on forever
 
 		subject_delay = delay_seconds + dummy_scans_ms/1000
-	try:
-		trial_code = stim_protocol_dictionary[trial]
-	except KeyError:
-		trial_code = trial
 
-	if not prefer_labbookdb:
-		try:
-			scan_dir_contents = os.listdir(scan_dir)
-			sequence_files = [i for i in scan_dir_contents if "sequence" in i and "tsv" in i]
-			sequence_file = os.path.join(scan_dir, sequence_files[0])
-			mydf = pd.read_csv(sequence_file, sep="\s")
-		except IndexError:
-			from labbookdb.report.tracking import bids_eventsfile
-			mydf = bids_eventsfile(db_path, trial_code)
-	else:
-		try:
-			from labbookdb.report.tracking import bids_eventsfile
-			mydf = bids_eventsfile(db_path, trial_code)
-		except ImportError:
-			scan_dir_contents = os.listdir(scan_dir)
-			sequence_files = [i for i in scan_dir_contents if "sequence" in i and "tsv" in i]
-			sequence_file = os.path.join(scan_dir, sequence_files[0])
-			mydf = pd.read_csv(sequence_file, sep="\s")
+	if not unchanged:
+		mydf['onset'] = mydf['onset'] - subject_delay
 
-	mydf['onset'] = mydf['onset'] - subject_delay
 	mydf.to_csv(out_file, sep=str('\t'), index=False)
 
 	return out_file

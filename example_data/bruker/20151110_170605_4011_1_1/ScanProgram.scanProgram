@@ -3466,7 +3466,7 @@ $$ @vis= GO_max_reco_mem RECO_GO RECO
       <creationDate class="sql-timestamp">2015-11-10 16:26:33.173</creationDate>
       <preDatasetServiceEntities/>
       <postDatasetServiceEntities/>
-      <displayName>acq-EPI_BOLD_trial-JogB (E7)</displayName>
+      <displayName>acq-EPIlowcovbold_trial-JogB (E7)</displayName>
       <index>4</index>
       <duration>1440000</duration>
       <status>SUCCEEDED</status>
@@ -3480,7 +3480,7 @@ $$ @vis= GO_max_reco_mem RECO_GO RECO
         <modificationDate>2015-11-10 17:59:33.54 UTC</modificationDate>
         <favorite>false</favorite>
         <creationDate>2015-11-10 17:59:33.54 UTC</creationDate>
-        <displayName>EPI_BOLD_JogB</displayName>
+        <displayName>acq-EPIlowcovbold_trial-JogB</displayName>
         <description>Default method protocol</description>
         <specimen>undefined</specimen>
         <region>undefined</region>
@@ -31925,7 +31925,7 @@ $$ @vis= GO_max_reco_mem RECO_GO RECO
       <creationDate class="sql-timestamp">2015-11-10 17:00:32.636</creationDate>
       <preDatasetServiceEntities/>
       <postDatasetServiceEntities/>
-      <displayName>acq-EPIlowcov_CBV_trial-JogB (E9)</displayName>
+      <displayName>acq-EPIlowcovcbv_trial-JogB (E9)</displayName>
       <index>6</index>
       <duration>1440000</duration>
       <status>SUCCEEDED</status>
@@ -31939,7 +31939,7 @@ $$ @vis= GO_max_reco_mem RECO_GO RECO
         <modificationDate>2015-11-10 17:59:33.87 UTC</modificationDate>
         <favorite>false</favorite>
         <creationDate>2015-11-10 17:59:33.86 UTC</creationDate>
-        <displayName>EPIlowcov_CBV_JogB</displayName>
+        <displayName>acq-EPIlowcovcbv_trial-JogB</displayName>
         <description>Default method protocol</description>
         <specimen>undefined</specimen>
         <region>undefined</region>

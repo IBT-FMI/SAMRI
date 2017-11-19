@@ -1,0 +1,136 @@
+##TITLE=Parameter List, ParaVision 6.0
+##JCAMPDX=4.24
+##DATATYPE=Parameter Values
+##ORIGIN=Bruker BioSpin MRI GmbH
+##OWNER=mri
+$$ 2017-03-17 16:39:58 +0100  mri@pharmascan70
+$$ /opt/PV6.0/data/mri/20170317_155009_5706_1_5/900002/visu_pars
+$$ process /opt/PV6.0/prog/mod/acq_out
+##$VisuVersion=3
+##$VisuUid=( 65 )
+<2.16.756.5.5.100.9223372038926637916.12922.1489765198.1>
+##$VisuCreator=( 65 )
+<ParaVision>
+##$VisuCreatorVersion=( 65 )
+<6.0>
+##$VisuCreationDate=<2017-03-17T16:39:58,562+0100>
+##$VisuInstanceModality=( 65 )
+<MR>
+##$VisuCoreFrameCount=1
+##$VisuCoreDim=3
+##$VisuCoreSize=( 3 )
+64 64 64
+##$VisuCoreDimDesc=( 3 )
+spatial spatial spatial
+##$VisuCoreExtent=( 3 )
+30 30 30
+##$VisuCoreFrameThickness=( 1 )
+30
+##$VisuCoreUnits=( 3, 65 )
+<mm> <mm> <mm>
+##$VisuCoreOrientation=( 1, 9 )
+0 1 0 0 0 -1 -1 0 0
+##$VisuCorePosition=( 1, 3 )
+14.765625 -15 15
+##$VisuCoreDataMin=( 1 )
+-2147483646.5
+##$VisuCoreDataMax=( 1 )
+1810859825.17628
+##$VisuCoreDataOffs=( 1 )
+0
+##$VisuCoreDataSlope=( 1 )
+4.50836606281018e-07
+##$VisuCoreDataUnits=( 1, 65 )
+<Hz>
+##$VisuCoreFrameType=( 1 )
+MAGNITUDE_IMAGE
+##$VisuCoreSlicePacksDef=(-1, 1)
+##$VisuCoreSlicePacksSlices=( 1 )
+(0, 1)
+##$VisuCoreSlicePacksSliceDist=( 1 )
+30
+##$VisuCoreWordType=_32BIT_SGN_INT
+##$VisuCoreByteOrder=littleEndian
+##$VisuCoreDiskSliceOrder=disk_normal_slice_order
+##$VisuSubjectName=( 65 )
+<5706>
+##$VisuSubjectId=( 65 )
+<5706>
+##$VisuSubjectUid=( 65 )
+<2.16.756.5.5.100.4219345756.8159.1484670286.495>
+##$VisuSubjectInstanceCreationDate=(1484670286, 359, 60)
+##$VisuSubjectBirthDate=( 9 )
+<20170117>
+##$VisuSubjectSex=MALE
+##$VisuSubjectType=Quadruped
+##$VisuStudyUid=( 65 )
+<2.16.756.5.5.100.4219345756.13573.1489762209.460>
+##$VisuStudyDate=<2017-03-17T15:50:09,266+0100>
+##$VisuStudyId=( 65 )
+<ofMpF>
+##$VisuStudyNumber=5
+##$VisuSubjectWeight=0.03
+##$VisuStudyReferringPhysician=( 65 )
+<CHo>
+##$VisuStudyDescription=( 2048 )
+<\
+>
+##$VisuExperimentNumber=900002
+##$VisuProcessingNumber=1
+##$VisuSeriesDate=<2017-03-17T16:39:58,562+0100>
+##$VisuSubjectPosition=Head_Supine
+##$VisuSeriesTypeId=( 65 )
+<ACQ_BRUKER_PVM>
+##$VisuManufacturer=( 65 )
+<Bruker BioSpin MRI GmbH>
+##$VisuAcqSoftwareVersion=( 65 )
+<6.0>
+##$VisuInstitution=( 65 )
+<ETH Zuerich>
+##$VisuStation=( 65 )
+<BioSpec 70/16>
+##$VisuAcqDate=<2017-03-17T16:37:07,507+0100>
+##$VisuAcqEchoTrainLength=1
+##$VisuAcqSequenceName=( 40 )
+<Bruker:FieldMap>
+##$VisuAcqNumberOfAverages=2
+##$VisuAcqImagingFrequency=300.326645287495
+##$VisuAcqImagedNucleus=( 8 )
+<1H>
+##$VisuAcqRepetitionTime=( 1 )
+20
+##$VisuAcqPhaseEncSteps=64
+##$VisuAcqPixelBandwidth=1860.11904761905
+##$VisuAcqFlipAngle=30
+##$VisuAcqSize=( 3 )
+64 64 64
+##$VisuAcqImageSizeAccellerated=No
+##$VisuAcqGradEncoding=( 3 )
+phase_enc read_enc slice_enc
+##$VisuAcquisitionProtocol=( 65 )
+<B0Map-ADJ_B0MAP>
+##$VisuAcqScanTime=163840
+##$VisuAcqAntiAlias=( 3 )
+1 1 1
+##$VisuAcqEchoSequenceType=Both
+##$VisuAcqSpinsVelocityEncoded=No
+##$VisuAcqHasTimeOfFlightContrast=No
+##$VisuAcqIsEpiSequence=No
+##$VisuAcqSpectralSuppression=NoSuppression
+##$VisuAcqKSpaceTraversal=RectilinearTraversal
+##$VisuAcqEncodingOrder=( 3 )
+LinearEncoding LinearEncoding LinearEncoding
+##$VisuAcqKSpaceTrajectoryCnt=1
+##$VisuAcqKSpaceFiltering=( 3 )
+NO_WDW NO_WDW NO_WDW
+##$VisuAcqFlowCompensation=FlowNone
+##$VisuAcqSpoiling=GradientSpoiled
+##$VisuAcqPartialFourier=( 3 )
+1 1 1
+##$VisuAcqParallelReductionFactor=( 3 )
+1 1 1
+##$VisuAcqMagnetizationTransfer=No
+##$VisuAcqBloodSignalNulling=No
+##$VisuCardiacSynchUsed=No
+##$VisuRespSynchUsed=No
+##END=

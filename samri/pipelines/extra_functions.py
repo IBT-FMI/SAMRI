@@ -8,17 +8,42 @@ from copy import deepcopy
 import nibabel as nb
 import pandas as pd
 
-STRUCTURAL_CONTRAST_MATCHING = {
-	('T1','t1'):'T1w',
-	('T2','t2'):'T2w',
-	}
 BEST_GUESS_STRUCTURAL_CONTRAST_MATCHING = {
 	('FLASH',):'T1w',
 	('TurboRARE','TRARE'):'T2w',
 	}
+BIDS_METADATA_EXTRACTION_DICTS = [
+	{'field_name':'EchoTime',
+		'query_file':'method',
+		'regex':r'^##\$EchoTime=(?P<value>.*?)$',
+		'scale': 1./1000.,
+		'type': float,
+		},
+	{'field_name':'FlipAngle',
+		'query_file':'visu_pars',
+		'regex':r'^##\$VisuAcqFlipAngle=(?P<value>.*?)$',
+		'type': float,
+		},
+	{'field_name':'Manufacturer',
+		'query_file':'configscan',
+		'regex':r'^##ORIGIN=(?P<value>.*?)$',
+		},
+	{'field_name':'ReceiveCoilName',
+		'query_file':'configscan',
+		'regex':r'.*?,COILTABLE,1#\$Name,(?P<value>.*?)#\$Id.*?',
+		},
+	{'field_name':'PulseSequenceType',
+		'query_file':'method',
+		'regex':r'^##\$Method=<Bruker:(?P<value>.*?)>$',
+		},
+	]
 FUNCTIONAL_CONTRAST_MATCHING = {
 	('BOLD','bold','Bold'):'bold',
 	('CBV','cbv','Cbv'):'cbv',
+	}
+STRUCTURAL_CONTRAST_MATCHING = {
+	('T1','t1'):'T1w',
+	('T2','t2'):'T2w',
 	}
 
 def force_dummy_scans(in_file, scan_dir,
@@ -62,32 +87,6 @@ def force_dummy_scans(in_file, scan_dir,
 		nib.save(img_,out_file)
 
 	return out_file
-
-BIDS_METADATA_EXTRACTION_DICTS = [
-	{'field_name':'EchoTime',
-		'query_file':'method',
-		'regex':r'^##\$EchoTime=(?P<value>.*?)$',
-		'scale': 1./1000.,
-		'type': float,
-		},
-	{'field_name':'FlipAngle',
-		'query_file':'visu_pars',
-		'regex':r'^##\$VisuAcqFlipAngle=(?P<value>.*?)$',
-		'type': float,
-		},
-	{'field_name':'Manufacturer',
-		'query_file':'configscan',
-		'regex':r'^##ORIGIN=(?P<value>.*?)$',
-		},
-	{'field_name':'ReceiveCoilName',
-		'query_file':'configscan',
-		'regex':r'.*?,COILTABLE,1#\$Name,(?P<value>.*?)#\$Id.*?',
-		},
-	{'field_name':'PulseSequenceType',
-		'query_file':'method',
-		'regex':r'^##\$Method=<Bruker:(?P<value>.*?)>$',
-		},
-	]
 
 def write_bids_metadata_file(scan_dir, extraction_dicts,
 	out_file="bids_metadata.json",

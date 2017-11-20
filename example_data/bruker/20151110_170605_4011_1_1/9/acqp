@@ -185,10 +185,10 @@ $$ @vis= SFO7 O7 BF8 SFO8 O8 NUC1 NUC2 NUC3 NUC4 NUC5 NUC6 NUC7 NUC8 NUCLEUS
 ##$ACQ_vp_list=( 1 )
 1e-06
 ##$ACQ_protocol_name=( 64 )
-<EPI_CBV_jb_long>
+<acq-EPIlowcovcbv_trial-JogB>
 $$ @vis= L ACQ_vd_list_size ACQ_vd_list ACQ_vp_list_size ACQ_vp_list
 ##$ACQ_scan_name=( 64 )
-<EPI_CBV_jb_long>
+<acq-EPIlowcovcbv_trial-JogB>
 ##$ACQ_method=( 40 )
 <Bruker:EPI>
 ##$ACQ_completed=Yes

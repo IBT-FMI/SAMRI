@@ -52,14 +52,16 @@ def test_bids_naming():
 			)
 	assert_and_feedback(name,'sub-5704_ses-ofMpF_acq-TurboRARE_T2w.nii.gz', debug=data_selection)
 
-def test_bru2bids():
-	from samri.pipelines.reposit import bru2bids
-
-	bruker_data_dir = path.join(DATA_DIR,'bruker')
-	bru2bids(bruker_data_dir,
-		debug=False,
-		functional_match={'trial':['JogB','CogB','CogB2m'],},
-		structural_match={'acquisition':['TurboRARE', 'TurboRARElowcov']},
-		actual_size=True,
-		keep_work=False,
-		)
+# The following test fails because it will not work with our dummy data (containing only the directory hierarchy and some metadata files).
+# This should work once we can include `2dseq` files in our example data.
+#def test_bru2bids():
+#	from samri.pipelines.reposit import bru2bids
+#
+#	bruker_data_dir = path.join(DATA_DIR,'bruker')
+#	bru2bids(bruker_data_dir,
+#		debug=False,
+#		functional_match={'trial':['JogB','CogB','CogB2m'],},
+#		structural_match={'acquisition':['TurboRARE', 'TurboRARElowcov']},
+#		actual_size=True,
+#		keep_work=False,
+#		)

@@ -1,7 +1,7 @@
 __author__ = "Horea Christian"
 
 import argh
-from samri§.pipelines.diagnostics import diagnose
+from samri.pipelines.diagnostics import diagnose
 
 
 def main():

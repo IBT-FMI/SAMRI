@@ -112,6 +112,7 @@ def bru2bids(measurements_base,
 	events_filename.inputs.suffix = "events"
 	events_filename.inputs.extension = ".tsv"
 	events_filename.inputs.metadata = data_selection
+	events_filename.ignore_exception = True
 
 	f_metadata_file = pe.Node(name='metadata_file', interface=util.Function(function=write_bids_metadata_file,input_names=inspect.getargspec(write_bids_metadata_file)[0], output_names=['out_file']))
 	f_metadata_file.inputs.extraction_dicts = BIDS_METADATA_EXTRACTION_DICTS

@@ -73,8 +73,6 @@ def bru2bids(measurements_base,
 			)
 		structural_scan_types = s_data_selection['scan_type'].unique()
 		data_selection = pd.concat([data_selection,s_data_selection])
-	else:
-		structural_scan_types = []
 	if functional_match:
 		f_data_selection = get_data_selection(measurements_base,
 			match=functional_match,
@@ -148,42 +146,44 @@ def bru2bids(measurements_base,
 		(f_metadata_file, datasink, [('out_file', 'func.@metadata')]),
 		]
 
-	if structural_scan_types.any():
-		get_s_scan = pe.Node(name='get_s_scan', interface=util.Function(function=get_scan, input_names=inspect.getargspec(get_scan)[0], output_names=['scan_path','scan_type','trial']))
-		get_s_scan.inputs.ignore_exception = True
-		get_s_scan.inputs.data_selection = data_selection
-		get_s_scan.inputs.measurements_base = measurements_base
-		get_s_scan.iterables = ("scan_type", structural_scan_types)
+	try:
+		if structural_scan_types.any():
+			get_s_scan = pe.Node(name='get_s_scan', interface=util.Function(function=get_scan, input_names=inspect.getargspec(get_scan)[0], output_names=['scan_path','scan_type','trial']))
+			get_s_scan.inputs.ignore_exception = True
+			get_s_scan.inputs.data_selection = data_selection
+			get_s_scan.inputs.measurements_base = measurements_base
+			get_s_scan.iterables = ("scan_type", structural_scan_types)
 
-		s_bru2nii = pe.Node(interface=bru2nii.Bru2(), name="s_bru2nii")
-		s_bru2nii.inputs.force_conversion=True
-		s_bru2nii.inputs.actual_size=actual_size
+			s_bru2nii = pe.Node(interface=bru2nii.Bru2(), name="s_bru2nii")
+			s_bru2nii.inputs.force_conversion=True
+			s_bru2nii.inputs.actual_size=actual_size
 
-		s_filename = pe.Node(name='s_filename', interface=util.Function(function=bids_naming,input_names=inspect.getargspec(bids_naming)[0], output_names=['filename']))
-		s_filename.inputs.metadata = data_selection
-		s_filename.inputs.extension=''
+			s_filename = pe.Node(name='s_filename', interface=util.Function(function=bids_naming,input_names=inspect.getargspec(bids_naming)[0], output_names=['filename']))
+			s_filename.inputs.metadata = data_selection
+			s_filename.inputs.extension=''
 
-		s_metadata_filename = pe.Node(name='s_metadata_filename', interface=util.Function(function=bids_naming,input_names=inspect.getargspec(bids_naming)[0], output_names=['filename']))
-		s_metadata_filename.inputs.extension = ".json"
-		s_metadata_filename.inputs.metadata = data_selection
+			s_metadata_filename = pe.Node(name='s_metadata_filename', interface=util.Function(function=bids_naming,input_names=inspect.getargspec(bids_naming)[0], output_names=['filename']))
+			s_metadata_filename.inputs.extension = ".json"
+			s_metadata_filename.inputs.metadata = data_selection
 
-		s_metadata_file = pe.Node(name='s_metadata_file', interface=util.Function(function=write_bids_metadata_file,input_names=inspect.getargspec(write_bids_metadata_file)[0], output_names=['out_file']))
-		s_metadata_file.inputs.extraction_dicts = BIDS_METADATA_EXTRACTION_DICTS
+			s_metadata_file = pe.Node(name='s_metadata_file', interface=util.Function(function=write_bids_metadata_file,input_names=inspect.getargspec(write_bids_metadata_file)[0], output_names=['out_file']))
+			s_metadata_file.inputs.extraction_dicts = BIDS_METADATA_EXTRACTION_DICTS
 
-		workflow_connections.extend([
-			(infosource, get_s_scan, [('subject_session', 'selector')]),
-			(infosource, s_filename, [('subject_session', 'subject_session')]),
-			(infosource, s_metadata_filename, [('subject_session', 'subject_session')]),
-			(get_s_scan, s_bru2nii, [('scan_path','input_dir')]),
-			(get_s_scan, s_filename, [('scan_type', 'scan_type')]),
-			(get_s_scan, s_metadata_filename, [('scan_type', 'scan_type')]),
-			(get_s_scan, s_metadata_file, [('scan_path', 'scan_dir')]),
-			(s_filename, s_bru2nii, [('filename','output_filename')]),
-			(s_metadata_filename, s_metadata_file, [('filename', 'out_file')]),
-			(s_bru2nii, datasink, [('nii_file', 'anat')]),
-			(s_metadata_file, datasink, [('out_file', 'anat.@metadata')]),
-			])
-
+			workflow_connections.extend([
+				(infosource, get_s_scan, [('subject_session', 'selector')]),
+				(infosource, s_filename, [('subject_session', 'subject_session')]),
+				(infosource, s_metadata_filename, [('subject_session', 'subject_session')]),
+				(get_s_scan, s_bru2nii, [('scan_path','input_dir')]),
+				(get_s_scan, s_filename, [('scan_type', 'scan_type')]),
+				(get_s_scan, s_metadata_filename, [('scan_type', 'scan_type')]),
+				(get_s_scan, s_metadata_file, [('scan_path', 'scan_dir')]),
+				(s_filename, s_bru2nii, [('filename','output_filename')]),
+				(s_metadata_filename, s_metadata_file, [('filename', 'out_file')]),
+				(s_bru2nii, datasink, [('nii_file', 'anat')]),
+				(s_metadata_file, datasink, [('out_file', 'anat.@metadata')]),
+				])
+	except UnboundLocalError:
+		pass
 
 	crashdump_dir = path.join(measurements_base,'bids_crashdump')
 	workflow_config = {'execution': {'crashdump_dir': crashdump_dir}}

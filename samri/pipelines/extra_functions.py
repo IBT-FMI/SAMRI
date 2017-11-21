@@ -44,6 +44,8 @@ FUNCTIONAL_CONTRAST_MATCHING = {
 STRUCTURAL_CONTRAST_MATCHING = {
 	('T1','t1'):'T1w',
 	('T2','t2'):'T2w',
+	('MTon','MtOn'):'MTon',
+	('MToff','MtOff'):'MToff',
 	}
 
 def force_dummy_scans(in_file, scan_dir,

@@ -73,6 +73,8 @@ def bru2bids(measurements_base,
 			)
 		structural_scan_types = s_data_selection['scan_type'].unique()
 		data_selection = pd.concat([data_selection,s_data_selection])
+	else:
+		structural_scan_types = []
 	if functional_match:
 		f_data_selection = get_data_selection(measurements_base,
 			match=functional_match,

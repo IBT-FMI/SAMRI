@@ -117,43 +117,10 @@ def bids_naming(subject_session, scan_type, metadata,
 		trial = trial.item()
 		filename += '_trial-{}'.format(trial)
 	if not suffix:
-		contrast = selection['contrast']
-		if not contrast.isnull().all():
-			contrast = contrast.item()
-			filename += '_{}'.format(contrast)
-	else:
-		filename += '_{}'.format(suffix)
-	filename += extension
-
-	return filename
-
-def _bids_naming(subject_session, scan_type, metadata,
-	extra=['acq'],
-	extension='.nii.gz',
-	suffix='',
-	):
-	"""
-	Generate a BIDS filename from a subject-and-session iterator, a scan type, and a `pandas.DataFrame` metadata container.
-	"""
-	scan_type_is_trial = True
-	subject, session = subject_session
-	filename = 'sub-{}'.format(subject)
-	filename += '_ses-{}'.format(session)
-	if 'acq' in extra:
-		acq = metadata[(metadata['subject']==subject)&(metadata['session']==session)&(metadata['scan_type']==scan_type)]['acq']
-		if not acq.isnull().all():
-			acq = acq.item()
-			filename += '_acq-{}'.format(acq)
-	if not acq == scan_type:
-		trial = metadata[(metadata['subject']==subject)&(metadata['session']==session)&(metadata['scan_type']==scan_type)]['trial']
-		if not trial.isnull().all():
-			trial = trial.item()
-			filename += '_trial-{}'.format(trial)
-	if not suffix:
-		contrast = metadata[(metadata['subject']==subject)&(metadata['session']==session)&(metadata['scan_type']==scan_type)]['contrast']
-		if not contrast.isnull().all():
-			contrast = contrast.item()
-			filename += '_{}'.format(contrast)
+		modality = selection['modality']
+		if not modality.isnull().all():
+			modality = modality.item()
+			filename += '_{}'.format(modality)
 	else:
 		filename += '_{}'.format(suffix)
 	filename += extension

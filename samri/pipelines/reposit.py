@@ -4,6 +4,7 @@ from samri.pipelines.extra_functions import get_data_selection, get_scan, write_
 import re
 import inspect
 import shutil
+import time
 
 import nipype.interfaces.io as nio
 import nipype.interfaces.utility as util		# utility
@@ -119,11 +120,11 @@ def bru2bids(measurements_base,
 
 	events_file = pe.Node(name='events_file', interface=util.Function(function=write_events_file,input_names=inspect.getargspec(write_events_file)[0], output_names=['out_file']))
 	events_file.inputs.unchanged = True
+	events_file.ignore_exception = True
 
 	datasink = pe.Node(nio.DataSink(), name='datasink')
 	datasink.inputs.base_directory = path.join(measurements_base,"bids")
 	datasink.inputs.parameterization = False
-	datasink.inputs.ignore_exception = True
 
 	workflow_connections = [
 		(infosource, get_f_scan, [('subject_session', 'selector')]),
@@ -213,3 +214,8 @@ def bru2bids(measurements_base,
 			shutil.rmtree(crashdump_dir)
 		except FileNotFoundError:
 			pass
+	print(data_selection)
+	print(f_data_selection)
+	print(s_data_selection)
+	print(structural_scan_types)
+	print(functional_scan_types)

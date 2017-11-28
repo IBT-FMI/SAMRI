@@ -8,7 +8,7 @@ from copy import deepcopy
 import nibabel as nb
 import pandas as pd
 
-BEST_GUESS_STRUCTURAL_CONTRAST_MATCHING = {
+BEST_GUESS_MODALITY_MATCH = {
 	('FLASH',):'T1w',
 	('TurboRARE','TRARE'):'T2w',
 	}
@@ -37,11 +37,9 @@ BIDS_METADATA_EXTRACTION_DICTS = [
 		'regex':r'^##\$Method=<Bruker:(?P<value>.*?)>$',
 		},
 	]
-FUNCTIONAL_CONTRAST_MATCHING = {
+MODALITY_MATCH = {
 	('BOLD','bold','Bold'):'bold',
 	('CBV','cbv','Cbv'):'cbv',
-	}
-STRUCTURAL_CONTRAST_MATCHING = {
 	('T1','t1'):'T1w',
 	('T2','t2'):'T2w',
 	('MTon','MtOn'):'MTon',
@@ -174,14 +172,14 @@ def write_events_file(scan_dir, trial,
 				from labbookdb.report.tracking import bids_eventsfile
 				mydf = bids_eventsfile(db_path, trial)
 			else:
-				return None
+				return '/dev/null'
 	else:
 		try:
 			if os.path.isfile(db_path):
 				from labbookdb.report.tracking import bids_eventsfile
 				mydf = bids_eventsfile(db_path, trial)
 			else:
-				return None
+				return '/dev/null'
 		except ImportError:
 			scan_dir_contents = os.listdir(scan_dir)
 			sequence_files = [i for i in scan_dir_contents if "sequence" in i and "tsv" in i]
@@ -373,13 +371,13 @@ BIDS_KEY_DICTIONARY = {
 	'trial':['trial','TRIAL','stim','STIM','stimulation','STIMULATION'],
 	}
 
-def assign_contrast(scan_type, record):
-	"""Add a contrast column with a corresponding value to a `pandas.DataFrame` object.
+def assign_modality(scan_type, record):
+	"""Add a modality column with a corresponding value to a `pandas.DataFrame` object.
 
 	Parameters
 	----------
 	scan_type: str
-		A string potentially containing a contrast identifier.
+		A string potentially containing a modality identifier.
 	record: pandas.DataFrame
 		A `pandas.Dataframe` object.
 
@@ -387,19 +385,16 @@ def assign_contrast(scan_type, record):
 	-------
 	An updated `pandas.DataFrame` obejct.
 	"""
-	for contrast_group in FUNCTIONAL_CONTRAST_MATCHING:
-		for contrast_string in contrast_group:
-			if contrast_string in scan_type:
-				record['contrast'] = FUNCTIONAL_CONTRAST_MATCHING[contrast_group]
-				scan_type = scan_type.replace(contrast_string,'')
+	for modality_group in MODALITY_MATCH:
+		for modality_string in modality_group:
+			if modality_string in scan_type:
+				record['modality'] = MODALITY_MATCH[modality_group]
 				return scan_type, record
-	for contrast_group in BEST_GUESS_STRUCTURAL_CONTRAST_MATCHING:
-		for contrast_string in contrast_group:
-			if contrast_string in scan_type:
-				record['contrast'] = BEST_GUESS_STRUCTURAL_CONTRAST_MATCHING[contrast_group]
-	BEST_GUESS_STRUCTURAL_CONTRAST_MATCHING
-
-	return scan_type, record
+	for modality_group in BEST_GUESS_MODALITY_MATCH:
+		for modality_string in modality_group:
+			if modality_string in scan_type:
+				record['modality'] = BEST_GUESS_MODALITY_MATCH[modality_group]
+				return scan_type, record
 
 def match_exclude_bids(key, values, record, scan_type, number):
 	key_alternatives = BIDS_KEY_DICTIONARY[key]
@@ -411,7 +406,7 @@ def match_exclude_bids(key, values, record, scan_type, number):
 					record['scan_type'] = str(scan_type).strip(' ')
 					record['scan'] = str(int(number))
 					record[key] = str(value).strip(' ')
-					scan_type, record = assign_contrast(scan_type, record)
+					scan_type, record = assign_modality(scan_type, record)
 					for key_ in BIDS_KEY_DICTIONARY:
 						for alternative_ in BIDS_KEY_DICTIONARY[key_]:
 							if alternative_ in scan_type:

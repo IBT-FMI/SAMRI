@@ -123,6 +123,7 @@ def bru2bids(measurements_base,
 	datasink = pe.Node(nio.DataSink(), name='datasink')
 	datasink.inputs.base_directory = path.join(measurements_base,"bids")
 	datasink.inputs.parameterization = False
+	datasink.inputs.ignore_exception = True
 
 	workflow_connections = [
 		(infosource, get_f_scan, [('subject_session', 'selector')]),
@@ -208,5 +209,7 @@ def bru2bids(measurements_base,
 	if not keep_work:
 		shutil.rmtree(path.join(workflow.base_dir,workdir_name))
 	if not keep_crashdump:
-		shutil.rmtree(crashdump_dir)
-
+		try:
+			shutil.rmtree(crashdump_dir)
+		except FileNotFoundError:
+			pass

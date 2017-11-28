@@ -159,8 +159,9 @@ def write_events_file(scan_dir, trial,
 	import pandas as pd
 	import numpy as np
 
-	out_file =os.path.abspath(os.path.expanduser(out_file))
-	scan_dir =os.path.abspath(os.path.expanduser(scan_dir))
+	out_file = os.path.abspath(os.path.expanduser(out_file))
+	scan_dir = os.path.abspath(os.path.expanduser(scan_dir))
+	db_path = os.path.abspath(os.path.expanduser(db_path))
 
 	if not prefer_labbookdb:
 		try:
@@ -169,12 +170,18 @@ def write_events_file(scan_dir, trial,
 			sequence_file = os.path.join(scan_dir, sequence_files[0])
 			mydf = pd.read_csv(sequence_file, sep="\s")
 		except IndexError:
-			from labbookdb.report.tracking import bids_eventsfile
-			mydf = bids_eventsfile(db_path, trial)
+			if os.path.isfile(db_path):
+				from labbookdb.report.tracking import bids_eventsfile
+				mydf = bids_eventsfile(db_path, trial)
+			else:
+				return None
 	else:
 		try:
-			from labbookdb.report.tracking import bids_eventsfile
-			mydf = bids_eventsfile(db_path, trial)
+			if os.path.isfile(db_path):
+				from labbookdb.report.tracking import bids_eventsfile
+				mydf = bids_eventsfile(db_path, trial)
+			else:
+				return None
 		except ImportError:
 			scan_dir_contents = os.listdir(scan_dir)
 			sequence_files = [i for i in scan_dir_contents if "sequence" in i and "tsv" in i]

@@ -214,8 +214,3 @@ def bru2bids(measurements_base,
 			shutil.rmtree(crashdump_dir)
 		except FileNotFoundError:
 			pass
-	print(data_selection)
-	print(f_data_selection)
-	print(s_data_selection)
-	print(structural_scan_types)
-	print(functional_scan_types)

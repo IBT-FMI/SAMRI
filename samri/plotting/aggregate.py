@@ -6,12 +6,10 @@ from matplotlib import rcParams
 EXTRA_COLORSET = ["#797979","#000000","#505050","#FFFFFF","#B0B0B0",]
 
 def registration_qc(df,
-	anova_type=3,
 	cmap="Set3",
 	extra=False,
 	extra_cmap=EXTRA_COLORSET,
 	group={"sub":"Subject"},
-	model="{value} ~ C({extra}) + C({group}) + C({repeat}) -1",
 	print_model=False,
 	print_anova=False,
 	repeat={"ses":"Session"},
@@ -103,25 +101,20 @@ def registration_qc(df,
 		extra = list(extra.values())[0]
 	df = df.rename(columns=column_renames)
 
-	model = model.format(value=value, group=group, repeat=repeat, extra=extra)
-	regression_model = smf.ols(model, data=df).fit()
-	if print_model:
-		print(regression_model.summary())
-
-	anova_summary = sm.stats.anova_lm(regression_model, typ=anova_type)
-	if print_anova:
-		print(anova_summary)
-
 	if extra:
 		myplot = sns.swarmplot(x=group, y=value, hue=extra, data=df,
 			size=rcParams["lines.markersize"]*1.4,
 			palette=sns.color_palette(extra_cmap),
 			)
-	myplot = sns.swarmplot(x=group, y=value, hue=repeat, data=df,
-		edgecolor=(1, 1, 1, 0.0),
-		linewidth=rcParams["lines.markersize"]*.4,
-		palette=sns.color_palette(cmap),
-		)
+		myplot = sns.swarmplot(x=group, y=value, hue=repeat, data=df,
+			edgecolor=(1, 1, 1, 0.0),
+			linewidth=rcParams["lines.markersize"]*.4,
+			palette=sns.color_palette(cmap),
+			)
+	else:
+		myplot = sns.swarmplot(x=group, y=value, hue=repeat, data=df,
+			palette=sns.color_palette(cmap),
+			)
 
 	plt.legend(loc=rcParams["legend.loc"])
 
@@ -129,5 +122,3 @@ def registration_qc(df,
 		sns.plt.show()
 	if save_as:
 		plt.savefig(path.abspath(path.expanduser(save_as)), bbox_inches='tight')
-
-	return anova_summary

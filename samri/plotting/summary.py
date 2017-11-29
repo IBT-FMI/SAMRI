@@ -347,6 +347,7 @@ def roi_masking(substitution, ts_file_template, beta_file_template, design_file_
 		design = pd.read_csv(design_file, skiprows=5, sep="\t", header=None, index_col=False)
 		event_df = pd.read_csv(event_file, sep="\t")
 	except ValueError:
+		print('Not found',ts_file,beta_file,design_file,event_file)
 		return None,None,None,None,None
 	subplot_title = "\n ".join([str(substitution["subject"]),str(substitution["session"])])
 	timecourse = np.mean(timecourse, axis=0)
@@ -365,7 +366,7 @@ def ts_overviews(substitutions, roi_path,
 	stat_maps = []
 	subplot_titles = []
 	designs = []
-	roi_path = path.expanduser(roi_path)
+	roi_path = path.abspath(path.expanduser(roi_path))
 
 	n_jobs = mp.cpu_count()-2
 	substitutions_data = Parallel(n_jobs=n_jobs, verbose=0, backend="threading")(map(delayed(roi_masking),

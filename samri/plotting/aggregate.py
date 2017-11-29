@@ -1,5 +1,6 @@
 import matplotlib.pyplot as plt
 import pandas as pd
+import seaborn.apionly as sns
 from os import path
 from matplotlib import rcParams
 
@@ -10,8 +11,6 @@ def registration_qc(df,
 	extra=False,
 	extra_cmap=EXTRA_COLORSET,
 	group={"sub":"Subject"},
-	print_model=False,
-	print_anova=False,
 	repeat={"ses":"Session"},
 	samri_style=True,
 	save_as=False,
@@ -26,20 +25,12 @@ def registration_qc(df,
 
 	df : pandas.DataFrame or str
 		Pandas Dataframe or CSV file containing similarity scores.
-	anova_type : int, optional
-		Type of the ANOVA to use for model analysis. Consult [1]_ for a theoretical overview, and `statsmodels.stats.anova.anova_lm` for the implementation we use.
 	cmap : str or list, optional
 		If a string, the variable specifies the matplotlib colormap [2]_ (qualitative colormaps are recommended) to use for `repeat` highlighting. If a List, the variable should be a list of colors (e.g. `["#00FF00","#2222FF"]`).
 	extra_cmap : str or list, optional
 		If a string, the variable specifies the matplotlib colormap [2]_ (qualitative colormaps are recommended) to use for `extra` highlighting,  which is applied as a contour to the `repeat`-colored pacthes. If a List, the variable should be a list of colors (e.g. `["#00FF00","#2222FF"]`).
 	group : str or dict, optional
 		Column of `df` to use as the group factor (values of this factor will represent the x-axis). If a dictionary is passed, the column named for the key of the dictionary is renamed to the value, and the value name is then used as the group factor. This is useful for the input of longer but clearer names for plotting.
-	model : string, optional
-		A string specifying the ANOVA formula as a statsmodels function [3]_. It may contain string substitutions (e.g. `"{value} ~ C({group})"`).
-	print_model : bool, optional
-		Whether to print the model output table.
-	print_anova : bool, optional
-		Whether to print the ANOVA output table.
 	samri_style : bool, optional
 		Whether to apply a generic SAMRI style to the plot.
 	save_as : str, optional
@@ -66,9 +57,6 @@ def registration_qc(df,
 
 	.. [3] http://www.statsmodels.org/dev/example_formulas.html
 	"""
-	import seaborn.apionly as sns
-	import statsmodels.api as sm
-	import statsmodels.formula.api as smf
 
 	if samri_style:
 		this_path = path.dirname(path.realpath(__file__))
@@ -114,6 +102,7 @@ def registration_qc(df,
 	else:
 		myplot = sns.swarmplot(x=group, y=value, hue=repeat, data=df,
 			palette=sns.color_palette(cmap),
+			size=rcParams["lines.markersize"]*2,
 			)
 
 	plt.legend(loc=rcParams["legend.loc"])

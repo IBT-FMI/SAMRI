@@ -27,9 +27,43 @@ def reg_gc():
 	session_effect = inline_anova(anova_summary,"C(Session)",style="python")
 	print("Session Main Effect: {}".format(session_effect))
 
+def test_reg_qc(
+	radius=5,
+	autofind=False,
+	plot=False,
+	):
+	"""This could be used as a continuous integration test function once we can distribute demo data."""
+	from samri.utilities import bids_autofind
+	from samri.plotting.aggregate import registration_qc
+	from samri.report.registration import get_scores
+	from samri.typesetting import inline_anova
+	from samri.utilities import bids_substitution_iterator
+
+	if autofind:
+		path_template, substitutions = bids_autofind("~/ni_data/ofM.dr/preprocessing/composite","func")
+	else:
+		path_template = "{data_dir}/preprocessing/{preprocessing_dir}/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_acq-{acquisition}_trial-{trial}_cbv.nii.gz"
+		substitutions = bids_substitution_iterator(
+			["ofM", "ofMaF", "ofMcF1", "ofMcF2", "ofMpF"],
+			["5689","5690","5691","5694","5706","5700","5704","6255","6262"],
+			["CogB"],
+			"~/ni_data/ofM.dr/",
+			"composite",
+			acquisitions=['EPI'],
+			check_file_format=path_template,
+			)
+
+	df = get_scores(path_template, substitutions,
+		"~/ni_data/templates/DSURQEc_200micron_average.nii",
+		metric="CC",
+		radius_or_number_of_bins=radius,
+		sampling_strategy="Regular",
+		sampling_percentage=0.33,
+		save_as="f_reg_quality.csv",
+		)
 def reg_cc(
 	radius=5,
-	autofind=True,
+	autofind=False,
 	plot=False,
 	):
 	from samri.utilities import bids_autofind
@@ -41,14 +75,16 @@ def reg_cc(
 	if autofind:
 		path_template, substitutions = bids_autofind("~/ni_data/ofM.dr/preprocessing/composite","func")
 	else:
+		path_template = "{data_dir}/preprocessing/{preprocessing_dir}/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_acq-{acquisition}_trial-{trial}_cbv.nii.gz"
 		substitutions = bids_substitution_iterator(
-			["ofM", "ofM_aF", "ofM_cF1", "ofM_cF2", "ofM_pF"],
+			["ofM", "ofMaF", "ofMcF1", "ofMcF2", "ofMpF"],
 			["4001","4007","4008","4011","5692","5694","5699","5700","5704","6255","6262"],
-			["EPI_CBV_chr_longSOA","EPI_CBV_jb_long"],
+			["CogB","JogB"],
 			"~/ni_data/ofM.dr/",
 			"composite",
-		)
-		path_template = "~/ni_data/ofM.dr/preprocessing/{preprocessing_dir}/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_trial-{trial}.nii.gz"
+			acquisitions=['EPI'],
+			check_file_format=path_template,
+			)
 
 	df = get_scores(path_template, substitutions,
 		"~/ni_data/templates/DSURQEc_200micron_average.nii",

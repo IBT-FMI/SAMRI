@@ -56,7 +56,8 @@ def bids_autofind(bids_dir,modality):
 	return path_template, substitutions
 
 def bids_substitution_iterator(sessions, subjects, trials, data_dir, preprocessing_dir,
-	acquisitions=[],
+	acquisitions=[''],
+	modalities=[''],
 	l1_dir=None,
 	l1_workdir=None,
 	preprocessing_workdir=None,
@@ -96,41 +97,23 @@ def bids_substitution_iterator(sessions, subjects, trials, data_dir, preprocessi
 	if not preprocessing_workdir:
 		preprocessing_workdir = preprocessing_dir+"_work"
 	substitutions=[]
-	if acquisitions:
-		for subject, session, trial, acquisition in product(subjects, sessions, trials, acquisitions):
-			substitution={}
-			substitution["data_dir"] = data_dir
-			substitution["l1_dir"] = l1_dir
-			substitution["l1_workdir"] = l1_workdir
-			substitution["preprocessing_dir"] = preprocessing_dir
-			substitution["preprocessing_workdir"] = preprocessing_workdir
-			substitution["trial"] = trial
-			substitution["session"] = session
-			substitution["subject"] = subject
-			substitution["acquisition"] = acquisition
-			if check_file_format:
-				check_file = check_file_format.format(**substitution)
-				check_file = path.abspath(path.expanduser(check_file))
-				if path.isfile(check_file):
-					substitutions.append(substitution)
-			else:
+	for subject, session, trial, acquisition, modality in product(subjects, sessions, trials, acquisitions, modalities):
+		substitution={}
+		substitution["data_dir"] = data_dir
+		substitution["l1_dir"] = l1_dir
+		substitution["l1_workdir"] = l1_workdir
+		substitution["preprocessing_dir"] = preprocessing_dir
+		substitution["preprocessing_workdir"] = preprocessing_workdir
+		substitution["trial"] = trial
+		substitution["session"] = session
+		substitution["subject"] = subject
+		substitution["acquisition"] = acquisition
+		substitution["modality"] = modality
+		if check_file_format:
+			check_file = check_file_format.format(**substitution)
+			check_file = path.abspath(path.expanduser(check_file))
+			if path.isfile(check_file):
 				substitutions.append(substitution)
-	else:
-		for subject, session, trial in product(subjects, sessions, trials):
-			substitution={}
-			substitution["data_dir"] = data_dir
-			substitution["l1_dir"] = l1_dir
-			substitution["l1_workdir"] = l1_workdir
-			substitution["preprocessing_dir"] = preprocessing_dir
-			substitution["preprocessing_workdir"] = preprocessing_workdir
-			substitution["trial"] = trial
-			substitution["session"] = session
-			substitution["subject"] = subject
-			if check_file_format:
-				check_file = check_file_format.format(**substitution)
-				check_file = path.abspath(path.expanduser(check_file))
-				if path.isfile(check_file):
-					substitutions.append(substitution)
-			else:
-				substitutions.append(substitution)
+		else:
+			substitutions.append(substitution)
 	return substitutions

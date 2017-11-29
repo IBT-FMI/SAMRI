@@ -93,9 +93,3 @@ def get_scores(file_template, substitutions, reference,
 		else:
 			raise ValueError("Please specify an output path ending in any one of "+",".join((".csv",))+".")
 	return df
-
-if __name__ == '__main__':
-	get_scores("~/ni_data/ofM.dr/preprocessing/composite", "~/ni_data/templates/DSURQEc_200micron_average.nii",
-		#modality="anat",
-		save_as="f_reg_quality.csv"
-		)

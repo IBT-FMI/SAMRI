@@ -96,7 +96,7 @@ def seed_based(substitutions, seed, roi,
 			low_pass=low_pass,
 			high_pass=high_pass,
 			t_r=tr,
-			memory='~/.nilearn_cache', memory_level=1, verbose=0
+			memory='nilearn_cache', memory_level=1, verbose=0
 			)
 	brain_masker = NiftiMasker(
 			mask_img=roi_mask,

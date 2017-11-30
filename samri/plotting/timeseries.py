@@ -10,11 +10,7 @@ from matplotlib import rcParams
 import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
 
-try:
-	from samri.plotting import maps, utilities
-except ImportError:
-	from ..plotting import maps, utilities
-
+from samri.plotting import maps, utilities
 from samri.plotting.utilities import QUALITATIVE_COLORSET
 
 def visualize(fsl_basis_set):

@@ -31,7 +31,7 @@ def scale_timings(timelist, input_units, output_units, time_repetition):
 	return timelist
 
 
-def gen_info(run_event_files, one_condition_file, habituation_regressor):
+def gen_info(run_event_files, habituation_regressor):
 	"""Generate subject_info structure from a list of event files or a multirow event file.
 	"""
 	info = []
@@ -53,39 +53,23 @@ def gen_info(run_event_files, one_condition_file, habituation_regressor):
 						sublist_.append(i_)
 					eventfile_data_.append(sublist_)
 				eventfile_data = eventfile_data_
-				if one_condition_file:
-					name = "e0"
+				name = "e0"
+				onsets = [i[0] for i in eventfile_data]
+				durations = [i[1] for i in eventfile_data]
+				amplitudes = [i[2] for i in eventfile_data]
+				runinfo.conditions.append(name)
+				runinfo.onsets.append(onsets)
+				runinfo.durations.append(durations)
+				runinfo.amplitudes.append(amplitudes)
+				if habituation_regressor:
+					name = "e1"
 					onsets = [i[0] for i in eventfile_data]
 					durations = [i[1] for i in eventfile_data]
-					amplitudes = [i[2] for i in eventfile_data]
+					amplitudes = [len(eventfile_data)-i for i in range(len(eventfile_data))]
 					runinfo.conditions.append(name)
 					runinfo.onsets.append(onsets)
 					runinfo.durations.append(durations)
 					runinfo.amplitudes.append(amplitudes)
-					if habituation_regressor:
-						name = "e1"
-						onsets = [i[0] for i in eventfile_data]
-						durations = [i[1] for i in eventfile_data]
-						amplitudes = [len(eventfile_data)-i for i in range(len(eventfile_data))]
-						runinfo.conditions.append(name)
-						runinfo.onsets.append(onsets)
-						runinfo.durations.append(durations)
-						runinfo.amplitudes.append(amplitudes)
-				else:
-					for ix, line in enumerate(eventfile_data):
-						name = "e{}".format(ix)
-						runinfo.conditions.append(name)
-						event_info = np.atleast_2d(line)
-						event_info=np.array([np.array(sublist) for sublist in event_info])
-						runinfo.onsets.append(event_info[:, 0].tolist())
-						if event_info.shape[1] > 1:
-							runinfo.durations.append(event_info[:, 1].tolist())
-						else:
-							runinfo.durations.append([0])
-						if event_info.shape[1] > 2:
-							runinfo.amplitudes.append(event_info[:, 2].tolist())
-						else:
-							delattr(runinfo, 'amplitudes')
 		else:
 			for event_file in event_files:
 				_, name = os.path.split(event_file)
@@ -136,7 +120,6 @@ class SpecifyModelInputSpec(BaseInterfaceInputSpec):
 	time_repetition = traits.Float(mandatory=True,
 								   desc=("Time between the start of one volume to the start of "
 										 "the next image volume."))
-	one_condition_file = traits.Bool(mandatory=False,default=True)
 	habituation_regressor = traits.Bool(mandatory=False,default=False)
 	# Not implemented yet
 	# polynomial_order = traits.Range(0, low=0,
@@ -331,7 +314,7 @@ class SpecifyModel(BaseInterface):
 			if isdefined(self.inputs.subject_info):
 				infolist = self.inputs.subject_info
 			else:
-				infolist = gen_info(self.inputs.event_files, self.inputs.one_condition_file, self.inputs.habituation_regressor)
+				infolist = gen_info(self.inputs.event_files, self.inputs.habituation_regressor)
 		self._sessinfo = self._generate_standard_design(infolist,
 														functional_runs=self.inputs.functional_runs,
 														realignment_parameters=realignment_parameters,
@@ -351,11 +334,6 @@ class SpecifyModel(BaseInterface):
 		outputs['session_info'] = self._sessinfo
 
 		return outputs
-
-
-
-
-
 
 
 

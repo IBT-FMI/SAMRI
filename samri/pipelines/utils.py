@@ -2,21 +2,6 @@
 
 from __future__ import print_function, division, unicode_literals, absolute_import
 
-STIM_PROTOCOL_DICTIONARY={
-	"EPI_BOLD_chr_longSOA":"chr_longSOA",
-	"EPI_BOLD_jb_long":"jb_long",
-	"EPI_CBV_alej":"alej",
-	"EPI_CBV_chr_longSOA":"chr_longSOA",
-	"EPI_CBV_chr_vlongSOA":"chr_vlongSOA",
-	"EPI_CBV_jb_long":"jb_long",
-	"EPI_CBV_jin6":"jin6",
-	"EPI_CBV_jin10":"jin10",
-	"EPI_CBV_jin20":"jin20",
-	"EPI_CBV_jin40":"jin40",
-	"EPI_CBV_jin60":"jin60",
-	"EPI_CBV_jp_phasic":"jp_phasic",
-	}
-
 def fslmaths_invert_values(img_path):
 	"""Calculates the op_string required to make an fsl.ImageMaths() node invert an image"""
 	op_string = "-sub {0} -sub {0}".format(img_path)
@@ -132,43 +117,10 @@ def bids_naming(subject_session, scan_type, metadata,
 		trial = trial.item()
 		filename += '_trial-{}'.format(trial)
 	if not suffix:
-		contrast = selection['contrast']
-		if not contrast.isnull().all():
-			contrast = contrast.item()
-			filename += '_{}'.format(contrast)
-	else:
-		filename += '_{}'.format(suffix)
-	filename += extension
-
-	return filename
-
-def _bids_naming(subject_session, scan_type, metadata,
-	extra=['acq'],
-	extension='.nii.gz',
-	suffix='',
-	):
-	"""
-	Generate a BIDS filename from a subject-and-session iterator, a scan type, and a `pandas.DataFrame` metadata container.
-	"""
-	scan_type_is_trial = True
-	subject, session = subject_session
-	filename = 'sub-{}'.format(subject)
-	filename += '_ses-{}'.format(session)
-	if 'acq' in extra:
-		acq = metadata[(metadata['subject']==subject)&(metadata['session']==session)&(metadata['scan_type']==scan_type)]['acq']
-		if not acq.isnull().all():
-			acq = acq.item()
-			filename += '_acq-{}'.format(acq)
-	if not acq == scan_type:
-		trial = metadata[(metadata['subject']==subject)&(metadata['session']==session)&(metadata['scan_type']==scan_type)]['trial']
-		if not trial.isnull().all():
-			trial = trial.item()
-			filename += '_trial-{}'.format(trial)
-	if not suffix:
-		contrast = metadata[(metadata['subject']==subject)&(metadata['session']==session)&(metadata['scan_type']==scan_type)]['contrast']
-		if not contrast.isnull().all():
-			contrast = contrast.item()
-			filename += '_{}'.format(contrast)
+		modality = selection['modality']
+		if not modality.isnull().all():
+			modality = modality.item()
+			filename += '_{}'.format(modality)
 	else:
 		filename += '_{}'.format(suffix)
 	filename += extension

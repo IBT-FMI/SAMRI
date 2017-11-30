@@ -2,26 +2,53 @@ import csv
 import inspect
 import os
 import re
+import json
 
 from copy import deepcopy
 import nibabel as nb
 import pandas as pd
-try:
-	from utils import STIM_PROTOCOL_DICTIONARY
-except ImportError:
-	from .utils import STIM_PROTOCOL_DICTIONARY
 
-STRUCTURAL_CONTRAST_MATCHING = {
-	('T1','t1'):'T1w',
-	('T2','t2'):'T2w',
-	}
-BEST_GUESS_STRUCTURAL_CONTRAST_MATCHING = {
+BEST_GUESS_MODALITY_MATCH = {
 	('FLASH',):'T1w',
 	('TurboRARE','TRARE'):'T2w',
 	}
-FUNCTIONAL_CONTRAST_MATCHING = {
+BIDS_METADATA_EXTRACTION_DICTS = [
+	{'field_name':'EchoTime',
+		'query_file':'method',
+		'regex':r'^##\$EchoTime=(?P<value>.*?)$',
+		'scale': 1./1000.,
+		'type': float,
+		},
+	{'field_name':'FlipAngle',
+		'query_file':'visu_pars',
+		'regex':r'^##\$VisuAcqFlipAngle=(?P<value>.*?)$',
+		'type': float,
+		},
+	{'field_name':'Manufacturer',
+		'query_file':'configscan',
+		'regex':r'^##ORIGIN=(?P<value>.*?)$',
+		},
+	{'field_name':'NumberOfVolumesDiscardedByScanner',
+		'query_file':'method',
+		'regex':r'^##\$PVM_DummyScans=(?P<value>.*?)$',
+		'type': int,
+		},
+	{'field_name':'ReceiveCoilName',
+		'query_file':'configscan',
+		'regex':r'.*?,COILTABLE,1#\$Name,(?P<value>.*?)#\$Id.*?',
+		},
+	{'field_name':'PulseSequenceType',
+		'query_file':'method',
+		'regex':r'^##\$Method=<Bruker:(?P<value>.*?)>$',
+		},
+	]
+MODALITY_MATCH = {
 	('BOLD','bold','Bold'):'bold',
 	('CBV','cbv','Cbv'):'cbv',
+	('T1','t1'):'T1w',
+	('T2','t2'):'T2w',
+	('MTon','MtOn'):'MTon',
+	('MToff','MtOff'):'MToff',
 	}
 
 def force_dummy_scans(in_file, scan_dir,
@@ -57,13 +84,49 @@ def force_dummy_scans(in_file, scan_dir,
 	delete_scans = desired_dummy_scans - dummy_scans
 
 	if delete_scans <= 0:
-		out_file = in_file
+		img = nib.load(in_file)
+		nib.save(img,out_file)
 	else:
 		img = nib.load(in_file)
 		img_ = nib.Nifti1Image(img.get_data()[...,delete_scans:], img.affine, img.header)
 		nib.save(img_,out_file)
 
 	return out_file
+
+def write_bids_metadata_file(scan_dir, extraction_dicts,
+	out_file="bids_metadata.json",
+	):
+
+	import json
+	import re
+	from os import path
+
+	out_file = path.abspath(path.expanduser(out_file))
+	scan_dir = path.abspath(path.expanduser(scan_dir))
+	metadata = {}
+	for extraction_dict in extraction_dicts:
+		query_file = path.abspath(path.join(scan_dir,extraction_dict['query_file']))
+		with open(query_file) as search:
+			for line in search:
+				if re.match(extraction_dict['regex'], line):
+					m = re.match(extraction_dict['regex'], line)
+					value = m.groupdict()['value']
+					try:
+						value = extraction_dict['type'](value)
+					except KeyError:
+						pass
+					try:
+						value = value * extraction_dict['scale']
+					except KeyError:
+						pass
+					metadata[extraction_dict['field_name']] = value
+					break
+	with open(out_file, 'w') as out_file_writeable:
+		json.dump(metadata, out_file_writeable, indent=1)
+		out_file_writeable.write("\n")  # `json.dump` does not add a newline at the end; we do it here.
+
+	return out_file
+
 
 def write_function_call(frame, target_path):
 	args, _, _, values = inspect.getargvalues(frame)
@@ -83,13 +146,13 @@ def write_function_call(frame, target_path):
 	target.close()
 
 def write_events_file(scan_dir, trial,
-	stim_protocol_dictionary={},
 	db_path="~/syncdata/meta.db",
 	out_file="events.tsv",
 	dummy_scans_ms="determine",
 	subject_delay=False,
 	very_nasty_bruker_delay_hack=False,
 	prefer_labbookdb=False,
+	unchanged=True,
 	):
 
 	import csv
@@ -99,10 +162,36 @@ def write_events_file(scan_dir, trial,
 	import pandas as pd
 	import numpy as np
 
-	out_file =os.path.abspath(os.path.expanduser(out_file))
-	scan_dir =os.path.abspath(os.path.expanduser(scan_dir))
+	out_file = os.path.abspath(os.path.expanduser(out_file))
+	scan_dir = os.path.abspath(os.path.expanduser(scan_dir))
+	db_path = os.path.abspath(os.path.expanduser(db_path))
 
-	if not subject_delay:
+	if not prefer_labbookdb:
+		try:
+			scan_dir_contents = os.listdir(scan_dir)
+			sequence_files = [i for i in scan_dir_contents if "sequence" in i and "tsv" in i]
+			sequence_file = os.path.join(scan_dir, sequence_files[0])
+			mydf = pd.read_csv(sequence_file, sep="\s")
+		except IndexError:
+			if os.path.isfile(db_path):
+				from labbookdb.report.tracking import bids_eventsfile
+				mydf = bids_eventsfile(db_path, trial)
+			else:
+				return '/dev/null'
+	else:
+		try:
+			if os.path.isfile(db_path):
+				from labbookdb.report.tracking import bids_eventsfile
+				mydf = bids_eventsfile(db_path, trial)
+			else:
+				return '/dev/null'
+		except ImportError:
+			scan_dir_contents = os.listdir(scan_dir)
+			sequence_files = [i for i in scan_dir_contents if "sequence" in i and "tsv" in i]
+			sequence_file = os.path.join(scan_dir, sequence_files[0])
+			mydf = pd.read_csv(sequence_file, sep="\s")
+
+	if not subject_delay and not unchanged:
 		state_file_path = os.path.join(scan_dir,"AdjStatePerScan")
 
 		#Here we read the `AdjStatePerScan` file, which may be missing if no adjustments were run at the beginning of this scan
@@ -142,31 +231,10 @@ def write_events_file(scan_dir, trial,
 					break #prevent loop from going on forever
 
 		subject_delay = delay_seconds + dummy_scans_ms/1000
-	try:
-		trial_code = stim_protocol_dictionary[trial]
-	except KeyError:
-		trial_code = trial
 
-	if not prefer_labbookdb:
-		try:
-			scan_dir_contents = os.listdir(scan_dir)
-			sequence_files = [i for i in scan_dir_contents if "sequence" in i and "tsv" in i]
-			sequence_file = os.path.join(scan_dir, sequence_files[0])
-			mydf = pd.read_csv(sequence_file, sep="\s")
-		except IndexError:
-			from labbookdb.report.tracking import bids_eventsfile
-			mydf = bids_eventsfile(db_path, trial_code)
-	else:
-		try:
-			from labbookdb.report.tracking import bids_eventsfile
-			mydf = bids_eventsfile(db_path, trial_code)
-		except ImportError:
-			scan_dir_contents = os.listdir(scan_dir)
-			sequence_files = [i for i in scan_dir_contents if "sequence" in i and "tsv" in i]
-			sequence_file = os.path.join(scan_dir, sequence_files[0])
-			mydf = pd.read_csv(sequence_file, sep="\s")
+	if not unchanged:
+		mydf['onset'] = mydf['onset'] - subject_delay
 
-	mydf['onset'] = mydf['onset'] - subject_delay
 	mydf.to_csv(out_file, sep=str('\t'), index=False)
 
 	return out_file
@@ -285,132 +353,6 @@ def get_scan(measurements_base, data_selection,
 
 	return scan_path, scan_type, trial
 
-def _get_data_selection(workflow_base,
-	sessions=[],
-	scan_types=[],
-	subjects=[],
-	exclude_subjects=[],
-	measurements=[],
-	exclude_measurements=[],
-	scan_type_category="functional",
-	):
-	"""
-	Return a `pandas.DaaFrame` object of the Bruker measurement directories located under a given base directory, and their respective scans, subjects, and trials.
-
-	Parameters
-	----------
-	workflow_base : str
-		The path in which to query for Bruker measurement directories.
-	"""
-
-	workflow_base = os.path.abspath(os.path.expanduser(workflow_base))
-
-	if measurements:
-		measurement_path_list = [os.path.join(workflow_base,i) for i in measurements]
-	else:
-		measurement_path_list = os.listdir(workflow_base)
-
-	selected_measurements=[]
-	#populate a list of lists with acceptable subject names, sessions, and sub_dir's
-	for sub_dir in measurement_path_list:
-		if sub_dir not in exclude_measurements:
-			selected_measurement = {}
-			try:
-				state_file = open(os.path.join(workflow_base,sub_dir,"subject"), "r")
-				read_variables=0 #count variables so that breaking takes place after both have been read
-				while True:
-					current_line = state_file.readline()
-					if "##$SUBJECT_name_string=" in current_line:
-						entry=re.sub("[<>\n]", "", state_file.readline())
-						if entry not in exclude_subjects:
-							if len(subjects) > 0 and entry not in subjects:
-								break
-							else:
-								selected_measurement['subject'] = entry
-						else:
-							break
-						read_variables +=1 #count recorded variables
-					if "##$SUBJECT_study_name=" in current_line:
-						entry=re.sub("[<>\n]", "", state_file.readline())
-						if entry in sessions or len(sessions) == 0:
-							selected_measurement['session'] = entry
-						else:
-							break
-						read_variables +=1 #count recorded variables
-					if read_variables == 2:
-						selected_measurement['measurement'] = sub_dir
-						#if the directory passed both the subject and sessions tests, append a line for it
-						if not scan_types:
-							#add two empty entries to fill columns otherwise dedicated to the scan program
-							selected_measurements.append(selected_measurement)
-						#if various scan types are selected extend and copy lines to accommodate:
-						else:
-							for scan_type in scan_types:
-								measurement_copy = deepcopy(selected_measurement)
-								scan_number=None
-								try:
-									scan_program_file_path = os.path.join(workflow_base,sub_dir,"ScanProgram.scanProgram")
-									indicator_line_matches = ['<displayName>', '</displayName>\n', '(', ')']
-									with open(scan_program_file_path, "r") as scan_program_file:
-										for current_line in scan_program_file:
-											if scan_type_category == 'functional':
-												# we need to make sure that the trial identifier is a suffix, and not e.g. a subset of a different trial identifier string,
-												# therefore we pad the string
-												if all(i in current_line for i in indicator_line_matches) and scan_type+' ' in current_line:
-													measurement_copy_ = deepcopy(measurement_copy)
-													measurement_copy_ = scanprogram_functional_scan_info(scan_type, current_line, measurement_copy_)
-													selected_measurements.append(measurement_copy_)
-											elif scan_type_category == 'structural':
-												#t we need to make sure that the acquisition identifier is a prefix, and not e.g. a subset of a different acquisition identifier string,
-												# therefore we pad the string
-												if all(i in current_line for i in indicator_line_matches) and scan_type in current_line:
-													measurement_copy_ = deepcopy(measurement_copy)
-													measurement_copy_ = scanprogram_structural_scan_info(scan_type, current_line, measurement_copy_)
-													selected_measurements.append(measurement_copy_)
-										#If the ScanProgram.scanProgram file is small in size and the scan_type could not be matched, that may be because ParaVision failed
-										#to write all the information into the file. This happens occasionally.
-										#Thus we scan the individual acquisition protocols as well. These are a suboptimal and second choice, because acqp scans **also**
-										#keep the original names the sequences had on import (and may thus be misleading, if the name was changed by the user after import).
-										if os.stat(scan_program_file_path).st_size <= 700 and not scan_number:
-											raise(IOError)
-								except IOError:
-									for sub_sub_dir in os.listdir(os.path.join(workflow_base,sub_dir)):
-										try:
-											acqp_file_path = os.path.join(workflow_base,sub_dir,sub_sub_dir,"acqp")
-											with open(acqp_file_path,'r') as acqp_file:
-												for current_line in acqp_file:
-													if scan_type_category == 'functional':
-														if scan_type+">" in current_line:
-															scan_number = sub_sub_dir
-															measurement_copy['scan'] = scan_number
-															measurement_copy = acqp_functional_scan_info(scan_type, current_line, measurement_copy)
-															selected_measurements.append(measurement_copy)
-															break
-													elif scan_type_category == 'structural':
-														if scan_type in current_line:
-															scan_number = sub_sub_dir
-															measurement_copy['scan'] = scan_number
-															measurement_copy = acqp_structural_scan_info(scan_type, current_line, measurement_copy)
-															selected_measurements.append(measurement_copy)
-															break
-										except IOError:
-											pass
-										if scan_number:
-											break
-						break #prevent loop from going on forever
-			except IOError:
-				pass
-
-	data_selection = pd.DataFrame(selected_measurements)
-
-	#drop subjects which do not have measurements for all sessions
-	if len(sessions) > 1:
-		for subject in set(data_selection["subject"]):
-			if len(data_selection[(data_selection["subject"] == subject)]) < len(sessions):
-				data_selection = data_selection[(data_selection["subject"] != subject)]
-
-	return data_selection
-
 def match_exclude_ss(entry, match, exclude, record, key):
 	try:
 		exclude_list = exclude[key]
@@ -434,13 +376,13 @@ BIDS_KEY_DICTIONARY = {
 	'trial':['trial','TRIAL','stim','STIM','stimulation','STIMULATION'],
 	}
 
-def assign_contrast(scan_type, record):
-	"""Add a contrast column with a corresponding value to a `pandas.DataFrame` object.
+def assign_modality(scan_type, record):
+	"""Add a modality column with a corresponding value to a `pandas.DataFrame` object.
 
 	Parameters
 	----------
 	scan_type: str
-		A string potentially containing a contrast identifier.
+		A string potentially containing a modality identifier.
 	record: pandas.DataFrame
 		A `pandas.Dataframe` object.
 
@@ -448,19 +390,16 @@ def assign_contrast(scan_type, record):
 	-------
 	An updated `pandas.DataFrame` obejct.
 	"""
-	for contrast_group in FUNCTIONAL_CONTRAST_MATCHING:
-		for contrast_string in contrast_group:
-			if contrast_string in scan_type:
-				record['contrast'] = FUNCTIONAL_CONTRAST_MATCHING[contrast_group]
-				scan_type = scan_type.replace(contrast_string,'')
+	for modality_group in MODALITY_MATCH:
+		for modality_string in modality_group:
+			if modality_string in scan_type:
+				record['modality'] = MODALITY_MATCH[modality_group]
 				return scan_type, record
-	for contrast_group in BEST_GUESS_STRUCTURAL_CONTRAST_MATCHING:
-		for contrast_string in contrast_group:
-			if contrast_string in scan_type:
-				record['contrast'] = BEST_GUESS_STRUCTURAL_CONTRAST_MATCHING[contrast_group]
-	BEST_GUESS_STRUCTURAL_CONTRAST_MATCHING
-
-	return scan_type, record
+	for modality_group in BEST_GUESS_MODALITY_MATCH:
+		for modality_string in modality_group:
+			if modality_string in scan_type:
+				record['modality'] = BEST_GUESS_MODALITY_MATCH[modality_group]
+				return scan_type, record
 
 def match_exclude_bids(key, values, record, scan_type, number):
 	key_alternatives = BIDS_KEY_DICTIONARY[key]
@@ -472,7 +411,7 @@ def match_exclude_bids(key, values, record, scan_type, number):
 					record['scan_type'] = str(scan_type).strip(' ')
 					record['scan'] = str(int(number))
 					record[key] = str(value).strip(' ')
-					scan_type, record = assign_contrast(scan_type, record)
+					scan_type, record = assign_modality(scan_type, record)
 					for key_ in BIDS_KEY_DICTIONARY:
 						for alternative_ in BIDS_KEY_DICTIONARY[key_]:
 							if alternative_ in scan_type:
@@ -591,6 +530,7 @@ def select_from_datafind_df(df,
 	bids_dictionary_override=False,
 	output_key='path',
 	failsafe=False,
+	list_output=False,
 	):
 
 
@@ -608,80 +548,12 @@ def select_from_datafind_df(df,
 		for key in bids_dictionary_override:
 				df=df[df[key]==bids_dictionary_override[key]]
 
-	if failsafe:
-		df = df.iloc[0]
-	selection = df[output_key].item()
+	if list_output:
+		selection = df[output_key].tolist()
+	else:
+		if failsafe:
+			df = df.iloc[0]
+		selection = df[output_key].item()
 
 	return selection
 
-
-def scanprogram_structural_scan_info(scan_type, current_line, measurement_copy):
-	acq = scan_type
-	acquisition, paravision_numbering = current_line.split(" (E")
-	acquisition = acquisition.split('<displayName>')[1]
-	scan_number = paravision_numbering.strip(")</displayName>\n")
-	measurement_copy['scan_type'] = acquisition
-	measurement_copy['scan'] = str(int(scan_number))
-	measurement_copy['acq'] = acq
-	measurement_copy['contrast'] = None
-	for key in STRUCTURAL_CONTRAST_MATCHING:
-		for i in key:
-			if i in acquisition:
-				measurement_copy['contrast'] = STRUCTURAL_CONTRAST_MATCHING[key]
-				break
-	if not measurement_copy['contrast']:
-		for key in BEST_GUESS_STRUCTURAL_CONTRAST_MATCHING:
-			for i in key:
-				if i in acquisition:
-					measurement_copy['contrast'] = BEST_GUESS_STRUCTURAL_CONTRAST_MATCHING[key]
-					break
-	return measurement_copy
-
-def scanprogram_functional_scan_info(scan_type, current_line, measurement_copy):
-	acquisition, paravision_numbering = current_line.split(" (E")
-	acquisition = acquisition.split('<displayName>')[1]
-	scan_number = paravision_numbering.strip(")</displayName>\n")
-	acq = acquisition.split(scan_type)[0]
-	measurement_copy['scan_type'] = acquisition
-	measurement_copy['scan'] = str(int(scan_number))
-	measurement_copy['trial'] = scan_type
-	for key in FUNCTIONAL_CONTRAST_MATCHING:
-		for i in key:
-			if i in acq:
-				measurement_copy['contrast'] = FUNCTIONAL_CONTRAST_MATCHING[key]
-				acq = acq.replace(i,'')
-				break
-	acq = ''.join(ch for ch in acq if ch.isalnum())
-	measurement_copy['acq'] = acq
-	return measurement_copy
-
-def acqp_structural_scan_info(scan_type, current_line, measurement_copy):
-	measurement_copy['scan_type'] = current_line.split('>')[0].split('<')[1]
-	measurement_copy['acq'] = scan_type
-	measurement_copy['contrast'] = None
-	for key in STRUCTURAL_CONTRAST_MATCHING:
-		for i in key:
-			if i in current_line:
-				measurement_copy['contrast'] = STRUCTURAL_CONTRAST_MATCHING[key]
-				break
-	if not measurement_copy['contrast']:
-		for key in BEST_GUESS_STRUCTURAL_CONTRAST_MATCHING:
-			for i in key:
-				if i in current_line:
-					measurement_copy['contrast'] = BEST_GUESS_STRUCTURAL_CONTRAST_MATCHING[key]
-					break
-	return measurement_copy
-
-def acqp_functional_scan_info(scan_type, current_line, measurement_copy):
-	measurement_copy['scan_type'] = current_line.split('>')[0].split('<')[1]
-	acquisition = current_line.split(scan_type+'>')[0]
-	measurement_copy['trial'] = scan_type
-	for key in FUNCTIONAL_CONTRAST_MATCHING:
-		for i in key:
-			if i in acquisition:
-				measurement_copy['contrast'] = FUNCTIONAL_CONTRAST_MATCHING[key]
-				acquisition = acquisition.replace(i,'')
-				break
-	acq = ''.join(ch for ch in acquisition if ch.isalnum())
-	measurement_copy['acq'] = acq
-	return measurement_copy

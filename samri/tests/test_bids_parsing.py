@@ -11,8 +11,7 @@ def assert_and_feedback(obtained, expected,
 		print(debug)
 		raise AssertionError('The compared strings are not identical:\n"{}" - computed.\n"{}" - expected.'.format(obtained, expected))
 
-def test_bruker_to_bids(
-	):
+def test_bids_naming():
 	from samri.pipelines.extra_functions import get_data_selection
 	from samri.pipelines.utils import bids_naming
 	import pandas as pd
@@ -27,7 +26,7 @@ def test_bruker_to_bids(
 
 	name = bids_naming(
 			metadata=data_selection,
-			scan_type='acq-EPI_CBV_trial-CogB',
+			scan_type='acq-EPIcbv_trial-CogB',
 			subject_session=('5706','ofMpF'),
 			)
 	assert_and_feedback(name,'sub-5706_ses-ofMpF_acq-EPI_trial-CogB_cbv.nii.gz', debug=data_selection)
@@ -41,7 +40,7 @@ def test_bruker_to_bids(
 
 	name = bids_naming(
 			metadata=data_selection,
-			scan_type='acq-EPI_CBV_trial-CogB',
+			scan_type='acq-EPIcbv_trial-CogB',
 			subject_session=('5704','ofMpF'),
 			)
 	assert_and_feedback(name,'sub-5704_ses-ofMpF_acq-EPI_trial-CogB_cbv.nii.gz', debug=data_selection)
@@ -52,3 +51,17 @@ def test_bruker_to_bids(
 			subject_session=('5704','ofMpF'),
 			)
 	assert_and_feedback(name,'sub-5704_ses-ofMpF_acq-TurboRARE_T2w.nii.gz', debug=data_selection)
+
+# The following test fails because it will not work with our dummy data (containing only the directory hierarchy and some metadata files).
+# This should work once we can include `2dseq` files in our example data.
+#def test_bru2bids():
+#	from samri.pipelines.reposit import bru2bids
+#
+#	bruker_data_dir = path.join(DATA_DIR,'bruker')
+#	bru2bids(bruker_data_dir,
+#		debug=False,
+#		functional_match={'trial':['JogB','CogB','CogB2m'],},
+#		structural_match={'acquisition':['TurboRARE', 'TurboRARElowcov']},
+#		actual_size=True,
+#		keep_work=False,
+#		)

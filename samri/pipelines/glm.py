@@ -12,43 +12,65 @@ from copy import deepcopy
 from itertools import product
 from nipype.interfaces import fsl
 from nipype.interfaces.fsl.model import Level1Design
+#from nipype.algorithms.modelgen import SpecifyModel
 
 from samri.pipelines.extra_interfaces import SpecifyModel
 from samri.pipelines.extra_functions import select_from_datafind_df
 from samri.pipelines.utils import bids_dict_to_source, ss_to_path, iterfield_selector, datasource_exclude, bids_dict_to_dir
+from samri.utilities import N_PROCS
 
+N_PROCS=max(N_PROCS-2, 2)
 
 def l1(preprocessing_dir,
+	bf_path = '~/ni_data/irfs/chr_beta1.txt',
+	exclude={},
+	habituation='confound',
 	highpass_sigma=225,
 	include={},
-	exclude={},
 	keep_work=False,
 	l1_dir="",
-	nprocs=10,
 	mask="~/ni_data/templates/ds_QBI_chr_bin.nii.gz",
-	per_stimulus_contrast=False,
-	habituation="",
+	match_regex='sub-(?P<sub>[a-zA-Z0-9]+)/ses-(?P<ses>[a-zA-Z0-9]+)/func/.*?_acq-(?P<acq>[a-zA-Z0-9]+)_trial-(?P<trial>[a-zA-Z0-9]+)_(?P<mod>[a-zA-Z0-9]+)\.(?:tsv|nii|nii\.gz)',
+	nprocs=N_PROCS,
 	tr=1,
 	workflow_name="generic",
-	bf_path = '~/ni_data/irfs/chr_beta1.txt',
-	modality = 'cbv',
+	modality="cbv",
 	):
-	"""Calculate subject level GLM statistics.
+	"""Calculate subject level GLM statistic scores.
 
 	Parameters
 	----------
 
-	include : dict
-	A dictionary with any combination of "sessions", "subjects", "trials" as keys and corresponding identifiers as values.
-	If this is specified ony matching entries will be included in the analysis.
-
+	bf_path : str, optional
+		Basis set path. It should point to a text file in the so-called FEAT/FSL "#2" format (1 entry per volume).
 	exclude : dict
-	A dictionary with any combination of "sessions", "subjects", "trials" as keys and corresponding identifiers as values.
-	If this is specified ony non-matching entries will be included in the analysis.
-
-	habituation : string
-	One value of "confound", "in_main_contrast", "separate_contrast", "" indicating how the habituation regressor should be handled.
-	"" or any other value which evaluates to False will mean no habituation regressor is used int he model
+		A dictionary with any combination of "sessions", "subjects", "trials" as keys and corresponding identifiers as values.
+		If this is specified ony non-matching entries will be included in the analysis.
+	habituation : {"", "confound", "separate_contrast", "in_main_contrast"}, optional
+		How the habituation regressor should be handled.
+		Anything which evaluates as False (though we recommend "") means no habituation regressor will be introduced.
+	highpass_sigma : int, optional
+		Highpass threshold (in seconds).
+	include : dict
+		A dictionary with any combination of "sessions", "subjects", "trials" as keys and corresponding identifiers as values.
+		If this is specified ony matching entries will be included in the analysis.
+	keep_work : bool, optional
+		Whether to keep the work directory (containing all the intermediary workflow steps, as managed by nipypye).
+		This is useful for debugging and quality control.
+	l1_dir : str, optional
+		Path to the directory inside which both the working directory and the output directory will be created.
+	mask : str, optional
+		Path to the brain mask which shall be used to define the brain volume in the analysis.
+		This has to point to an existing NIfTI file containing zero and one values only.
+	match_regex : str, optional
+		Regex matching pattern by which to select input files. Has to contain groups named "sub", "ses", "acq", "trial", and "mod".
+	n_procs : int, optional
+		Maximum number of processes which to simultaneously spawn for the workflow.
+		If not explicitly defined, this is automatically calculated from the number of available cores and under the assumption that the workflow will be the main process running for the duration that it is running.
+	tr : int, optional
+		Repetition time, in seconds.
+	workflow_name : str, optional
+		Name of the workflow; this will also be the name of the final output directory produced under `l1_dir`.
 	"""
 
 	preprocessing_dir = path.expanduser(preprocessing_dir)
@@ -57,9 +79,10 @@ def l1(preprocessing_dir,
 
 	datafind = nio.DataFinder()
 	datafind.inputs.root_paths = preprocessing_dir
-	datafind.inputs.match_regex = '.+/sub-(?P<sub>[a-zA-Z0-9]+)/ses-(?P<ses>[a-zA-Z0-9]+)/func/.*?_acq-(?P<acq>[a-zA-Z0-9]+)_trial-(?P<trial>[a-zA-Z0-9]+)_(?P<mod>[a-zA-Z0-9]+)\.(?:tsv|nii|nii\.gz)'
+	datafind.inputs.match_regex = match_regex
 	datafind_res = datafind.run()
-	data_selection = zip(*[datafind_res.outputs.sub, datafind_res.outputs.ses, datafind_res.outputs.acq, datafind_res.outputs.trial, datafind_res.outputs.mod, datafind_res.outputs.out_paths])
+	out_paths = [path.abspath(path.expanduser(i)) for i in datafind_res.outputs.out_paths]
+	data_selection = zip(*[datafind_res.outputs.sub, datafind_res.outputs.ses, datafind_res.outputs.acq, datafind_res.outputs.trial, datafind_res.outputs.mod, out_paths])
 	data_selection = [list(i) for i in data_selection]
 	data_selection = pd.DataFrame(data_selection,columns=('subject','session','acquisition','trial','modality','path'))
 
@@ -80,7 +103,6 @@ def l1(preprocessing_dir,
 	specify_model.inputs.input_units = 'secs'
 	specify_model.inputs.time_repetition = tr
 	specify_model.inputs.high_pass_filter_cutoff = highpass_sigma
-	specify_model.inputs.one_condition_file = not per_stimulus_contrast
 	specify_model.inputs.habituation_regressor = bool(habituation)
 
 	level1design = pe.Node(interface=Level1Design(), name="level1design")
@@ -91,16 +113,14 @@ def l1(preprocessing_dir,
 	# level1design.inputs.bases = {'gamma': {'derivs':False, 'gammasigma':10, 'gammadelay':5}}
 	level1design.inputs.orthogonalization = {1: {0:0,1:0,2:0}, 2: {0:1,1:1,2:0}}
 	level1design.inputs.model_serial_correlations = True
-	if per_stimulus_contrast:
-		level1design.inputs.contrasts = [('allStim','T', ["e0","e1","e2","e3","e4","e5"],[1,1,1,1,1,1])] #condition names as defined in specify_model
-	elif habituation=="separate_contrast":
+	if habituation=="separate_contrast":
 		level1design.inputs.contrasts = [('allStim','T', ["e0"],[1]),('allStim','T', ["e1"],[1])] #condition names as defined in specify_model
 	elif habituation=="in_main_contrast":
 		level1design.inputs.contrasts = [('allStim','T', ["e0", "e1"],[1,1])] #condition names as defined in specify_model
-	elif habituation=="confound":
+	elif habituation=="confound" or not habituation:
 		level1design.inputs.contrasts = [('allStim','T', ["e0"],[1])] #condition names as defined in specify_model
 	else:
-		level1design.inputs.contrasts = [('allStim','T', ["e0"],[1])] #condition names as defined in specify_model
+		raise ValueError('The value you have provided for the `habituation` parameter, namely "{}", is invalid. Please choose one of: {"confound","in_main_contrast","separate_contrast"}'.format(habituation))
 
 	modelgen = pe.Node(interface=fsl.FEATModel(), name='modelgen')
 
@@ -203,7 +223,6 @@ def add_suffix(name, suffix):
 	return str(name)+str(suffix)
 
 def l2_common_effect(l1_dir,
-	exclude={},
 	groupby="session",
 	keep_work=False,
 	l2_dir="",
@@ -215,6 +234,8 @@ def l2_common_effect(l1_dir,
 	subjects=[],
 	sessions=[],
 	trials=[],
+	exclude={},
+	include={},
 	):
 
 	l1_dir = path.expanduser(l1_dir)
@@ -227,9 +248,16 @@ def l2_common_effect(l1_dir,
 	datafind.inputs.root_paths = l1_dir
 	datafind.inputs.match_regex = '.+/sub-(?P<sub>[a-zA-Z0-9]+)/ses-(?P<ses>[a-zA-Z0-9]+)/.*?_acq-(?P<acq>[a-zA-Z0-9]+)_trial-(?P<trial>[a-zA-Z0-9]+)_(?P<mod>[a-zA-Z0-9]+)_(?P<stat>[a-zA-Z0-9]+)\.(?:tsv|nii|nii\.gz)'
 	datafind_res = datafind.run()
-	data_selection = zip(*[datafind_res.outputs.sub, datafind_res.outputs.ses, datafind_res.outputs.acq, datafind_res.outputs.trial, datafind_res.outputs.mod, datafind_res.outputs.out_paths])
+	data_selection = zip(*[datafind_res.outputs.sub, datafind_res.outputs.ses, datafind_res.outputs.acq, datafind_res.outputs.trial, datafind_res.outputs.mod, datafind_res.outputs.stat, datafind_res.outputs.out_paths])
 	data_selection = [list(i) for i in data_selection]
-	data_selection = pd.DataFrame(data_selection,columns=('subject','session','acquisition','trial','modality','path'))
+	data_selection = pd.DataFrame(data_selection,columns=('subject','session','acquisition','trial','modality','statistic','path'))
+	data_selection = data_selection.sort_values(['session', 'subject'], ascending=[1, 1])
+	if exclude:
+		for key in exclude:
+			data_selection = data_selection[~data_selection[key].isin(exclude[key])]
+	if include:
+		for key in include:
+			data_selection = data_selection[data_selection[key].isin(include[key])]
 
 	copemerge = pe.Node(interface=fsl.Merge(dimension='t'),name="copemerge")
 	varcopemerge = pe.Node(interface=fsl.Merge(dimension='t'),name="varcopemerge")
@@ -284,23 +312,25 @@ def l2_common_effect(l1_dir,
 			(merge, varcopemerge, [(('out',add_suffix,"_varcb.nii.gz"), 'merged_file')]),
 			]
 	elif groupby == "session":
-		sessions = data_selection[['sessions']].drop_duplicates().values.tolist()
+		sessions = data_selection[['session']].drop_duplicates()
+		sessions = sessions.T.to_dict().values()
 
 		infosource = pe.Node(interface=util.IdentityInterface(fields=['iterable']), name="infosource")
 		infosource.iterables = [('iterable', sessions)]
-		datasource = pe.Node(interface=nio.DataGrabber(infields=["group",], outfields=["copes", "varcbs"]), name="datasource")
-		datasource.inputs.template_args = dict(
-			copes=[['group','group']],
-			varcbs=[['group','group']]
-			)
-		datasource.inputs.field_template = dict(
-			copes="sub-*/ses-%s/sub-*_ses-%s_trial-*_cope.nii.gz",
-			varcbs="sub-*/ses-%s/sub-*_ses-%s_trial-*_varcb.nii.gz",
-			)
+
+		copes = pe.Node(name='copes', interface=util.Function(function=select_from_datafind_df, input_names=inspect.getargspec(select_from_datafind_df)[0], output_names=['selection']))
+		copes.inputs.bids_dictionary_override = {'statistic':'cope'}
+		copes.inputs.df = data_selection
+		copes.inputs.list_output = True
+
+		varcopes = pe.Node(name='varcopes', interface=util.Function(function=select_from_datafind_df, input_names=inspect.getargspec(select_from_datafind_df)[0], output_names=['selection']))
+		varcopes.inputs.bids_dictionary_override = {'statistic':'varcb'}
+		varcopes.inputs.df = data_selection
+		varcopes.inputs.list_output = True
+
 		workflow_connections = [
-			(infosource, datasource, [('iterable', 'group')]),
-			(infosource, copemerge, [(('iterable',add_suffix,"_cope.nii.gz"), 'merged_file')]),
-			(infosource, varcopemerge, [(('iterable',add_suffix,"_varcb.nii.gz"), 'merged_file')]),
+			(infosource, copemerge, [(('iterable',dict_and_suffix,"session","_cope.nii.gz"), 'merged_file')]),
+			(infosource, varcopemerge, [(('iterable',dict_and_suffix,"session","_varcb.nii.gz"), 'merged_file')]),
 			]
 	elif groupby == "trial":
 		infosource = pe.Node(interface=util.IdentityInterface(fields=['iterable']), name="infosource")
@@ -319,14 +349,11 @@ def l2_common_effect(l1_dir,
 			(infosource, copemerge, [(('iterable',add_suffix,"_cope.nii.gz"), 'merged_file')]),
 			(infosource, varcopemerge, [(('iterable',add_suffix,"_varcb.nii.gz"), 'merged_file')]),
 			]
-	datasource.inputs.base_directory = l1_dir
-	datasource.inputs.sort_filelist = True
-	datasource.inputs.template = "*"
 
 	workflow_connections.extend([
-		(datasource, copemerge, [(('copes',datasource_exclude,exclude), 'in_files')]),
-		(datasource, varcopemerge, [(('varcbs',datasource_exclude,exclude), 'in_files')]),
-		(datasource, level2model, [(('copes',datasource_exclude,exclude,"len"), 'num_copes')]),
+		(copes, copemerge, [('selection', 'in_files')]),
+		(varcopes, varcopemerge, [('selection', 'in_files')]),
+		(varcopes, level2model, [(('selection',mylen), 'num_copes')]),
 		(copemerge,flameo,[('merged_file','cope_file')]),
 		(varcopemerge,flameo,[('merged_file','var_cope_file')]),
 		(level2model,flameo, [('design_mat','design_file')]),
@@ -360,6 +387,14 @@ def l2_common_effect(l1_dir,
 
 	if not keep_work:
 		shutil.rmtree(path.join(l2_dir,workdir_name))
+
+def mylen(foo):
+	return len(foo)
+
+def dict_and_suffix(my_dictionary,key,suffix):
+	filename = my_dictionary[key]
+	filename = str(filename)+suffix
+	return filename
 
 def l2_anova(l1_dir,
 	keep_work=False,
@@ -405,18 +440,20 @@ def l2_anova(l1_dir,
 	copemerge.inputs.merged_file = 'copes.nii.gz'
 
 	varcopemerge = pe.Node(interface=fsl.Merge(dimension='t'),name="varcopemerge")
-	varcopemerge.inputs.in_files = copes
+	varcopemerge.inputs.in_files = varcopes
 	varcopemerge.inputs.merged_file = 'varcopes.nii.gz'
 
 	copeonly = data_selection[data_selection['statistic']=='cope']
 	regressors = {}
 	for sub in copeonly['subject'].unique():
+		#print(sub)
 		regressor = [copeonly['subject'] == sub][0]
 		regressor = [int(i) for i in regressor]
 		key = "sub-"+str(sub)
 		regressors[key] = regressor
 	reference = str(copeonly['session'].unique()[0])
 	for ses in copeonly['session'].unique()[1:]:
+		#print(ses)
 		regressor = [copeonly['session'] == ses][0]
 		regressor = [int(i) for i in regressor]
 		key = "ses-("+str(ses)+'-'+reference+')'
@@ -429,12 +466,15 @@ def l2_anova(l1_dir,
 	level2model = pe.Node(interface=fsl.MultipleRegressDesign(),name='level2model')
 	level2model.inputs.regressors = regressors
 	level2model.inputs.contrasts = contrasts
+	#print(regressors)
+	#print(contrasts)
+	#return
 
 	flameo = pe.Node(interface=fsl.FLAMEO(), name="flameo")
 	flameo.inputs.mask_file = mask
 	# Using 'fe' instead of 'ols' is recommended (https://dpaniukov.github.io/2016/07/14/three-level-analysis-with-fsl-and-ants-2.html)
 	# This has also been tested in SAMRI and shown to give better estimates.
-	flameo.inputs.run_mode = "fe"
+	flameo.inputs.run_mode = "flame12"
 
 	substitutions = []
 	t_counter = 1

@@ -1,6 +1,6 @@
 from os import path
 from samri.analysis import fc
-from samri.pipelines import glm, preprocessing
+from samri.pipelines import glm, preprocess
 from samri.utilities import bids_substitution_iterator
 
 def cbv_composite(data_path,workflow_name,

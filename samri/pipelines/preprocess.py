@@ -1,8 +1,5 @@
 from os import path, listdir, getcwd, remove
-try:
-	from ..extra_functions import get_data_selection, get_scan, write_events_file, force_dummy_scans
-except (SystemError, ValueError, ImportError):
-	from samri.pipelines.extra_functions import get_data_selection, get_scan, write_events_file, force_dummy_scans
+from samri.pipelines.extra_functions import get_data_selection, get_scan, write_bids_metadata_file, write_events_file, force_dummy_scans, BIDS_METADATA_EXTRACTION_DICTS
 
 import re
 import inspect
@@ -18,7 +15,7 @@ import pandas as pd
 from nipype.interfaces import afni, bru2nii, fsl, nipy
 
 from samri.pipelines.nodes import *
-from samri.pipelines.utils import bids_naming, ss_to_path, sss_filename, fslmaths_invert_values, STIM_PROTOCOL_DICTIONARY
+from samri.pipelines.utils import bids_naming, ss_to_path, sss_filename, fslmaths_invert_values
 from samri.utilities import N_PROCS
 from samri.fetch.templates import fetch_rat_waxholm, fetch_mouse_DSURQE
 
@@ -34,7 +31,7 @@ thisscriptspath = path.dirname(path.realpath(__file__))
 scan_classification_file_path = path.join(thisscriptspath,"scan_type_classification.csv")
 
 def bruker(measurements_base, template,
-	debug=False,
+	DEBUG=False,
 	exclude={},
 	functional_match={},
 	structural_match={},

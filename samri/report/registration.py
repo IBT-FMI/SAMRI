@@ -24,9 +24,9 @@ def measure_sim(path_template, substitutions, reference,
 
 	file_data = {}
 	file_data["path"] = image_path
-	file_data["ses"] = substitutions["session"]
-	file_data["sub"] = substitutions["subject"]
-	file_data["trial"] = substitutions["trial"]
+	file_data["session"] = substitutions["session"]
+	file_data["subject"] = substitutions["subject"]
+	file_data["acquisution"] = substitutions["trial"]
 
 	if "/func/" in path_template or "/dwi/" in path_template:
 		image_name = path.basename(file_data["path"])
@@ -93,9 +93,3 @@ def get_scores(file_template, substitutions, reference,
 		else:
 			raise ValueError("Please specify an output path ending in any one of "+",".join((".csv",))+".")
 	return df
-
-if __name__ == '__main__':
-	get_scores("~/ni_data/ofM.dr/preprocessing/composite", "~/ni_data/templates/DSURQEc_200micron_average.nii",
-		#modality="anat",
-		save_as="f_reg_quality.csv"
-		)

@@ -15,26 +15,52 @@ import pylab
 from numpy import genfromtxt
 
 def add_fc_roi_data(data_path, seed_masker, brain_masker,
-	substitution=False,
-	smoothing_fwhm=.3,
-	detrend=True,
-	standardize=True,
-	low_pass=0.25,
-	high_pass=0.004,
-	tr=1.,
+	dictionary_return=False,
 	save_as="",
+	substitution={},
 	):
-	"""Return a per-subject and a per-voxel dataframe containing the mean and voxelwise ROI t-scores"""
+	"""Return a per-subject volumetric image of the seed-based functional connectivity (FC) with respect to the `seed_masker` inside the `brain_masker`.
+
+	Parameters
+	----------
+
+	data_path : str
+		Path to 4D data for which to estimate functional connectivity.
+		It can be a formattable string containing key references from the `substitutions` dictionary.
+	seed_masker : nilearn.input_data.NiftiMasker
+		A `nilearn.input_data.NiftiMasker` object delineating the seed region.
+	brain_masker : nilearn.input_data.NiftiMasker
+		A `nilearn.input_data.NiftiMasker` object delineating the region in which to calculate voxelwise FC scores.
+	dictionary_return : bool, optional
+		Whether to return the resulting FC NIfTI image as the value of the "result" key of a dictionary
+		(whose other keys are those provided inside the `substitution` dictionary).
+	save_as : str, optional
+		Path under which to save the resultind NIfTI.
+		It can be a formattable string containing key references from the `substitutions` dictionary.
+	substitution : dict, optional
+		Dictionary containig keys corresponding to the formattable fields in `data_path` and/or `save_as`. If `dictionary_return` is `True`, the resulting FC NIfTI will be appended to this dictionary under the `'result'` key.
+
+	Returns
+	-------
+
+	str or nibabel.nifti1.Nifti1Image or dict
+		Either a path to the produced FC NIfTI file on disk (if `save_as` is defined, but not `dictionary_retutn`), or a `nibabel.nifti1.Nifti1Image` object (if `save_as` and `dictionary_return` are both undefined), or a dictionary which is a copy of `substitutions` and contains a path to the produced FC NIfTI file on disk under the `'result'` key (if `save_as` and `return_dictionary` are both defined), or a dictionary which is a copy of `substitutions` and contains a `nibabel.nifti1.Nifti1Image` object under the `'result'` key (if `save_as` is not defined, but `dictonary_return` is).
+	"""
+
+	if dictionary_return and not substitution:
+		print('WARNING: If you want a dictionary returned (as selected via the `dictionary_return` parameter), you should provide a `substitution` dictionary.')
+
+	result = deepcopy(substitution)
+
 	if substitution:
 		data_path = data_path.format(**substitution)
 	data_path = path.abspath(path.expanduser(data_path))
 
-	results = deepcopy(substitution)
-
 	if not path.isfile(data_path):
 		print("WARNING: File \"{}\" does not exist.".format(data_path))
-		results["result"] = None
-		return results
+		if dictionary_return:
+			result["result"] = None
+			return result
 
 	seed_time_series = seed_masker.fit_transform(data_path,).T
 	seed_time_series = np.mean(seed_time_series, axis=0)
@@ -44,7 +70,8 @@ def add_fc_roi_data(data_path, seed_masker, brain_masker,
 	seed_based_correlation_img = brain_masker.inverse_transform(seed_based_correlations_fisher_z.T)
 
 	if save_as:
-		save_as = save_as.format(**substitution)
+		if substitution:
+			save_as = save_as.format(**substitution)
 		save_as = path.abspath(path.expanduser(save_as))
 		save_as_dir = path.dirname(save_as)
 		try:
@@ -55,11 +82,16 @@ def add_fc_roi_data(data_path, seed_masker, brain_masker,
 			else:
 				raise
 		seed_based_correlation_img.to_filename(save_as)
-		results["result"] = save_as
+		if dictionary_return:
+			result["result"] = save_as
+		else:
+			result = save_as
+	elif dictionary_return:
+		result["result"] = seed_based_correlation_img
 	else:
-		results["result"] = seed_based_correlation_img
+		result = seed_based_correlation_img
 
-	return results
+	return result
 
 def seed_based(substitutions, seed, roi,
 	ts_file_template="~/ni_data/ofM.dr/preprocessing/{preprocessing_dir}/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_trial-{trial}.nii.gz",
@@ -115,14 +147,9 @@ def seed_based(substitutions, seed, roi,
 		[ts_file_template]*len(substitutions),
 		[seed_masker]*len(substitutions),
 		[brain_masker]*len(substitutions),
-		substitutions,
-		[smoothing_fwhm]*len(substitutions),
-		[detrend]*len(substitutions),
-		[standardize]*len(substitutions),
-		[low_pass]*len(substitutions),
-		[high_pass]*len(substitutions),
-		[tr]*len(substitutions),
+		[True]*len(substitution),
 		[save_results]*len(substitutions),
+		substitutions,
 		))
 
 	return fc_maps

@@ -13,6 +13,7 @@ setup(
 	provides = ["samri"],
 	packages = [
 		"samri",
+		"samri.analysis",
 		"samri.fetch",
 		"samri.optimization",
 		"samri.pipelines",

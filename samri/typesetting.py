@@ -35,6 +35,7 @@ def inline_anova(anova,
 	style="python",
 	max_len=4,
 	condensed=False,
+	pythontex_safe=False,
 	):
 	"""Typeset factor summary from statsmodels-style anova DataFrame for inline mention.
 
@@ -84,6 +85,7 @@ def inline_anova(anova,
 			f_string,
 			p_string,
 			)
-
+		if pythontex_safe:
+			inline = inline.replace("\\","\\\\") 
 	return inline
 

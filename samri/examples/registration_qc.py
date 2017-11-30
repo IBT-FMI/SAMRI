@@ -11,12 +11,8 @@ anova_summary = registration_qc(df_path,
 	group={"sub":"Subject"},
 	repeat={"ses":"Session"},
 	extra={"trial":"Type"},
-	model="{value} ~ C({extra}) + C({repeat}) + C({group}) -1",
 	save_as="registration_qc.png",
-	print_model=True,
-	print_anova=True,
 	show=False,
-	anova_type=2,
 	)
 
 print(inline_anova(anova_summary,"C(Subject)",style="python"))

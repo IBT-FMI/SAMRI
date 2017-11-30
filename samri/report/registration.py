@@ -26,7 +26,7 @@ def measure_sim(path_template, substitutions, reference,
 	file_data["path"] = image_path
 	file_data["session"] = substitutions["session"]
 	file_data["subject"] = substitutions["subject"]
-	file_data["acquisution"] = substitutions["trial"]
+	file_data["acquisition"] = substitutions["trial"]
 
 	if "/func/" in path_template or "/dwi/" in path_template:
 		image_name = path.basename(file_data["path"])

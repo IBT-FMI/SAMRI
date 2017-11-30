@@ -26,7 +26,7 @@ def test_bids_naming():
 
 	name = bids_naming(
 			metadata=data_selection,
-			scan_type='acq-EPIcbv_trial-CogB',
+			scan_type='acq-EPI_cbv_trial-CogB',
 			subject_session=('5706','ofMpF'),
 			)
 	assert_and_feedback(name,'sub-5706_ses-ofMpF_acq-EPI_trial-CogB_cbv.nii.gz', debug=data_selection)
@@ -40,7 +40,7 @@ def test_bids_naming():
 
 	name = bids_naming(
 			metadata=data_selection,
-			scan_type='acq-EPIcbv_trial-CogB',
+			scan_type='acq-EPI_cbv_trial-CogB',
 			subject_session=('5704','ofMpF'),
 			)
 	assert_and_feedback(name,'sub-5704_ses-ofMpF_acq-EPI_trial-CogB_cbv.nii.gz', debug=data_selection)

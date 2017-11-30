@@ -166,6 +166,7 @@ def stat(stat_maps,
 	vmax=None,
 	shape="portrait",
 	draw_colorbar=True,
+	ax=None,
 	):
 
 	"""Plot a list of statistical maps.
@@ -213,7 +214,10 @@ def stat(stat_maps,
 	if isinstance(stat_maps, str):
 		stat_maps=[stat_maps]
 	if len(stat_maps) == 1:
-		fig, axes = plt.subplots(facecolor='#eeeeee')
+		if not ax:
+			fig, ax = plt.subplots(facecolor='#eeeeee')
+		else:
+			fig = None
 
 		if figure_title:
 			fig.suptitle(figure_title, fontsize=scale*20, fontweight='bold')
@@ -224,7 +228,7 @@ def stat(stat_maps,
 			title=None
 
 		if draw_colorbar:
-			cax, kw = _draw_colorbar(stat_maps[0],axes,
+			cax, kw = _draw_colorbar(stat_maps[0],ax,
 				threshold=threshold,
 				aspect=30,
 				fraction=0.05,
@@ -234,7 +238,7 @@ def stat(stat_maps,
 			my_overlay = overlays[0]
 		else:
 			my_overlay = None
-		display = scaled_plot(stat_maps[0], template, fig, axes,
+		display = scaled_plot(stat_maps[0], template, fig, ax,
 			overlay=my_overlay,
 			title=title,
 			threshold=threshold,
@@ -260,13 +264,13 @@ def stat(stat_maps,
 				#we use inverse floor division to get the ceiling
 				ncols = -(-len(stat_maps)//2)
 				#scale = scale/float(nrows)
-		fig, axes = plt.subplots(figsize=(6*ncols,2.5*nrows), facecolor='#eeeeee', nrows=nrows, ncols=ncols)
+		fig, ax = plt.subplots(figsize=(6*ncols,2.5*nrows), facecolor='#eeeeee', nrows=nrows, ncols=ncols)
 		if figure_title:
 			fig.suptitle(figure_title, fontsize=scale*35, fontweight='bold')
 		conserve_colorbar_steps = 0
 		# We transform the axes array so that we iterate column-first rather than row-first.
 		# This is done to better share colorbars between consecutive axes.
-		flat_axes = list(axes.T.flatten())
+		flat_axes = list(ax.T.flatten())
 		try:
 			stat_maps = list(stat_maps.T.flatten())
 		except AttributeError:
@@ -351,16 +355,19 @@ def stat(stat_maps,
 	return display
 
 def atlas_label(atlas,
-	mapping="",
-	label_names=[],
+	alpha=0.7,
 	anat="~/ni_data/templates/DSURQEc_40micron_masked.nii.gz",
+	ax=None,
+	color="#E69F00",
+	fig=None,
+	label_names=[],
+	mapping="",
 	annotate=True,
 	black_bg=False,
 	draw_cross=True,
 	threshold=None,
 	roi=False,
 	subplot_titles=[],
-	color="#E69F00",
 	scale=1.,
 	dim=0,
 	**kwargs
@@ -381,9 +388,17 @@ def atlas_label(atlas,
 
 	cm = ListedColormap([color], name="my_atlas_label_cmap", N=None)
 
-	fig = plt.figure()
-
-	display = nilearn.plotting.plot_roi(roi, bg_img=anat, black_bg=black_bg, annotate=False, draw_cross=False, cmap=cm, dim=dim, figure=fig)
+	display = nilearn.plotting.plot_roi(roi,
+		alpha=alpha,
+		annotate=False,
+		axes=ax,
+		bg_img=anat,
+		black_bg=black_bg,
+		draw_cross=False,
+		cmap=cm,
+		dim=dim,
+		figure=fig,
+		)
 	if draw_cross:
 		display.draw_cross(linewidth=scale*1.6, alpha=0.4)
 	if annotate:
@@ -391,6 +406,7 @@ def atlas_label(atlas,
 	if subplot_titles:
 		display.title(title, size=2+scale*26)
 
+	return display
 
 def plot_myanat(anat="~/ni_data/templates/hires_QBI_chr.nii.gz"):
 	nilearn.plotting.plot_anat(anat, cut_coords=[0, 0, 0],title='Anatomy image')

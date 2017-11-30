@@ -82,7 +82,7 @@ def reg_cc(
 			["CogB","JogB"],
 			"~/ni_data/ofM.dr/",
 			"composite",
-			acquisitions=['EPI'],
+			acquisitions=['EPI','EPIlowcov'],
 			check_file_format=path_template,
 			)
 
@@ -94,26 +94,6 @@ def reg_cc(
 		sampling_percentage=0.33,
 		save_as="f_reg_quality.csv",
 		)
-
-	if plot:
-		anova_summary = registration_qc(df,
-			value={"similarity":"Similarity"},
-			group={"sub":"Subject"},
-			repeat={"ses":"Session"},
-			extra={"trial":"Type"},
-			model="{value} ~ C({extra}) + C({repeat}) + C({group}) -1",
-			save_as="registration_qc.png",
-			print_model=True,
-			print_anova=True,
-			show=False,
-			)
-
-		subject_effect = inline_anova(anova_summary,"C(Subject)",style="python")
-		print("Subject Main Effect: {}".format(subject_effect))
-		session_effect = inline_anova(anova_summary,"C(Session)",style="python", max_len=2)
-		print("Session Main Effect: {}".format(session_effect))
-		type_effect = inline_anova(anova_summary,"C(Type)",style="python")
-		print("Scan Type Main Effect: {}".format(type_effect))
 
 def metadata():
 	from samri.pipelines.extra_functions import get_data_selection

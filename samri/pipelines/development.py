@@ -141,6 +141,16 @@ def cbv_composite(data_path="~/ni_data/ofM.dr/",
 	#	mask="~/ni_data/templates/DSURQEc_200micron_mask.nii.gz",
 	#	)
 
+def anova_fc():
+	glm.l2_anova("~/ni_data/ofM.dr/fc/drs_seed/",
+		workflow_name="anova_fc",
+		keep_work=True,
+		mask="~/ni_data/templates/DSURQEc_200micron_mask.nii.gz",
+		include={
+			'session':['ofM','ofMaF','ofMcF1','ofMcF2','ofMpF'],
+			'subject':['5691',"5689","5690","5700"],
+			},
+		)
 def anova():
 	from samri.fetch.local import roi_from_atlaslabel
 	roi = roi_from_atlaslabel("~/ni_data/templates/roi/DSURQEc_200micron_labels.nii",

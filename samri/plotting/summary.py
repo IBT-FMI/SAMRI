@@ -297,7 +297,7 @@ def p_roi_masking(substitution, ts_file_template, beta_file_template, p_file_tem
 
 	return timecourse, design, mask_map, event_df, subplot_title
 
-def roi_masking(substitution, ts_file_template, beta_file_template, design_file_template, event_file_template, roi_path):
+def roi_masking(substitution, ts_file_template, beta_file_template, design_file_template, event_file_template, roi):
 	"""Apply a substitution pattern to timecourse, beta, and design file templates - and mask the data of the former two according to a roi. Subsequently scale the design by the mean beta.
 
 	Parameters
@@ -339,8 +339,11 @@ def roi_masking(substitution, ts_file_template, beta_file_template, design_file_
 	design_file = path.expanduser(design_file_template.format(**substitution))
 	event_file = path.expanduser(event_file_template.format(**substitution))
 
-	masker = NiftiMasker(mask_img=roi_path)
-	mask_map = nib.load(roi_path)
+	masker = NiftiMasker(mask_img=roi)
+	if isinstance(roi, str):
+		mask_map = nib.load(roi)
+	else:
+		mask_map = roi
 	try:
 		timecourse = masker.fit_transform(ts_file).T
 		betas = masker.fit_transform(beta_file).T
@@ -355,7 +358,7 @@ def roi_masking(substitution, ts_file_template, beta_file_template, design_file_
 
 	return timecourse, design, mask_map, event_df, subplot_title
 
-def ts_overviews(substitutions, roi_path,
+def ts_overviews(substitutions, roi,
 	ts_file_template="~/ni_data/ofM.dr/preprocessing/{preprocessing_dir}/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_trial-{scan}.nii.gz",
 	beta_file_template="~/ni_data/ofM.dr/l1/{l1_dir}/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_trial-{scan}_cope.nii.gz",
 	design_file_template="~/ni_data/ofM.dr/l1/{l1_workdir}/_subject_session_scan_{subject}.{session}.{scan}/modelgen/run0.mat",
@@ -366,7 +369,10 @@ def ts_overviews(substitutions, roi_path,
 	stat_maps = []
 	subplot_titles = []
 	designs = []
-	roi_path = path.abspath(path.expanduser(roi_path))
+	try:
+		roi = path.abspath(path.expanduser(roi))
+	except AttributeError:
+		pass
 
 	n_jobs = mp.cpu_count()-2
 	substitutions_data = Parallel(n_jobs=n_jobs, verbose=0, backend="threading")(map(delayed(roi_masking),
@@ -375,7 +381,7 @@ def ts_overviews(substitutions, roi_path,
 		[beta_file_template]*len(substitutions),
 		[design_file_template]*len(substitutions),
 		[event_file_template]*len(substitutions),
-		[roi_path]*len(substitutions),
+		[roi]*len(substitutions),
 		))
 	timecourses, designs, stat_maps, event_dfs, subplot_titles = zip(*substitutions_data)
 

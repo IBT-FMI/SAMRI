@@ -328,7 +328,7 @@ def ctx_drs_connectivity():
 
 	subjectdf.to_csv('~/ni_data/ofM.dr/fc/{}/ctx_summary.csv'.format(workflow_name))
 
-def ctx_pattern_drs_connectivity():
+def ctx_pattern_mask_drs_sfc():
 	import pandas as pd
 	from behaviopy.plotting import qualitative_times
 	from samri.plotting import summary
@@ -337,9 +337,9 @@ def ctx_pattern_drs_connectivity():
 	from samri.fetch.local import roi_from_atlaslabel
 
 	workflow_name = 'drs_seed'
-	my_roi = '~/ni_data/ofM.dr/l2/anova_ctx/anova_zfstat.nii.gz'
+	my_roi = '~/ni_data/ofM.dr/l2/anova_ctx/anova_fstat.nii.gz'
 
-	my_roi = roi.from_threshold(my_roi, 1., save_as='~/ni_data/ofM.dr/fc/{}/ctx_pattern_mask.nii.gz'.format(workflow_name))
+	my_roi = roi.from_img_threshold(my_roi, 2., save_as='~/ni_data/ofM.dr/fc/{}/ctx_pattern_mask.nii.gz'.format(workflow_name))
 
 	substitutions = bids_substitution_iterator(
                 ["ofM","ofMaF","ofMcF1","ofMcF2","ofMpF"],

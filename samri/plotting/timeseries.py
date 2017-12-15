@@ -161,9 +161,9 @@ def multi(timecourses, designs, stat_maps, events_dfs, subplot_titles,
 			max_rows = (len(timecourses) // ncols) + 1
 			min_rows = len(timecourses) % max_rows
 			if samri_style:
-				fig, axes = plt.subplots(figsize=(10*max_rows,7*ncols), facecolor='#eeeeee', nrows=max_rows*min_rows, ncols=ncols)
-			else:
-				fig, axes = plt.subplots(facecolor='#eeeeee', nrows=max_rows*min_rows, ncols=ncols)
+				this_path = path.dirname(path.realpath(__file__))
+				plt.style.use(path.join(this_path,"samri.conf"))
+			fig, axes = plt.subplots(figsize=(10*max_rows,7*ncols), facecolor='#eeeeee', nrows=max_rows*min_rows, ncols=ncols)
 			xlabel_positive = [(i*max_rows)-1 for i in range(1,ncols)]
 			xlabel_positive.append(len(timecourses)-1)
 			max_ylim = [0,0]

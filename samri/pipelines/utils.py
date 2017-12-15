@@ -117,10 +117,14 @@ def bids_naming(subject_session, scan_type, metadata,
 		trial = trial.item()
 		filename += '_trial-{}'.format(trial)
 	if not suffix:
-		modality = selection['modality']
-		if not modality.isnull().all():
-			modality = modality.item()
-			filename += '_{}'.format(modality)
+		try:
+			modality = selection['modality']
+		except KeyError:
+			pass
+		else:
+			if not modality.isnull().all():
+				modality = modality.item()
+				filename += '_{}'.format(modality)
 	else:
 		filename += '_{}'.format(suffix)
 	filename += extension

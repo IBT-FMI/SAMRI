@@ -400,6 +400,7 @@ def assign_modality(scan_type, record):
 			if modality_string in scan_type:
 				record['modality'] = BEST_GUESS_MODALITY_MATCH[modality_group]
 				return scan_type, record
+	return scan_type, record
 
 def match_exclude_bids(key, values, record, scan_type, number):
 	key_alternatives = BIDS_KEY_DICTIONARY[key]

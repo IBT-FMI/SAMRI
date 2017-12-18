@@ -145,86 +145,115 @@ def roi_based(substitutions,
 
 	return ax
 
-def multi(timecourses, designs, stat_maps, events_dfs, subplot_titles,
+def multi(timecourses,
+	designs=[],
+	events_dfs=[],
+	subplot_titles=[],
 	colors=QUALITATIVE_COLORSET,
 	figure="maps",
 	quantitative=True,
 	save_as="",
 	samri_style=True,
 	):
-	if figure == "maps":
-		maps.stat(stat_maps, template="~/ni_data/templates/ds_QBI_chr.nii.gz", threshold=0.1, interpolation="gaussian", subplot_titles=subplot_titles)
-	elif figure == "timecourses":
-		if len(timecourses) > 1:
-			ncols = 2
-			#we use inverse floor division to get the ceiling
-			max_rows = (len(timecourses) // ncols) + 1
-			min_rows = len(timecourses) % max_rows
-			if samri_style:
-				this_path = path.dirname(path.realpath(__file__))
-				plt.style.use(path.join(this_path,"samri.conf"))
-			fig, axes = plt.subplots(figsize=(10*max_rows,7*ncols), facecolor='#eeeeee', nrows=max_rows*min_rows, ncols=ncols)
-			xlabel_positive = [(i*max_rows)-1 for i in range(1,ncols)]
-			xlabel_positive.append(len(timecourses)-1)
-			max_ylim = [0,0]
+	if len(timecourses) > 1:
+		ncols = 2
+		#we use inverse floor division to get the ceiling
+		max_rows = int(round(np.ceil((len(timecourses) // ncols))))
+		min_rows = int(round(np.floor((len(timecourses) // ncols))))
+		if samri_style:
+			this_path = path.dirname(path.realpath(__file__))
+			plt.style.use(path.join(this_path,"samri.conf"))
+		fig, axes = plt.subplots(figsize=(10*max_rows,7*ncols), facecolor='#eeeeee', nrows=max_rows*min_rows, ncols=ncols)
+		xlabel_positive = [(i*max_rows)-1 for i in range(1,ncols)]
+		xlabel_positive.append(len(timecourses)-1)
+		max_ylim = [0,0]
 
-			for ix, timecourse in enumerate(timecourses):
-				timecourse = timecourses[ix]
-				design = designs[ix]
+		for ix, timecourse in enumerate(timecourses):
+
+			col = ix // max_rows
+			row = ix % max_rows
+			if col+1 == ncols:
+				ax = plt.subplot2grid((max_rows*min_rows,ncols), (row*max_rows, col), rowspan=max_rows)
+			else:
+				ax = plt.subplot2grid((max_rows*min_rows,ncols), (row*min_rows, col), rowspan=min_rows)
+
+			#Add plotting elements as available
+			try:
 				events_df = events_dfs[ix]
-				subplot_title = subplot_titles[ix]
-
-				col = ix // max_rows
-				row = ix % max_rows
-				if col+1 == ncols:
-					ax = plt.subplot2grid((max_rows*min_rows,ncols), (row*max_rows, col), rowspan=max_rows)
-				else:
-					ax = plt.subplot2grid((max_rows*min_rows,ncols), (row*min_rows, col), rowspan=min_rows)
+			except:
+				pass
+			else:
 				for d, o in zip(events_df["duration"], events_df["onset"]):
 					d = round(d)
 					o = round(o)
 					ax.axvspan(o,o+d, facecolor="cyan", alpha=0.15)
+
+			if isinstance(timecourse, pd.DataFrame):
+				timecourse.plot(ax=ax)
+			elif isinstance(timecourse[0], int) or isinstance (timecourse[0], float):
 				ax.plot(timecourse, lw=rcParams['lines.linewidth']/4)
+			else:
+				for timecourse_variant in timecourse:
+					if isinstance(timecourse_variant, dict):
+						ax.plot(list(timecourse_variant.values())[0],
+							lw=rcParams['lines.linewidth']/4,
+							label=list(timecourse_variant.keys())[0],
+							)
+					else:
+						ax.plot(timecourse_variant.values,
+							lw=rcParams['lines.linewidth']/4,
+							)
+
+
+			try:
+				design = designs[ix]
+			except:
+				pass
+			else:
 				ax.plot(design[0])
-				if not ix in xlabel_positive:
-					plt.setp(ax.get_xticklabels(), visible=False)
-				if not quantitative:
-					ax.yaxis.grid(False)
-					ax.set_yticks([])
-				else:
-					ax.yaxis.set_label_position("right")
-				ax.tick_params(axis='y',)
-				ax.set_xlim([0,len(timecourse)])
-				ax.set_ylabel(subplot_title)
-		else:
-			fig, ax = plt.subplots(facecolor='#eeeeee')
 
-			timecourse = timecourses[0]
-			design = designs[0]
-			events_df = events_dfs[0]
-			subplot_title = "Arbitrary Units"
-
-			for d, o in zip(events_df["duration"], events_df["onset"]):
-				d = round(d)
-				o = round(o)
-				ax.axvspan(o,o+d, facecolor="cyan", alpha=0.15)
-			ax.plot(timecourse, lw=rcParams['lines.linewidth']*1.5, color=colors[0], alpha=1)
-			for ix, i in enumerate(design):
-				try:
-					iteration_color=colors[ix+1]
-				except IndexError:
-					pass
-				ax.plot(design[ix], lw=rcParams['lines.linewidth']*2, color=iteration_color, alpha=1)
+			if not ix in xlabel_positive:
+				plt.setp(ax.get_xticklabels(), visible=False)
 			if not quantitative:
 				ax.yaxis.grid(False)
 				ax.set_yticks([])
 			else:
 				ax.yaxis.set_label_position("right")
+			ax.tick_params(axis='y',)
+			try:
+				subplot_title = subplot_titles[ix]
+			except:
+				pass
+			else:
+				ax.set_ylabel(subplot_title+' [AU]')
 			ax.set_xlim([0,len(timecourse)])
-			ax.set_ylabel(subplot_title)
-			ax.set_xlabel("TR[1s]")
 	else:
-		print("WARNING: you must specify either 'maps' or 'timecourses'")
+		fig, ax = plt.subplots(facecolor='#eeeeee')
+
+		timecourse = timecourses[0]
+		design = designs[0]
+		events_df = events_dfs[0]
+		subplot_title = "Arbitrary Units"
+
+		for d, o in zip(events_df["duration"], events_df["onset"]):
+			d = round(d)
+			o = round(o)
+			ax.axvspan(o,o+d, facecolor="cyan", alpha=0.15)
+		ax.plot(timecourse, lw=rcParams['lines.linewidth']*1.5, color=colors[0], alpha=1)
+		for ix, i in enumerate(design):
+			try:
+				iteration_color=colors[ix+1]
+			except IndexError:
+				pass
+			ax.plot(design[ix], lw=rcParams['lines.linewidth']*2, color=iteration_color, alpha=1)
+		if not quantitative:
+			ax.yaxis.grid(False)
+			ax.set_yticks([])
+		else:
+			ax.yaxis.set_label_position("right")
+		ax.set_xlim([0,len(timecourse)])
+		ax.set_ylabel(subplot_title)
+		ax.set_xlabel("TR[1s]")
 	if save_as:
 		save_as = path.abspath(path.expanduser(save_as))
 		plt.savefig(save_as)

@@ -2,13 +2,14 @@ import nibabel
 import nipype.interfaces.io as nio
 import numpy as np
 import pandas as pd
-from os import path
-from nilearn.input_data import NiftiLabelsMasker, NiftiMapsMasker, NiftiMasker
-
+from copy import deepcopy
 from matplotlib import rcParams
+from nilearn.input_data import NiftiLabelsMasker, NiftiMapsMasker, NiftiMasker
+from os import path
 
-import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
+import matplotlib.pyplot as plt
+import matplotlib.ticker as plticker
 
 from samri.plotting import maps, utilities
 from samri.plotting.utilities import QUALITATIVE_COLORSET
@@ -57,7 +58,7 @@ def plot_stim_design(file_path,stim):
 	# 	o = int(o[0])
 	# 	ax.axvspan(o,o+d, facecolor="cyan", alpha=0.15)
 	ax = df.plot(ax=ax)
-	#remove bottom and top small tick lines
+	#REMove bottom and top small tick lines
 	plt.tick_params(axis='x', which='both', bottom='off', top='off', left='off', right='off')
 	plt.tick_params(axis='y', which='both', bottom='off', top='off', left='off', right='off')
 
@@ -154,28 +155,63 @@ def multi(timecourses,
 	quantitative=True,
 	save_as="",
 	samri_style=True,
+	ax_size=[10,7],
+	unit_ticking=False,
+	x_label="TR [1s]"
 	):
+	"""Plot multiple timecourses on an intelligently scaled multi-axis figure.
+
+	Parameters
+	----------
+
+	timecourses : list or pandas.DataFrame
+		Timecourses to plot.
+		The value can be a list of lists of floats (in which case every list gives a timecourse to plot separately);
+		or a list of dictionaries, every one of which has strings as keys and lists of floats as values (in which case each dictionary contains one or multiple timeseries to be plotted on the same axis - and labelled according to the respective keys);
+		or a list of `pandas.DataFrame` objects (in which case each DataFrame is plotted on a new axis);
+		or a `pandas.DataFrame` object (in which case the object is broken apart into a list of DataFrames by the values in the column specified by a string `subplot_titles` value - and the `subplot_tiles` value will be set to the values in the selected column).
+	subplot_titles : list or str
+		The titles to assign to the individual plots.
+		For compactness, this title is actually assigned to the y-label field, and can be placed left or right of the plot (corresponding to `False` or `True` values of the `quantitative` attribute, respectively)
+	"""
+
+	if isinstance(timecourses, pd.DataFrame):
+		if subplot_titles in ['subject','session','acquisition','trial']:
+			timecourses_ = []
+			subplot_titles_ = []
+			values = list(timecourses[subplot_titles].unique())
+			for value in values:
+				timecourse = timecourses[timecourses[subplot_titles]==value]
+				timecourse = deepcopy(timecourse)
+				timecourses_.append(timecourse)
+				subplot_titles_.append(value)
+			timecourses = timecourses_
+			subplot_titles = subplot_titles_
+		else:
+			timecourses = [timecourses,]
+
+	if samri_style:
+		this_path = path.dirname(path.realpath(__file__))
+		plt.style.use(path.join(this_path,"samri.conf"))
+
 	if len(timecourses) > 1:
 		ncols = 2
-		#we use inverse floor division to get the ceiling
-		max_rows = int(round(np.ceil((len(timecourses) // ncols))))
-		min_rows = int(round(np.floor((len(timecourses) // ncols))))
-		if samri_style:
-			this_path = path.dirname(path.realpath(__file__))
-			plt.style.use(path.join(this_path,"samri.conf"))
-		fig, axes = plt.subplots(figsize=(10*max_rows,7*ncols), facecolor='#eeeeee', nrows=max_rows*min_rows, ncols=ncols)
-		xlabel_positive = [(i*max_rows)-1 for i in range(1,ncols)]
+		max_rowspan = int(np.ceil((len(timecourses) / float(ncols))))
+		min_rowspan = int(np.floor((len(timecourses) / float(ncols))))
+		fig, axes = plt.subplots(figsize=(ax_size[0]*max_rowspan*min_rowspan*0.5,ax_size[1]*ncols), facecolor='#eeeeee', nrows=max_rowspan*min_rowspan, ncols=ncols)
+		xlabel_positive = [(i*max_rowspan)-1 for i in range(1,ncols)]
 		xlabel_positive.append(len(timecourses)-1)
 		max_ylim = [0,0]
 
+
 		for ix, timecourse in enumerate(timecourses):
 
-			col = ix // max_rows
-			row = ix % max_rows
+			col = ix // max_rowspan
+			row = ix % max_rowspan
 			if col+1 == ncols:
-				ax = plt.subplot2grid((max_rows*min_rows,ncols), (row*max_rows, col), rowspan=max_rows)
+				ax = plt.subplot2grid((max_rowspan*min_rowspan,ncols), (row*max_rowspan, col), rowspan=max_rowspan)
 			else:
-				ax = plt.subplot2grid((max_rows*min_rows,ncols), (row*min_rows, col), rowspan=min_rows)
+				ax = plt.subplot2grid((max_rowspan*min_rowspan,ncols), (row*min_rowspan, col), rowspan=min_rowspan)
 
 			#Add plotting elements as available
 			try:
@@ -214,46 +250,82 @@ def multi(timecourses,
 
 			if not ix in xlabel_positive:
 				plt.setp(ax.get_xticklabels(), visible=False)
-			if not quantitative:
+			if quantitative:
+				ax_ = ax.twinx()
+				ax_.yaxis.set_label_position("right")
+				ax_.yaxis.grid(False)
+				ax_.set_yticks([])
+				try:
+					subplot_title = subplot_titles[ix]
+				except:
+					pass
+				else:
+					ax_.set_ylabel(subplot_title)
+			else:
 				ax.yaxis.grid(False)
 				ax.set_yticks([])
-			else:
-				ax.yaxis.set_label_position("right")
+				try:
+					subplot_title = subplot_titles[ix]
+				except:
+					pass
+				else:
+					ax.set_ylabel(subplot_title)
+
 			ax.tick_params(axis='y',)
-			try:
-				subplot_title = subplot_titles[ix]
-			except:
-				pass
-			else:
-				ax.set_ylabel(subplot_title+' [AU]')
+
+			if unit_ticking:
+				ax.xaxis.set_ticks_position('both')
+				loc_maj = plticker.MultipleLocator(base=10.0)
+				ax.xaxis.set_major_locator(loc_maj)
+				loc_min = plticker.MultipleLocator(base=1.0)
+				ax.xaxis.set_minor_locator(loc_min)
+
 			ax.set_xlim([0,len(timecourse)])
 	else:
-		fig, ax = plt.subplots(facecolor='#eeeeee')
+		fig, ax = plt.subplots(figsize=(ax_size[0],ax_size[1]), facecolor='#eeeeee')
 
 		timecourse = timecourses[0]
-		design = designs[0]
-		events_df = events_dfs[0]
-		subplot_title = "Arbitrary Units"
+		subplot_title = subplot_titles[0]
 
-		for d, o in zip(events_df["duration"], events_df["onset"]):
-			d = round(d)
-			o = round(o)
-			ax.axvspan(o,o+d, facecolor="cyan", alpha=0.15)
-		ax.plot(timecourse, lw=rcParams['lines.linewidth']*1.5, color=colors[0], alpha=1)
-		for ix, i in enumerate(design):
-			try:
-				iteration_color=colors[ix+1]
-			except IndexError:
-				pass
-			ax.plot(design[ix], lw=rcParams['lines.linewidth']*2, color=iteration_color, alpha=1)
+		# Add plot elements as appropriate
+		try:
+			design = designs[0]
+		except:
+			pass
+		else:
+			for ix, i in enumerate(design):
+				try:
+					iteration_color=colors[ix+1]
+				except IndexError:
+					pass
+				ax.plot(design[ix], lw=rcParams['lines.linewidth']*2, color=iteration_color, alpha=1)
+
+		try:
+			events_df = events_dfs[0]
+		except:
+			pass
+		else:
+			for d, o in zip(events_df["duration"], events_df["onset"]):
+				d = round(d)
+				o = round(o)
+				ax.axvspan(o,o+d, facecolor="cyan", alpha=0.15)
+
+		if isinstance(timecourse, pd.DataFrame):
+			timecourse.plot(ax=ax)
+		else:
+			ax.plot(timecourse, lw=rcParams['lines.linewidth']*1.5, color=colors[0], alpha=1)
 		if not quantitative:
 			ax.yaxis.grid(False)
 			ax.set_yticks([])
-		else:
-			ax.yaxis.set_label_position("right")
 		ax.set_xlim([0,len(timecourse)])
-		ax.set_ylabel(subplot_title)
-		ax.set_xlabel("TR[1s]")
+		plt.title(subplot_title)
+		ax.set_xlabel(x_label)
+		if unit_ticking:
+			ax.xaxis.set_ticks_position('both')
+			loc_maj = plticker.MultipleLocator(base=10.0)
+			ax.xaxis.set_major_locator(loc_maj)
+			loc_min = plticker.MultipleLocator(base=1.0)
+			ax.xaxis.set_minor_locator(loc_min)
 	if save_as:
 		save_as = path.abspath(path.expanduser(save_as))
 		plt.savefig(save_as)

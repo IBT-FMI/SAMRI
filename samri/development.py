@@ -1,3 +1,62 @@
+def temporal_qc_separate():
+	import matplotlib.pyplot as plt
+	import matplotlib.ticker as plticker
+	import numpy as np
+	from samri.report.snr import base_metrics
+	from samri.plotting.timeseries import multi
+	from samri.utilities import bids_substitution_iterator
+
+	substitutions = bids_substitution_iterator(
+		['testSTIM'],
+		['COILphantom'],
+		['CcsI'],
+		'/home/chymera/ni_data/phantoms/',
+		'bids',
+		acquisitions=['EPIalladj','EPIcopyadjNODUM','EPIcopyadj','EPImoveGOP'],
+		)
+
+	for i in substitutions:
+		timecourses  = base_metrics('{data_dir}/{preprocessing_dir}/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_acq-{acquisition}_trial-{trial}.nii', i)
+		multi(timecourses,
+			designs=[],
+			events_dfs=[],
+			subplot_titles='acquisition',
+			quantitative=False,
+			save_as='temp_{}.pdf'.format(i['acquisition']),
+			samri_style=True,
+			ax_size=[16,6],
+			unit_ticking=True,
+			)
+
+def temporal_qc_al_in_one():
+	import matplotlib.pyplot as plt
+	import matplotlib.ticker as plticker
+	import numpy as np
+	from samri.report.snr import iter_base_metrics
+	from samri.plotting.timeseries import multi
+	from samri.utilities import bids_substitution_iterator
+
+	substitutions = bids_substitution_iterator(
+		['testSTIM'],
+		['COILphantom'],
+		['CcsI'],
+		'/home/chymera/ni_data/phantoms/',
+		'bids',
+		acquisitions=['EPIalladj','EPIcopyadjNODUM','EPIcopyadj','EPImoveGOP'],
+		)
+
+	timecourses  = iter_base_metrics('{data_dir}/{preprocessing_dir}/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_acq-{acquisition}_trial-{trial}.nii', substitutions)
+	multi(timecourses,
+		designs=[],
+		events_dfs=[],
+		subplot_titles='acquisition',
+		quantitative=False,
+		save_as="temp_qc.pdf",
+		samri_style=True,
+		ax_size=[16,6],
+		unit_ticking=True,
+		)
+
 def reg_gc():
 	from samri.plotting.aggregate import registration_qc
 	from samri.report.registration import get_scores

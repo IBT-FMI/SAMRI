@@ -104,6 +104,8 @@ def write_bids_metadata_file(scan_dir, extraction_dicts,
 	out_file = path.abspath(path.expanduser(out_file))
 	scan_dir = path.abspath(path.expanduser(scan_dir))
 	metadata = {}
+
+	# Extract nice parameters:
 	for extraction_dict in extraction_dicts:
 		query_file = path.abspath(path.join(scan_dir,extraction_dict['query_file']))
 		with open(query_file) as search:
@@ -121,6 +123,10 @@ def write_bids_metadata_file(scan_dir, extraction_dicts,
 						pass
 					metadata[extraction_dict['field_name']] = value
 					break
+	# Extract difficult parameters
+
+	# Calculate compound parameters
+
 	with open(out_file, 'w') as out_file_writeable:
 		json.dump(metadata, out_file_writeable, indent=1)
 		out_file_writeable.write("\n")  # `json.dump` does not add a newline at the end; we do it here.

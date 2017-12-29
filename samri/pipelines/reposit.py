@@ -1,8 +1,10 @@
 from os import path, remove
 from samri.pipelines.extra_functions import get_data_selection, get_scan, write_bids_metadata_file, write_events_file, BIDS_METADATA_EXTRACTION_DICTS
 
+import argh
 import re
 import inspect
+import json
 import shutil
 import time
 
@@ -17,6 +19,8 @@ from samri.utilities import N_PROCS
 
 N_PROCS=max(N_PROCS-4, 2)
 
+@argh.arg('-f','--functional-match', type=json.loads)
+@argh.arg('-s','--structural-match', type=json.loads)
 def bru2bids(measurements_base,
 	actual_size=True,
 	debug=False,
@@ -206,7 +210,13 @@ def bru2bids(measurements_base,
 	workflow.config = workflow_config
 	workflow.write_graph(dotfilename=path.join(workflow.base_dir,workdir_name,"graph.dot"), graph2use="hierarchical", format="png")
 
-	workflow.run(plugin="MultiProc", plugin_args={'n_procs' : n_procs})
+	if not keep_work or not keep_crashdump:
+		try:
+			workflow.run(plugin="MultiProc", plugin_args={'n_procs' : n_procs})
+		except RuntimeError:
+			pass
+	else:
+		workflow.run(plugin="MultiProc", plugin_args={'n_procs' : n_procs})
 	if not keep_work:
 		shutil.rmtree(path.join(workflow.base_dir,workdir_name))
 	if not keep_crashdump:

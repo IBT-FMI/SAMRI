@@ -100,7 +100,6 @@ def bids_naming(subject_session, scan_type, metadata,
 	"""
 	Generate a BIDS filename from a subject-and-session iterator, a scan type, and a `pandas.DataFrame` metadata container.
 	"""
-	scan_type_is_trial = True
 	subject, session = subject_session
 	filename = 'sub-{}'.format(subject)
 	filename += '_ses-{}'.format(session)

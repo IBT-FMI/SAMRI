@@ -51,11 +51,55 @@ MODALITY_MATCH = {
 	('MToff','MtOff'):'MToff',
 	}
 
-def force_dummy_scans(in_file, scan_dir,
+def force_dummy_scans(in_file,
 	desired_dummy_scans=10,
 	out_file="forced_dummy_scans_file.nii.gz",
 	):
 	"""Take a scan and crop initial timepoints depending upon the number of dummy scans (determined from a Bruker scan directory) and the desired number of dummy scans.
+
+	in_file : string
+	BIDS-compliant path to the 4D NIfTI file for which to force dummy scans.
+
+	desired_dummy_scans : int , optional
+	Desired timepoints dummy scans.
+	"""
+
+	import json
+	import nibabel as nib
+	from os import path
+
+	out_file = path.abspath(path.expanduser(out_file))
+	in_file = path.abspath(path.expanduser(in_file))
+	in_file_base = path.splitext(in_file)[0]
+	metadata_file = in_file_base+'.json'
+
+	metadata = json.load(open(metadata_file))
+
+	dummy_scans = 0
+	try:
+		dummy_scans = metadata['NumberOfVolumesDiscardedByScanner']
+	except:
+		pass
+
+	delete_scans = desired_dummy_scans - dummy_scans
+
+	if delete_scans <= 0:
+		img = nib.load(in_file)
+		nib.save(img,out_file)
+	else:
+		img = nib.load(in_file)
+		img_ = nib.Nifti1Image(img.get_data()[...,delete_scans:], img.affine, img.header)
+		nib.save(img_,out_file)
+
+	return out_file
+
+def _force_dummy_scans(in_file, scan_dir,
+	desired_dummy_scans=10,
+	out_file="forced_dummy_scans_file.nii.gz",
+	):
+	"""
+	THIS IS THE OLD DUMMY SCANS FUNCTION (SUBJECT TO REMOVAL WITHOUT NOTICE), WHICH NEEDS AS INPUT A BRUKER DIRECTORY, THE CURRENT FUNTION (`force_dummy_scans`) IS PREFERRED AND TAKE A BIDS JSON AS AN INPUT.
+	Take a scan and crop initial timepoints depending upon the number of dummy scans (determined from a Bruker scan directory) and the desired number of dummy scans.
 
 	in_file : string
 	Path to the 4D NIfTI file for which to force dummy scans.

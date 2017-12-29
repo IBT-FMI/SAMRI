@@ -92,6 +92,32 @@ def bids_dict_to_source(bids_dictionary, source_format):
 
 	return source
 
+def out_path(selection_df, in_path,
+	in_field='path',
+	out_field='out_path',
+	):
+	"""Select the `out_path` field corresponding to a given `in_path` from a BIDS-style selection dataframe which includes an `out_path` column.
+	"""
+
+	out_path = selection_df[selection_df[in_field]==in_path][out_field].item()
+
+	return out_path
+
+def container(selection_df, out_path,
+	kind='',
+	out_field='out_path',
+	):
+
+	subject = selection_df[selection_df[out_field]==out_path]['subject'].item()
+	session = selection_df[selection_df[out_field]==out_path]['session'].item()
+
+	container = 'sub-{}/ses-{}'.format(subject,session)
+	if kind:
+		container += '/'
+		container += kind
+
+	return container
+
 def bids_naming(subject_session, scan_type, metadata,
 	extra=['acq'],
 	extension='.nii.gz',

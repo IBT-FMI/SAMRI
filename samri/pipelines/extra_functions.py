@@ -124,50 +124,6 @@ def get_tr(in_file,
 
 	return tr
 
-def _force_dummy_scans(in_file, scan_dir,
-	desired_dummy_scans=10,
-	out_file="forced_dummy_scans_file.nii.gz",
-	):
-	"""
-	THIS IS THE OLD DUMMY SCANS FUNCTION (SUBJECT TO REMOVAL WITHOUT NOTICE), WHICH NEEDS AS INPUT A BRUKER DIRECTORY, THE CURRENT FUNTION (`force_dummy_scans`) IS PREFERRED AND TAKE A BIDS JSON AS AN INPUT.
-	Take a scan and crop initial timepoints depending upon the number of dummy scans (determined from a Bruker scan directory) and the desired number of dummy scans.
-
-	in_file : string
-	Path to the 4D NIfTI file for which to force dummy scans.
-
-	scan_dir : string
-	Path to the corresponding Bruker directory of the scan_dir.
-
-	desired_dummy_scans : int , optional
-	Desired timepoints dummy scans.
-	"""
-
-	import nibabel as nib
-	from os import path
-
-	out_file = path.abspath(path.expanduser(out_file))
-
-	method_file_path = path.join(scan_dir,"method")
-	method_file = open(method_file_path, "r")
-	dummy_scans = 0
-	while True:
-		current_line = method_file.readline()
-		if "##$PVM_DummyScans=" in current_line:
-			dummy_scans = int(current_line.split("=")[1])
-			break
-
-	delete_scans = desired_dummy_scans - dummy_scans
-
-	if delete_scans <= 0:
-		img = nib.load(in_file)
-		nib.save(img,out_file)
-	else:
-		img = nib.load(in_file)
-		img_ = nib.Nifti1Image(img.get_data()[...,delete_scans:], img.affine, img.header)
-		nib.save(img_,out_file)
-
-	return out_file
-
 def write_bids_metadata_file(scan_dir, extraction_dicts,
 	out_file="bids_metadata.json",
 	):

@@ -93,6 +93,37 @@ def force_dummy_scans(in_file,
 
 	return out_file
 
+def get_tr(in_file,
+	ndim=4,
+	):
+	"""Return the repetiton time of a NIfTI file.
+
+	Parameters
+	----------
+
+	in_file : str
+		Path to NIfTI file
+	ndim : int
+		Dimensionality of NIfTI file
+
+	Returns
+	-------
+
+	float :
+		Repetition Time
+	"""
+
+	import nibabel as nib
+	from os import path
+
+	in_file = path.abspath(path.expanduser(in_file))
+
+	img = nib.load(in_file)
+	header = img.header
+	tr = header.get_zooms()[ndim-1]
+
+	return tr
+
 def _force_dummy_scans(in_file, scan_dir,
 	desired_dummy_scans=10,
 	out_file="forced_dummy_scans_file.nii.gz",

@@ -14,10 +14,9 @@ import nipype.pipeline.engine as pe				# pypeline engine
 import pandas as pd
 from nipype.interfaces import afni, fsl, nipy, bru2nii
 
-from samri.pipelines.extra_functions import get_data_selection, get_scan, write_events_file, force_dummy_scans
+from samri.pipelines.extra_functions import force_dummy_scans, get_tr
 from samri.pipelines.nodes import functional_registration, structural_registration, composite_registration
 from samri.pipelines.utils import out_path, container
-
 from samri.utilities import N_PROCS
 
 #set all outputs to compressed NIfTI
@@ -28,40 +27,37 @@ fsl.FSLCommand.set_default_output_type('NIFTI_GZ')
 thisscriptspath = path.dirname(path.realpath(__file__))
 scan_classification_file_path = path.join(thisscriptspath,"scan_type_classification.csv")
 
-@argh.arg('-f', '--functional_scan_types', nargs='+', type=str)
-@argh.arg('-s', '--structural_scan_types', nargs='+', type=str)
-@argh.arg('--sessions', nargs='+', type=str)
-@argh.arg('--subjects', nargs='+', type=str)
-@argh.arg('--exclude_subjects', nargs='+', type=str)
-@argh.arg('--measurements', nargs='+', type=str)
-@argh.arg('--exclude_measurements', nargs='+', type=str)
 def diagnose(bids_base,
-	functional_scan_types=[],
-	structural_scan_types=[],
-	sessions=[],
-	subjects=[],
-	measurements=[],
-	exclude_subjects=[],
-	exclude_measurements=[],
-	actual_size=False,
 	components=None,
-	loud=False,
 	n_procs=N_PROCS,
 	realign="time",
-	tr=1,
+	tr=None,
 	workflow_name="diagnostic",
 	exclude={},
 	include={},
 	match_regex='.+/sub-(?P<sub>[a-zA-Z0-9]+)/ses-(?P<ses>[a-zA-Z0-9]+)/.*?_acq-(?P<acq>[a-zA-Z0-9]+)_trial-(?P<trial>[a-zA-Z0-9]+)_(?P<mod>[a-zA-Z0-9]+).(?:nii|nii\.gz)',
-	keep_work=True,
-	keep_crashdump=True,
+	keep_work=False,
+	keep_crashdump=False,
 	debug=False,
 	):
-	'''
+	'''Run an independent component analysis quick diagnotic (using FSL's MELODIC) on data stored in a BIDS directory tree.
+
+	Parameters
+	----------
 
 	realign: {"space","time","spacetime",""}
 		Parameter that dictates slictiming correction and realignment of slices. "time" (FSL.SliceTimer) is default, since it works safely. Use others only with caution!
-
+	keep_work : bool, optional
+		Whether to keep the work directory (containing all the intermediary workflow steps, as managed by nipypye).
+		This is useful for debugging and quality control.
+	keep_crashdump : bool, optional
+		Whether to keep the crashdump directory (containing all the crash reports for intermediary workflow steps, as managed by nipypye).
+		This is useful for debugging and quality control.
+	n_procs : int, optional
+		Maximum number of processes which to simultaneously spawn for the workflow.
+		If not explicitly defined, this is automatically calculated from the number of available cores and under the assumption that the workflow will be the main process running for the duration that it is running.
+	tr : int, optional
+		Repetition time (in seconds); if evaluated as False, the TR will be read from the NIfTI header of each file individually.
 	'''
 
 	bids_base = path.abspath(path.expanduser(bids_base))
@@ -108,7 +104,8 @@ def diagnose(bids_base,
 	datasink.inputs.parameterization = False
 
 	melodic = pe.Node(interface=fsl.model.MELODIC(), name="melodic")
-	melodic.inputs.tr_sec = tr
+	if tr:
+		melodic.inputs.tr_sec = tr
 	melodic.inputs.report = True
 	if components:
 		melodic.inputs.dim = int(components)
@@ -122,6 +119,16 @@ def diagnose(bids_base,
 		(melodic, datasink, [('out_dir', 'func')]),
 		]
 
+	if not tr:
+		report_tr = pe.Node(name='report_tr', interface=util.Function(function=get_tr,input_names=inspect.getargspec(get_tr)[0], output_names=['tr']))
+		report_tr.inputs.ndim = 4
+
+		workflow_connections.extend([
+			(infosource, report_tr, [('path', 'in_file')]),
+			(report_tr, melodic, [('tr', 'tr_sec')]),
+			])
+
+
 	if realign == "space":
 		realigner = pe.Node(interface=spm.Realign(), name="realigner")
 		realigner.inputs.register_to_mean = True
@@ -132,7 +139,12 @@ def diagnose(bids_base,
 	elif realign == "spacetime":
 		realigner = pe.Node(interface=nipy.SpaceTimeRealigner(), name="realigner")
 		realigner.inputs.slice_times = "asc_alt_2"
-		realigner.inputs.tr = tr
+		if tr:
+			realigner.inputs.tr = tr
+		else:
+			workflow_connections.extend([
+				(report_tr, realigner, [('tr', 'tr')]),
+				])
 		realigner.inputs.slice_info = 3 #3 for coronal slices (2 for horizontal, 1 for sagittal)
 		workflow_connections.extend([
 			(dummy_scans, realigner, [('out_file', 'in_file')]),
@@ -140,7 +152,12 @@ def diagnose(bids_base,
 			])
 	elif realign == "time":
 		realigner = pe.Node(interface=fsl.SliceTimer(), name="slicetimer")
-		realigner.inputs.time_repetition = tr
+		if tr:
+			realigner.inputs.time_repetition = tr
+		else:
+			workflow_connections.extend([
+				(report_tr, realigner, [('tr', 'time_repetition')]),
+				])
 		workflow_connections.extend([
 			(dummy_scans, realigner, [('out_file', 'in_file')]),
 			(realigner, melodic, [('slice_time_corrected_file', 'in_files')]),

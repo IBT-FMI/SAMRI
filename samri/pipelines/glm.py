@@ -22,7 +22,6 @@ N_PROCS=max(N_PROCS-2, 2)
 
 def l1(preprocessing_dir,
 	bf_path = '~/ni_data/irfs/chr_beta1.txt',
-	exclude={},
 	habituation='confound',
 	highpass_sigma=225,
 	include={},
@@ -41,9 +40,6 @@ def l1(preprocessing_dir,
 
 	bf_path : str, optional
 		Basis set path. It should point to a text file in the so-called FEAT/FSL "#2" format (1 entry per volume).
-	exclude : dict
-		A dictionary with any combination of "sessions", "subjects", "trials" as keys and corresponding identifiers as values.
-		If this is specified ony non-matching entries will be included in the analysis.
 	habituation : {"", "confound", "separate_contrast", "in_main_contrast"}, optional
 		How the habituation regressor should be handled.
 		Anything which evaluates as False (though we recommend "") means no habituation regressor will be introduced.

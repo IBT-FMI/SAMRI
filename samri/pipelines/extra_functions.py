@@ -400,6 +400,10 @@ def get_data_selection(workflow_base,
 		If the list is empty, all directories (unless explicitly excluded via `exclude_measurements`) will be queried.
 	exclude_measurements : list of str, optional
 		A list of measurement directory names to be excluded from querying (i.e. a blacklist).
+
+	Notes
+	-----
+	This data selector function is robust to `ScanProgram.scanProgram` files which have been truncated before the first detected match, but not to files truncated after at least one match.
 	"""
 
 	workflow_base = os.path.abspath(os.path.expanduser(workflow_base))
@@ -432,41 +436,45 @@ def get_data_selection(workflow_base,
 					if read_variables == 2:
 						selected_measurement['measurement'] = sub_dir
 						scan_program_file = os.path.join(workflow_base,sub_dir,"ScanProgram.scanProgram")
+						scan_dir_resolved = False
 						try:
 							with open(scan_program_file) as search:
 								for line in search:
 									measurement_copy = deepcopy(selected_measurement)
-									if re.match(r'^[ \t]+<displayName>.+?\(E\d+\)</displayName>[\r\n]+', line):
-										m = re.match(r'^[ \t]+<displayName>(?P<scan_type>.*?)\(E(?P<number>\d+)\)</displayName>[\r\n]+', line)
+									if re.match(r'^[ \t]+<displayName>[a-zA-Z0-9-_]+? \(E\d+\)</displayName>[\r\n]+', line):
+										m = re.match(r'^[ \t]+<displayName>(?P<scan_type>.+?) \(E(?P<number>\d+)\)</displayName>[\r\n]+', line)
 										number = m.groupdict()['number']
 										scan_type = m.groupdict()['scan_type']
 										for key in match:
 											if match_exclude_bids(key, match[key], measurement_copy, scan_type, number):
 												selected_measurements.append(measurement_copy)
+												scan_dir_resolved = True
 												break
+							if not scan_dir_resolved:
+								raise IOError()
 						except IOError:
 							for sub_sub_dir in os.listdir(os.path.join(workflow_base,sub_dir)):
 								measurement_copy = deepcopy(selected_measurement)
 								acqp_file_path = os.path.join(workflow_base,sub_dir,sub_sub_dir,"acqp")
-								scan_dir_resolved = False
-								while scan_dir_resolved == False:
-									try:
-										with open(acqp_file_path,'r') as search:
-											for line in search:
-												if re.match(r'^(?!/)<.+?>[\r\n]+', line):
-													number = sub_sub_dir
-													m = re.match(r'^(?!/)<(?P<scan_type>.+?)>[\r\n]+', line)
-													scan_type = m.groupdict()['scan_type']
-													for key in match:
-														if match_exclude_bids(key, match[key], measurement_copy, scan_type, number):
-															selected_measurements.append(measurement_copy)
-															scan_dir_resolved = True
-															break
-												if scan_dir_resolved:
-													break
-											scan_dir_resolved = True
-									except IOError:
-										scan_dir_resolved = True
+								scan_subdir_resolved = False
+								try:
+									with open(acqp_file_path,'r') as search:
+										for line in search:
+											if scan_subdir_resolved:
+												break
+											if re.match(r'^(?!/)<[a-zA-Z0-9-_]+?>[\r\n]+', line):
+												number = sub_sub_dir
+												m = re.match(r'^(?!/)<(?P<scan_type>.+?)>[\r\n]+', line)
+												scan_type = m.groupdict()['scan_type']
+												for key in match:
+													if match_exclude_bids(key, match[key], measurement_copy, scan_type, number):
+														selected_measurements.append(measurement_copy)
+														scan_subdir_resolved = True
+														break
+										else:
+											pass
+								except IOError:
+									pass
 						break #prevent loop from going on forever
 			except IOError:
 				pass

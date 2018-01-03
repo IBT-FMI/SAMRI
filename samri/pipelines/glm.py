@@ -1,5 +1,4 @@
 from os import path, listdir, getcwd, remove
-from samri.pipelines.extra_functions import get_level2_inputs, get_subjectinfo, write_function_call, bids_inputs
 
 import inspect
 import pandas as pd

@@ -29,35 +29,51 @@ scan_classification_file_path = path.join(thisscriptspath,"scan_type_classificat
 
 def diagnose(bids_base,
 	components=None,
+	debug=False,
+	exclude={},
+	include={},
+	keep_crashdump=False,
+	keep_work=False,
+	match_regex='.+/sub-(?P<sub>[a-zA-Z0-9]+)/ses-(?P<ses>[a-zA-Z0-9]+)/.*?_acq-(?P<acq>[a-zA-Z0-9]+)_trial-(?P<trial>[a-zA-Z0-9]+)_(?P<mod>[a-zA-Z0-9]+).(?:nii|nii\.gz)',
 	n_procs=N_PROCS,
 	realign="time",
 	tr=None,
 	workflow_name="diagnostic",
-	exclude={},
-	include={},
-	match_regex='.+/sub-(?P<sub>[a-zA-Z0-9]+)/ses-(?P<ses>[a-zA-Z0-9]+)/.*?_acq-(?P<acq>[a-zA-Z0-9]+)_trial-(?P<trial>[a-zA-Z0-9]+)_(?P<mod>[a-zA-Z0-9]+).(?:nii|nii\.gz)',
-	keep_work=False,
-	keep_crashdump=False,
-	debug=False,
 	):
-	'''Run an independent component analysis quick diagnotic (using FSL's MELODIC) on data stored in a BIDS directory tree.
+	'''Run a basic independent component analysis diagnotic (using FSL's MELODIC) on functional MRI data stored in a BIDS directory tree.
 
 	Parameters
 	----------
 
-	realign: {"space","time","spacetime",""}
-		Parameter that dictates slictiming correction and realignment of slices. "time" (FSL.SliceTimer) is default, since it works safely. Use others only with caution!
-	keep_work : bool, optional
-		Whether to keep the work directory (containing all the intermediary workflow steps, as managed by nipypye).
-		This is useful for debugging and quality control.
+	bids_base : string, optional
+		Path to the top level of a BIDS directory tree for which to perform the diagnostic.
+	components : int, optional
+		Number of independent components to produce for each functional measurement; if evaluated as False, the number of components is automatically optimized for the given data by FSL's MELODIC.
+	debug : bool, optional
+		Enable full nipype debugging support for the workflow construction and execution.
+	exclude : dict, optional
+		A dictionary with any subset of 'subject', 'session', 'acquisition', 'trial', 'modality', and 'path' as keys and corresponding identifiers as values.
+		This is a blacklist: if this is specified only non-matching entries will be included in the analysis.
+	include : dict, optional
+		A dictionary with any subset of 'subject', 'session', 'acquisition', 'trial', 'modality', and 'path' as keys and corresponding identifiers as values.
+		This is a whitelist: if this is specified only matching entries will be included in the analysis.
 	keep_crashdump : bool, optional
 		Whether to keep the crashdump directory (containing all the crash reports for intermediary workflow steps, as managed by nipypye).
 		This is useful for debugging and quality control.
+	keep_work : bool, optional
+		Whether to keep the work directory (containing all the intermediary workflow steps, as managed by nipypye).
+		This is useful for debugging and quality control.
+	match_regex : str, optional
+		Regex matching pattern by which to select input files. Has to contain groups named "sub", "ses", "acq", "trial", and "mod".
 	n_procs : int, optional
 		Maximum number of processes which to simultaneously spawn for the workflow.
 		If not explicitly defined, this is automatically calculated from the number of available cores and under the assumption that the workflow will be the main process running for the duration that it is running.
+	realign : {"space","time","spacetime",""}
+		Parameter that dictates slictiming correction and realignment of slices. "time" (FSL.SliceTimer) is default, since it works safely. Use others only with caution!
 	tr : int, optional
 		Repetition time (in seconds); if evaluated as False, the TR will be read from the NIfTI header of each file individually.
+	workflow_name : string, optional
+		Name of the workflow execution. The output will be saved one level above the bids_base, under a directory bearing the name given here.
 	'''
 
 	bids_base = path.abspath(path.expanduser(bids_base))

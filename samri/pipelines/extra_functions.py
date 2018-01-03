@@ -5,7 +5,6 @@ import re
 import json
 
 from copy import deepcopy
-import nibabel as nb
 import pandas as pd
 
 BEST_GUESS_MODALITY_MATCH = {

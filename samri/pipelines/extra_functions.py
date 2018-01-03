@@ -164,24 +164,6 @@ def write_bids_metadata_file(scan_dir, extraction_dicts,
 
 	return out_file
 
-
-def write_function_call(frame, target_path):
-	args, _, _, values = inspect.getargvalues(frame)
-	function_name = inspect.getframeinfo(frame)[2]
-	function_call = function_name+"("
-	for arg in args:
-		arg_value = values[arg]
-		if isinstance(arg_value, str):
-			arg_value = "\'"+arg_value+"\'"
-		else:
-			arg_value = str(arg_value)
-		arg_entry=arg+"="+arg_value+","
-		function_call+=arg_entry
-	function_call+=")"
-	target = open(target_path, 'w')
-	target.write(function_call)
-	target.close()
-
 def write_events_file(scan_dir, trial,
 	db_path="~/syncdata/meta.db",
 	out_file="events.tsv",
@@ -276,75 +258,6 @@ def write_events_file(scan_dir, trial,
 
 	return out_file
 
-def get_subjectinfo(subject_delay, scan_type, scan_types):
-	from nipype.interfaces.base import Bunch
-	import pandas as pd
-	import numpy as np
-	from copy import deepcopy
-	import sys
-	sys.path.append('~/src/LabbookDB/db/')
-	from query import load_session
-	from common_classes import StimulationProtocol
-	db_path="~/syncdata/meta.db"
-
-	session, engine = load_session(db_path)
-
-	sql_query=session.query(StimulationProtocol).filter(StimulationProtocol.code==scan_types[scan_type])
-	mystring = sql_query.statement
-	mydf = pd.read_sql_query(mystring,engine)
-	delay = int(mydf["stimulation_onset"][0])
-	inter_stimulus_duration = int(mydf["inter_stimulus_duration"][0])
-	stimulus_duration = mydf["stimulus_duration"][0]
-	stimulus_repetitions = mydf["stimulus_repetitions"][0]
-
-	onsets=[]
-	names=[]
-	for i in range(stimulus_repetitions):
-		onset = delay+(inter_stimulus_duration+stimulus_duration)*i
-		onsets.append([onset])
-		names.append("s"+str(i+1))
-	output = []
-	for idx_a, a in enumerate(onsets):
-		for idx_b, b in enumerate(a):
-			onsets[idx_a][idx_b] = round(b-subject_delay, 2) #floating point values don't add up nicely, so we have to round (https://docs.python.org/2/tutorial/floatingpoint.html)
-	output.append(Bunch(conditions=names,
-					onsets=deepcopy(onsets),
-					durations=[[stimulus_duration]]*stimulus_repetitions
-					))
-	return output
-
-def stimulus_protocol_bunch(eventfile_path):
-	eventfile_df = pd.read_csv(eventfile_path)
-
-def bids_inputs(input_root, categories=[], participants=[], scan_types=[]):
-	import os
-	l2_inputs = []
-	for dirName, subdirList, fileList in os.walk(input_root, topdown=False):
-		if subdirList == []:
-			for my_file in fileList:
-				candidate_l2_input = os.path.join(dirName,my_file)
-				#the following string additions are performed to not accidentally match longer identifiers which include the shorter identifiers actually queried for. The path formatting is taken from the glm.py level1() datasync node, and will not work if that is modified.
-				if not "/anat/" in candidate_l2_input and candidate_l2_input[-11:] != "_events.tsv":
-					if (any("ses-"+c in candidate_l2_input for c in categories) or not categories) and (any("sub-"+p in candidate_l2_input for p in participants) or not participants) and (any("scan_type_"+s+"/" in candidate_l2_input for s in scan_types) or not scan_types):
-						l2_inputs.append(candidate_l2_input)
-
-	return l2_inputs
-
-
-def get_level2_inputs(input_root, categories=[], participants=[], scan_types=[]):
-	import os
-	l2_inputs = []
-	for dirName, subdirList, fileList in os.walk(input_root, topdown=False):
-		if subdirList == []:
-			for my_file in fileList:
-				candidate_l2_input = os.path.join(dirName,my_file)
-				#the following string additions are performed to not accidentally match longer identifiers which include the shorter identifiers actually queried for. The path formatting is taken from the glm.py level1() datasync node, and will not work if that is modified.
-				if (any(os.path.join(input_root,c)+"." in candidate_l2_input for c in categories) or not categories) and (any("."+p+"/" in candidate_l2_input for p in participants) or not participants) and (any("scan_type_"+s+"/" in candidate_l2_input for s in scan_types) or not scan_types):
-					l2_inputs.append(candidate_l2_input)
-
-	scan_paths = []
-	return l2_inputs
-
 def get_scan(measurements_base, data_selection,
 	scan_type=False,
 	selector=None,
@@ -390,24 +303,6 @@ def get_scan(measurements_base, data_selection,
 
 	return scan_path, scan_type, trial
 
-def match_exclude_ss(entry, match, exclude, record, key):
-	try:
-		exclude_list = exclude[key]
-	except KeyError:
-		exclude_list = []
-	try:
-		match_list = match[key]
-	except KeyError:
-		match_list = []
-	if entry not in exclude_list:
-		if len(match_list) > 0 and entry not in match_list:
-			return False
-		else:
-			record[key] = str(entry).strip(' ')
-		return True
-	else:
-		return False
-
 BIDS_KEY_DICTIONARY = {
 	'acquisition':['acquisition','ACQUISITION','acq','ACQ'],
 	'trial':['trial','TRIAL','stim','STIM','stimulation','STIMULATION'],
@@ -438,6 +333,24 @@ def assign_modality(scan_type, record):
 				record['modality'] = BEST_GUESS_MODALITY_MATCH[modality_group]
 				return scan_type, record
 	return scan_type, record
+
+def match_exclude_ss(entry, match, exclude, record, key):
+	try:
+		exclude_list = exclude[key]
+	except KeyError:
+		exclude_list = []
+	try:
+		match_list = match[key]
+	except KeyError:
+		match_list = []
+	if entry not in exclude_list:
+		if len(match_list) > 0 and entry not in match_list:
+			return False
+		else:
+			record[key] = str(entry).strip(' ')
+		return True
+	else:
+		return False
 
 def match_exclude_bids(key, values, record, scan_type, number):
 	key_alternatives = BIDS_KEY_DICTIONARY[key]

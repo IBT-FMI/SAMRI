@@ -12,7 +12,7 @@ import nipype.interfaces.io as nio
 import nipype.interfaces.utility as util		# utility
 import nipype.pipeline.engine as pe				# pypeline engine
 import pandas as pd
-from nipype.interfaces import afni, fsl, nipy, bru2nii
+from nipype.interfaces import fsl, nipy, bru2nii
 
 from samri.pipelines.extra_functions import force_dummy_scans, get_tr
 from samri.pipelines.nodes import functional_registration, structural_registration, composite_registration
@@ -20,12 +20,7 @@ from samri.pipelines.utils import out_path, container
 from samri.utilities import N_PROCS
 
 #set all outputs to compressed NIfTI
-afni.base.AFNICommand.set_default_output_type('NIFTI_GZ')
 fsl.FSLCommand.set_default_output_type('NIFTI_GZ')
-
-#relative paths
-thisscriptspath = path.dirname(path.realpath(__file__))
-scan_classification_file_path = path.join(thisscriptspath,"scan_type_classification.csv")
 
 def diagnose(bids_base,
 	components=None,

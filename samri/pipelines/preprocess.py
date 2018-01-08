@@ -26,10 +26,6 @@ N_PROCS=max(N_PROCS-4, 2)
 afni.base.AFNICommand.set_default_output_type('NIFTI_GZ')
 fsl.FSLCommand.set_default_output_type('NIFTI_GZ')
 
-#relative paths
-thisscriptspath = path.dirname(path.realpath(__file__))
-scan_classification_file_path = path.join(thisscriptspath,"scan_type_classification.csv")
-
 def bruker(measurements_base, template,
 	DEBUG=False,
 	exclude={},
@@ -72,18 +68,6 @@ def bruker(measurements_base, template,
 		return -1
 
 	measurements_base = path.abspath(path.expanduser(measurements_base))
-
-	# select all functional/sturctural scan types unless specified
-	#if not functional_scan_types or not structural_scan_types:
-	#	scan_classification = pd.read_csv(scan_classification_file_path)
-	#	if not functional_scan_types:
-	#		functional_scan_types = list(scan_classification[(scan_classification["categories"] == "functional")]["scan_type"])
-	#	if not structural_scan_types:
-	#		structural_scan_types = list(scan_classification[(scan_classification["categories"] == "structural")]["scan_type"])
-
-	#hack to allow structural scan type disabling:
-	#if structural_scan_types == -1:
-	#	structural_scan_types = []
 
 	# add subject and session filters if present
 	if subjects:

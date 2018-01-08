@@ -237,11 +237,12 @@ def reg_slices():
 	"""Test the plotting of image sacks on an atlas background for registration quality control.
 	"""
 	from samri.plotting.maps import slices_stack
+	from samri.utilities import bids_substitution_iterator
 
-	stack = [
-		
-		]
-	~/ni_data/ofM.dr/preprocessing/composite/sub-6255/ses-ofM/anat/sub-6255_ses-ofM_TurboRARE.nii.gz
+	file_template = '{data_dir}/sub-{subject}/ses-{session}/anat/sub-{subject}_ses-{session}_TurboRARE.nii.gz'
+	stack = bids_substitution_iterator(['6255'],['ofM'],
+		data_sir='~/ni_data/ofM.dr/preprocessing/composite',
+		)
 
 	slices_stack('~/ni_data/template/DSURQEc_200micron_mask.nii.gz',
 		stack=stack,

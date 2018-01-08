@@ -20,7 +20,6 @@ from samri.pipelines.utils import out_path, container
 from samri.utilities import N_PROCS
 
 #set all outputs to compressed NIfTI
-afni.base.AFNICommand.set_default_output_type('NIFTI_GZ')
 fsl.FSLCommand.set_default_output_type('NIFTI_GZ')
 
 def seed_based(bids_base,

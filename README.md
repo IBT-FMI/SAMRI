@@ -54,6 +54,12 @@ If you are getting a `Permission denied (publickey)` error upon trying to clone,
 * [Add an SSH key](https://help.github.com/articles/adding-a-new-ssh-key-to-your-github-account/) to your GitHub account.
 * Pull via the HTTPS link `git clone https://github.com/IBT-FMI/SAMRI.git`.
 
+## Key Concepts
+
+Many SAMRI functions which take multiple paths as inputs, rely on what we call *BIDS-Iterator Inputs*.
+These are pairs of one filename template string and a list of dictionaries (which are internally used by functions adhering to this input standard in order to format the aforementioned strings).
+BIDS-Iterator Inputs can be produced via the `samri.utilities.bids_substitution_iterator()` function.
+
 ## Dependencies:
 
 * [argh](https://github.com/neithere/argh) - in Portage as dev-python/argh

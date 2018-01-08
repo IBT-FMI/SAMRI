@@ -61,7 +61,7 @@ def bids_substitution_iterator(sessions, subjects, trials, data_dir, preprocessi
 	l1_dir=None,
 	l1_workdir=None,
 	preprocessing_workdir=None,
-	check_file_format=None,
+	validate_for_template=None,
 	):
 	"""Returns a list of dictionaries, which can be used together with a template string to identify large sets of input data files for SAMRI functions.
 
@@ -84,6 +84,10 @@ def bids_substitution_iterator(sessions, subjects, trials, data_dir, preprocessi
 		String identifying the level 1 work directory name from which to provide an iterator. If `None` the level 1 work directory name is assumed to be the level 1 pipeline name (`l1_dir`) suffixed with the string `"_work"`.
 	preprocessing_workdir : str, optional
 		String identifying the preprocessing work directory name from which to provide an iterator. If `None` the preprocessing work directory name is assumed to be the preprocessing pipeline name (`preprocessing_dir`) suffixed with the string `"_work"`.
+	validate_for_template : str, optional
+		Template string for which to check whether a file exists.
+		If no file exists given a substitution dictionary, that dictionary will not be added to the retuned list.
+		If this variable is an empty string (or otherwise evaluates as False) no check is performed, and all dictionaries (i.e. all input value permutations) are returned.
 
 	Returns
 	-------
@@ -109,8 +113,8 @@ def bids_substitution_iterator(sessions, subjects, trials, data_dir, preprocessi
 		substitution["subject"] = subject
 		substitution["acquisition"] = acquisition
 		substitution["modality"] = modality
-		if check_file_format:
-			check_file = check_file_format.format(**substitution)
+		if validate_for_template:
+			check_file = validate_for_template.format(**substitution)
 			check_file = path.abspath(path.expanduser(check_file))
 			if path.isfile(check_file):
 				substitutions.append(substitution)

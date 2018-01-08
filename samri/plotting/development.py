@@ -35,15 +35,6 @@ def overview(workflow, identifiers,
 		save_as=save_as,
 		)
 
-def blur_kernel_compare_dr(conditions=["ofM","ofM_aF","ofM_cF1","ofM_cF2","ofM_pF"], parameters=["level2_dgamma","level2_dgamma_blurxy4","level2_dgamma_blurxy5", "level2_dgamma_blurxy6", "level2_dgamma_blurxy7"], threshold=3):
-	from matplotlib.backends.backend_pdf import PdfPages
-	pp = PdfPages('~/DR.pdf')
-	for condition in conditions:
-		stat_maps = ["~/ni_data/ofM.dr/GLM/"+parameter+"/_category_multi_"+condition+"/flameo/mapflow/_flameo0/stats/tstat1.nii.gz" for parameter in parameters]
-		titles = [stat_map[32:-43] for stat_map in stat_maps]
-		maps.stat(stat_maps, cut_coords=(-49,8,43), threshold=threshold, interpolation="none", template="~/ni_data/templates/hires_QBI_chr.nii.gz", save_as=pp, figure_title=condition, subplot_titles=parameters)
-	pp.close()
-
 def plot_roi_per_session(l1_dir, roi_mask, color,
 	roi_mask_normalize="",
 	):

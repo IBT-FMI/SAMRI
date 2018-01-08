@@ -408,9 +408,15 @@ def atlas_label(atlas,
 
 	return display
 
-def slices_stack(bg_image,
-	slice_spacing=0.25,
-	file_template='',
+def slices_stack(bg_image, file_template,
+	alpha=[0.9],
+	colors=['r','g','b'],
+	legend_template='{session} session',
+	levels_percentile=[80],
+	ratio='portrait',
+	save_as='',
+	scale=0.4,
+	slice_spacing=0.5,
 	substitutions=[],
 	):
 	"""
@@ -419,14 +425,151 @@ def slices_stack(bg_image,
 	Parameters
 	----------
 
+	bg_image : str
+		Path to the NIfTI image to draw in grayscale as th eplot background.
+		This would commonly be some sort of brain template.
+	file_template : str
+		String template giving the path to the overlay stack.
+		To create multiple overlays, this template will iteratively be substituted with each of the substitution dictionaries in the `substitutions` parameter.
+	alpha : list, optional
+		List of floats, specifying with how much alpha to draw each contour.
+	colors : list, optional
+		List of colors in which to plot the overlays.
+	legend_template : string, optional
+		String template which can be formatted with the dictionaries contained in the `substitutions` parameter.
+		The resulting strings will give the legend text.
+	levels_percentile : list, optional
+		List of integers, specifying at which percentiles of each overlay to draw contours.
+	ratio : list or {'landscape', 'portrait'}, optional
+		Either a list of 2 integers giving the desired number of rows and columns (in this order), or a string, which is either 'landscape' or 'portrait', and which prompts the function to auto-determine the best number of rows and columns given the number of slices and the `scale` attribute.
+	save_as : str, optional
+		Path under which to save the output figure.
+	scale : float, optional
+		The expected ratio of the slice height dividrd by the sum of the slice height and width.
+		This somewhat complex metric controls the row and column distribution of slices in the 'landscape' and 'portrait' plotting shapes.
 	slice_spacing : float
 		Slice spacing in mm.
+	substitutions : list of dicts, optional
+		A list of dictionaried, with keys including all substitution keys found in the `file_template` parameter, and values giving desired substitution values which point the `file_template` string templated to existing filed which are to be included in the overlay stack.
+		Such a dictionary is best obtained via `samri.utilities.bids_substitution_iterator()`.
 	"""
-
-	print([file_template.format(**substitution) for substitution in substitutions])
 
 	bg_image = path.abspath(path.expanduser(bg_image))
 
-	display = nilearn.plotting.plot_anat(bg_image,
-		display_mode='y',
-		)
+	imgs = []
+	bounds = []
+	levels = []
+	slice_order_is_reversed = 0
+	for substitution in substitutions:
+		filename = file_template.format(**substitution)
+		filename = path.abspath(path.expanduser(filename))
+		img = nib.load(filename)
+		data = img.get_data()
+		if img.header['dim'][0] >= 2:
+			ndim = 0
+			for i in range(len(img.header['dim'])-1):
+				current_dim = img.header['dim'][i+1]
+				if current_dim == 1:
+					break
+				ndim += 1
+			img.header['dim'][0] = ndim
+			img.header['pixdim'][ndim+1:] = 0
+			data = data.T[0].T
+			img = nib.nifti1.Nifti1Image(data, img.affine, img.header)
+		for level_percentile in levels_percentile:
+			level = np.percentile(data,level_percentile)
+			levels.append(level)
+		slice_row = img.header['srow_x']
+		subthreshold_start_slices = 0
+		while True:
+			for my_slice in data:
+				if my_slice.max() < min(levels_percentile):
+					subthreshold_start_slices += 1
+				else:
+					break
+			break
+		subthreshold_end_slices = 0
+		while True:
+			for my_slice in data:
+				if my_slice.max() < min(levels_percentile):
+					subthreshold_end_slices += 1
+				else:
+					break
+			break
+		img_min_slice = slice_row[3] + subthreshold_start_slices*slice_row[0]
+		img_max_slice = slice_row[3] + (data.shape[0]-subthreshold_end_slices)*slice_row[0]
+		bounds.extend([img_min_slice,img_max_slice])
+		if slice_row[0] < 0:
+			slice_order_is_reversed += 1
+		else:
+			slice_order_is_reversed -= 1
+		imgs.append(img)
+
+	if len(alpha) == 1:
+		alpha = alpha * len(imgs)
+
+	min_slice = min(bounds)
+	max_slice = max(bounds)
+	cut_coords = np.arange(min_slice, max_slice, slice_spacing)
+	if np.sum(slice_order_is_reversed) > 0:
+		cut_coords = cut_coords[::-1]
+
+	if len(cut_coords) > 3:
+		try:
+			nrows, ncols = ratio
+		except ValueError:
+			cut_coord_length = len(cut_coords)
+			if legend_template:
+				cut_coord_length += 1
+			if ratio == "portrait":
+				ncols = np.floor(cut_coord_length**(scale))
+				nrows = np.ceil(cut_coord_length/float(ncols))
+			elif ratio == "landscape":
+				nrows = np.floor(cut_coord_length**(scale))
+				ncols = np.ceil(cut_coord_length/float(nrows))
+		fig, ax = plt.subplots(figsize=(ncols*2.5,nrows*2.5),
+				nrows=int(nrows), ncols=int(ncols),
+				facecolor='#000000',
+				)
+		flat_axes = list(ax.flatten())
+		for ix, ax_i in enumerate(flat_axes):
+			try:
+				display = nilearn.plotting.plot_anat(bg_image,
+					axes=ax_i,
+					display_mode='y',
+					cut_coords=[cut_coords[ix]],
+					annotate=False,
+					)
+			except IndexError:
+				ax_i.axis('off')
+			else:
+				for img_ix, img in enumerate(imgs):
+					color = colors[img_ix]
+					display.add_contours(img,
+							alpha=alpha[img_ix],
+							colors=[color],
+							levels=levels[img_ix],
+							)
+
+	else:
+		display = nilearn.plotting.plot_anat(bg_image,
+			display_mode='y',
+			cut_coords=cut_coords,
+			)
+		for ix, img in enumerate(imgs):
+			color = colors[ix]
+			display.add_contours(img, levels=levels, colors=[color])
+
+	if legend_template:
+		for ix, img in enumerate(imgs):
+			insertion_legend, = plt.plot([],[], color=colors[ix], label=legend_template.format(**substitutions[ix]))
+		plt.legend(loc='lower left',bbox_to_anchor=(1.1, 0.))
+
+	if save_as:
+		save_as = path.abspath(path.expanduser(save_as))
+		plt.savefig(save_as,
+			dpi=400,
+			bbox_inches='tight',
+			facecolor=fig.get_facecolor(),
+			edgecolor='none',
+			)

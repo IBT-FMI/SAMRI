@@ -240,12 +240,18 @@ def reg_slices():
 	from samri.utilities import bids_substitution_iterator
 
 	file_template = '{data_dir}/sub-{subject}/ses-{session}/anat/sub-{subject}_ses-{session}_TurboRARE.nii.gz'
-	stack = bids_substitution_iterator(['6255'],['ofM'],
-		data_sir='~/ni_data/ofM.dr/preprocessing/composite',
+	substitutions = bids_substitution_iterator(['ofM','ofM_aF','ofM_cF1','ofM_cF2'],['6255'],
+		data_dir='~/ni_data/ofM.dr/preprocessing/composite',
 		)
 
-	slices_stack('~/ni_data/template/DSURQEc_200micron_mask.nii.gz',
-		stack=stack,
+	cmap = plt.get_cmap('tab20').colors
+	slices_stack('~/ni_data/templates/DSURQEc_40micron_average.nii',
+		alpha=[0.6],
+		colors=cmap[::2],
+		file_template=file_template,
+		substitutions=substitutions,
+		save_as='~/reg_slices.png',
+		ratio='landscape',
 		)
 
 if __name__ == '__main__':

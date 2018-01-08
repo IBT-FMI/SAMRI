@@ -233,7 +233,19 @@ def functional_connectivity(ts="~/ni_data/ofM.dr/preprocessing/as_composite/sub-
 	#correlation_matrix = fc.correlation_matrix(ts, '~/confounds.csv', labels_img, save_as = '~/correlation_matrix.csv')
 	connectivity.plot_connectivity_matrix(correlation_matrix, figsize, labels, save_as = '~/correlation_matrix.png')
 
+def reg_slices():
+	"""Test the plotting of image sacks on an atlas background for registration quality control.
+	"""
+	from samri.plotting.maps import slices_stack
 
+	stack = [
+		
+		]
+	~/ni_data/ofM.dr/preprocessing/composite/sub-6255/ses-ofM/anat/sub-6255_ses-ofM_TurboRARE.nii.gz
+
+	slices_stack('~/ni_data/template/DSURQEc_200micron_mask.nii.gz',
+		stack=stack,
+		)
 
 if __name__ == '__main__':
 	# seed_connectivity_overview()

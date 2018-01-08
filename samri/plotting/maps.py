@@ -408,13 +408,20 @@ def atlas_label(atlas,
 
 	return display
 
-def plot_myanat(anat="~/ni_data/templates/hires_QBI_chr.nii.gz"):
-	nilearn.plotting.plot_anat(anat, cut_coords=[0, 0, 0],title='Anatomy image')
+def slices_stack(bg_image,
+	slice_spacing=0.25,
+	stack=[],
+	):
+	"""
+	Plot coronal `bg_image` slices at a given spacing, and overlay contours from a list of NIfTI files.
 
-def plot_nii(file_path, slices):
-	nilearn.plotting.plot_anat(file_path, cut_coords=slices, display_mode="y", annotate=False, draw_cross=False)
+	Parameters
+	----------
 
-def from_multi_contrast(session_participant_file, template="~/ni_data/templates/ds_QBI_chr.nii.gz", threshold="2"):
-	img = nib.load(session_participant_file)
-	print(img.__dict__)
-	nilearn.plotting.plot_stat_map(img, bg_img=template,threshold=threshold, black_bg=False, vmax=40)
+	slice_spacing : float
+		Slice spacing in mm.
+	"""
+	display = nilearn.plotting.plot_anat(bg_image
+		display_mode='y',
+
+		)

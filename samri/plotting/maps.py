@@ -410,7 +410,8 @@ def atlas_label(atlas,
 
 def slices_stack(bg_image,
 	slice_spacing=0.25,
-	stack=[],
+	file_template='',
+	substitutions=[],
 	):
 	"""
 	Plot coronal `bg_image` slices at a given spacing, and overlay contours from a list of NIfTI files.
@@ -421,7 +422,11 @@ def slices_stack(bg_image,
 	slice_spacing : float
 		Slice spacing in mm.
 	"""
-	display = nilearn.plotting.plot_anat(bg_image
-		display_mode='y',
 
+	print([file_template.format(**substitution) for substitution in substitutions])
+
+	bg_image = path.abspath(path.expanduser(bg_image))
+
+	display = nilearn.plotting.plot_anat(bg_image,
+		display_mode='y',
 		)

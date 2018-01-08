@@ -1,3 +1,2 @@
-include samri/pipelines/scan_type_classification.csv
 include samri/plotting/samri.conf
 

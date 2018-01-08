@@ -55,7 +55,9 @@ def bids_autofind(bids_dir,modality):
 
 	return path_template, substitutions
 
-def bids_substitution_iterator(sessions, subjects, trials, data_dir, preprocessing_dir,
+def bids_substitution_iterator(sessions, subjects, trials,
+	data_dir='',
+	preprocessing_dir='',
 	acquisitions=[''],
 	modalities=[''],
 	l1_dir=None,
@@ -74,7 +76,7 @@ def bids_substitution_iterator(sessions, subjects, trials, data_dir, preprocessi
 		A list of subject identifiers to include in the iterator.
 	trials : list
 		A list of scan types to include in the iterator.
-	data_dir : str
+	data_dir : str, optional
 		Path to the data root (this is where SAMRI creates e.g. `preprocessing`, `l1`, or `l2` directories.
 	preprocessing_dir : str, optional
 		String identifying the preprocessing pipeline name from which to provide an iterator.

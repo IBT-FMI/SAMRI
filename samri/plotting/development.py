@@ -233,14 +233,36 @@ def functional_connectivity(ts="~/ni_data/ofM.dr/preprocessing/as_composite/sub-
 	#correlation_matrix = fc.correlation_matrix(ts, '~/confounds.csv', labels_img, save_as = '~/correlation_matrix.csv')
 	connectivity.plot_connectivity_matrix(correlation_matrix, figsize, labels, save_as = '~/correlation_matrix.png')
 
-def reg_slices():
+def reg_single():
+	"""Test the plotting of image sacks on an atlas background for registration quality control.
+	"""
+	from samri.plotting.maps import slices_stack
+	from samri.utilities import bids_substitution_iterator
+
+	file_template = '~/ni_data/templates/DSURQEc_200micron_masked.nii.gz'
+
+	cmap = plt.get_cmap('tab20').colors
+	slices_stack('~/ni_data/ofM.dr/preprocessing/composite/sub-5704/ses-ofM_pF/anat/sub-5704_ses-ofM_pF_TurboRARE.nii.gz',
+		alpha=[0.9],
+		colors=cmap[::2],
+		file_template=file_template,
+		save_as='~/reg_slices.png',
+		ratio='landscape',
+		legend_template='Template',
+		levels_percentile=[79],
+		slice_spacing=0.45,
+		force_reverse_slice_order=True,
+		figure_title='Single-Session Fit and Distortion Control',
+		)
+
+def reg_multisession_coherence():
 	"""Test the plotting of image sacks on an atlas background for registration quality control.
 	"""
 	from samri.plotting.maps import slices_stack
 	from samri.utilities import bids_substitution_iterator
 
 	file_template = '{data_dir}/sub-{subject}/ses-{session}/anat/sub-{subject}_ses-{session}_TurboRARE.nii.gz'
-	substitutions = bids_substitution_iterator(['ofM','ofM_aF','ofM_cF1','ofM_cF2'],['6255'],
+	substitutions = bids_substitution_iterator(['ofM','ofM_aF','ofM_cF1','ofM_cF2','ofM_pF'],['5704'],
 		data_dir='~/ni_data/ofM.dr/preprocessing/composite',
 		)
 
@@ -249,9 +271,12 @@ def reg_slices():
 		alpha=[0.6],
 		colors=cmap[::2],
 		file_template=file_template,
+		legend_template='{session} session',
 		substitutions=substitutions,
-		save_as='~/reg_slices.png',
+		save_as='~/reg_multisession_coherence.png',
 		ratio='landscape',
+		levels_percentile=[75],
+		figure_title='Multi-Session Fit and Coherence Control',
 		)
 
 if __name__ == '__main__':

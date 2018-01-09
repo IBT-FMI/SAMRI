@@ -411,13 +411,15 @@ def atlas_label(atlas,
 def slices_stack(bg_image, file_template,
 	alpha=[0.9],
 	colors=['r','g','b'],
-	legend_template='{session} session',
+	legend_template='',
+	figure_title='',
+	force_reverse_slice_order=True,
 	levels_percentile=[80],
 	ratio='portrait',
 	save_as='',
 	scale=0.4,
 	slice_spacing=0.5,
-	substitutions=[],
+	substitutions=[{},],
 	):
 	"""
 	Plot coronal `bg_image` slices at a given spacing, and overlay contours from a list of NIfTI files.
@@ -435,6 +437,10 @@ def slices_stack(bg_image, file_template,
 		List of floats, specifying with how much alpha to draw each contour.
 	colors : list, optional
 		List of colors in which to plot the overlays.
+	force_reverse_slice_order : bool, optional
+		Whether to force the reversal of the slice order.
+		This can be done to enforce a visual presentation without having to modify the underlying data (i.e. visualize neurological-order slices in radiological order).
+		This option should generally be avoided, ideally one would not obfuscate the data orientation when plotting.
 	legend_template : string, optional
 		String template which can be formatted with the dictionaries contained in the `substitutions` parameter.
 		The resulting strings will give the legend text.
@@ -455,6 +461,19 @@ def slices_stack(bg_image, file_template,
 	"""
 
 	bg_image = path.abspath(path.expanduser(bg_image))
+	bg_img = nib.load(bg_image)
+	if bg_img.header['dim'][0] > 3:
+		bg_data = bg_img.get_data()
+		ndim = 0
+		for i in range(len(bg_img.header['dim'])-1):
+			current_dim = bg_img.header['dim'][i+1]
+			if current_dim == 1:
+				break
+			ndim += 1
+		bg_img.header['dim'][0] = ndim
+		bg_img.header['pixdim'][ndim+1:] = 0
+		bg_data = bg_data.T[0].T
+		bg_img = nib.nifti1.Nifti1Image(bg_data, bg_img.affine, bg_img.header)
 
 	imgs = []
 	bounds = []
@@ -465,7 +484,7 @@ def slices_stack(bg_image, file_template,
 		filename = path.abspath(path.expanduser(filename))
 		img = nib.load(filename)
 		data = img.get_data()
-		if img.header['dim'][0] >= 2:
+		if img.header['dim'][0] > 3:
 			ndim = 0
 			for i in range(len(img.header['dim'])-1):
 				current_dim = img.header['dim'][i+1]
@@ -479,27 +498,29 @@ def slices_stack(bg_image, file_template,
 		for level_percentile in levels_percentile:
 			level = np.percentile(data,level_percentile)
 			levels.append(level)
-		slice_row = img.header['srow_x']
+		slice_row = img.header['srow_y']
 		subthreshold_start_slices = 0
 		while True:
-			for my_slice in data:
-				if my_slice.max() < min(levels_percentile):
+			for i in np.arange(data.shape[1]):
+				my_slice = data[:,i,:]
+				if my_slice.max() < min(levels):
 					subthreshold_start_slices += 1
 				else:
 					break
 			break
 		subthreshold_end_slices = 0
 		while True:
-			for my_slice in data:
-				if my_slice.max() < min(levels_percentile):
+			for i in np.arange(data.shape[1])[::-1]:
+				my_slice = data[:,i,:]
+				if my_slice.max() < min(levels):
 					subthreshold_end_slices += 1
 				else:
 					break
 			break
-		img_min_slice = slice_row[3] + subthreshold_start_slices*slice_row[0]
-		img_max_slice = slice_row[3] + (data.shape[0]-subthreshold_end_slices)*slice_row[0]
+		img_min_slice = slice_row[3] + subthreshold_start_slices*slice_row[1]
+		img_max_slice = slice_row[3] + (data.shape[1]-subthreshold_end_slices)*slice_row[1]
 		bounds.extend([img_min_slice,img_max_slice])
-		if slice_row[0] < 0:
+		if slice_row[1] < 0:
 			slice_order_is_reversed += 1
 		else:
 			slice_order_is_reversed -= 1
@@ -511,7 +532,9 @@ def slices_stack(bg_image, file_template,
 	min_slice = min(bounds)
 	max_slice = max(bounds)
 	cut_coords = np.arange(min_slice, max_slice, slice_spacing)
-	if np.sum(slice_order_is_reversed) > 0:
+	if slice_order_is_reversed > 0:
+		cut_coords = cut_coords[::-1]
+	if force_reverse_slice_order:
 		cut_coords = cut_coords[::-1]
 
 	if len(cut_coords) > 3:
@@ -534,7 +557,7 @@ def slices_stack(bg_image, file_template,
 		flat_axes = list(ax.flatten())
 		for ix, ax_i in enumerate(flat_axes):
 			try:
-				display = nilearn.plotting.plot_anat(bg_image,
+				display = nilearn.plotting.plot_anat(bg_img,
 					axes=ax_i,
 					display_mode='y',
 					cut_coords=[cut_coords[ix]],
@@ -552,7 +575,7 @@ def slices_stack(bg_image, file_template,
 							)
 
 	else:
-		display = nilearn.plotting.plot_anat(bg_image,
+		display = nilearn.plotting.plot_anat(bg_img,
 			display_mode='y',
 			cut_coords=cut_coords,
 			)
@@ -564,6 +587,12 @@ def slices_stack(bg_image, file_template,
 		for ix, img in enumerate(imgs):
 			insertion_legend, = plt.plot([],[], color=colors[ix], label=legend_template.format(**substitutions[ix]))
 		plt.legend(loc='lower left',bbox_to_anchor=(1.1, 0.))
+
+	fig.suptitle(figure_title,
+		color='w',
+		fontsize=14,
+		fontweight='bold',
+		)
 
 	if save_as:
 		save_as = path.abspath(path.expanduser(save_as))

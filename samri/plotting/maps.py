@@ -562,12 +562,12 @@ def contour_slices(bg_image, file_template,
 		linewidths = (rcParams['axes.linewidth'],)*len(imgs)
 
 	if len(cut_coords) > 3:
+		cut_coord_length = len(cut_coords)
+		if legend_template:
+			cut_coord_length += 1
 		try:
 			nrows, ncols = ratio
 		except ValueError:
-			cut_coord_length = len(cut_coords)
-			if legend_template:
-				cut_coord_length += 1
 			if ratio == "portrait":
 				ncols = np.floor(cut_coord_length**(scale))
 				nrows = np.ceil(cut_coord_length/float(ncols))

@@ -10,8 +10,9 @@ from nilearn.plotting.img_plotting import _get_colorbar_and_data_ranges
 
 import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
-from mpl_toolkits.axes_grid1.inset_locator import inset_axes
+from matplotlib import rcParams
 from matplotlib.colorbar import ColorbarBase, make_axes
+from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 
 from samri.fetch.local import roi_from_atlaslabel
 from samri.plotting.utilities import QUALITATIVE_COLORSET
@@ -408,18 +409,21 @@ def atlas_label(atlas,
 
 	return display
 
-def slices_stack(bg_image, file_template,
+def contour_slices(bg_image, file_template,
 	alpha=[0.9],
 	colors=['r','g','b'],
-	legend_template='',
 	figure_title='',
 	force_reverse_slice_order=True,
+	legend_template='',
 	levels_percentile=[80],
+	linewidths=(),
 	ratio='portrait',
 	save_as='',
 	scale=0.4,
 	slice_spacing=0.5,
 	substitutions=[{},],
+	samri_style=True,
+	title_color='#BBBBBB',
 	):
 	"""
 	Plot coronal `bg_image` slices at a given spacing, and overlay contours from a list of NIfTI files.
@@ -437,6 +441,8 @@ def slices_stack(bg_image, file_template,
 		List of floats, specifying with how much alpha to draw each contour.
 	colors : list, optional
 		List of colors in which to plot the overlays.
+	figure_title : str, optional
+		Title for the figure.
 	force_reverse_slice_order : bool, optional
 		Whether to force the reversal of the slice order.
 		This can be done to enforce a visual presentation without having to modify the underlying data (i.e. visualize neurological-order slices in radiological order).
@@ -446,6 +452,8 @@ def slices_stack(bg_image, file_template,
 		The resulting strings will give the legend text.
 	levels_percentile : list, optional
 		List of integers, specifying at which percentiles of each overlay to draw contours.
+	line_widths : tuple, optional
+		Tuple of desired contour line widths (one per substitution).
 	ratio : list or {'landscape', 'portrait'}, optional
 		Either a list of 2 integers giving the desired number of rows and columns (in this order), or a string, which is either 'landscape' or 'portrait', and which prompts the function to auto-determine the best number of rows and columns given the number of slices and the `scale` attribute.
 	save_as : str, optional
@@ -458,7 +466,20 @@ def slices_stack(bg_image, file_template,
 	substitutions : list of dicts, optional
 		A list of dictionaried, with keys including all substitution keys found in the `file_template` parameter, and values giving desired substitution values which point the `file_template` string templated to existing filed which are to be included in the overlay stack.
 		Such a dictionary is best obtained via `samri.utilities.bids_substitution_iterator()`.
+	title_color : string, optional
+		String specifying the desired color for the title.
+		This needs to be specified in-function, because the matplotlibrc styling standard does not provide for title color specification [matplotlibrc_title]
+
+	References
+	----------
+
+	.. [matplotlibrc_title] https://stackoverflow.com/questions/30109465/matplotlib-set-title-color-in-stylesheet
 	"""
+
+	if samri_style:
+		plotting_module_path = path.dirname(path.realpath(__file__))
+		style_path = path.join(plotting_module_path,'contour_slices.conf')
+		plt.style.use([style_path])
 
 	bg_image = path.abspath(path.expanduser(bg_image))
 	bg_img = nib.load(bg_image)
@@ -537,6 +558,9 @@ def slices_stack(bg_image, file_template,
 	if force_reverse_slice_order:
 		cut_coords = cut_coords[::-1]
 
+	if not linewidths:
+		linewidths = (rcParams['axes.linewidth'],)*len(imgs)
+
 	if len(cut_coords) > 3:
 		try:
 			nrows, ncols = ratio
@@ -550,9 +574,11 @@ def slices_stack(bg_image, file_template,
 			elif ratio == "landscape":
 				nrows = np.floor(cut_coord_length**(scale))
 				ncols = np.ceil(cut_coord_length/float(nrows))
-		fig, ax = plt.subplots(figsize=(ncols*2.5,nrows*2.5),
+		figsize = np.array(rcParams['figure.figsize'])
+		figsize_scales = figsize/np.array([float(ncols),float(nrows)])
+		figsize_scale = figsize_scales.min()
+		fig, ax = plt.subplots(figsize=(ncols*figsize_scale,nrows*figsize_scale),
 				nrows=int(nrows), ncols=int(ncols),
-				facecolor='#000000',
 				)
 		flat_axes = list(ax.flatten())
 		for ix, ax_i in enumerate(flat_axes):
@@ -572,6 +598,7 @@ def slices_stack(bg_image, file_template,
 							alpha=alpha[img_ix],
 							colors=[color],
 							levels=levels[img_ix],
+							linewidths=(linewidths[img_ix],),
 							)
 
 	else:
@@ -588,17 +615,10 @@ def slices_stack(bg_image, file_template,
 			insertion_legend, = plt.plot([],[], color=colors[ix], label=legend_template.format(**substitutions[ix]))
 		plt.legend(loc='lower left',bbox_to_anchor=(1.1, 0.))
 
-	fig.suptitle(figure_title,
-		color='w',
-		fontsize=14,
-		fontweight='bold',
-		)
+	fig.suptitle(figure_title, color=title_color)
 
 	if save_as:
 		save_as = path.abspath(path.expanduser(save_as))
 		plt.savefig(save_as,
-			dpi=400,
-			bbox_inches='tight',
 			facecolor=fig.get_facecolor(),
-			edgecolor='none',
 			)

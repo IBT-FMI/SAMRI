@@ -574,6 +574,10 @@ def contour_slices(bg_image, file_template,
 			elif ratio == "landscape":
 				nrows = np.floor(cut_coord_length**(scale))
 				ncols = np.ceil(cut_coord_length/float(nrows))
+		# we adjust the respective rc.Param here, because it needs to be set before drawing to take effect
+		if legend_template and cut_coord_length == ncols*(nrows-1)+1:
+			rcParams['figure.subplot.bottom'] = np.max([rcParams['figure.subplot.bottom']-0.07,0.])
+
 		figsize = np.array(rcParams['figure.figsize'])
 		figsize_scales = figsize/np.array([float(ncols),float(nrows)])
 		figsize_scale = figsize_scales.min()
@@ -581,6 +585,7 @@ def contour_slices(bg_image, file_template,
 				nrows=int(nrows), ncols=int(ncols),
 				)
 		flat_axes = list(ax.flatten())
+
 		for ix, ax_i in enumerate(flat_axes):
 			try:
 				display = nilearn.plotting.plot_anat(bg_img,
@@ -601,6 +606,13 @@ def contour_slices(bg_image, file_template,
 							linewidths=(linewidths[img_ix],),
 							)
 
+		if legend_template:
+			for ix, img in enumerate(imgs):
+				insertion_legend, = plt.plot([],[], color=colors[ix], label=legend_template.format(**substitutions[ix]))
+			if cut_coord_length == ncols*(nrows-1)+1:
+				plt.legend(loc='upper left',bbox_to_anchor=(-0.1, -0.3))
+			else:
+				plt.legend(loc='lower left',bbox_to_anchor=(1.1, 0.))
 	else:
 		display = nilearn.plotting.plot_anat(bg_img,
 			display_mode='y',
@@ -610,12 +622,8 @@ def contour_slices(bg_image, file_template,
 			color = colors[ix]
 			display.add_contours(img, levels=levels, colors=[color])
 
-	if legend_template:
-		for ix, img in enumerate(imgs):
-			insertion_legend, = plt.plot([],[], color=colors[ix], label=legend_template.format(**substitutions[ix]))
-		plt.legend(loc='lower left',bbox_to_anchor=(1.1, 0.))
-
-	fig.suptitle(figure_title, color=title_color)
+	if figure_title:
+		fig.suptitle(figure_title, color=title_color)
 
 	if save_as:
 		save_as = path.abspath(path.expanduser(save_as))

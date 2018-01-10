@@ -576,7 +576,7 @@ def contour_slices(bg_image, file_template,
 				ncols = np.ceil(cut_coord_length/float(nrows))
 		# we adjust the respective rc.Param here, because it needs to be set before drawing to take effect
 		if legend_template and cut_coord_length == ncols*(nrows-1)+1:
-			rcParams['figure.subplot.bottom'] = np.max([rcParams['figure.subplot.bottom']-0.07,0.])
+			rcParams['figure.subplot.bottom'] = np.max([rcParams['figure.subplot.bottom']-0.05,0.])
 
 		figsize = np.array(rcParams['figure.figsize'])
 		figsize_scales = figsize/np.array([float(ncols),float(nrows)])

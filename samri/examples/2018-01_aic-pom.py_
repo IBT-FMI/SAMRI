@@ -1,0 +1,40 @@
+import matplotlib.pyplot as plt
+
+from samri.plotting.maps import contour_slices
+from samri.utilities import bids_substitution_iterator
+
+file_template = '~/ni_data/templates/DSURQEc_200micron_masked.nii.gz'
+
+cmap = plt.get_cmap('tab20').colors
+contour_slices('~/ni_data/ofM.dr/preprocessing/composite/sub-5704/ses-ofM_pF/anat/sub-5704_ses-ofM_pF_TurboRARE.nii.gz',
+	alpha=[0.9],
+	colors=cmap[::2],
+	figure_title='Single-Session Fit and Distortion Control',
+	file_template=file_template,
+	force_reverse_slice_order=True,
+	legend_template='Template',
+	levels_percentile=[79],
+	ratio='portrait',
+	save_as='2018-01_aic-pom_1.pdf',
+	slice_spacing=0.45,
+	)
+
+file_template = '{data_dir}/sub-{subject}/ses-{session}/anat/sub-{subject}_ses-{session}_TurboRARE.nii.gz'
+substitutions = bids_substitution_iterator(['ofM','ofM_aF','ofM_cF1','ofM_cF2','ofM_pF'],['5704'],
+	data_dir='~/ni_data/ofM.dr/preprocessing/composite',
+	)
+
+cmap = plt.get_cmap('tab20').colors
+contour_slices('~/ni_data/templates/DSURQEc_40micron_average.nii',
+	alpha=[0.6],
+	colors=cmap[::2],
+	figure_title='Multi-Session Fit and Coherence Control',
+	file_template=file_template,
+	force_reverse_slice_order=True,
+	legend_template='{session} session',
+	levels_percentile=[75],
+	ratio='portrait',
+	save_as='2018-01_aic-pom_2.pdf',
+	slice_spacing=0.45,
+	substitutions=substitutions,
+	)

@@ -412,6 +412,7 @@ def atlas_label(atlas,
 def contour_slices(bg_image, file_template,
 	alpha=[0.9],
 	colors=['r','g','b'],
+	dimming=0.,
 	figure_title='',
 	force_reverse_slice_order=True,
 	legend_template='',
@@ -441,6 +442,10 @@ def contour_slices(bg_image, file_template,
 		List of floats, specifying with how much alpha to draw each contour.
 	colors : list, optional
 		List of colors in which to plot the overlays.
+	dimming : float, optional
+		Dimming factor, generally between -2 and 2 (-2 increases contrast, 2 decreases it).
+		This parameter is passed directly to `nilearn.plotting.plot_anat()`
+		Set to 'auto', to use nilearn automagick dimming.
 	figure_title : str, optional
 		Title for the figure.
 	force_reverse_slice_order : bool, optional
@@ -593,6 +598,7 @@ def contour_slices(bg_image, file_template,
 					display_mode='y',
 					cut_coords=[cut_coords[ix]],
 					annotate=False,
+					dim=dimming,
 					)
 			except IndexError:
 				ax_i.axis('off')

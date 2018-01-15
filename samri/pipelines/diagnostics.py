@@ -22,6 +22,12 @@ from samri.utilities import N_PROCS
 #set all outputs to compressed NIfTI
 fsl.FSLCommand.set_default_output_type('NIFTI_GZ')
 
+# Python2 compatibility
+try:
+	    FileNotFoundError
+except NameError:
+	    FileNotFoundError = IOError
+
 def diagnose(bids_base,
 	components=None,
 	debug=False,
@@ -208,7 +214,7 @@ def diagnose(bids_base,
 	if not keep_crashdump:
 		try:
 			shutil.rmtree(crashdump_dir)
-		except FileNotFoundError:
+		except (FileNotFoundError, OSError):
 			pass
 
 	return

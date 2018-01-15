@@ -130,6 +130,7 @@ def write_bids_metadata_file(scan_dir, extraction_dicts,
 	import json
 	import re
 	from os import path
+	from samri.pipelines.utils import parse_paravision_date
 
 	out_file = path.abspath(path.expanduser(out_file))
 	scan_dir = path.abspath(path.expanduser(scan_dir))
@@ -153,9 +154,33 @@ def write_bids_metadata_file(scan_dir, extraction_dicts,
 						pass
 					metadata[extraction_dict['field_name']] = value
 					break
-	# Extract difficult parameters
-
-	# Calculate compound parameters
+	# Extract DelayAfterTrigger
+	try:
+		query_file = path.abspath(path.join(scan_dir,'AdjStatePerScan'))
+		read_line = False
+		with open(query_file) as search:
+			for line in search:
+				if '##$AdjScanStateTime=( 2 )' in line:
+					read_line = True
+					continue
+				if read_line:
+					m = re.match(r'^<(?P<value>.*?)> <.*?>$', line)
+					adjustments_start = m.groupdict()['value']
+					adjustments_start = parse_paravision_date(adjustments_start)
+					break
+	except IOError:
+		pass
+	else:
+		query_file = path.abspath(path.join(scan_dir,'acqp'))
+		with open(query_file) as search:
+			for line in search:
+				if re.match(r'^##\$ACQ_time=<.*?>$', line):
+					m = re.match(r'^##\$ACQ_time=<(?P<value>.*?)>$', line)
+					adjustments_end = m.groupdict()['value']
+					adjustments_end = parse_paravision_date(adjustments_end)
+					break
+		adjustments_duration = adjustments_end - adjustments_start
+		metadata['DelayAfterTrigger'] = adjustments_duration.total_seconds()
 
 	with open(out_file, 'w') as out_file_writeable:
 		json.dump(metadata, out_file_writeable, indent=1)
@@ -163,22 +188,49 @@ def write_bids_metadata_file(scan_dir, extraction_dicts,
 
 	return out_file
 
-def write_events_file(scan_dir, trial,
+
+def write_events_file(scan_dir,
 	db_path="~/syncdata/meta.db",
+	metadata_file='',
 	out_file="events.tsv",
-	dummy_scans_ms="determine",
-	subject_delay=False,
-	very_nasty_bruker_delay_hack=False,
 	prefer_labbookdb=False,
-	unchanged=True,
+	timecourse_file='',
+	trial='',
 	):
+	"""Adjust a BIDS event file to reflect delays introduced after the trigger and before the scan onset.
+
+	Parameters
+	----------
+
+	scan_dir : str
+		ParaVision scan directory path.
+	db_path : str, optional
+		LabbookDB database file path from which to source the evets profile for the identifier assigned to the `trial` parameter.
+	metadata_file : str, optional
+		Path to a BIDS metadata file.
+	out_file : str, optional
+		Path to which to write the adjusted events file
+	prefer_labbookdb : bool, optional
+		Whether to query the events file in the LabbookDB database file first (rather than look for the events file in the scan directory).
+	timecourse_file : str, optional
+		Path to a NIfTI file.
+	trial : str, optional
+		Trial identifier from a LabbookDB database.
+
+	Returns
+	-------
+
+	str : Path to which the adjusted events file was saved.
+	"""
 
 	import csv
 	import sys
-	from datetime import datetime
+	import json
 	import os
 	import pandas as pd
+	import nibabel as nib
 	import numpy as np
+	from datetime import datetime
 
 	out_file = os.path.abspath(os.path.expanduser(out_file))
 	scan_dir = os.path.abspath(os.path.expanduser(scan_dir))
@@ -209,49 +261,25 @@ def write_events_file(scan_dir, trial,
 			sequence_file = os.path.join(scan_dir, sequence_files[0])
 			mydf = pd.read_csv(sequence_file, sep="\s")
 
-	if not subject_delay and not unchanged:
-		state_file_path = os.path.join(scan_dir,"AdjStatePerScan")
+	if metadata_file and timecourse_file:
+		timecourse_file = os.path.abspath(os.path.expanduser(timecourse_file))
+		metadata_file = os.path.abspath(os.path.expanduser(metadata_file))
 
-		#Here we read the `AdjStatePerScan` file, which may be missing if no adjustments were run at the beginning of this scan
+		timecourse = nib.load(timecourse_file)
+		zooms = timecourse.header.get_zooms()
+		tr = zooms[-1]
+		with open(metadata_file) as metadata:
+			    metadata = json.load(metadata)
+		delay = 0
 		try:
-			state_file = open(state_file_path, "r")
-		except IOError:
-			delay_seconds = 0
-		else:
-			while True:
-				current_line = state_file.readline()
-				if "AdjScanStateTime" in current_line:
-					delay_datetime_line = state_file.readline()
-					break
-
-			trigger_time, scanstart_time = [datetime.utcnow().strptime(i.split("+")[0], "<%Y-%m-%dT%H:%M:%S,%f") for i in delay_datetime_line.split(" ")]
-			delay = scanstart_time-trigger_time
-			delay_seconds=delay.total_seconds()
-			if very_nasty_bruker_delay_hack:
-				delay_seconds += 12
-
-		#Here we read the `method` file, which contains info about dummy scans
-		method_file_path = os.path.join(scan_dir,"method")
-		method_file = open(method_file_path, "r")
-
-		read_variables=0 #count variables so that breaking takes place after both have been read
-
-		if dummy_scans_ms == "determine":
-			while True:
-				current_line = method_file.readline()
-				if "##$PVM_DummyScans=" in current_line:
-					dummy_scans = int(current_line.split("=")[1])
-					read_variables +=1 #count variables
-				if "##$PVM_DummyScansDur=" in current_line:
-					dummy_scans_ms = int(current_line.split("=")[1])
-					read_variables +=1 #count variables
-				if read_variables == 2:
-					break #prevent loop from going on forever
-
-		subject_delay = delay_seconds + dummy_scans_ms/1000
-
-	if not unchanged:
-		mydf['onset'] = mydf['onset'] - subject_delay
+			delay += metadata['NumberOfVolumesDiscardedByScanner'] / float(tr)
+		except:
+			pass
+		try:
+			delay += metadata['DelayAfterTrigger']
+		except:
+			pass
+		mydf['onset'] = mydf['onset'] - delay
 
 	mydf.to_csv(out_file, sep=str('\t'), index=False)
 

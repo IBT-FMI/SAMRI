@@ -123,7 +123,6 @@ def bru2bids(measurements_base,
 	f_metadata_file.inputs.extraction_dicts = BIDS_METADATA_EXTRACTION_DICTS
 
 	events_file = pe.Node(name='events_file', interface=util.Function(function=write_events_file,input_names=inspect.getargspec(write_events_file)[0], output_names=['out_file']))
-	events_file.inputs.unchanged = True
 	events_file.ignore_exception = True
 
 	datasink = pe.Node(nio.DataSink(), name='datasink')
@@ -143,6 +142,8 @@ def bru2bids(measurements_base,
 		(f_metadata_filename, f_metadata_file, [('filename', 'out_file')]),
 		(f_filename, f_bru2nii, [('filename', 'output_filename')]),
 		(events_filename, events_file, [('filename', 'out_file')]),
+		(f_metadata_file, events_file, [('out_file', 'metadata_file')]),
+		(f_bru2nii, events_file, [('nii_file', 'timecourse_file')]),
 		(get_f_scan, events_filename, [('scan_type', 'scan_type')]),
 		(f_bru2nii, datasink, [('nii_file', 'func')]),
 		(get_f_scan, events_file, [

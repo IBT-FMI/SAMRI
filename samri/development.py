@@ -2,6 +2,7 @@ def temporal_qc_separate():
 	import matplotlib.pyplot as plt
 	import matplotlib.ticker as plticker
 	import numpy as np
+	import pandas as pd
 	from samri.report.snr import base_metrics
 	from samri.plotting.timeseries import multi
 	from samri.utilities import bids_substitution_iterator
@@ -17,12 +18,13 @@ def temporal_qc_separate():
 
 	for i in substitutions:
 		timecourses  = base_metrics('{data_dir}/{preprocessing_dir}/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_acq-{acquisition}_trial-{trial}.nii', i)
+		events_df = pd.read_csv('{data_dir}/{preprocessing_dir}/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_acq-{acquisition}_trial-{trial}_events.tsv'.format(**i), sep='\t')
 		multi(timecourses,
 			designs=[],
-			events_dfs=[],
+			events_dfs=[events_df],
 			subplot_titles='acquisition',
 			quantitative=False,
-			save_as='temp_{}.pdf'.format(i['acquisition']),
+			save_as='temp_{acquisition}.pdf'.format(**i),
 			samri_style=True,
 			ax_size=[16,6],
 			unit_ticking=True,

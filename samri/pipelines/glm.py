@@ -32,6 +32,7 @@ def l1(preprocessing_dir,
 	nprocs=N_PROCS,
 	tr=1,
 	workflow_name="generic",
+	modality="cbv",
 	):
 	"""Calculate subject level GLM statistic scores.
 
@@ -80,13 +81,13 @@ def l1(preprocessing_dir,
 	data_selection = [list(i) for i in data_selection]
 	data_selection = pd.DataFrame(data_selection,columns=('subject','session','acquisition','trial','modality','path'))
 
-	bids_dictionary = data_selection[data_selection['modality']=='cbv'].drop_duplicates().T.to_dict().values()
+	bids_dictionary = data_selection[data_selection['modality']==modality].drop_duplicates().T.to_dict().values()
 
 	infosource = pe.Node(interface=util.IdentityInterface(fields=['bids_dictionary']), name="infosource")
 	infosource.iterables = [('bids_dictionary', bids_dictionary)]
 
 	datafile_source = pe.Node(name='datafile_source', interface=util.Function(function=select_from_datafind_df, input_names=inspect.getargspec(select_from_datafind_df)[0], output_names=['out_file']))
-	datafile_source.inputs.bids_dictionary_override = {'modality':'cbv'}
+	datafile_source.inputs.bids_dictionary_override = {'modality':modality}
 	datafile_source.inputs.df = data_selection
 
 	eventfile_source = pe.Node(name='eventfile_source', interface=util.Function(function=select_from_datafind_df, input_names=inspect.getargspec(select_from_datafind_df)[0], output_names=['out_file']))

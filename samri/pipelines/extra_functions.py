@@ -286,7 +286,7 @@ def write_events_file(scan_dir,
 	return out_file
 
 def get_scan(measurements_base, data_selection,
-	scan_type=False,
+	scan_type="",
 	selector=None,
 	subject=None,
 	session=None,
@@ -301,7 +301,7 @@ def get_scan(measurements_base, data_selection,
 	data_selection : pandas.DataFrame
 		A `pandas.DataFrame` object as produced by `samri.preprocessing.extra_functions.get_data_selection()`.
 	scan_type : str
-		The type of scan for which to determine the directory. This value will first be queried on the `data_selection` "trial" column, and if ounsuccesful on the "acq" column (corresponding to functional and structural scans respectively).
+		The type of scan for which to determine the directory.
 	selector : iterable, optional
 		The first method of selecting the subject and scan, this value should be a length-2 list or tuple containing the subject and sthe session to be selected.
 	subject : string, optional

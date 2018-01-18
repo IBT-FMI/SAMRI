@@ -9,6 +9,10 @@ from nilearn.connectome import ConnectivityMeasure
 from nilearn.input_data import NiftiLabelsMasker, NiftiMasker
 from nipype.interfaces import fsl
 from os import path, makedirs
+import scipy
+import scipy.cluster.hierarchy as hier_clustering
+import pylab
+from numpy import genfromtxt
 
 def add_fc_roi_data(data_path, seed_masker, brain_masker,
 	dictionary_return=False,
@@ -320,11 +324,15 @@ def seed_based_connectivity(ts, seed_mask,
 
 	return seed_based_correlation_img
 
-def correlation_matrix(ts,
+def correlation_matrix(ts,mask,
 	confounds=None,
 	labels_img='',
 	loud = False,
 	save_as = '',
+	tr=1,
+	low_pass=0.25,
+	high_pass=0.004,
+	smoothing_fwhm=.3,
 	):
 	"""Return a csv containing correlations between ROIs.
 
@@ -343,14 +351,24 @@ def correlation_matrix(ts,
 	Array/CSV file containing confounding time-series to be regressed out before FC analysis.
 
 	"""
+
 	ts = path.abspath(path.expanduser(ts))
 	labels_img = path.abspath(path.expanduser(labels_img))
+	mask = path.abspath(path.expanduser(mask))
 
+
+	print(ts)
 	labels_masker = NiftiLabelsMasker(
 		labels_img=labels_img,
+		mask_img=mask,
+		memory="nilearn_cache",
+		memory_level=3,
 		standardize=True,
-		memory='nilearn_cache',
-		verbose=5
+		verbose=5,
+		low_pass = low_pass,
+		high_pass = high_pass,
+		smoothing_fwhm=smoothing_fwhm,
+		t_r=tr,
 		)
 
 	#TODO: test confounds with physiological signals
@@ -367,3 +385,35 @@ def correlation_matrix(ts,
 		np.savetxt(path.abspath(path.expanduser(save_as)), correlation_matrix, delimiter=',')
 
 	return correlation_matrix
+
+
+def dendogram(correlation_matrix,
+	save_as = '',
+	figsize=(50,50),
+	):
+
+	correlation_matrix = path.abspath(path.expanduser(correlation_matrix))
+
+	y = hier_clustering(correlation_matrix, method='centroid')
+	z = hier_clustering(y, orientation='right')
+	
+	fig = pylab.figure(figsize=figsize)
+	ax_1 = fig.add_axes([0.1,0.1,0.2,0.8])
+	ax_1.set_xticks([])
+	ax_1.set_yticks([])
+	
+	ax_2 = fig.add_axes([0.3,0.1,0.6,0.8])
+	index = z['leaves']
+	correlation_matrix = correlation_matrix[index,:]
+	correlation_matrix = correlation_matrix[:,index]
+	im = ax_2.matshow(correlation_matrix, aspect='auto', origin='lower')
+	ax_2.set_xticks([])
+	ax_2.set_yticks([])
+
+	ax_color = fig.add_axes([0.91,0.1,0.02,0.8])
+	colorbar = pylab.colorbar(im, cax=ax_color)
+	colorbar.ax.tick_params(labelsize=75)
+
+	# Display and save figure.
+	if(save_as):
+		fig.savefig(path.abspath(path.expanduser(save_as)))

@@ -330,8 +330,8 @@ def correlation_matrix(ts,mask,
 	loud = False,
 	save_as = '',
 	tr=1,
-        low_pass=0.25,
-        high_pass=0.004,
+	low_pass=0.25,
+	high_pass=0.004,
 	smoothing_fwhm=.3,
 	):
 	"""Return a csv containing correlations between ROIs.
@@ -415,5 +415,5 @@ def dendogram(correlation_matrix,
 	colorbar.ax.tick_params(labelsize=75)
 
 	# Display and save figure.
-        if(save_as):
-                fig.savefig(path.abspath(path.expanduser(save_as)))
+	if(save_as):
+		fig.savefig(path.abspath(path.expanduser(save_as)))

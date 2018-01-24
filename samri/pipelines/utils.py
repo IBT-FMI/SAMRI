@@ -2,6 +2,32 @@
 
 from __future__ import print_function, division, unicode_literals, absolute_import
 
+def parse_paravision_date(pv_date):
+	"""Convert ParaVision-style datetime string to Python datetime object.
+
+	Parameters
+	----------
+
+	pv_date : str
+		ParaVision datetime string.
+
+	Returns
+	-------
+
+	`datetime.datetime` : A Python datetime object.
+
+	Notes
+	-----
+
+	The datetime object produced does not contain a timezone, and should therefor only be used to determine time deltas relative to other datetimes from the same session.
+	"""
+	from datetime import datetime
+
+	pv_date, _ = pv_date.split('+')
+	pv_date += "000"
+	pv_date = datetime.strptime(pv_date, "%Y-%m-%dT%H:%M:%S,%f")
+	return pv_date
+
 def fslmaths_invert_values(img_path):
 	"""Calculates the op_string required to make an fsl.ImageMaths() node invert an image"""
 	op_string = "-sub {0} -sub {0}".format(img_path)

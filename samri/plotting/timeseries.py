@@ -205,7 +205,6 @@ def multi(timecourses,
 
 
 		for ix, timecourse in enumerate(timecourses):
-
 			col = ix // max_rowspan
 			row = ix % max_rowspan
 			if col+1 == ncols:

@@ -1,6 +1,8 @@
 import numpy as np
 import collections
 import seaborn.apionly as sns
+import matplotlib
+matplotlib.use('Agg')
 from matplotlib import pyplot as plt
 from numpy import genfromtxt
 from os import path
@@ -82,8 +84,9 @@ def plot_connectivity_matrix(correlation_matrix,
 	y_ticks = plt.yticks(range(len(labels_np) - 1), labels_np[1:])
 	plt.gca().yaxis.tick_left()
 	cbar = plt.colorbar()
-	cbar.ax.tick_params(labelsize=100)
+	cbar.ax.tick_params(labelsize=75)
 	# plt.subplots_adjust(left=.01, bottom=.3, top=.99, right=.62)
 	if(save_as):
 		plt.savefig(path.abspath(path.expanduser(save_as)))
-	plt.show()
+	
+	return plt

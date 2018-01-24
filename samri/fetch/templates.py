@@ -4,6 +4,8 @@ import subprocess
 from os import path
 import os
 
+
+
 def fetch_rat_waxholm(template_dir="~/.samri_files/templates/rat/waxholm/", verbose=1):
 	"""Download and load waxholm atlas for Sprague Dawley rat
 
@@ -36,10 +38,22 @@ def fetch_rat_waxholm(template_dir="~/.samri_files/templates/rat/waxholm/", verb
 	url_labels = 'https://www.nitrc.org/frs/download.php/9439/WHS_SD_rat_atlas_v2.label'
 	labels = _fetch_files(path.abspath(path.expanduser(template_dir)), [('WHS_SD_rat_atlas_v2.label', url_labels, {})],
 			verbose=verbose)[0]
+		
+	# resample template
+	commands = ["ResampleImage 3 WHS_SD_rat_T2star_v1.01.nii.gz _200micron_WHS_SD_rat_T2star_v1.01.nii.gz 0.2x0.2x0.2 size=1 spacing=0 4",
+		"SmoothImage 3 _200micron_WHS_SD_rat_T2star_v1.01.nii.gz 0.4 200micron_WHS_SD_rat_T2star_v1.01.nii.gz",
+		"rm _200micron_WHS_SD_rat_T2star_v1.01.nii.gz",
+		"ResampleImage 3 WHS_SD_rat_atlas_v2.nii.gz _200micron_WHS_SD_rat_atlas_v2.nii.gz 0.2x0.2x0.2 size=1 spacing=0 4",
+		"SmoothImage 3 _200micron_WHS_SD_rat_atlas_v2.nii.gz 0.4 200micron_WHS_SD_rat_atlas_v2.nii.gz",
+		"rm _200micron_WHS_SD_rat_atlas_v2.nii.gz",]
+
+	for command in commands:
+		p = subprocess.Popen(command.split(), cwd=path.abspath(path.expanduser(template_dir)), stdout=subprocess.PIPE)
+		p.wait()
 
 	return dict([
-			("template", template),
-			("atlas", atlas),
+			("template", path.abspath(path.expanduser(template_dir)) + "200micron_WHS_SD_rat_T2star_v1.01.nii.gz"),
+			("atlas", path.abspath(path.expanduser(template_dir)) + "200micron_WHS_SD_rat_atlas_v2.nii.gz"),
 			("labels", labels)])
 
 
@@ -65,7 +79,7 @@ def fetch_mouse_DSURQE(template_dir="~/.samri_files/templates/mouse/DSURQE/", ve
 
 	if(path.isfile(path.abspath(path.expanduser(template_dir + 'DSURQEc_40micron_labels.nii')))):
 		return dict([
-			        ("template", path.abspath(path.expanduser(template_dir)) + "/DSURQEc_40micron_average.nii"),
+				("template", path.abspath(path.expanduser(template_dir)) + "/DSURQEc_40micron_average.nii"),
 				("atlas", path.abspath(path.expanduser(template_dir)) + "/DSURQEc_40micron_labels.nii"),
 				("mask", path.abspath(path.expanduser(template_dir)) + "/DSURQEc_40micron_mask.nii"),
 				("labels", path.abspath(path.expanduser(template_dir)) + "/DSURQEc_40micron_itksnap_mapping.txt")])

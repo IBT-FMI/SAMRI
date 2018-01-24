@@ -21,7 +21,9 @@ N_PROCS=max(N_PROCS-4, 2)
 
 @argh.arg('-f','--functional-match', type=json.loads)
 @argh.arg('-s','--structural-match', type=json.loads)
+@argh.arg('-m','--measurements', nargs='*', type=str)
 def bru2bids(measurements_base,
+	measurements=[],
 	actual_size=True,
 	debug=False,
 	exclude={},
@@ -75,6 +77,7 @@ def bru2bids(measurements_base,
 		s_data_selection = get_data_selection(measurements_base,
 			match=structural_match,
 			exclude=exclude,
+			measurements=measurements,
 			)
 		structural_scan_types = s_data_selection['scan_type'].unique()
 		data_selection = pd.concat([data_selection,s_data_selection])
@@ -82,6 +85,7 @@ def bru2bids(measurements_base,
 		f_data_selection = get_data_selection(measurements_base,
 			match=functional_match,
 			exclude=exclude,
+			measurements=measurements,
 			)
 		functional_scan_types = f_data_selection['scan_type'].unique()
 		data_selection = pd.concat([data_selection,f_data_selection])
@@ -105,11 +109,11 @@ def bru2bids(measurements_base,
 	f_bru2nii = pe.Node(interface=bru2nii.Bru2(), name="f_bru2nii")
 	f_bru2nii.inputs.actual_size=actual_size
 
-	f_filename = pe.Node(name='bids_filename', interface=util.Function(function=bids_naming,input_names=inspect.getargspec(bids_naming)[0], output_names=['filename']))
+	f_filename = pe.Node(name='f_filename', interface=util.Function(function=bids_naming,input_names=inspect.getargspec(bids_naming)[0], output_names=['filename']))
 	f_filename.inputs.metadata = data_selection
 	f_filename.inputs.extension=''
 
-	f_metadata_filename = pe.Node(name='metadata_filename', interface=util.Function(function=bids_naming,input_names=inspect.getargspec(bids_naming)[0], output_names=['filename']))
+	f_metadata_filename = pe.Node(name='f_metadata_filename', interface=util.Function(function=bids_naming,input_names=inspect.getargspec(bids_naming)[0], output_names=['filename']))
 	f_metadata_filename.inputs.extension = ".json"
 	f_metadata_filename.inputs.metadata = data_selection
 
@@ -123,7 +127,6 @@ def bru2bids(measurements_base,
 	f_metadata_file.inputs.extraction_dicts = BIDS_METADATA_EXTRACTION_DICTS
 
 	events_file = pe.Node(name='events_file', interface=util.Function(function=write_events_file,input_names=inspect.getargspec(write_events_file)[0], output_names=['out_file']))
-	events_file.inputs.unchanged = True
 	events_file.ignore_exception = True
 
 	datasink = pe.Node(nio.DataSink(), name='datasink')
@@ -131,11 +134,11 @@ def bru2bids(measurements_base,
 	datasink.inputs.parameterization = False
 
 	workflow_connections = [
+		(infosource, datasink, [(('subject_session',ss_to_path), 'container')]),
 		(infosource, get_f_scan, [('subject_session', 'selector')]),
 		(infosource, f_metadata_filename, [('subject_session', 'subject_session')]),
 		(infosource, f_filename, [('subject_session', 'subject_session')]),
 		(infosource, events_filename, [('subject_session', 'subject_session')]),
-		(infosource, datasink, [(('subject_session',ss_to_path), 'container')]),
 		(get_f_scan, f_metadata_filename, [('scan_type', 'scan_type')]),
 		(get_f_scan, f_filename, [('scan_type', 'scan_type')]),
 		(get_f_scan, f_bru2nii, [('scan_path', 'input_dir')]),
@@ -143,6 +146,8 @@ def bru2bids(measurements_base,
 		(f_metadata_filename, f_metadata_file, [('filename', 'out_file')]),
 		(f_filename, f_bru2nii, [('filename', 'output_filename')]),
 		(events_filename, events_file, [('filename', 'out_file')]),
+		(f_metadata_file, events_file, [('out_file', 'metadata_file')]),
+		(f_bru2nii, events_file, [('nii_file', 'timecourse_file')]),
 		(get_f_scan, events_filename, [('scan_type', 'scan_type')]),
 		(f_bru2nii, datasink, [('nii_file', 'func')]),
 		(get_f_scan, events_file, [
@@ -152,45 +157,6 @@ def bru2bids(measurements_base,
 		(events_file, datasink, [('out_file', 'func.@events')]),
 		(f_metadata_file, datasink, [('out_file', 'func.@metadata')]),
 		]
-
-	try:
-		if structural_scan_types.any():
-			get_s_scan = pe.Node(name='get_s_scan', interface=util.Function(function=get_scan, input_names=inspect.getargspec(get_scan)[0], output_names=['scan_path','scan_type','trial']))
-			get_s_scan.inputs.ignore_exception = True
-			get_s_scan.inputs.data_selection = data_selection
-			get_s_scan.inputs.measurements_base = measurements_base
-			get_s_scan.iterables = ("scan_type", structural_scan_types)
-
-			s_bru2nii = pe.Node(interface=bru2nii.Bru2(), name="s_bru2nii")
-			s_bru2nii.inputs.force_conversion=True
-			s_bru2nii.inputs.actual_size=actual_size
-
-			s_filename = pe.Node(name='s_filename', interface=util.Function(function=bids_naming,input_names=inspect.getargspec(bids_naming)[0], output_names=['filename']))
-			s_filename.inputs.metadata = data_selection
-			s_filename.inputs.extension=''
-
-			s_metadata_filename = pe.Node(name='s_metadata_filename', interface=util.Function(function=bids_naming,input_names=inspect.getargspec(bids_naming)[0], output_names=['filename']))
-			s_metadata_filename.inputs.extension = ".json"
-			s_metadata_filename.inputs.metadata = data_selection
-
-			s_metadata_file = pe.Node(name='s_metadata_file', interface=util.Function(function=write_bids_metadata_file,input_names=inspect.getargspec(write_bids_metadata_file)[0], output_names=['out_file']))
-			s_metadata_file.inputs.extraction_dicts = BIDS_METADATA_EXTRACTION_DICTS
-
-			workflow_connections.extend([
-				(infosource, get_s_scan, [('subject_session', 'selector')]),
-				(infosource, s_filename, [('subject_session', 'subject_session')]),
-				(infosource, s_metadata_filename, [('subject_session', 'subject_session')]),
-				(get_s_scan, s_bru2nii, [('scan_path','input_dir')]),
-				(get_s_scan, s_filename, [('scan_type', 'scan_type')]),
-				(get_s_scan, s_metadata_filename, [('scan_type', 'scan_type')]),
-				(get_s_scan, s_metadata_file, [('scan_path', 'scan_dir')]),
-				(s_filename, s_bru2nii, [('filename','output_filename')]),
-				(s_metadata_filename, s_metadata_file, [('filename', 'out_file')]),
-				(s_bru2nii, datasink, [('nii_file', 'anat')]),
-				(s_metadata_file, datasink, [('out_file', 'anat.@metadata')]),
-				])
-	except UnboundLocalError:
-		pass
 
 	crashdump_dir = path.join(measurements_base,'bids_crashdump')
 	workflow_config = {'execution': {'crashdump_dir': crashdump_dir}}
@@ -224,3 +190,76 @@ def bru2bids(measurements_base,
 			shutil.rmtree(crashdump_dir)
 		except FileNotFoundError:
 			pass
+
+	try:
+		if structural_scan_types.any():
+			get_s_scan = pe.Node(name='get_s_scan', interface=util.Function(function=get_scan, input_names=inspect.getargspec(get_scan)[0], output_names=['scan_path','scan_type','trial']))
+			get_s_scan.inputs.ignore_exception = True
+			get_s_scan.inputs.data_selection = data_selection
+			get_s_scan.inputs.measurements_base = measurements_base
+			get_s_scan.iterables = ("scan_type", structural_scan_types)
+
+			s_bru2nii = pe.Node(interface=bru2nii.Bru2(), name="s_bru2nii")
+			s_bru2nii.inputs.force_conversion=True
+			s_bru2nii.inputs.actual_size=actual_size
+
+			s_filename = pe.Node(name='s_filename', interface=util.Function(function=bids_naming,input_names=inspect.getargspec(bids_naming)[0], output_names=['filename']))
+			s_filename.inputs.metadata = data_selection
+			s_filename.inputs.extension=''
+
+			s_metadata_filename = pe.Node(name='s_metadata_filename', interface=util.Function(function=bids_naming,input_names=inspect.getargspec(bids_naming)[0], output_names=['filename']))
+			s_metadata_filename.inputs.extension = ".json"
+			s_metadata_filename.inputs.metadata = data_selection
+
+			s_metadata_file = pe.Node(name='s_metadata_file', interface=util.Function(function=write_bids_metadata_file,input_names=inspect.getargspec(write_bids_metadata_file)[0], output_names=['out_file']))
+			s_metadata_file.inputs.extraction_dicts = BIDS_METADATA_EXTRACTION_DICTS
+
+			workflow_connections = [
+				(infosource, datasink, [(('subject_session',ss_to_path), 'container')]),
+				(infosource, get_s_scan, [('subject_session', 'selector')]),
+				(infosource, s_filename, [('subject_session', 'subject_session')]),
+				(infosource, s_metadata_filename, [('subject_session', 'subject_session')]),
+				(get_s_scan, s_bru2nii, [('scan_path','input_dir')]),
+				(get_s_scan, s_filename, [('scan_type', 'scan_type')]),
+				(get_s_scan, s_metadata_filename, [('scan_type', 'scan_type')]),
+				(get_s_scan, s_metadata_file, [('scan_path', 'scan_dir')]),
+				(s_filename, s_bru2nii, [('filename','output_filename')]),
+				(s_metadata_filename, s_metadata_file, [('filename', 'out_file')]),
+				(s_bru2nii, datasink, [('nii_file', 'anat')]),
+				(s_metadata_file, datasink, [('out_file', 'anat.@metadata')]),
+				]
+			crashdump_dir = path.join(measurements_base,'bids_crashdump')
+			workflow_config = {'execution': {'crashdump_dir': crashdump_dir}}
+			if debug:
+				workflow_config['logging'] = {
+					'workflow_level':'DEBUG',
+					'utils_level':'DEBUG',
+					'interface_level':'DEBUG',
+					'filemanip_level':'DEBUG',
+					'log_to_file':'true',
+					}
+
+			workdir_name = 'bids_work'
+			workflow = pe.Workflow(name=workdir_name)
+			workflow.connect(workflow_connections)
+			workflow.base_dir = path.join(measurements_base)
+			workflow.config = workflow_config
+			workflow.write_graph(dotfilename=path.join(workflow.base_dir,workdir_name,"graph.dot"), graph2use="hierarchical", format="png")
+
+			if not keep_work or not keep_crashdump:
+				try:
+					workflow.run(plugin="MultiProc", plugin_args={'n_procs' : n_procs})
+				except RuntimeError:
+					pass
+			else:
+				workflow.run(plugin="MultiProc", plugin_args={'n_procs' : n_procs})
+			if not keep_work:
+				shutil.rmtree(path.join(workflow.base_dir,workdir_name))
+			if not keep_crashdump:
+				try:
+					shutil.rmtree(crashdump_dir)
+				except FileNotFoundError:
+					pass
+	except UnboundLocalError:
+		pass
+

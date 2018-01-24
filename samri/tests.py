@@ -52,7 +52,6 @@ def plotmodel(matfile):
 	column_names = range(int(length))
 	df = pd.read_csv(matfile, skiprows=5, sep="\t", header=None, names=column_names, index_col=False)
 	df.plot()
-	plt.show()
 
 def subjectinfo(subject_delay):
 	from nipype.interfaces.base import Bunch

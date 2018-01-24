@@ -4,39 +4,9 @@ branches:
 
 language: python
 before_install:
-  - docker pull ibtfmi/stereotaxyz
-  - docker create --name "stereotaxyz" --rm -ti -v "${PWD}":/home/stereotaxyz ibtfmi/stereotaxyz
-  - docker start stereotaxyz
-  - docker exec stereotaxyz emaint sync -a
+  - docker pull ibtfmi/samri
+  - docker create --name "samri" --rm -ti -v "${PWD}":/home/samri ibtfmi/samri
+  - docker start samri
+  - docker exec samri emaint sync -a
 script:
-  - docker exec stereotaxyz sh -c 'FEATURES="test" /home/stereotaxyz/.gentoo/install.sh'
-
-cache:
-  directories:
-    - $HOME/.portage-pkgdir
-
-matrix:
-  include:
-    - language: python
-      python: 2.7
-    - language: python
-      python: 3.4
-
-install:
-  - travis_wait 20 pip install -r requirements.txt
-  - pip install .
-
-script:
-  - pytest
-  - export MPLBACKEND="agg"
-  - cd samri/examples
-  - for f in *.py ; do python "$f" ; done
-        
-# The following code attempts to build a Gentoo system from scratch and install all SAMRI deps via portage. This works as far as we can tell, but the free TravisCI plan is limited to 50' jobs - which we overshoot here in the emerge process alone. 
-#    - os: linux
-#      services: docker
-#      language: generic
-#      sudo: required
-#      script:
-#        - 'if [ "${TRAVIS_EVENT_TYPE}" != "cron" ]; then
-#          docker run --rm -ti -v "${HOME}"/.portage-pkgdir:/usr/portage/packages -v "${PWD}":${HOME}/SAMRI -w ${HOME}/SAMRI gentoo/stage3-amd64:latest ${HOME}/SAMRI/.gentoo/on_travis.sh; fi'
+  - docker exec samri sh -c 'FEATURES="test" /home/samri/.gentoo/install.sh'

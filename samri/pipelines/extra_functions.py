@@ -321,7 +321,13 @@ def get_scan(measurements_base, data_selection,
 		filtered_data = filtered_data[filtered_data["trial"] == trial]
 	if scan_type:
 		filtered_data = filtered_data[filtered_data["scan_type"] == scan_type]
-	measurement_path = filtered_data["measurement"].item()
+	
+	try:
+		measurement_path = filtered_data["measurement"].item()
+	except Exception as e:
+		import sys
+		raise type(e), type(e)(' measurements have ambiguous names according to bids standard'), sys.exc_info()[2]
+	
 	scan_subdir = filtered_data["scan"].item()
 	scan_path = os.path.join(measurements_base,measurement_path,scan_subdir)
 

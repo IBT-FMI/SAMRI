@@ -321,16 +321,14 @@ def get_scan(measurements_base, data_selection,
 		filtered_data = filtered_data[filtered_data["trial"] == trial]
 	if scan_type:
 		filtered_data = filtered_data[filtered_data["scan_type"] == scan_type]
-
-	modality = filtered_data['modality'].item()
-
-	scan_path = os.path.join(measurements_base, 'sub-' + subject + '/', 'ses-' + session + '/', modality )
-	nii_path = scan_path + '/sub-' + subject + '_' + 'ses-' + session + '_' + scan_type + '.nii'
+	measurement_path = filtered_data["measurement"].item()
+	scan_subdir = filtered_data["scan"].item()
+	scan_path = os.path.join(measurements_base,measurement_path,scan_subdir)
 
 	if not trial:
 		trial = filtered_data['trial'].item()
 
-	return scan_path, scan_type, trial, nii_path
+	return scan_path, scan_type, trial
 
 def get_bids_scan(bids_base, data_selection,
 	scan_type="",

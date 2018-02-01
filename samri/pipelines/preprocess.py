@@ -45,7 +45,7 @@ def bidsDataSelection(base,
 	df['scan_type'] = ""
 	df.loc[df.modality == 'func', 'scan_type'] = 'acq-'+df['acq']+'_trial-'+df['trial']
 	df.loc[df.modality == 'anat', 'scan_type'] = 'acq-'+df['acq']+'_' + df['type']
-	
+
 	return df
 
 def bruker(bids_base, template,
@@ -100,7 +100,7 @@ def bruker(bids_base, template,
 
 
 	data_selection = bidsDataSelection(bids_base)
-	
+
 	# generate functional and structural scan types
 	functional_scan_types = data_selection.loc[data_selection.modality == 'func']['scan_type'].values
 	structural_scan_types = data_selection.loc[data_selection.modality == 'anat']['scan_type'].values
@@ -144,9 +144,6 @@ def bruker(bids_base, template,
 
 	events_file = pe.Node(name='events_file', interface=util.Function(function=write_events_file,input_names=inspect.getargspec(write_events_file)[0], output_names=['out_file']))
 	events_file.inputs.dummy_scans_ms = DUMMY_SCANS * tr * 1000
-	#TODO: was tun mit dem hier?
-	#events_file.inputs.stim_protocol_dictionary = STIM_PROTOCOL_DICTIONARY
-	
 	events_file.inputs.very_nasty_bruker_delay_hack = very_nasty_bruker_delay_hack
 	if not (strict or verbose):
 		events_file.inputs.ignore_exception = True

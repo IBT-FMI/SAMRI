@@ -31,7 +31,7 @@ afni.base.AFNICommand.set_default_output_type('NIFTI_GZ')
 fsl.FSLCommand.set_default_output_type('NIFTI_GZ')
 
 
-def bidsDataSelection(base,
+def bids_data_selection(base,
 		):
 	layout = BIDSLayout(base)
 	df = layout.as_data_frame()
@@ -99,7 +99,7 @@ def bruker(bids_base, template,
 		structural_scan_types['session'] = sessions
 
 
-	data_selection = bidsDataSelection(bids_base)
+	data_selection = bids_data_selection(bids_base)
 
 	# generate functional and structural scan types
 	functional_scan_types = data_selection.loc[data_selection.modality == 'func']['scan_type'].values

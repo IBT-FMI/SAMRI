@@ -12,7 +12,7 @@ HOMEPAGE="https://github.com/IBT-FMI/SAMRI"
 
 LICENSE="GPL-3"
 SLOT="0"
-IUSE=""
+IUSE="labbookdb"
 KEYWORDS=""
 
 DEPEND=""
@@ -27,7 +27,7 @@ RDEPEND="
 	dev-python/statsmodels[${PYTHON_USEDEP}]
 	>=sci-biology/fsl-5.0.9
 	sci-biology/bru2nii
-	sci-libs/labbookdb[${PYTHON_USEDEP}]
+	labbookdb? ( sci-libs/labbookdb[${PYTHON_USEDEP}] )
 	sci-libs/nibabel[${PYTHON_USEDEP}]
 	>=sci-libs/nipy-0.4.1[${PYTHON_USEDEP}]
 	>=sci-libs/nipype-0.14.0_pre20170830[${PYTHON_USEDEP}]

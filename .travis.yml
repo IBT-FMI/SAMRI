@@ -1,7 +1,7 @@
 branches:
   only:
     - master
-
+    
 language: python
 before_install:
   - docker pull ibtfmi/samri
@@ -10,3 +10,31 @@ before_install:
   - docker exec samri emaint sync -a
 script:
   - docker exec samri sh -c 'FEATURES="test" /home/samri/.gentoo/install.sh'
+  
+cache:
+  directories:
+    - $HOME/.portage-pkgdir
+
+matrix:
+  include:
+    - language: python
+      install:
+        - travis_wait 20 pip install -r requirements.txt
+      python: 2.7
+      script:
+        - pytest
+    - os: linux
+      services: docker
+      language: generic
+      sudo: required
+      script:
+        - 'if [ "${TRAVIS_EVENT_TYPE}" != "cron" ]; then
+          docker run --rm -ti -v "${HOME}"/.portage-pkgdir:/usr/portage/packages -v "${PWD}":${HOME}/SAMRI -w ${HOME}/SAMRI gentoo/stage3-amd64:latest ${HOME}/SAMRI/.gentoo/on_travis.sh; fi'
+    - os: linux
+      env: BUILD_TYPE=newversioncheck # marker environment variable to make the build matrix more readable in the UI
+      services: docker
+      language: generic
+      sudo: required
+      script:
+        - 'if [ "${TRAVIS_EVENT_TYPE}" == "cron" ]; then 
+          docker run --rm -ti -v "${HOME}"/.portage-pkgdir:/usr/portage/packages -v "${PWD}":${HOME}/SAMRI -w ${HOME}/SAMRI gentoo/stage3-amd64:latest ${HOME}/SAMRI/.gentoo/on_travis.sh; fi'

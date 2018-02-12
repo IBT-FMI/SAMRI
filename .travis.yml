@@ -4,7 +4,10 @@ before_install:
   - docker create --name "samri" --rm -ti -v "${PWD}":/home/samri ibtfmi/samri
   - docker start samri
   # This installs the newest versions of the dependencies:
-  - docker exec samri emaint sync -a
-  - docker exec samri /home/samri/.gentoo/install.sh -o
+  #- docker exec samri emaint sync -a
+  #- docker exec samri /home/samri/.gentoo/install.sh -o
 script:
-  - docker exec samri sh -c 'FEATURES="test" /home/samri/.gentoo/install.sh'
+  # This should work as is, but for some reason pulls in a lot of deps
+  # (and consequently applies the "test" flag to all of them
+  #- docker exec samri sh -c 'FEATURES="test" /home/samri/.gentoo/install.sh'
+  - docker exec samri sh -c 'FEATURES="test" /home/samri/.gentoo/install.sh -O'

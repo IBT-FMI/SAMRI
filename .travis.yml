@@ -3,6 +3,8 @@ before_install:
   - docker pull ibtfmi/samri
   - docker create --name "samri" --rm -ti -v "${PWD}":/home/samri ibtfmi/samri
   - docker start samri
+  # This installs the newest versions of the dependencies:
   - docker exec samri emaint sync -a
+  - docker exec samri /home/samri/.gentoo/install.sh -o
 script:
   - docker exec samri sh -c 'FEATURES="test" /home/samri/.gentoo/install.sh'

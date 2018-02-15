@@ -339,7 +339,7 @@ def get_bids_scan(bids_base, data_selection,
 	):
 
 	"""Description...
-	
+
 	Parameters
 	----------
 	bids_base : str
@@ -363,20 +363,20 @@ def get_bids_scan(bids_base, data_selection,
 	if not session:
 		session = selector[1]
 	filtered_data = data_selection[(data_selection["session"] == session)&(data_selection["subject"] == subject)]
+
 	if trial:
 		filtered_data = filtered_data[filtered_data["trial"] == trial]
-	if scan_type:
+        if scan_type:
 		filtered_data = filtered_data[filtered_data["scan_type"] == scan_type]
-
+	
 	modality = filtered_data['modality'].item()
+	if not trial:
+		trial = filtered_data['trial'].item()
 
 	scan_path = os.path.join(bids_base, 'sub-' + subject + '/', 'ses-' + session + '/', modality )
 	nii_path = scan_path + '/sub-' + subject + '_' + 'ses-' + session + '_' + scan_type + '.nii'
 
-	if not trial:
-		trial = filtered_data['trial'].item()
-
-	return scan_path, scan_type, trial, nii_path
+	return scan_path, modality, trial, nii_path
 
 BIDS_KEY_DICTIONARY = {
 	'acquisition':['acquisition','ACQUISITION','acq','ACQ'],

@@ -17,6 +17,11 @@ from nipype.interfaces import bru2nii
 from samri.pipelines.utils import bids_naming, ss_to_path
 from samri.utilities import N_PROCS
 
+try:
+	    FileNotFoundError
+except NameError:
+	    FileNotFoundError = IOError
+
 N_PROCS=max(N_PROCS-4, 2)
 
 @argh.arg('-f','--functional-match', type=json.loads)
@@ -188,7 +193,7 @@ def bru2bids(measurements_base,
 	if not keep_crashdump:
 		try:
 			shutil.rmtree(crashdump_dir)
-		except FileNotFoundError:
+		except (FileNotFoundError, OSError):
 			pass
 
 	try:
@@ -258,7 +263,7 @@ def bru2bids(measurements_base,
 			if not keep_crashdump:
 				try:
 					shutil.rmtree(crashdump_dir)
-				except FileNotFoundError:
+				except (FileNotFoundError, OSError):
 					pass
 	except UnboundLocalError:
 		pass

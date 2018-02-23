@@ -46,8 +46,9 @@ python_test() {
 	export MPLBACKEND="agg"
 	export PATH=${TEST_DIR}/scripts:$PATH
 	export PYTHONIOENCODING=utf-8
-	pytest
+	pytest || die
 	for i in samri/examples/*.py; do
-		"${PYTHON}" "$i" || die "Example Python script $i failed with ${EPYTHON}"
+		echo "Executing ${EPYTHON} ${i}"
+		${EPYTHON} "$i" || die "Example Python script $i failed with ${EPYTHON}"
 	done
 }

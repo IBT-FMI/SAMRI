@@ -18,11 +18,11 @@ def dr_seed_fc():
 		"~/ni_data/ofM.dr/",
 		"composite",
 		acquisitions=["EPI",],
-		check_file_format='~/ni_data/ofM.dr/preprocessing/{preprocessing_dir}/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_acq-{acquisition}_trial-{trial}_cbv.nii.gz')
+		check_file_format='~/ni_data/ofM.dr/preprocessing/{preprocessing_dir}/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_acq-{acquisition}_task-{task}_cbv.nii.gz')
 
 	fc_results = fc.seed_based(substitutions, "~/ni_data/templates/roi/DSURQEc_dr.nii.gz", "~/ni_data/templates/DSURQEc_200micron_mask.nii.gz",
-		ts_file_template='~/ni_data/ofM.dr/preprocessing/{preprocessing_dir}/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_acq-{acquisition}_trial-{trial}_cbv.nii.gz',
-		save_results="~/ni_data/ofM.dr/fc/{preprocessing_dir}/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_acq-{acquisition}_trial-{trial}_cbv_zstat.nii.gz",
+		ts_file_template='~/ni_data/ofM.dr/preprocessing/{preprocessing_dir}/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_acq-{acquisition}_task-{task}_cbv.nii.gz',
+		save_results="~/ni_data/ofM.dr/fc/{preprocessing_dir}/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_acq-{acquisition}_task-{task}_cbv_zstat.nii.gz",
 		)
 def drs_seed_fc():
 	import numpy as np
@@ -44,10 +44,10 @@ def drs_seed_fc():
 		"~/ni_data/ofM.dr/",
 		"composite",
 		acquisitions=["EPI",],
-		check_file_format='~/ni_data/ofM.dr/preprocessing/{preprocessing_dir}/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_acq-{acquisition}_trial-{trial}_cbv.nii.gz')
+		check_file_format='~/ni_data/ofM.dr/preprocessing/{preprocessing_dir}/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_acq-{acquisition}_task-{task}_cbv.nii.gz')
 
 	fc_results = fc.seed_based(substitutions, "~/ni_data/templates/roi/DSURQEc_dr-s.nii.gz", "~/ni_data/templates/DSURQEc_200micron_mask.nii.gz",
-		ts_file_template='~/ni_data/ofM.dr/preprocessing/{preprocessing_dir}/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_acq-{acquisition}_trial-{trial}_cbv.nii.gz',
-		save_results="~/ni_data/ofM.dr/fc/dr-s_seed/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_acq-{acquisition}_trial-{trial}_cbv_zstat.nii.gz",
+		ts_file_template='~/ni_data/ofM.dr/preprocessing/{preprocessing_dir}/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_acq-{acquisition}_task-{task}_cbv.nii.gz',
+		save_results="~/ni_data/ofM.dr/fc/dr-s_seed/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_acq-{acquisition}_task-{task}_cbv_zstat.nii.gz",
 		)
 

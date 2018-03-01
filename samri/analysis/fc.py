@@ -94,7 +94,7 @@ def add_fc_roi_data(data_path, seed_masker, brain_masker,
 	return result
 
 def seed_based(substitutions, seed, roi,
-	ts_file_template="~/ni_data/ofM.dr/preprocessing/{preprocessing_dir}/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_trial-{trial}.nii.gz",
+	ts_file_template="~/ni_data/ofM.dr/preprocessing/{preprocessing_dir}/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_task-{task}.nii.gz",
 	smoothing_fwhm=.3,
 	detrend=True,
 	standardize=True,
@@ -159,7 +159,7 @@ def dual_regression(substitutions_a, substitutions_b,
 	components=9,
 	group_level="concat",
 	tr=1,
-	ts_file_template="{data_dir}/preprocessing/{preprocessing_dir}/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_trial-{scan}.nii.gz",
+	ts_file_template="{data_dir}/preprocessing/{preprocessing_dir}/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_task-{scan}.nii.gz",
 	):
 
 	all_merged_path = path.abspath(path.expanduser(all_merged_path))
@@ -194,7 +194,7 @@ def dual_regression(substitutions_a, substitutions_b,
 	ica_run = ica.run()
 
 def get_signal(substitutions_a, substitutions_b,
-	functional_file_template="~/ni_data/ofM.dr/preprocessing/{preprocessing_dir}/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_trial-{scan}.nii.gz",
+	functional_file_template="~/ni_data/ofM.dr/preprocessing/{preprocessing_dir}/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_task-{scan}.nii.gz",
 	mask="~/ni_data/templates/DSURQEc_200micron_bin.nii.gz",
 	):
 

@@ -15,10 +15,10 @@ def drs_activity():
                 "~/ni_data/ofM.dr/",
                 workflow_name,
                 acquisitions=["EPI",],
-                check_file_format='{data_dir}/l1/{l1_dir}/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_acq-{acquisition}_trial-{trial}_cbv_tstat.nii.gz',
+                check_file_format='{data_dir}/l1/{l1_dir}/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_acq-{acquisition}_task-{task}_cbv_tstat.nii.gz',
 		)
 	fit, anova, subjectdf, voxeldf = roi.per_session(substitutions,
-		filename_template='{data_dir}/l1/{l1_dir}/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_acq-{acquisition}_trial-{trial}_cbv_tstat.nii.gz',
+		filename_template='{data_dir}/l1/{l1_dir}/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_acq-{acquisition}_task-{task}_cbv_tstat.nii.gz',
 		roi_mask="~/ni_data/templates/roi/DSURQEc_drs.nii.gz",
 		)
 	subjectdf['treatment']='Fluoxetine'
@@ -29,10 +29,10 @@ def drs_activity():
                 "~/ni_data/ofM.dr/",
                 workflow_name,
                 acquisitions=["EPI",],
-		check_file_format='{data_dir}/l1/{l1_dir}/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_acq-{acquisition}_trial-{trial}_cbv_tstat.nii.gz',
+		check_file_format='{data_dir}/l1/{l1_dir}/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_acq-{acquisition}_task-{task}_cbv_tstat.nii.gz',
 		)
 	fit_, anova_, subjectdf_, voxeldf_ = roi.per_session(substitutions_,
-		filename_template='{data_dir}/l1/{l1_dir}/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_acq-{acquisition}_trial-{trial}_cbv_tstat.nii.gz',
+		filename_template='{data_dir}/l1/{l1_dir}/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_acq-{acquisition}_task-{task}_cbv_tstat.nii.gz',
 		roi_mask="~/ni_data/templates/roi/DSURQEc_drs.nii.gz",
 		)
 	subjectdf_['treatment']='Vehicle'
@@ -58,11 +58,11 @@ def pattern_fc():
                 "~/ni_data/ofM.dr/",
                 workflow_name,
                 acquisitions=["EPI",],
-                check_file_format='{data_dir}/fc/{preprocessing_dir}/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_acq-{acquisition}_trial-{trial}_cbv_zstat.nii.gz',
+                check_file_format='{data_dir}/fc/{preprocessing_dir}/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_acq-{acquisition}_task-{task}_cbv_zstat.nii.gz',
 		)
 	subjectdf = summary.analytic_pattern_per_session(substitutions,
 		'~/ni_data/ofM.dr/l2/anova_ctx/anova_zfstat.nii.gz',
-                t_file_template='{data_dir}/fc/{preprocessing_dir}/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_acq-{acquisition}_trial-{trial}_cbv_zstat.nii.gz',
+                t_file_template='{data_dir}/fc/{preprocessing_dir}/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_acq-{acquisition}_task-{task}_cbv_zstat.nii.gz',
 		legend_loc=2,
 		figure="per-participant",
 		color="#309079",
@@ -77,11 +77,11 @@ def pattern_fc():
                 "~/ni_data/ofM.dr/",
                 workflow_name,
                 acquisitions=["EPI",],
-                check_file_format='{data_dir}/fc/{preprocessing_dir}/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_acq-{acquisition}_trial-{trial}_cbv_zstat.nii.gz',
+                check_file_format='{data_dir}/fc/{preprocessing_dir}/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_acq-{acquisition}_task-{task}_cbv_zstat.nii.gz',
 		)
 	subjectdf_ = summary.analytic_pattern_per_session(substitutions_,
 		'~/ni_data/ofM.dr/l2/anova_ctx/anova_zfstat.nii.gz',
-                t_file_template='{data_dir}/fc/{preprocessing_dir}/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_acq-{acquisition}_trial-{trial}_cbv_zstat.nii.gz',
+                t_file_template='{data_dir}/fc/{preprocessing_dir}/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_acq-{acquisition}_task-{task}_cbv_zstat.nii.gz',
 		legend_loc=2,
 		figure="per-participant",
 		color="#309079",
@@ -110,11 +110,11 @@ def pattern_activity():
                 "~/ni_data/ofM.dr/",
                 workflow_name,
                 acquisitions=["EPI",],
-                check_file_format='{data_dir}/l1/{l1_dir}/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_acq-{acquisition}_trial-{trial}_cbv_tstat.nii.gz',
+                check_file_format='{data_dir}/l1/{l1_dir}/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_acq-{acquisition}_task-{task}_cbv_tstat.nii.gz',
 		)
 	subjectdf = summary.analytic_pattern_per_session(substitutions,
 		'~/ni_data/ofM.dr/l2/best_responders/sessionofM/tstat1.nii.gz',
-                t_file_template='{data_dir}/l1/{l1_dir}/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_acq-{acquisition}_trial-{trial}_cbv_tstat.nii.gz',
+                t_file_template='{data_dir}/l1/{l1_dir}/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_acq-{acquisition}_task-{task}_cbv_tstat.nii.gz',
 		legend_loc=2,
 		figure="per-participant",
 		color="#309079",
@@ -129,11 +129,11 @@ def pattern_activity():
                 "~/ni_data/ofM.dr/",
                 workflow_name,
                 acquisitions=["EPI",],
-		check_file_format='{data_dir}/l1/{l1_dir}/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_acq-{acquisition}_trial-{trial}_cbv_tstat.nii.gz',
+		check_file_format='{data_dir}/l1/{l1_dir}/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_acq-{acquisition}_task-{task}_cbv_tstat.nii.gz',
 		)
 	subjectdf_ = summary.analytic_pattern_per_session(substitutions_,
 		'~/ni_data/ofM.dr/l2/best_responders/sessionofM/tstat1.nii.gz',
-                t_file_template='{data_dir}/l1/{l1_dir}/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_acq-{acquisition}_trial-{trial}_cbv_tstat.nii.gz',
+                t_file_template='{data_dir}/l1/{l1_dir}/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_acq-{acquisition}_task-{task}_cbv_tstat.nii.gz',
 		legend_loc=2,
 		figure="per-participant",
 		color="#309079",
@@ -162,10 +162,10 @@ def ctx_activity():
                 "~/ni_data/ofM.dr/",
                 workflow_name,
                 acquisitions=["EPI",],
-                check_file_format='{data_dir}/l1/{l1_dir}/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_acq-{acquisition}_trial-{trial}_cbv_tstat.nii.gz',
+                check_file_format='{data_dir}/l1/{l1_dir}/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_acq-{acquisition}_task-{task}_cbv_tstat.nii.gz',
 		)
 	fit, anova, subjectdf, voxeldf = roi.per_session(substitutions,
-		filename_template='{data_dir}/l1/{l1_dir}/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_acq-{acquisition}_trial-{trial}_cbv_tstat.nii.gz',
+		filename_template='{data_dir}/l1/{l1_dir}/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_acq-{acquisition}_task-{task}_cbv_tstat.nii.gz',
 		roi_mask="~/ni_data/templates/roi/DSURQEc_ctx.nii.gz",
 		)
 	subjectdf['treatment']='Fluoxetine'
@@ -176,10 +176,10 @@ def ctx_activity():
                 "~/ni_data/ofM.dr/",
                 workflow_name,
                 acquisitions=["EPI",],
-		check_file_format='{data_dir}/l1/{l1_dir}/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_acq-{acquisition}_trial-{trial}_cbv_tstat.nii.gz',
+		check_file_format='{data_dir}/l1/{l1_dir}/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_acq-{acquisition}_task-{task}_cbv_tstat.nii.gz',
 		)
 	fit_, anova_, subjectdf_, voxeldf_ = roi.per_session(substitutions_,
-		filename_template='{data_dir}/l1/{l1_dir}/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_acq-{acquisition}_trial-{trial}_cbv_tstat.nii.gz',
+		filename_template='{data_dir}/l1/{l1_dir}/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_acq-{acquisition}_task-{task}_cbv_tstat.nii.gz',
 		roi_mask="~/ni_data/templates/roi/DSURQEc_ctx.nii.gz",
 		)
 	subjectdf_['treatment']='Vehicle'
@@ -205,10 +205,10 @@ def dr_activity():
                 "~/ni_data/ofM.dr/",
                 workflow_name,
                 acquisitions=["EPI",],
-                check_file_format='{data_dir}/l1/{l1_dir}/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_acq-{acquisition}_trial-{trial}_cbv_tstat.nii.gz',
+                check_file_format='{data_dir}/l1/{l1_dir}/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_acq-{acquisition}_task-{task}_cbv_tstat.nii.gz',
 		)
 	fit, anova, subjectdf, voxeldf = roi.per_session(substitutions,
-		filename_template='{data_dir}/l1/{l1_dir}/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_acq-{acquisition}_trial-{trial}_cbv_tstat.nii.gz',
+		filename_template='{data_dir}/l1/{l1_dir}/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_acq-{acquisition}_task-{task}_cbv_tstat.nii.gz',
 		roi_mask="~/ni_data/templates/roi/DSURQEc_dr.nii.gz",
 		)
 	subjectdf['treatment']='Fluoxetine'
@@ -219,10 +219,10 @@ def dr_activity():
                 "~/ni_data/ofM.dr/",
                 workflow_name,
                 acquisitions=["EPI",],
-		check_file_format='{data_dir}/l1/{l1_dir}/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_acq-{acquisition}_trial-{trial}_cbv_tstat.nii.gz',
+		check_file_format='{data_dir}/l1/{l1_dir}/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_acq-{acquisition}_task-{task}_cbv_tstat.nii.gz',
 		)
 	fit_, anova_, subjectdf_, voxeldf_ = roi.per_session(substitutions_,
-		filename_template='{data_dir}/l1/{l1_dir}/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_acq-{acquisition}_trial-{trial}_cbv_tstat.nii.gz',
+		filename_template='{data_dir}/l1/{l1_dir}/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_acq-{acquisition}_task-{task}_cbv_tstat.nii.gz',
 		roi_mask="~/ni_data/templates/roi/DSURQEc_dr.nii.gz",
 		)
 	subjectdf_['treatment']='Vehicle'
@@ -253,10 +253,10 @@ def ctx_dr_connectivity():
                 "~/ni_data/ofM.dr/",
                 workflow_name,
                 acquisitions=["EPI",],
-                check_file_format='~/ni_data/ofM.dr/fc/{preprocessing_dir}/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_acq-{acquisition}_trial-{trial}_cbv_zstat.nii.gz',
+                check_file_format='~/ni_data/ofM.dr/fc/{preprocessing_dir}/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_acq-{acquisition}_task-{task}_cbv_zstat.nii.gz',
 		)
 	fit, anova, subjectdf, voxeldf = roi.per_session(substitutions,
-		filename_template='~/ni_data/ofM.dr/fc/{preprocessing_dir}/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_acq-{acquisition}_trial-{trial}_cbv_zstat.nii.gz',
+		filename_template='~/ni_data/ofM.dr/fc/{preprocessing_dir}/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_acq-{acquisition}_task-{task}_cbv_zstat.nii.gz',
 		roi_mask=my_roi,
 		)
 	subjectdf['treatment']='Fluoxetine'
@@ -267,10 +267,10 @@ def ctx_dr_connectivity():
                 "~/ni_data/ofM.dr/",
 		workflow_name,
                 acquisitions=["EPI",],
-                check_file_format='~/ni_data/ofM.dr/fc/{preprocessing_dir}/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_acq-{acquisition}_trial-{trial}_cbv_zstat.nii.gz',
+                check_file_format='~/ni_data/ofM.dr/fc/{preprocessing_dir}/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_acq-{acquisition}_task-{task}_cbv_zstat.nii.gz',
 		)
 	fit_, anova_, subjectdf_, voxeldf_ = roi.per_session(substitutions_,
-		filename_template='~/ni_data/ofM.dr/fc/{preprocessing_dir}/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_acq-{acquisition}_trial-{trial}_cbv_zstat.nii.gz',
+		filename_template='~/ni_data/ofM.dr/fc/{preprocessing_dir}/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_acq-{acquisition}_task-{task}_cbv_zstat.nii.gz',
 		roi_mask=my_roi,
 		)
 	subjectdf_['treatment']='Vehicle'
@@ -301,10 +301,10 @@ def ctx_drs_connectivity():
                 "~/ni_data/ofM.dr/",
                 workflow_name,
                 acquisitions=["EPI",],
-                check_file_format='~/ni_data/ofM.dr/fc/{preprocessing_dir}/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_acq-{acquisition}_trial-{trial}_cbv_zstat.nii.gz',
+                check_file_format='~/ni_data/ofM.dr/fc/{preprocessing_dir}/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_acq-{acquisition}_task-{task}_cbv_zstat.nii.gz',
 		)
 	fit, anova, subjectdf, voxeldf = roi.per_session(substitutions,
-		filename_template='~/ni_data/ofM.dr/fc/{preprocessing_dir}/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_acq-{acquisition}_trial-{trial}_cbv_zstat.nii.gz',
+		filename_template='~/ni_data/ofM.dr/fc/{preprocessing_dir}/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_acq-{acquisition}_task-{task}_cbv_zstat.nii.gz',
 		roi_mask=my_roi,
 		)
 	subjectdf['treatment']='Fluoxetine'
@@ -315,10 +315,10 @@ def ctx_drs_connectivity():
                 "~/ni_data/ofM.dr/",
 		workflow_name,
                 acquisitions=["EPI",],
-                check_file_format='~/ni_data/ofM.dr/fc/{preprocessing_dir}/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_acq-{acquisition}_trial-{trial}_cbv_zstat.nii.gz',
+                check_file_format='~/ni_data/ofM.dr/fc/{preprocessing_dir}/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_acq-{acquisition}_task-{task}_cbv_zstat.nii.gz',
 		)
 	fit_, anova_, subjectdf_, voxeldf_ = roi.per_session(substitutions_,
-		filename_template='~/ni_data/ofM.dr/fc/{preprocessing_dir}/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_acq-{acquisition}_trial-{trial}_cbv_zstat.nii.gz',
+		filename_template='~/ni_data/ofM.dr/fc/{preprocessing_dir}/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_acq-{acquisition}_task-{task}_cbv_zstat.nii.gz',
 		roi_mask=my_roi,
 		)
 	subjectdf_['treatment']='Vehicle'
@@ -348,10 +348,10 @@ def ctx_pattern_mask_drs_sfc():
                 "~/ni_data/ofM.dr/",
                 workflow_name,
                 acquisitions=["EPI",],
-                check_file_format='~/ni_data/ofM.dr/fc/{preprocessing_dir}/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_acq-{acquisition}_trial-{trial}_cbv_zstat.nii.gz',
+                check_file_format='~/ni_data/ofM.dr/fc/{preprocessing_dir}/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_acq-{acquisition}_task-{task}_cbv_zstat.nii.gz',
 		)
 	subjectdf, voxeldf = roi.per_session(substitutions,
-		filename_template='~/ni_data/ofM.dr/fc/{preprocessing_dir}/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_acq-{acquisition}_trial-{trial}_cbv_zstat.nii.gz',
+		filename_template='~/ni_data/ofM.dr/fc/{preprocessing_dir}/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_acq-{acquisition}_task-{task}_cbv_zstat.nii.gz',
 		roi_mask=my_roi,
 		)
 	subjectdf['treatment']='Fluoxetine'
@@ -362,10 +362,10 @@ def ctx_pattern_mask_drs_sfc():
                 "~/ni_data/ofM.dr/",
 		workflow_name,
                 acquisitions=["EPI",],
-                check_file_format='~/ni_data/ofM.dr/fc/{preprocessing_dir}/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_acq-{acquisition}_trial-{trial}_cbv_zstat.nii.gz',
+                check_file_format='~/ni_data/ofM.dr/fc/{preprocessing_dir}/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_acq-{acquisition}_task-{task}_cbv_zstat.nii.gz',
 		)
 	subjectdf_, voxeldf_ = roi.per_session(substitutions_,
-		filename_template='~/ni_data/ofM.dr/fc/{preprocessing_dir}/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_acq-{acquisition}_trial-{trial}_cbv_zstat.nii.gz',
+		filename_template='~/ni_data/ofM.dr/fc/{preprocessing_dir}/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_acq-{acquisition}_task-{task}_cbv_zstat.nii.gz',
 		roi_mask=my_roi,
 		)
 	subjectdf_['treatment']='Vehicle'

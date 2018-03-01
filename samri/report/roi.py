@@ -61,7 +61,7 @@ def from_img_threshold(image, threshold,
 	return roi
 
 def per_session(substitutions, roi_mask,
-	filename_template="~/ni_data/ofM.dr/l1/{l1_dir}/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_trial-{scan}_tstat.nii.gz",
+	filename_template="~/ni_data/ofM.dr/l1/{l1_dir}/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_task-{scan}_tstat.nii.gz",
 	roi_mask_normalize="",
 	):
 

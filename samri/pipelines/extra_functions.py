@@ -340,6 +340,54 @@ def get_scan(measurements_base, data_selection,
 
 	return scan_path, scan_type, task
 
+def get_bids_scan(bids_base, data_selection,
+	scan_type="",
+	selector=None,
+	subject=None,
+	session=None,
+	trial=False,
+	):
+
+	"""Description...
+	
+	Parameters
+	----------
+	bids_base : str
+		Path to the bids base path.
+	data_selection : pandas.DataFrame
+		A `pandas.DataFrame` object as produced by `samri.preprocessing.extra_functions.get_data_selection()`.
+	scan_type : str
+		The type of scan for which to determine the directory.
+	selector : iterable, optional
+		The first method of selecting the subject and scan, this value should be a length-2 list or tuple containing the subject and sthe session to be selected.
+	subject : string, optional
+		This has to be defined if `selector` is not defined. The subject for which to return a scan directory.
+	session : string, optional
+		This has to be defined if `selector` is not defined. The session for which to return a scan directory.
+	"""
+	import os #for some reason the import outside the function fails
+	import pandas as pd
+
+	if not subject:
+		subject = selector[0]
+	if not session:
+		session = selector[1]
+	filtered_data = data_selection[(data_selection["session"] == session)&(data_selection["subject"] == subject)]
+	if trial:
+		filtered_data = filtered_data[filtered_data["trial"] == trial]
+	if scan_type:
+		filtered_data = filtered_data[filtered_data["scan_type"] == scan_type]
+
+	modality = filtered_data['modality'].item()
+
+	scan_path = os.path.join(bids_base, 'sub-' + subject + '/', 'ses-' + session + '/', modality )
+	nii_path = scan_path + '/sub-' + subject + '_' + 'ses-' + session + '_' + scan_type + '.nii'
+
+	if not trial:
+		trial = filtered_data['trial'].item()
+
+	return scan_path, scan_type, trial, nii_path
+
 BIDS_KEY_DICTIONARY = {
 	'acquisition':['acquisition','ACQUISITION','acq','ACQ'],
 	'task':['task','TASK','stim','STIM','stimulation','STIMULATION'],

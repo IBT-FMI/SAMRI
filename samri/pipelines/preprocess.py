@@ -17,7 +17,6 @@ from nipype.interfaces import afni, bru2nii, fsl, nipy
 from samri.pipelines.nodes import *
 from samri.pipelines.utils import bids_naming, ss_to_path, sss_filename, fslmaths_invert_values
 from samri.utilities import N_PROCS
-from samri.fetch.templates import fetch_rat_waxholm, fetch_mouse_DSURQE
 
 DUMMY_SCANS=10
 N_PROCS=max(N_PROCS-4, 2)
@@ -58,9 +57,11 @@ def bruker(measurements_base, template,
 	'''
 	if template:
 		if template == "mouse":
+			from samri.fetch.templates import fetch_rat_waxholm, fetch_mouse_DSURQE
 			template = fetch_mouse_DSURQE()['template']
 			registration_mask = fetch_mouse_DSURQE()['mask']
 		elif template == "rat":
+			from samri.fetch.templates import fetch_rat_waxholm, fetch_mouse_DSURQE
 			template = fetch_rat_waxholm()['template']
 			registration_mask = fetch_rat_waxholm()['mask']
 		else:

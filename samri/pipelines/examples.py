@@ -1,12 +1,11 @@
 from os import path
-from samri.analysis import fc
-from samri.pipelines import glm, preprocess
 from samri.utilities import bids_substitution_iterator
 
 def cbv_composite(data_path,workflow_name,
 	preprocessing_dir="preprocessing",
 	l1_dir="l1",
 	):
+	from samri.pipelines import glm, preprocess
 	preprocessing.bruker(data_path,
 		#exclude_measurements=['20151027_121613_4013_1_1'],
 		functional_scan_types=["EPI_CBV_chr_longSOA","EPI_CBV_jb_long"],
@@ -48,6 +47,7 @@ def cbv_composite(data_path,workflow_name,
 		)
 
 def dr_only():
+	from samri.pipelines import glm, preprocess
 	glm.l1("~/ni_data/ofM.dr/preprocessing/_composite",
 		mask="~/ni_data/templates/roi/f_dr_chr.nii.gz",
 		workflow_name="dr",
@@ -57,6 +57,7 @@ def dr_only():
 		)
 
 def dr_composite():
+	from samri.pipelines import glm, preprocess
 	preprocessing.bruker("~/ni_data/ofM.dr/",exclude_measurements=['20151027_121613_4013_1_1'], workflow_name="composite", very_nasty_bruker_delay_hack=True, negative_contrast_agent=True, functional_blur_xy=4, functional_registration_method="composite")
 	glm.l1("~/ni_data/ofM.dr/preprocessing/composite", workflow_name="composite", include={"subjects":[i for i in range(4001,4010)]+[4011,4012]}, habituation="confound",mask="~/ni_data/templates/ds_QBI_chr_bin.nii.gz",keep_work=True)
 	glm.l1("~/ni_data/ofM.dr/preprocessing/composite", workflow_name="composite_dr", include={"subjects":[i for i in range(4001,4010)]+[4011,4012]}, habituation="confound",mask="~/ni_data/templates/roi/f_dr_chr_bin.nii.gz",)
@@ -64,9 +65,11 @@ def dr_composite():
 	glm.l2_common_effect("~/ni_data/ofM.dr/l1/composite", workflow_name="sessionwise_composite", groupby="session", exclude={"subjects":["4001","4002","4003","4004","4005","4006","4009","4011","4013"]})
 	glm.l2_common_effect("~/ni_data/ofM.dr/l1/composite", workflow_name="sessionwise_composite_w4011", groupby="session", exclude={"subjects":["4001","4002","4003","4004","4005","4006","4009","4013"]})
 def vta_composite():
+	from samri.pipelines import glm, preprocess
 	preprocessing.bruker("~/ni_data/ofM.vta/",workflow_name="composite", very_nasty_bruker_delay_hack=False, negative_contrast_agent=True, functional_blur_xy=4, functional_registration_method="composite")
 
 def test_dual_regression(group_level="migp"):
+	from samri.analysis import fc
 	substitutions_a = bids_substitution_iterator(
 		["ofM",],
 		["5689","5690","5691"],
@@ -87,6 +90,7 @@ def test_dual_regression(group_level="migp"):
 	#fc.get_signal(substitutions_a,substitutions_b
 
 def run_level1_glm():
+	from samri.pipelines import glm, preprocess
 	glm.l1(preprocessing_dir='~/bandpass_ni_data/rsfM/preprocessing/composite',
 		workflow_name='as_composite',
 		habituation='confound',

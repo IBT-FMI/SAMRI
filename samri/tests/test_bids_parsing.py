@@ -65,3 +65,18 @@ def test_bids_naming():
 #		actual_size=True,
 #		keep_work=False,
 #		)
+
+
+# will fail as well (see above)
+
+#def test_bruker_bids():
+#	from samri.pipelines.preprocess import bruker
+#
+#	bids_base = '~/ni_data/bruker/bids'
+#
+#	bruker(bids_base,
+#		"mouse",
+#		functional_match={'trial':['JogB','CogB','CogB2m'],},
+#		structural_match={'acquisition':['TurboRARE', 'TurboRARElowcov']},
+#		functional_registration_method="composite")
+

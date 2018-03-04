@@ -30,6 +30,7 @@ N_PROCS=max(N_PROCS-4, 2)
 def bru2bids(measurements_base,
 	measurements=[],
 	actual_size=True,
+	dataset_name=False,
 	debug=False,
 	exclude={},
 	functional_match={},
@@ -51,6 +52,9 @@ def bru2bids(measurements_base,
 		Whether to conserve the voxel size reported by the scanner when converting the data to NIfTI.
 		Setting this to `False` multiplies the voxel edge lengths by 10 (i.e. the volume by 1000); this is occasionally done in hackish small animal pipelines, which use routines designed exclusively for human data.
 		Unless you are looking to reproduce such a workflow, this should be set to `True`.
+	dataset_name : string, optional
+		A dataset name that will be written into the BIDS metadata file.
+		Generally not needed, as by default we use the dataset path to satisfy this BIDS requirement.
 	debug : bool, optional
 		Whether to enable debug support.
 		This prints the data selection before passing it to the nipype workflow management system, and turns on debug support in nipype (leading to more verbose logging).
@@ -148,6 +152,7 @@ def bru2bids(measurements_base,
 		(get_f_scan, f_filename, [('scan_type', 'scan_type')]),
 		(get_f_scan, f_bru2nii, [('scan_path', 'input_dir')]),
 		(get_f_scan, f_metadata_file, [('scan_path', 'scan_dir')]),
+		(get_f_scan, f_metadata_file, [('task', 'task_name')]),
 		(f_metadata_filename, f_metadata_file, [('filename', 'out_file')]),
 		(f_filename, f_bru2nii, [('filename', 'output_filename')]),
 		(events_filename, events_file, [('filename', 'out_file')]),
@@ -180,7 +185,9 @@ def bru2bids(measurements_base,
 	workflow.base_dir = path.join(measurements_base)
 	workflow.config = workflow_config
 	workflow.write_graph(dotfilename=path.join(workflow.base_dir,workdir_name,"graph.dot"), graph2use="hierarchical", format="png")
+	out_dir = path.join(workflow.base_dir,"bids")
 
+	#Run workflow
 	if not keep_work or not keep_crashdump:
 		try:
 			workflow.run(plugin="MultiProc", plugin_args={'n_procs' : n_procs})
@@ -249,8 +256,9 @@ def bru2bids(measurements_base,
 			workflow.connect(workflow_connections)
 			workflow.base_dir = path.join(measurements_base)
 			workflow.config = workflow_config
-			workflow.write_graph(dotfilename=path.join(workflow.base_dir,workdir_name,"graph.dot"), graph2use="hierarchical", format="png")
+			workflow.write_graph(dotfilename=path.join(workflow.base_dir,workdir_name,"graph_structural.dot"), graph2use="hierarchical", format="png")
 
+			#Execute the workflow
 			if not keep_work or not keep_crashdump:
 				try:
 					workflow.run(plugin="MultiProc", plugin_args={'n_procs' : n_procs})
@@ -267,4 +275,18 @@ def bru2bids(measurements_base,
 					pass
 	except UnboundLocalError:
 		pass
+
+	# This is needed because BIDS does not yet support CBV
+	with open(path.join(out_dir,".bidsignore"), "w") as f:
+		f.write('*_cbv.*')
+
+	# BIDS needs a descriptor file
+	if not dataset_name:
+		dataset_name = measurements_base
+	description = {
+		'Name':dataset_name,
+		'BIDSVersion':'1.0.2',
+		}
+	with open(path.join(out_dir,'dataset_description.json'), 'w') as f:
+		json.dump(description, f)
 

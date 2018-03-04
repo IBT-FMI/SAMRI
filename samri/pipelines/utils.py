@@ -40,15 +40,15 @@ def iterfield_selector(iterfields, selector, action):
 	----------
 
 	iterfields : list
-	A list of lists (or tuples) containing entries fromatted at (subject_id,session_id,trial_id)
+	A list of lists (or tuples) containing entries fromatted at (subject_id,session_id,task_id)
 
 	selector : dict
-	A dictionary with any combination of "sessions", "subjects", "trials" as keys and corresponding identifiers as values.
+	A dictionary with any combination of "sessions", "subjects", "tasks" as keys and corresponding identifiers as values.
 
 	action : "exclude" or "include"
 	Whether to exclude or include (and exclude all the other) matching entries from the output.
 	"""
-	name_map = {"subjects": 0, "sessions": 1, "trials":2}
+	name_map = {"subjects": 0, "sessions": 1, "tasks":2}
 	keep = []
 	for ix, iterfield in enumerate(iterfields):
 		for key in selector:
@@ -91,7 +91,7 @@ def datasource_exclude(in_files, excludes, output="files"):
 					exclude_criteria.append("ses-"+str(i))
 			if key in "scans":
 				for i in excludes[key]:
-					exclude_criteria.append("trial-"+str(i))
+					exclude_criteria.append("task-"+str(i))
 		out_files = [in_file for in_file in in_files if not any(criterion in in_file for criterion in exclude_criteria)]
 	if output == "files":
 		return out_files
@@ -163,10 +163,10 @@ def bids_naming(subject_session, scan_type, metadata,
 		if not acq.isnull().all():
 			acq = acq.item()
 			filename += '_acq-{}'.format(acq)
-	trial = selection['trial']
-	if not trial.isnull().all():
-		trial = trial.item()
-		filename += '_trial-{}'.format(trial)
+	task = selection['task']
+	if not task.isnull().all():
+		task = task.item()
+		filename += '_task-{}'.format(task)
 	if not suffix:
 		try:
 			modality = selection['modality']
@@ -182,7 +182,7 @@ def bids_naming(subject_session, scan_type, metadata,
 
 	return filename
 
-def sss_filename(subject_session, scan, scan_prefix="trial", suffix="", extension=".nii.gz"):
+def sss_filename(subject_session, scan, scan_prefix="task", suffix="", extension=".nii.gz"):
 	"""Concatenate subject-condition and scan inputs to a BIDS-style filename
 
 	Parameters

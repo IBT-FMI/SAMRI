@@ -50,10 +50,10 @@ def bru2bids(measurements_base,
 		Whether to enable debug support.
 		This prints the data selection before passing it to the nipype workflow management system, and turns on debug support in nipype (leading to more verbose logging).
 	exclude : dict, optional
-		A dictionary with any combination of "session", "subject", "trial" , and "acquisition" as keys and corresponding identifiers as values.
+		A dictionary with any combination of "session", "subject", "task" , and "acquisition" as keys and corresponding identifiers as values.
 		Only scans not matching any of the listed criteria will be included in the workfolow - i.e. this is a blacklist (for functional and structural scans).
 	functional_match : dict, optional
-		A dictionary with any combination of "session", "subject", "trial", and "acquisition" as keys and corresponding lists of identifiers as values.
+		A dictionary with any combination of "session", "subject", "task", and "acquisition" as keys and corresponding lists of identifiers as values.
 		Functional scans matching all identifiers will be included - i.e. this is a whitelist.
 	keep_work : bool, optional
 		Whether to keep the work directory (containing all the intermediary workflow steps, as managed by nipypye).
@@ -65,7 +65,7 @@ def bru2bids(measurements_base,
 		Maximum number of processes which to simultaneously spawn for the workflow.
 		If not explicitly defined, this is automatically calculated from the number of available cores and under the assumption that the workflow will be the main process running for the duration that it is running.
 	structural_match : dict, optional
-		A dictionary with any combination of "session", "subject", "trial", and "acquisition" as keys and corresponding lists of identifiers as values.
+		A dictionary with any combination of "session", "subject", "task", and "acquisition" as keys and corresponding lists of identifiers as values.
 		Functional scans matching all identifiers will be included - i.e. this is a whitelist.
 	"""
 
@@ -100,7 +100,7 @@ def bru2bids(measurements_base,
 	infosource = pe.Node(interface=util.IdentityInterface(fields=['subject_session'], mandatory_inputs=False), name="infosource")
 	infosource.iterables = [('subject_session', subjects_sessions)]
 
-	get_f_scan = pe.Node(name='get_f_scan', interface=util.Function(function=get_scan,input_names=inspect.getargspec(get_scan)[0], output_names=['scan_path','scan_type','trial']))
+	get_f_scan = pe.Node(name='get_f_scan', interface=util.Function(function=get_scan,input_names=inspect.getargspec(get_scan)[0], output_names=['scan_path','scan_type','task']))
 	get_f_scan.inputs.ignore_exception = True
 	get_f_scan.inputs.data_selection = data_selection
 	get_f_scan.inputs.measurements_base = measurements_base
@@ -151,7 +151,7 @@ def bru2bids(measurements_base,
 		(get_f_scan, events_filename, [('scan_type', 'scan_type')]),
 		(f_bru2nii, datasink, [('nii_file', 'func')]),
 		(get_f_scan, events_file, [
-			('trial', 'trial'),
+			('task', 'task'),
 			('scan_path', 'scan_dir')
 			]),
 		(events_file, datasink, [('out_file', 'func.@events')]),
@@ -193,7 +193,7 @@ def bru2bids(measurements_base,
 
 	try:
 		if structural_scan_types.any():
-			get_s_scan = pe.Node(name='get_s_scan', interface=util.Function(function=get_scan, input_names=inspect.getargspec(get_scan)[0], output_names=['scan_path','scan_type','trial']))
+			get_s_scan = pe.Node(name='get_s_scan', interface=util.Function(function=get_scan, input_names=inspect.getargspec(get_scan)[0], output_names=['scan_path','scan_type','task']))
 			get_s_scan.inputs.ignore_exception = True
 			get_s_scan.inputs.data_selection = data_selection
 			get_s_scan.inputs.measurements_base = measurements_base

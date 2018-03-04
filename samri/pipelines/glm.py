@@ -28,7 +28,7 @@ def l1(preprocessing_dir,
 	keep_work=False,
 	l1_dir="",
 	mask="~/ni_data/templates/ds_QBI_chr_bin.nii.gz",
-	match_regex='sub-(?P<sub>[a-zA-Z0-9]+)/ses-(?P<ses>[a-zA-Z0-9]+)/func/.*?_acq-(?P<acq>[a-zA-Z0-9]+)_trial-(?P<trial>[a-zA-Z0-9]+)_(?P<mod>[a-zA-Z0-9]+)\.(?:tsv|nii|nii\.gz)',
+	match_regex='sub-(?P<sub>[a-zA-Z0-9]+)/ses-(?P<ses>[a-zA-Z0-9]+)/func/.*?_acq-(?P<acq>[a-zA-Z0-9]+)_task-(?P<task>[a-zA-Z0-9]+)_(?P<mod>[a-zA-Z0-9]+)\.(?:tsv|nii|nii\.gz)',
 	nprocs=N_PROCS,
 	tr=1,
 	workflow_name="generic",
@@ -47,7 +47,7 @@ def l1(preprocessing_dir,
 	highpass_sigma : int, optional
 		Highpass threshold (in seconds).
 	include : dict
-		A dictionary with any combination of "sessions", "subjects", "trials" as keys and corresponding identifiers as values.
+		A dictionary with any combination of "sessions", "subjects", "tasks" as keys and corresponding identifiers as values.
 		If this is specified ony matching entries will be included in the analysis.
 	keep_work : bool, optional
 		Whether to keep the work directory (containing all the intermediary workflow steps, as managed by nipypye).
@@ -58,7 +58,7 @@ def l1(preprocessing_dir,
 		Path to the brain mask which shall be used to define the brain volume in the analysis.
 		This has to point to an existing NIfTI file containing zero and one values only.
 	match_regex : str, optional
-		Regex matching pattern by which to select input files. Has to contain groups named "sub", "ses", "acq", "trial", and "mod".
+		Regex matching pattern by which to select input files. Has to contain groups named "sub", "ses", "acq", "task", and "mod".
 	n_procs : int, optional
 		Maximum number of processes which to simultaneously spawn for the workflow.
 		If not explicitly defined, this is automatically calculated from the number of available cores and under the assumption that the workflow will be the main process running for the duration that it is running.
@@ -77,9 +77,9 @@ def l1(preprocessing_dir,
 	datafind.inputs.match_regex = match_regex
 	datafind_res = datafind.run()
 	out_paths = [path.abspath(path.expanduser(i)) for i in datafind_res.outputs.out_paths]
-	data_selection = zip(*[datafind_res.outputs.sub, datafind_res.outputs.ses, datafind_res.outputs.acq, datafind_res.outputs.trial, datafind_res.outputs.mod, out_paths])
+	data_selection = zip(*[datafind_res.outputs.sub, datafind_res.outputs.ses, datafind_res.outputs.acq, datafind_res.outputs.task, datafind_res.outputs.mod, out_paths])
 	data_selection = [list(i) for i in data_selection]
-	data_selection = pd.DataFrame(data_selection,columns=('subject','session','acquisition','trial','modality','path'))
+	data_selection = pd.DataFrame(data_selection,columns=('subject','session','acquisition','task','modality','path'))
 
 	bids_dictionary = data_selection[data_selection['modality']==modality].drop_duplicates().T.to_dict().values()
 
@@ -130,17 +130,17 @@ def l1(preprocessing_dir,
 		glm.inputs.mask = path.abspath(path.expanduser(mask))
 
 	cope_filename = pe.Node(name='cope_filename', interface=util.Function(function=bids_dict_to_source,input_names=inspect.getargspec(bids_dict_to_source)[0], output_names=['filename']))
-	cope_filename.inputs.source_format = "sub-{subject}_ses-{session}_acq-{acquisition}_trial-{trial}_{modality}_cope.nii.gz"
+	cope_filename.inputs.source_format = "sub-{subject}_ses-{session}_acq-{acquisition}_task-{task}_{modality}_cope.nii.gz"
 	varcb_filename = pe.Node(name='varcb_filename', interface=util.Function(function=bids_dict_to_source,input_names=inspect.getargspec(bids_dict_to_source)[0], output_names=['filename']))
-	varcb_filename.inputs.source_format = "sub-{subject}_ses-{session}_acq-{acquisition}_trial-{trial}_{modality}_varcb.nii.gz"
+	varcb_filename.inputs.source_format = "sub-{subject}_ses-{session}_acq-{acquisition}_task-{task}_{modality}_varcb.nii.gz"
 	tstat_filename = pe.Node(name='tstat_filename', interface=util.Function(function=bids_dict_to_source,input_names=inspect.getargspec(bids_dict_to_source)[0], output_names=['filename']))
-	tstat_filename.inputs.source_format = "sub-{subject}_ses-{session}_acq-{acquisition}_trial-{trial}_{modality}_tstat.nii.gz"
+	tstat_filename.inputs.source_format = "sub-{subject}_ses-{session}_acq-{acquisition}_task-{task}_{modality}_tstat.nii.gz"
 	zstat_filename = pe.Node(name='zstat_filename', interface=util.Function(function=bids_dict_to_source,input_names=inspect.getargspec(bids_dict_to_source)[0], output_names=['filename']))
-	zstat_filename.inputs.source_format = "sub-{subject}_ses-{session}_acq-{acquisition}_trial-{trial}_{modality}_zstat.nii.gz"
+	zstat_filename.inputs.source_format = "sub-{subject}_ses-{session}_acq-{acquisition}_task-{task}_{modality}_zstat.nii.gz"
 	pstat_filename = pe.Node(name='pstat_filename', interface=util.Function(function=bids_dict_to_source,input_names=inspect.getargspec(bids_dict_to_source)[0], output_names=['filename']))
-	pstat_filename.inputs.source_format = "sub-{subject}_ses-{session}_acq-{acquisition}_trial-{trial}_{modality}_pstat.nii.gz"
+	pstat_filename.inputs.source_format = "sub-{subject}_ses-{session}_acq-{acquisition}_task-{task}_{modality}_pstat.nii.gz"
 	pfstat_filename = pe.Node(name='pfstat_filename', interface=util.Function(function=bids_dict_to_source,input_names=inspect.getargspec(bids_dict_to_source)[0], output_names=['filename']))
-	pfstat_filename.inputs.source_format = "sub-{subject}_ses-{session}_acq-{acquisition}_trial-{trial}_{modality}_pfstat.nii.gz"
+	pfstat_filename.inputs.source_format = "sub-{subject}_ses-{session}_acq-{acquisition}_task-{task}_{modality}_pfstat.nii.gz"
 
 	datasink = pe.Node(nio.DataSink(), name='datasink')
 	datasink.inputs.base_directory = path.join(l1_dir,workflow_name)
@@ -228,7 +228,7 @@ def l2_common_effect(l1_dir,
 	mask="~/ni_data/templates/ds_QBI_chr_bin.nii.gz",
 	subjects=[],
 	sessions=[],
-	trials=[],
+	tasks=[],
 	exclude={},
 	include={},
 	):
@@ -241,11 +241,11 @@ def l2_common_effect(l1_dir,
 
 	datafind = nio.DataFinder()
 	datafind.inputs.root_paths = l1_dir
-	datafind.inputs.match_regex = '.+/sub-(?P<sub>[a-zA-Z0-9]+)/ses-(?P<ses>[a-zA-Z0-9]+)/.*?_acq-(?P<acq>[a-zA-Z0-9]+)_trial-(?P<trial>[a-zA-Z0-9]+)_(?P<mod>[a-zA-Z0-9]+)_(?P<stat>[a-zA-Z0-9]+)\.(?:tsv|nii|nii\.gz)'
+	datafind.inputs.match_regex = '.+/sub-(?P<sub>[a-zA-Z0-9]+)/ses-(?P<ses>[a-zA-Z0-9]+)/.*?_acq-(?P<acq>[a-zA-Z0-9]+)_task-(?P<task>[a-zA-Z0-9]+)_(?P<mod>[a-zA-Z0-9]+)_(?P<stat>[a-zA-Z0-9]+)\.(?:tsv|nii|nii\.gz)'
 	datafind_res = datafind.run()
-	data_selection = zip(*[datafind_res.outputs.sub, datafind_res.outputs.ses, datafind_res.outputs.acq, datafind_res.outputs.trial, datafind_res.outputs.mod, datafind_res.outputs.stat, datafind_res.outputs.out_paths])
+	data_selection = zip(*[datafind_res.outputs.sub, datafind_res.outputs.ses, datafind_res.outputs.acq, datafind_res.outputs.task, datafind_res.outputs.mod, datafind_res.outputs.stat, datafind_res.outputs.out_paths])
 	data_selection = [list(i) for i in data_selection]
-	data_selection = pd.DataFrame(data_selection,columns=('subject','session','acquisition','trial','modality','statistic','path'))
+	data_selection = pd.DataFrame(data_selection,columns=('subject','session','acquisition','task','modality','statistic','path'))
 	data_selection = data_selection.sort_values(['session', 'subject'], ascending=[1, 1])
 	if exclude:
 		for key in exclude:
@@ -278,31 +278,31 @@ def l2_common_effect(l1_dir,
 			varcbs=[['group','group']]
 			)
 		datasource.inputs.field_template = dict(
-			copes="sub-%s/ses-*/sub-%s_ses-*_trial-*_cope.nii.gz",
-			varcbs="sub-%s/ses-*/sub-%s_ses-*_trial-*_varcb.nii.gz",
+			copes="sub-%s/ses-*/sub-%s_ses-*_task-*_cope.nii.gz",
+			varcbs="sub-%s/ses-*/sub-%s_ses-*_task-*_varcb.nii.gz",
 			)
 		workflow_connections = [
 			(infosource, datasource, [('iterable', 'group')]),
 			(infosource, copemerge, [(('iterable',add_suffix,"_cope.nii.gz"), 'merged_file')]),
 			(infosource, varcopemerge, [(('iterable',add_suffix,"_varcb.nii.gz"), 'merged_file')]),
 			]
-	elif groupby == "subject_trial":
+	elif groupby == "subject_task":
 		#does not currently work, due to missing iterator combinations (same issue as preprocessing)
 		merge = pe.Node(interface=util.Merge(2), name="merge")
-		infosource = pe.Node(interface=util.IdentityInterface(fields=['subject','trial']), name="infosource")
-		infosource.iterables = [('subject', subjects),('trial', trials)]
-		datasource = pe.Node(interface=nio.DataGrabber(infields=["subject","trial",], outfields=["copes", "varcbs"]), name="datasource")
+		infosource = pe.Node(interface=util.IdentityInterface(fields=['subject','task']), name="infosource")
+		infosource.iterables = [('subject', subjects),('task', tasks)]
+		datasource = pe.Node(interface=nio.DataGrabber(infields=["subject","task",], outfields=["copes", "varcbs"]), name="datasource")
 		datasource.inputs.template_args = dict(
-			copes=[["subject","subject","trial",]],
-			varcbs=[["subject","subject","trial",]]
+			copes=[["subject","subject","task",]],
+			varcbs=[["subject","subject","task",]]
 			)
 		datasource.inputs.field_template = dict(
-			copes="sub-%s/ses-*/sub-%s_ses-*_trial-%s_cope.nii.gz",
-			varcbs="sub-%s/ses-*/sub-%s_ses-*_trial-%s_varcb.nii.gz",
+			copes="sub-%s/ses-*/sub-%s_ses-*_task-%s_cope.nii.gz",
+			varcbs="sub-%s/ses-*/sub-%s_ses-*_task-%s_varcb.nii.gz",
 			)
 		workflow_connections = [
-			(infosource, datasource, [('subject', 'subject'),('trial','trial')]),
-			(infosource, merge, [('subject', 'in1'),('trial','in2')]),
+			(infosource, datasource, [('subject', 'subject'),('task','task')]),
+			(infosource, merge, [('subject', 'in1'),('task','in2')]),
 			(merge, copemerge, [(('out',add_suffix,"_cope.nii.gz"), 'merged_file')]),
 			(merge, varcopemerge, [(('out',add_suffix,"_varcb.nii.gz"), 'merged_file')]),
 			]
@@ -327,17 +327,17 @@ def l2_common_effect(l1_dir,
 			(infosource, copemerge, [(('iterable',dict_and_suffix,"session","_cope.nii.gz"), 'merged_file')]),
 			(infosource, varcopemerge, [(('iterable',dict_and_suffix,"session","_varcb.nii.gz"), 'merged_file')]),
 			]
-	elif groupby == "trial":
+	elif groupby == "task":
 		infosource = pe.Node(interface=util.IdentityInterface(fields=['iterable']), name="infosource")
-		infosource.iterables = [('iterable', trials)]
+		infosource.iterables = [('iterable', tasks)]
 		datasource = pe.Node(interface=nio.DataGrabber(infields=["group",], outfields=["copes", "varcbs"]), name="datasource")
 		datasource.inputs.template_args = dict(
 			copes=[['group']],
 			varcbs=[['group']]
 			)
 		datasource.inputs.field_template = dict(
-			copes="sub-*/ses-*/sub-*_ses-*_trial-%s_cope.nii.gz ",
-			varcbs="sub-*/ses-*/sub-*_ses-*_trial-%s_varcb.nii.gz ",
+			copes="sub-*/ses-*/sub-*_ses-*_task-%s_cope.nii.gz ",
+			varcbs="sub-*/ses-*/sub-*_ses-*_task-%s_varcb.nii.gz ",
 			)
 		workflow_connections = [
 			(infosource, datasource, [('iterable', 'group')]),
@@ -372,7 +372,7 @@ def l2_common_effect(l1_dir,
 		try:
 			workflow.run(plugin="MultiProc",  plugin_args={'n_procs' : nprocs})
 		except RuntimeError:
-			print("WARNING: Some expected trials have not been found (or another RuntimeError has occured).")
+			print("WARNING: Some expected tasks have not been found (or another RuntimeError has occured).")
 		for f in listdir(getcwd()):
 			if re.search("crash.*?-varcopemerge|-copemerge.*", f):
 				remove(path.join(getcwd(), f))
@@ -401,7 +401,7 @@ def l2_anova(l1_dir,
 	mask="~/ni_data/templates/DSURQEc_200micron_mask.nii.gz",
 	exclude={},
 	include={},
-	match_regex='.+/sub-(?P<sub>[a-zA-Z0-9]+)/ses-(?P<ses>[a-zA-Z0-9]+)/.*?_acq-(?P<acq>[a-zA-Z0-9]+)_trial-(?P<trial>[a-zA-Z0-9]+)_(?P<mod>[a-zA-Z0-9]+)_(?P<stat>(cope|varcb)+)\.(?:nii|nii\.gz)'
+	match_regex='.+/sub-(?P<sub>[a-zA-Z0-9]+)/ses-(?P<ses>[a-zA-Z0-9]+)/.*?_acq-(?P<acq>[a-zA-Z0-9]+)_task-(?P<task>[a-zA-Z0-9]+)_(?P<mod>[a-zA-Z0-9]+)_(?P<stat>(cope|varcb)+)\.(?:nii|nii\.gz)'
 	):
 
 	l1_dir = path.expanduser(l1_dir)
@@ -415,9 +415,9 @@ def l2_anova(l1_dir,
 	datafind.inputs.match_regex = match_regex
 	datafind_res = datafind.run()
 
-	data_selection = zip(*[datafind_res.outputs.sub, datafind_res.outputs.ses, datafind_res.outputs.acq, datafind_res.outputs.trial, datafind_res.outputs.mod, datafind_res.outputs.stat, datafind_res.outputs.out_paths])
+	data_selection = zip(*[datafind_res.outputs.sub, datafind_res.outputs.ses, datafind_res.outputs.acq, datafind_res.outputs.task, datafind_res.outputs.mod, datafind_res.outputs.stat, datafind_res.outputs.out_paths])
 	data_selection = [list(i) for i in data_selection]
-	data_selection = pd.DataFrame(data_selection,columns=('subject','session','acquisition','trial','modality','statistic','path'))
+	data_selection = pd.DataFrame(data_selection,columns=('subject','session','acquisition','task','modality','statistic','path'))
 
 	data_selection = data_selection.sort_values(['session', 'subject'], ascending=[1, 1])
 	if exclude:
@@ -513,7 +513,7 @@ def l2_anova(l1_dir,
 		try:
 			workflow.run(plugin="MultiProc",  plugin_args={'n_procs' : nprocs})
 		except RuntimeError:
-			print("WARNING: Some expected trials have not been found (or another RuntimeError has occured).")
+			print("WARNING: Some expected tasks have not been found (or another RuntimeError has occured).")
 		for f in listdir(getcwd()):
 			if re.search("crash.*?-varcopemerge|-copemerge.*", f):
 				remove(path.join(getcwd(), f))

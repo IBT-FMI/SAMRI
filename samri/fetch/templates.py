@@ -57,7 +57,7 @@ def fetch_rat_waxholm(template_dir="~/.samri_files/templates/rat/waxholm/", verb
 			("labels", labels)])
 
 
-def fetch_mouse_DSURQE(template_dir="~/.samri_files/templates/mouse/DSURQE/", verbose=1):
+def fetch_mouse_DSURQE(template_dir="~/.samri_files/templates/mouse/DSURQE/", verbose=1, resolution=200):
 	"""Download and load waxholm atlas for Sprague Dawley rat
 
 
@@ -77,12 +77,12 @@ def fetch_mouse_DSURQE(template_dir="~/.samri_files/templates/mouse/DSURQE/", ve
 
 	"""
 
-	if(path.isfile(path.abspath(path.expanduser(template_dir + 'DSURQEc_40micron_labels.nii')))):
+	if(path.isfile(path.abspath(path.expanduser(template_dir + 'DSURQEc_' + str(resolution) +'micron_labels.nii')))):
 		return dict([
-				("template", path.abspath(path.expanduser(template_dir)) + "/DSURQEc_40micron_average.nii"),
-				("atlas", path.abspath(path.expanduser(template_dir)) + "/DSURQEc_40micron_labels.nii"),
-				("mask", path.abspath(path.expanduser(template_dir)) + "/DSURQEc_40micron_mask.nii"),
-				("labels", path.abspath(path.expanduser(template_dir)) + "/DSURQEc_40micron_itksnap_mapping.txt")])
+				("template", path.abspath(path.expanduser(template_dir)) + "/DSURQEc_"+ str(resolution) +"micron_average.nii"),
+				("atlas", path.abspath(path.expanduser(template_dir)) + "/DSURQEc_"+ str(resolution) + "micron_labels.nii"),
+				("mask", path.abspath(path.expanduser(template_dir)) + "/DSURQEc_"+ str(resolution)  + "micron_mask.nii"),
+				("labels", path.abspath(path.expanduser(template_dir)) + "/DSURQEc_" + str(resolution) +"micron_itksnap_mapping.txt")])
 	else:
 		# Get template
 		url_template = 'http://repo.mouseimaging.ca/repo/DSURQE_40micron_nifti/DSURQE_40micron_average.nii'
@@ -129,7 +129,7 @@ def fetch_mouse_DSURQE(template_dir="~/.samri_files/templates/mouse/DSURQE/", ve
 			p.wait()
 
 		return dict([
-				("template", path.abspath(path.expanduser(template_dir)) + "/DSURQEc_40micron_average.nii"),
-				("atlas", path.abspath(path.expanduser(template_dir)) + "/DSURQEc_40micron_labels.nii"),
-				("mask", path.abspath(path.expanduser(template_dir)) + "/DSURQEc_40micron_mask.nii"),
+				("template", path.abspath(path.expanduser(template_dir)) + "/DSURQEc_" + str(resolution) + "micron_average.nii"),
+				("atlas", path.abspath(path.expanduser(template_dir)) + "/DSURQEc_" + str(resolution) + "micron_labels.nii"),
+				("mask", path.abspath(path.expanduser(template_dir)) + "/DSURQEc_"+ str(resolution) +"micron_mask.nii"),
 				("labels", labels)])

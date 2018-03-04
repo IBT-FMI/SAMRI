@@ -54,7 +54,7 @@ def rs(
 
 def ss():
 	preprocessing.bruker('~/ni_data/ss/',
-		functional_match={'trial':['FshSbu','FshSbb']},
+		functional_match={'task':['FshSbu','FshSbb']},
 		structural_match={'acquisition':['TurboRARE']},
 		workflow_name='composite',
 		lowpass_sigma=2,
@@ -72,7 +72,7 @@ def ss():
 
 def aic():
 	preprocessing.bruker('~/ni_data/test/',
-		functional_match={'trial':['CogB','CogB2m','JogB']},
+		functional_match={'task':['CogB','CogB2m','JogB']},
 		structural_match={'acquisition':['TurboRARE','TurboRARElowcov']},
 		workflow_name='composite',
 		lowpass_sigma=2,
@@ -101,7 +101,7 @@ def cbv_composite(data_path="~/ni_data/ofM.dr/",
 	):
 	#preprocessing.bruker(data_path,
 	#	#exclude_measurements=['20151027_121613_4013_1_1'],
-	#	functional_match={'trial':['CogB','JogB']},
+	#	functional_match={'task':['CogB','JogB']},
 	#	structural_match={'acquisition':['TurboRARE','TurboRARElowcov']},
 	#	#subjects=["4007","4008","4011","4012","5687","5688","5695","5689","5690","5691","5703","5704","5706"],
 	#	#subjects=["4007","4008","5687","5688","5704",
@@ -208,7 +208,7 @@ def typical_resp(data_path='~/ni_data/ofM.dr/', l1_dir='l1', workflow_name='comp
 		workflow_name="best_responders_old",
 		include={
 			'subject':["5689","5690","5691","5700","6262","6255","5694","5706"],
-			'trial':["CogB"],
+			'task':["CogB"],
 			},
 		groupby="session",
 		keep_work=True,
@@ -218,7 +218,7 @@ def typical_resp(data_path='~/ni_data/ofM.dr/', l1_dir='l1', workflow_name='comp
 		workflow_name="best_responders",
 		include={
 			'subject':["5699","5687","5691","5694","4005","6255","5706"],
-			'trial':["CogB"],
+			'task':["CogB"],
 			},
 		groupby="session",
 		keep_work=True,

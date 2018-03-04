@@ -158,15 +158,15 @@ def bids_naming(subject_session, scan_type, metadata,
 	selection =  metadata[(metadata['subject']==subject)&(metadata['session']==session)&(metadata['scan_type']==scan_type)]
 	if selection.empty:
 		return
+	task = selection['task']
+	if not task.isnull().all():
+		task = task.item()
+		filename += '_task-{}'.format(task)
 	if 'acq' in extra:
 		acq = selection['acquisition']
 		if not acq.isnull().all():
 			acq = acq.item()
 			filename += '_acq-{}'.format(acq)
-	task = selection['task']
-	if not task.isnull().all():
-		task = task.item()
-		filename += '_task-{}'.format(task)
 	if not suffix:
 		try:
 			modality = selection['modality']

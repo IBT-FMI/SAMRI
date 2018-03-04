@@ -35,7 +35,7 @@ def diagnose(bids_base,
 	include={},
 	keep_crashdump=False,
 	keep_work=False,
-	match_regex='.+/sub-(?P<sub>[a-zA-Z0-9]+)/ses-(?P<ses>[a-zA-Z0-9]+)/.*?_acq-(?P<acq>[a-zA-Z0-9]+)_trial-(?P<trial>[a-zA-Z0-9]+)_(?P<mod>[a-zA-Z0-9]+).(?:nii|nii\.gz)',
+	match_regex='.+/sub-(?P<sub>[a-zA-Z0-9]+)/ses-(?P<ses>[a-zA-Z0-9]+)/.*?_acq-(?P<acq>[a-zA-Z0-9]+)_task-(?P<task>[a-zA-Z0-9]+)_(?P<mod>[a-zA-Z0-9]+).(?:nii|nii\.gz)',
 	n_procs=N_PROCS,
 	realign="time",
 	tr=None,
@@ -53,10 +53,10 @@ def diagnose(bids_base,
 	debug : bool, optional
 		Enable full nipype debugging support for the workflow construction and execution.
 	exclude : dict, optional
-		A dictionary with any subset of 'subject', 'session', 'acquisition', 'trial', 'modality', and 'path' as keys and corresponding identifiers as values.
+		A dictionary with any subset of 'subject', 'session', 'acquisition', 'task', 'modality', and 'path' as keys and corresponding identifiers as values.
 		This is a blacklist: if this is specified only non-matching entries will be included in the analysis.
 	include : dict, optional
-		A dictionary with any subset of 'subject', 'session', 'acquisition', 'trial', 'modality', and 'path' as keys and corresponding identifiers as values.
+		A dictionary with any subset of 'subject', 'session', 'acquisition', 'task', 'modality', and 'path' as keys and corresponding identifiers as values.
 		This is a whitelist: if this is specified only matching entries will be included in the analysis.
 	keep_crashdump : bool, optional
 		Whether to keep the crashdump directory (containing all the crash reports for intermediary workflow steps, as managed by nipypye).
@@ -65,7 +65,7 @@ def diagnose(bids_base,
 		Whether to keep the work directory (containing all the intermediary workflow steps, as managed by nipypye).
 		This is useful for debugging and quality control.
 	match_regex : str, optional
-		Regex matching pattern by which to select input files. Has to contain groups named "sub", "ses", "acq", "trial", and "mod".
+		Regex matching pattern by which to select input files. Has to contain groups named "sub", "ses", "acq", "task", and "mod".
 	n_procs : int, optional
 		Maximum number of processes which to simultaneously spawn for the workflow.
 		If not explicitly defined, this is automatically calculated from the number of available cores and under the assumption that the workflow will be the main process running for the duration that it is running.
@@ -84,9 +84,9 @@ def diagnose(bids_base,
 	datafind.inputs.match_regex = match_regex
 	datafind_res = datafind.run()
 
-	data_selection = zip(*[datafind_res.outputs.sub, datafind_res.outputs.ses, datafind_res.outputs.acq, datafind_res.outputs.trial, datafind_res.outputs.mod, datafind_res.outputs.out_paths])
+	data_selection = zip(*[datafind_res.outputs.sub, datafind_res.outputs.ses, datafind_res.outputs.acq, datafind_res.outputs.task, datafind_res.outputs.mod, datafind_res.outputs.out_paths])
 	data_selection = [list(i) for i in data_selection]
-	data_selection = pd.DataFrame(data_selection,columns=('subject','session','acquisition','trial','modality','path'))
+	data_selection = pd.DataFrame(data_selection,columns=('subject','session','acquisition','task','modality','path'))
 
 	data_selection = data_selection.sort_values(['session', 'subject'], ascending=[1, 1])
 	if exclude:

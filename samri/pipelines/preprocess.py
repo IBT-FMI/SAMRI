@@ -1,5 +1,5 @@
 from os import path, listdir, getcwd, remove
-from samri.pipelines.extra_functions import get_data_selection, get_scan, get_bids_scan, write_bids_metadata_file, write_events_file, force_dummy_scans, BIDS_METADATA_EXTRACTION_DICTS
+from samri.pipelines.extra_functions import get_data_selection, get_bids_scan, write_bids_metadata_file,write_bids_events_file ,write_events_file, force_dummy_scans, BIDS_METADATA_EXTRACTION_DICTS
 
 import re
 import inspect
@@ -20,6 +20,8 @@ from samri.utilities import N_PROCS
 from samri.fetch.templates import fetch_rat_waxholm, fetch_mouse_DSURQE
 
 from bids.grabbids import BIDSLayout
+from bids.grabbids import BIDSValidator
+import os
 
 DUMMY_SCANS=10
 N_PROCS=max(N_PROCS-4, 2)
@@ -33,19 +35,25 @@ fsl.FSLCommand.set_default_output_type('NIFTI_GZ')
 
 def bids_data_selection(base,
 		):
+	validate = BIDSValidator()
+	for x in os.walk(base):
+		print(x[0])
+		print(validate.is_bids(x[0]))
 	layout = BIDSLayout(base)
 	df = layout.as_data_frame()
 	# drop event files
 	df = df[df.type != 'events']
 	# rm .json
 	df = df.loc[df.path.str.contains('.nii')]
-	#df = df.loc[df.path.str.contains('.json')]
-	df['trial'] = df['type']
 	# generate scan types for later
 	df['scan_type'] = ""
-	df.loc[df.modality == 'func', 'scan_type'] = 'acq-'+df['acq']+'_trial-'+df['trial']
+	#print(df.path.str.startswith('task', beg=0,end=len('task')))
+	beg = df.path.str.find('task-')
+	end = df.path.str.find('.')
+	df.loc[df.modality == 'func', 'scan_type'] = 'acq-'+df['acq']+'_task-'+  df.path.str.partition('task-')[2].str.partition('.')[0]
 	df.loc[df.modality == 'anat', 'scan_type'] = 'acq-'+df['acq']+'_' + df['type']
-
+	df.loc[df.modality == 'anat', 'task'] = df['type']
+	df.loc[df.modality == 'func', 'task'] = df.path.str.partition('task-')[2].str.partition('.')[0]
 	return df
 
 def bruker(bids_base, template,
@@ -108,19 +116,24 @@ def bruker(bids_base, template,
 	# we start to define nipype workflow elements (nodes, connections, meta)
 	subjects_sessions = data_selection[["subject","session"]].drop_duplicates().values.tolist()
 	if True:
-		print('Data selection:')
 		print(data_selection)
-		print('Iterating over:')
 		print(subjects_sessions)
-	infosource = pe.Node(interface=util.IdentityInterface(fields=['subject_session'], mandatory_inputs=False), name="infosource")
-	infosource.iterables = [('subject_session', subjects_sessions)]
+		print(data_selection.index.tolist())
+	#infosource = pe.Node(interface=util.IdentityInterface(fields=['subject_session'], mandatory_inputs=False), name="infosource")
+	#infosource.iterables = [('subject_session', subjects_sessions)]
 
-	get_f_scan = pe.Node(name='get_f_scan', interface=util.Function(function=get_bids_scan,input_names=inspect.getargspec(get_bids_scan)[0], output_names=['scan_path','scan_type','trial', 'nii_path']))
-	if not strict:
-		get_f_scan.inputs.ignore_exception = True
+	_func_ind = data_selection[data_selection["modality"] == "func"]
+	func_ind = _func_ind.index.tolist()
+
+	_struct_ind = data_selection[data_selection["modality"] == "anat"]
+	struct_ind = _struct_ind.index.tolist()
+	sel = data_selection.index.tolist()
+
+	get_f_scan = pe.Node(name='get_f_scan', interface=util.Function(function=get_bids_scan,input_names=inspect.getargspec(get_bids_scan)[0], output_names=['scan_path','scan_type','task', 'nii_path', 'nii_name', 'subject_session']))
+	get_f_scan.inputs.ignore_exception = True
 	get_f_scan.inputs.data_selection = data_selection
 	get_f_scan.inputs.bids_base = bids_base
-	get_f_scan.iterables = ("scan_type", functional_scan_types)
+	get_f_scan.iterables = ("ind_type", func_ind)
 
 	dummy_scans = pe.Node(name='dummy_scans', interface=util.Function(function=force_dummy_scans,input_names=inspect.getargspec(force_dummy_scans)[0], output_names=['out_file']))
 	dummy_scans.inputs.desired_dummy_scans = DUMMY_SCANS
@@ -142,7 +155,7 @@ def bruker(bids_base, template,
 	bids_stim_filename.inputs.extension = ".tsv"
 	bids_stim_filename.inputs.metadata = data_selection
 
-	events_file = pe.Node(name='events_file', interface=util.Function(function=write_events_file,input_names=inspect.getargspec(write_events_file)[0], output_names=['out_file']))
+	events_file = pe.Node(name='events_file', interface=util.Function(function=write_bids_events_file,input_names=inspect.getargspec(write_events_file)[0], output_names=['out_file']))
 	events_file.inputs.dummy_scans_ms = DUMMY_SCANS * tr * 1000
 	events_file.inputs.very_nasty_bruker_delay_hack = very_nasty_bruker_delay_hack
 	if not (strict or verbose):
@@ -155,21 +168,23 @@ def bruker(bids_base, template,
 		datasink.inputs.ignore_exception = True
 
 	workflow_connections = [
-		(infosource, get_f_scan, [('subject_session', 'selector')]),
-		(infosource, bids_stim_filename, [('subject_session', 'subject_session')]),
+		#(infosource, get_f_scan, [('subject_session', 'selector')]),
+		(get_f_scan, bids_stim_filename, [('subject_session', 'subject_session')]),
 		(get_f_scan, bids_stim_filename, [('scan_type', 'scan_type')]),
 		(get_f_scan, dummy_scans, [('nii_path', 'in_file')]),
 		(get_f_scan, dummy_scans, [('scan_path', 'scan_dir')]),
 		(get_f_scan, events_file, [
-			('trial', 'trial'),
+			('task', 'task'),
 			('scan_path', 'scan_dir')
 			]),
 		(events_file, datasink, [('out_file', 'func.@events')]),
-		(bids_stim_filename, events_file, [('filename', 'out_file')]),
-		(infosource, datasink, [(('subject_session',ss_to_path), 'container')]),
-		(infosource, bids_filename, [('subject_session', 'subject_session')]),
+		(get_f_scan, events_file, [('nii_name', 'out_file')]),
+		#(bids_stim_filename, events_file, [('filename', 'out_file')]),
+		(get_f_scan, datasink, [(('subject_session',ss_to_path), 'container')]),
+		(get_f_scan, bids_filename, [('subject_session', 'subject_session')]),
 		(get_f_scan, bids_filename, [('scan_type', 'scan_type')]),
-		(bids_filename, bandpass, [('filename', 'out_file')]),
+		#(bids_filename, bandpass, [('filename', 'out_file')]),
+		#(get_f_scan, bandpass, [('nii_name', 'out_file')]),
 		(bandpass, datasink, [('out_file', 'func')]),
 		]
 
@@ -203,13 +218,11 @@ def bruker(bids_base, template,
 		s_biascorrect, f_biascorrect = inflated_size_nodes()
 
 	if structural_scan_types.any():
-		get_s_scan = pe.Node(name='get_s_scan', interface=util.Function(function=get_bids_scan, input_names=inspect.getargspec(get_bids_scan)[0], output_names=['scan_path','scan_type',
-			'trial', 'nii_path']))
-		if not strict:
-			get_s_scan.inputs.ignore_exception = True
+		get_s_scan = pe.Node(name='get_s_scan', interface=util.Function(function=get_bids_scan, input_names=inspect.getargspec(get_bids_scan)[0], output_names=['scan_path','scan_type','task', 'nii_path', 'nii_name', 'subject_session']))
+		get_s_scan.inputs.ignore_exception = True
 		get_s_scan.inputs.data_selection = data_selection
 		get_s_scan.inputs.bids_base = bids_base
-		get_s_scan.iterables = ("scan_type", structural_scan_types)
+		#get_s_scan.iterables =  ("ind_type", struct_ind)
 
 		#s_bids_filename = pe.Node(name='s_bids_filename', interface=util.Function(function=sss_filename,input_names=inspect.getargspec(sss_filename)[0], output_names=['filename']))
 		s_bids_filename = pe.Node(name='s_bids_filename', interface=util.Function(function=bids_naming,input_names=inspect.getargspec(bids_naming)[0], output_names=['filename']))
@@ -276,10 +289,12 @@ def bruker(bids_base, template,
 			s_rotated = autorotate(template)
 
 		workflow_connections.extend([
-			(infosource, get_s_scan, [('subject_session', 'selector')]),
-			(infosource, s_bids_filename, [('subject_session', 'subject_session')]),
+			(get_f_scan, get_s_scan, [('subject_session', 'selector')]),
+			#(infosource, get_s_scan, [('subject_session', 'selector')]),
+			(get_f_scan, s_bids_filename, [('subject_session', 'subject_session')]),
 			(get_s_scan, s_bids_filename, [('scan_type', 'scan_type')]),
-			(s_bids_filename, s_warp, [('filename','output_image')]),
+			#(s_bids_filename, s_warp, [('filename','output_image')]),
+			(get_s_scan, s_warp, [('nii_name','output_image')]),
 			(get_s_scan, s_biascorrect, [('nii_path', 'input_image')]),
 			])
 
@@ -434,7 +449,7 @@ def bruker(bids_base, template,
 	workflow.config = workflow_config
 	workflow.write_graph(dotfilename=path.join(workflow.base_dir,workdir_name,"graph.dot"), graph2use="hierarchical", format="png")
 
-	workflow.run(plugin="MultiProc", plugin_args={'n_procs' : n_procs})
+	workflow.run(plugin="MultiProc", plugin_args={'n_procs' : n_procs, 'memory_gb' : 500})
 	if not keep_work:
 		shutil.rmtree(path.join(workflow.base_dir,workdir_name))
 

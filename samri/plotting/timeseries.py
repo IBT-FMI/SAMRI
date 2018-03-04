@@ -176,7 +176,7 @@ def multi(timecourses,
 	"""
 
 	if isinstance(timecourses, pd.DataFrame):
-		if subplot_titles in ['subject','session','acquisition','trial']:
+		if subplot_titles in ['subject','session','acquisition','task']:
 			timecourses_ = []
 			subplot_titles_ = []
 			values = list(timecourses[subplot_titles].unique())
@@ -343,9 +343,9 @@ if __name__ == '__main__':
 	#
 	roi_based(
 		roi="~/ni_data/templates/roi/f_dr_chr_bin.nii.gz",
-		events_file_template="~/ni_data/ofM.dr/preprocessing/{workflow}/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_trial-{scan}_events.tsv",
-		beta_file_template="~/ni_data/ofM.dr/l1/{workflow}/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_trial-{scan}_cope.nii.gz",
-		ts_file_template="~/ni_data/ofM.dr/preprocessing/{workflow}/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_trial-{scan}.nii.gz",
+		events_file_template="~/ni_data/ofM.dr/preprocessing/{workflow}/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_task-{scan}_events.tsv",
+		beta_file_template="~/ni_data/ofM.dr/l1/{workflow}/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_task-{scan}_cope.nii.gz",
+		ts_file_template="~/ni_data/ofM.dr/preprocessing/{workflow}/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_task-{scan}.nii.gz",
 		design_file_template="~/ni_data/ofM.dr/l1/{workflow}_work/_subject_session_scan_{subject}.{session}.{scan}/modelgen/run0.mat",
 		substitutions={"workflow":"composite","subject":4007,"session":"ofM_cF2","scan":"EPI_CBV_jb_long"},
 		scale_design=3,

@@ -468,24 +468,34 @@ def get_bids_scan(bids_base, data_selection,
 		filtered_data = filtered_data[filtered_data["modality"] == "anat"]
 	else:
 		filtered_data = data_selection[data_selection.index==ind_type]
-	
+
 	if(filtered_data.empty):
 		raise Exception("does not exist" + str(selector[0]) + str(selector[1]) + str(ind_type))
 	else:
+		acq = filtered_data['acq'].item()
+		typ = filtered_data['type'].item()
 		subject = filtered_data['subject'].item()
 		session = filtered_data['session'].item()
 		modality = filtered_data['modality'].item()
 		scan_type = filtered_data['scan_type'].item()
 		subject_session = [subject, session]
-		if not task:
-			task = filtered_data['task'].item()
 
 		scan_path = os.path.join(bids_base, 'sub-' + subject + '/', 'ses-' + session + '/', modality )
 
-		nii_name = 'sub-' + subject + '_' + 'ses-' + session + '_' + scan_type + '.nii.gz'
-		nii_path = scan_path + '/sub-' + subject + '_' + 'ses-' + session + '_' + scan_type + '.nii'
 
-		return scan_path, modality, task, nii_path, nii_name, subject_session
+		file_name = ''
+		events_name = ''
+		if(modality == 'func'):
+			task = filtered_data['task'].item()
+			file_name = 'sub-' + subject + '_' + 'ses-' + session + '_' + 'task-' + task + '_' + 'acq-' + acq + '_' + typ
+			events_name = 'sub-' + subject + '_' + 'ses-' + session + '_' + 'task-' + task + '_' + 'acq-' + acq + '_' + 'events.tsv'
+		else:
+			file_name = 'sub-' + subject + '_' + 'ses-' + session + '_' + 'acq-' + acq + '_' + typ
+
+		nii_name = file_name + '.nii.gz'
+		nii_path = scan_path + '/' + file_name + '.nii'
+
+		return scan_path, modality, task, nii_path, nii_name, file_name, events_name, subject_session
 
 BIDS_KEY_DICTIONARY = {
 	'acquisition':['acquisition','ACQUISITION','acq','ACQ'],

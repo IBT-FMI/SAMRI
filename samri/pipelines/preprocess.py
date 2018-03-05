@@ -34,6 +34,8 @@ fsl.FSLCommand.set_default_output_type('NIFTI_GZ')
 
 
 def bids_data_selection(base,
+		structural_match,
+		functional_match,
 		):
 	validate = BIDSValidator()
 	for x in os.walk(base):
@@ -56,7 +58,24 @@ def bids_data_selection(base,
 	df.loc[df.modality == 'func', 'task'] = df.path.str.partition('task-')[2].str.partition('_')[0]
 	df.loc[df.modality == 'func', 'scan_type'] = 'task-' + df['task'] + '_acq-'+ df['acq']
 	df.loc[df.modality == 'anat', 'scan_type'] = 'acq-'+df['acq'] +'_' + df['type']
-	return df
+
+	tasks = df.task.dropna().unique().tolist()
+	acqs = df.acq.dropna().unique().tolist()
+	
+	res_df = pd.DataFrame()
+	#TODO: generalize to all functional match entries
+	if(functional_match):
+		for task in functional_match['task']:
+			if(task in tasks):
+				_df = df[df.task == task]
+				res_df =res_df.append(_df)
+	if(structural_match):
+		for acq in structural_match['acquisition']:
+			if(acq in acqs):
+				_df = df[df.acq == acq]
+				res_df = res_df.append(_df)
+
+	return res_df
 
 def bruker(bids_base, template,
 	DEBUG=False,
@@ -109,7 +128,7 @@ def bruker(bids_base, template,
 		structural_scan_types['session'] = sessions
 
 
-	data_selection = bids_data_selection(bids_base)
+	data_selection = bids_data_selection(bids_base, structural_match, functional_match)
 
 	# generate functional and structural scan types
 	functional_scan_types = data_selection.loc[data_selection.modality == 'func']['scan_type'].values
@@ -117,20 +136,27 @@ def bruker(bids_base, template,
 
 	# we start to define nipype workflow elements (nodes, connections, meta)
 	subjects_sessions = data_selection[["subject","session"]].drop_duplicates().values.tolist()
-	if True:
-		print(data_selection)
-		print(subjects_sessions)
-	#infosource = pe.Node(interface=util.IdentityInterface(fields=['subject_session'], mandatory_inputs=False), name="infosource")
-	#infosource.iterables = [('subject_session', subjects_sessions)]
-
+	
 	_func_ind = data_selection[data_selection["modality"] == "func"]
 	func_ind = _func_ind.index.tolist()
 
 	_struct_ind = data_selection[data_selection["modality"] == "anat"]
 	struct_ind = _struct_ind.index.tolist()
 	sel = data_selection.index.tolist()
+	
+	if True:
+		print(data_selection)
+		print(subjects_sessions)
 
-	get_f_scan = pe.Node(name='get_f_scan', interface=util.Function(function=get_bids_scan,input_names=inspect.getargspec(get_bids_scan)[0], output_names=['scan_path','scan_type','task', 'nii_path', 'nii_name', 'file_name', 'subject_session']))
+		test = get_bids_scan(bids_base, data_selection, func_ind[0])
+		print(test)
+	#infosource = pe.Node(interface=util.IdentityInterface(fields=['subject_session'], mandatory_inputs=False), name="infosource")
+	#infosource.iterables = [('subject_session', subjects_sessions)]
+
+	import time
+	time.sleep(100000)
+
+	get_f_scan = pe.Node(name='get_f_scan', interface=util.Function(function=get_bids_scan,input_names=inspect.getargspec(get_bids_scan)[0], output_names=['scan_path','scan_type','task', 'nii_path', 'nii_name', 'file_name', 'events_name', 'subject_session']))
 	get_f_scan.inputs.ignore_exception = True
 	get_f_scan.inputs.data_selection = data_selection
 	get_f_scan.inputs.bids_base = bids_base
@@ -179,7 +205,7 @@ def bruker(bids_base, template,
 			('scan_path', 'scan_dir')
 			]),
 		(events_file, datasink, [('out_file', 'func.@events')]),
-		(get_f_scan, events_file, [('file_name', 'out_file')]),
+		(get_f_scan, events_file, [('events_name', 'out_file')]),
 		#(bids_stim_filename, events_file, [('filename', 'out_file')]),
 		(get_f_scan, datasink, [(('subject_session',ss_to_path), 'container')]),
 		(get_f_scan, bids_filename, [('subject_session', 'subject_session')]),
@@ -219,7 +245,7 @@ def bruker(bids_base, template,
 		s_biascorrect, f_biascorrect = inflated_size_nodes()
 
 	if structural_scan_types.any():
-		get_s_scan = pe.Node(name='get_s_scan', interface=util.Function(function=get_bids_scan, input_names=inspect.getargspec(get_bids_scan)[0], output_names=['scan_path','scan_type','task', 'nii_path', 'nii_name', 'file_name', 'subject_session']))
+		get_s_scan = pe.Node(name='get_s_scan', interface=util.Function(function=get_bids_scan, input_names=inspect.getargspec(get_bids_scan)[0], output_names=['scan_path','scan_type','task', 'nii_path', 'nii_name', 'file_name', 'events_name', 'subject_session']))
 		get_s_scan.inputs.ignore_exception = True
 		get_s_scan.inputs.data_selection = data_selection
 		get_s_scan.inputs.bids_base = bids_base

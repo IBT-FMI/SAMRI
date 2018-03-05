@@ -96,6 +96,18 @@ def aic():
 		keep_work=True,
 		)
 
+def bids_preprocessing():
+	from samri.pipelines.preprocess import bruker
+	bids_base = '~/ni_data/ofM.dr/'
+
+	bruker(bids_base, "~/ni_data/templates/DSURQEc_40micron_average.nii",
+		functional_match={'task':['CogB',],},
+		structural_match={'acquisition':['TurboRARE',]},
+		subjects=['5700'],
+		actual_size=True,
+		functional_registration_method="composite",
+		)
+
 def cbv_composite(data_path="~/ni_data/ofM.dr/",
 	workflow_name='composite',
 	preprocessing_dir="preprocessing",

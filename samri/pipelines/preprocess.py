@@ -50,10 +50,12 @@ def bids_data_selection(base,
 	#print(df.path.str.startswith('task', beg=0,end=len('task')))
 	beg = df.path.str.find('task-')
 	end = df.path.str.find('.')
-	df.loc[df.modality == 'func', 'scan_type'] = 'acq-'+df['acq']+'_task-'+  df.path.str.partition('task-')[2].str.partition('.')[0]
-	df.loc[df.modality == 'anat', 'scan_type'] = 'acq-'+df['acq']+'_' + df['type']
-	df.loc[df.modality == 'anat', 'task'] = df['type']
-	df.loc[df.modality == 'func', 'task'] = df.path.str.partition('task-')[2].str.partition('.')[0]
+	#df.loc[df.modality == 'func', 'scan_type'] = 'acq-'+df['acq']+'_task-'+  df.path.str.partition('task-')[2].str.partition('.')[0]
+	#df.loc[df.modality == 'anat', 'scan_type'] = 'acq-'+df['acq']+'_' + df['type']
+	#TODO: fix task!=type
+	df.loc[df.modality == 'func', 'task'] = df.path.str.partition('task-')[2].str.partition('_')[0]
+	df.loc[df.modality == 'func', 'scan_type'] = 'task-' + df['task'] + '_acq-'+ df['acq']
+	df.loc[df.modality == 'anat', 'scan_type'] = 'acq-'+df['acq'] +'_' + df['type']
 	return df
 
 def bruker(bids_base, template,
@@ -118,7 +120,6 @@ def bruker(bids_base, template,
 	if True:
 		print(data_selection)
 		print(subjects_sessions)
-		print(data_selection.index.tolist())
 	#infosource = pe.Node(interface=util.IdentityInterface(fields=['subject_session'], mandatory_inputs=False), name="infosource")
 	#infosource.iterables = [('subject_session', subjects_sessions)]
 
@@ -129,7 +130,7 @@ def bruker(bids_base, template,
 	struct_ind = _struct_ind.index.tolist()
 	sel = data_selection.index.tolist()
 
-	get_f_scan = pe.Node(name='get_f_scan', interface=util.Function(function=get_bids_scan,input_names=inspect.getargspec(get_bids_scan)[0], output_names=['scan_path','scan_type','task', 'nii_path', 'nii_name', 'subject_session']))
+	get_f_scan = pe.Node(name='get_f_scan', interface=util.Function(function=get_bids_scan,input_names=inspect.getargspec(get_bids_scan)[0], output_names=['scan_path','scan_type','task', 'nii_path', 'nii_name', 'file_name', 'subject_session']))
 	get_f_scan.inputs.ignore_exception = True
 	get_f_scan.inputs.data_selection = data_selection
 	get_f_scan.inputs.bids_base = bids_base
@@ -178,13 +179,13 @@ def bruker(bids_base, template,
 			('scan_path', 'scan_dir')
 			]),
 		(events_file, datasink, [('out_file', 'func.@events')]),
-		(get_f_scan, events_file, [('nii_name', 'out_file')]),
+		(get_f_scan, events_file, [('file_name', 'out_file')]),
 		#(bids_stim_filename, events_file, [('filename', 'out_file')]),
 		(get_f_scan, datasink, [(('subject_session',ss_to_path), 'container')]),
 		(get_f_scan, bids_filename, [('subject_session', 'subject_session')]),
 		(get_f_scan, bids_filename, [('scan_type', 'scan_type')]),
 		#(bids_filename, bandpass, [('filename', 'out_file')]),
-		#(get_f_scan, bandpass, [('nii_name', 'out_file')]),
+		(get_f_scan, bandpass, [('nii_name', 'out_file')]),
 		(bandpass, datasink, [('out_file', 'func')]),
 		]
 
@@ -218,7 +219,7 @@ def bruker(bids_base, template,
 		s_biascorrect, f_biascorrect = inflated_size_nodes()
 
 	if structural_scan_types.any():
-		get_s_scan = pe.Node(name='get_s_scan', interface=util.Function(function=get_bids_scan, input_names=inspect.getargspec(get_bids_scan)[0], output_names=['scan_path','scan_type','task', 'nii_path', 'nii_name', 'subject_session']))
+		get_s_scan = pe.Node(name='get_s_scan', interface=util.Function(function=get_bids_scan, input_names=inspect.getargspec(get_bids_scan)[0], output_names=['scan_path','scan_type','task', 'nii_path', 'nii_name', 'file_name', 'subject_session']))
 		get_s_scan.inputs.ignore_exception = True
 		get_s_scan.inputs.data_selection = data_selection
 		get_s_scan.inputs.bids_base = bids_base

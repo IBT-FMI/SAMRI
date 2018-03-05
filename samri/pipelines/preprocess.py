@@ -124,13 +124,6 @@ def bruker(bids_base, template,
 
 	bids_base = path.abspath(path.expanduser(bids_base))
 
-	# add subject and session filters if present
-	if subjects:
-		structural_scan_types['subject'] = subjects
-	if sessions:
-		structural_scan_types['session'] = sessions
-
-
 	data_selection = bids_data_selection(bids_base, structural_match, functional_match)
 
 	# generate functional and structural scan types

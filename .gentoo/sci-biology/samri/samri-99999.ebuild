@@ -31,9 +31,10 @@ RDEPEND="
 	sci-libs/nibabel[${PYTHON_USEDEP}]
 	>=sci-libs/nipy-0.4.1[${PYTHON_USEDEP}]
 	>=sci-libs/nipype-0.14.0_pre20170830[${PYTHON_USEDEP}]
+	sci-libs/pybids[${PYTHON_USEDEP}]
 	sci-libs/scipy[${PYTHON_USEDEP}]
 	sci-biology/ants
-	sci-biology/afni
+	=sci-biology/afni-9999
 	sci-biology/nilearn[${PYTHON_USEDEP}]
 	"
 
@@ -46,8 +47,9 @@ python_test() {
 	export MPLBACKEND="agg"
 	export PATH=${TEST_DIR}/scripts:$PATH
 	export PYTHONIOENCODING=utf-8
-	pytest
+	pytest || die
 	for i in samri/examples/*.py; do
-		"${PYTHON}" "$i" || die "Example Python script $i failed with ${EPYTHON}"
+		echo "Executing ${EPYTHON} ${i}"
+		${EPYTHON} "$i" || die "Example Python script $i failed with ${EPYTHON}"
 	done
 }

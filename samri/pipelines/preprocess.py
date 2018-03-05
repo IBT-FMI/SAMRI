@@ -109,10 +109,13 @@ def bruker(bids_base, template,
 	'''
 	if template:
 		if template == "mouse":
+			from samri.fetch.templates import fetch_rat_waxholm, fetch_mouse_DSURQE
 			template = fetch_mouse_DSURQE()['template']
 			registration_mask = fetch_mouse_DSURQE()['mask']
 		elif template == "rat":
+			from samri.fetch.templates import fetch_rat_waxholm, fetch_mouse_DSURQE
 			template = fetch_rat_waxholm()['template']
+			registration_mask = fetch_rat_waxholm()['mask']
 		else:
 			pass
 	else:
@@ -152,9 +155,6 @@ def bruker(bids_base, template,
 		print(test)
 	#infosource = pe.Node(interface=util.IdentityInterface(fields=['subject_session'], mandatory_inputs=False), name="infosource")
 	#infosource.iterables = [('subject_session', subjects_sessions)]
-
-	import time
-	time.sleep(100000)
 
 	get_f_scan = pe.Node(name='get_f_scan', interface=util.Function(function=get_bids_scan,input_names=inspect.getargspec(get_bids_scan)[0], output_names=['scan_path','scan_type','task', 'nii_path', 'nii_name', 'file_name', 'events_name', 'subject_session']))
 	get_f_scan.inputs.ignore_exception = True
@@ -245,6 +245,7 @@ def bruker(bids_base, template,
 		s_biascorrect, f_biascorrect = inflated_size_nodes()
 
 	if structural_scan_types.any():
+    
 		get_s_scan = pe.Node(name='get_s_scan', interface=util.Function(function=get_bids_scan, input_names=inspect.getargspec(get_bids_scan)[0], output_names=['scan_path','scan_type','task', 'nii_path', 'nii_name', 'file_name', 'events_name', 'subject_session']))
 		get_s_scan.inputs.ignore_exception = True
 		get_s_scan.inputs.data_selection = data_selection

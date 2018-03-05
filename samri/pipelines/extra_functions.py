@@ -36,6 +36,12 @@ BIDS_METADATA_EXTRACTION_DICTS = [
 		'query_file':'configscan',
 		'regex':r'.*?,COILTABLE,1#\$Name,(?P<value>.*?)#\$Id.*?',
 		},
+	{'field_name':'RepetitionTime',
+		'query_file':'method',
+		'regex':r'^##\$PVM_RepetitionTime=(?P<value>.*?)$',
+		'scale': 1./1000.,
+		'type': float,
+		},
 	{'field_name':'PulseSequenceType',
 		'query_file':'method',
 		'regex':r'^##\$Method=<Bruker:(?P<value>.*?)>$',
@@ -125,6 +131,7 @@ def get_tr(in_file,
 
 def write_bids_metadata_file(scan_dir, extraction_dicts,
 	out_file="bids_metadata.json",
+	task_name=False,
 	):
 
 	import json
@@ -181,6 +188,9 @@ def write_bids_metadata_file(scan_dir, extraction_dicts,
 					break
 		adjustments_duration = adjustments_end - adjustments_start
 		metadata['DelayAfterTrigger'] = adjustments_duration.total_seconds()
+
+	if task_name:
+		metadata['TaskName'] = task_name
 
 	with open(out_file, 'w') as out_file_writeable:
 		json.dump(metadata, out_file_writeable, indent=1)
@@ -340,14 +350,14 @@ def write_events_file(scan_dir,
 		except IndexError:
 			if os.path.isfile(db_path):
 				from labbookdb.report.tracking import bids_eventsfile
-				mydf = bids_eventsfile(db_path, task)
+				mydf = bids_eventsfile(db_path, task, strict=True)
 			else:
 				return '/dev/null'
 	else:
 		try:
 			if os.path.isfile(db_path):
 				from labbookdb.report.tracking import bids_eventsfile
-				mydf = bids_eventsfile(db_path, task)
+				mydf = bids_eventsfile(db_path, task, strict=True)
 			else:
 				return '/dev/null'
 		except ImportError:
@@ -422,7 +432,7 @@ def get_scan(measurements_base, data_selection,
 
 	if not task:
 		task = filtered_data['task'].item()
-
+    
 	return scan_path, scan_type, task
 
 def getSesAndData(grouped_df=None,

@@ -33,9 +33,21 @@ afni.base.AFNICommand.set_default_output_type('NIFTI_GZ')
 fsl.FSLCommand.set_default_output_type('NIFTI_GZ')
 
 
+def filterData(df, col_name, entries):
+
+	res_df = pd.DataFrame()
+	in_df = df[col_name].dropna().unique().tolist()
+	for entry in entries:
+		if(entry in in_df):
+			_df = df[df[col_name] == entry]
+			res_df = res_df.append(_df)
+	return res_df
+
 def bids_data_selection(base,
 		structural_match,
 		functional_match,
+		subjects,
+		sessions,
 		):
 	validate = BIDSValidator()
 	for x in os.walk(base):
@@ -59,23 +71,23 @@ def bids_data_selection(base,
 	df.loc[df.modality == 'func', 'scan_type'] = 'task-' + df['task'] + '_acq-'+ df['acq']
 	df.loc[df.modality == 'anat', 'scan_type'] = 'acq-'+df['acq'] +'_' + df['type']
 
-	tasks = df.task.dropna().unique().tolist()
-	acqs = df.acq.dropna().unique().tolist()
+	#TODO: make nicer, generalize to all functional match entries... dict vs list von subjects,etc. und acq / acquistion mismatch
 	
 	res_df = pd.DataFrame()
-	#TODO: generalize to all functional match entries
 	if(functional_match):
-		for task in functional_match['task']:
-			if(task in tasks):
-				_df = df[df.task == task]
-				res_df =res_df.append(_df)
-	if(structural_match):
-		for acq in structural_match['acquisition']:
-			if(acq in acqs):
-				_df = df[df.acq == acq]
-				res_df = res_df.append(_df)
+		_df = filterData(df, 'task', functional_match['task'])
+		res_df = res_df.append(_df)
+		if(structural_match):
+			_df = filterData(df, 'acq', structural_match['acquisition'])
+			res_df = res_df.append(_df)
+	df = res_df
+	
+	if(subjects):
+		df = filterData(df, 'subject', subjects)
+	if(sessions):
+		df = filterData(df, 'session', sessions)
 
-	return res_df
+	return df
 
 def bruker(bids_base, template,
 	DEBUG=False,
@@ -124,7 +136,7 @@ def bruker(bids_base, template,
 
 	bids_base = path.abspath(path.expanduser(bids_base))
 
-	data_selection = bids_data_selection(bids_base, structural_match, functional_match)
+	data_selection = bids_data_selection(bids_base, structural_match, functional_match, subjects, sessions)
 
 	# generate functional and structural scan types
 	functional_scan_types = data_selection.loc[data_selection.modality == 'func']['scan_type'].values

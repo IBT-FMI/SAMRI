@@ -1,40 +1,13 @@
-branches:
-  only:
-    - master
-    
 language: python
 before_install:
   - docker pull ibtfmi/samri
   - docker create --name "samri" --rm -ti -v "${PWD}":/home/samri ibtfmi/samri
   - docker start samri
-  - docker exec samri emaint sync -a
+  # This installs the newest versions of the dependencies:
+  #- docker exec samri emaint sync -a
+  #- docker exec samri /home/samri/.gentoo/install.sh -o
 script:
-  - docker exec samri sh -c 'FEATURES="test" /home/samri/.gentoo/install.sh'
-  
-cache:
-  directories:
-    - $HOME/.portage-pkgdir
-
-matrix:
-  include:
-    - language: python
-      install:
-        - travis_wait 20 pip install -r requirements.txt
-      python: 2.7
-      script:
-        - pytest
-    - os: linux
-      services: docker
-      language: generic
-      sudo: required
-      script:
-        - 'if [ "${TRAVIS_EVENT_TYPE}" != "cron" ]; then
-          docker run --rm -ti -v "${HOME}"/.portage-pkgdir:/usr/portage/packages -v "${PWD}":${HOME}/SAMRI -w ${HOME}/SAMRI gentoo/stage3-amd64:latest ${HOME}/SAMRI/.gentoo/on_travis.sh; fi'
-    - os: linux
-      env: BUILD_TYPE=newversioncheck # marker environment variable to make the build matrix more readable in the UI
-      services: docker
-      language: generic
-      sudo: required
-      script:
-        - 'if [ "${TRAVIS_EVENT_TYPE}" == "cron" ]; then 
-          docker run --rm -ti -v "${HOME}"/.portage-pkgdir:/usr/portage/packages -v "${PWD}":${HOME}/SAMRI -w ${HOME}/SAMRI gentoo/stage3-amd64:latest ${HOME}/SAMRI/.gentoo/on_travis.sh; fi'
+  # This should work as is, but for some reason pulls in a lot of deps
+  # (and consequently applies the "test" flag to all of them
+  #- docker exec samri sh -c 'FEATURES="test" /home/samri/.gentoo/install.sh'
+  - docker exec samri sh -c 'FEATURES="test" /home/samri/.gentoo/install.sh -O'

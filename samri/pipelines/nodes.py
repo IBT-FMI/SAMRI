@@ -25,7 +25,7 @@ PHASES = {
 	"s_rigid":{
 		"transforms":"Rigid",
 		"transform_parameters":(0.1,),
-		"number_of_iterations":[60,30],
+		"number_of_iterations":[6000,3000],
 		"metric":"GC",
 		"metric_weight":1,
 		"radius_or_number_of_bins":64,
@@ -42,7 +42,7 @@ PHASES = {
 	"affine":{
 		"transforms":"Affine",
 		"transform_parameters":(0.1,),
-		"number_of_iterations":[50,25],
+		"number_of_iterations":[500,250],
 		"metric":"MI",
 		"metric_weight":1,
 		"radius_or_number_of_bins":8,
@@ -59,7 +59,7 @@ PHASES = {
 	"syn":{
 		"transforms":"SyN",
 		"transform_parameters":(0.1, 2.0, 0.2),
-		"number_of_iterations":[50,25],
+		"number_of_iterations":[500,250],
 		"metric":"MI",
 		"metric_weight":1,
 		"radius_or_number_of_bins":16,
@@ -141,7 +141,7 @@ def DSURQEc_structural_registration(template,
 	mask="~/ni_data/templates/DSURQEc_200micron_mask.nii.gz",
 	num_threads=4,
 	phase_dictionary=PHASES,
-	s_phases=["s_rigid",],
+	s_phases=["s_rigid","affine","syn"],
 	f_phases=["f_rigid",],
 	):
 

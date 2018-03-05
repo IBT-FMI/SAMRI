@@ -76,7 +76,7 @@ def test_bids_naming():
 #
 #	bruker(bids_base,
 #		"mouse",
-#		functional_match={'trial':['JogB','CogB','CogB2m'],},
+#		functional_match={'task':['JogB','CogB','CogB2m'],},
 #		structural_match={'acquisition':['TurboRARE', 'TurboRARElowcov']},
 #		functional_registration_method="composite")
 

@@ -43,12 +43,7 @@ def filterData(df, col_name, entries):
 			res_df = res_df.append(_df)
 	return res_df
 
-def bids_data_selection(base,
-		structural_match,
-		functional_match,
-		subjects,
-		sessions,
-		):
+def bids_data_selection(base, structural_match, functional_match, subjects, sessions):
 	validate = BIDSValidator()
 	for x in os.walk(base):
 		print(x[0])
@@ -72,7 +67,6 @@ def bids_data_selection(base,
 	df.loc[df.modality == 'anat', 'scan_type'] = 'acq-'+df['acq'] +'_' + df['type']
 
 	#TODO: make nicer, generalize to all functional match entries... dict vs list von subjects,etc. und acq / acquistion mismatch
-	
 	res_df = pd.DataFrame()
 	if(functional_match):
 		_df = filterData(df, 'task', functional_match['task'])
@@ -81,7 +75,6 @@ def bids_data_selection(base,
 			_df = filterData(df, 'acq', structural_match['acquisition'])
 			res_df = res_df.append(_df)
 	df = res_df
-	
 	if(subjects):
 		df = filterData(df, 'subject', subjects)
 	if(sessions):
@@ -144,14 +137,14 @@ def bruker(bids_base, template,
 
 	# we start to define nipype workflow elements (nodes, connections, meta)
 	subjects_sessions = data_selection[["subject","session"]].drop_duplicates().values.tolist()
-	
+
 	_func_ind = data_selection[data_selection["modality"] == "func"]
 	func_ind = _func_ind.index.tolist()
 
 	_struct_ind = data_selection[data_selection["modality"] == "anat"]
 	struct_ind = _struct_ind.index.tolist()
 	sel = data_selection.index.tolist()
-	
+
 	if True:
 		print(data_selection)
 		print(subjects_sessions)
@@ -250,7 +243,6 @@ def bruker(bids_base, template,
 		s_biascorrect, f_biascorrect = inflated_size_nodes()
 
 	if structural_scan_types.any():
-    
 		get_s_scan = pe.Node(name='get_s_scan', interface=util.Function(function=get_bids_scan, input_names=inspect.getargspec(get_bids_scan)[0], output_names=['scan_path','scan_type','task', 'nii_path', 'nii_name', 'file_name', 'events_name', 'subject_session']))
 		get_s_scan.inputs.ignore_exception = True
 		get_s_scan.inputs.data_selection = data_selection

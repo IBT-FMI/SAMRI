@@ -98,14 +98,15 @@ def aic():
 
 def bids_preprocessing():
 	from samri.pipelines.preprocess import bruker
-	bids_base = '~/ni_data/ofM.dr/'
+	bids_base = '~/ni_data/ofM.dr/bids'
 
-	bruker(bids_base, "~/ni_data/templates/DSURQEc_40micron_average.nii",
-		functional_match={'task':['CogB',],},
+	bruker(bids_base, "~/ni_data/templates/DSURQEc_200micron_average.nii",
+		functional_match={'task':['CogB',],'type':['cbv']},
 		structural_match={'acquisition':['TurboRARE',]},
-		subjects=['5700'],
+		#subjects=['5700'],
 		actual_size=True,
 		functional_registration_method="composite",
+		negative_contrast_agent=True,
 		)
 
 def cbv_composite(data_path="~/ni_data/ofM.dr/",

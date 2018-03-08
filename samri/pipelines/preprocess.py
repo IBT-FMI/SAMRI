@@ -70,6 +70,10 @@ def bids_data_selection(base, structural_match, functional_match, subjects, sess
 	res_df = pd.DataFrame()
 	if(functional_match):
 		_df = filterData(df, 'task', functional_match['task'])
+		try:
+			_df = filterData(df, 'type', functional_match['type'])
+		except:
+			pass
 		res_df = res_df.append(_df)
 		if(structural_match):
 			_df = filterData(df, 'acq', structural_match['acquisition'])

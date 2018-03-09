@@ -22,6 +22,7 @@ N_PROCS=max(N_PROCS-2, 2)
 
 def l1(preprocessing_dir,
 	bf_path = '~/ni_data/irfs/chr_beta1.txt',
+	exclude={},
 	habituation='confound',
 	highpass_sigma=225,
 	include={},
@@ -41,6 +42,9 @@ def l1(preprocessing_dir,
 
 	bf_path : str, optional
 		Basis set path. It should point to a text file in the so-called FEAT/FSL "#2" format (1 entry per volume).
+	exclude : dict
+		A dictionary with any combination of "sessions", "subjects", "tasks" as keys and corresponding identifiers as values.
+		If this is specified matching entries will be excluded in the analysis.
 	habituation : {"", "confound", "separate_contrast", "in_main_contrast"}, optional
 		How the habituation regressor should be handled.
 		Anything which evaluates as False (though we recommend "") means no habituation regressor will be introduced.
@@ -48,7 +52,7 @@ def l1(preprocessing_dir,
 		Highpass threshold (in seconds).
 	include : dict
 		A dictionary with any combination of "sessions", "subjects", "tasks" as keys and corresponding identifiers as values.
-		If this is specified ony matching entries will be included in the analysis.
+		If this is specified only matching entries will be included in the analysis.
 	keep_work : bool, optional
 		Whether to keep the work directory (containing all the intermediary workflow steps, as managed by nipypye).
 		This is useful for debugging and quality control.
@@ -80,6 +84,12 @@ def l1(preprocessing_dir,
 	data_selection = zip(*[datafind_res.outputs.sub, datafind_res.outputs.ses, datafind_res.outputs.acq, datafind_res.outputs.task, datafind_res.outputs.mod, out_paths])
 	data_selection = [list(i) for i in data_selection]
 	data_selection = pd.DataFrame(data_selection,columns=('subject','session','acquisition','task','modality','path'))
+	if exclude:
+		for key in exclude:
+			data_selection = data_selection[~data_selection[key].isin(exclude[key])]
+	if include:
+		for key in include:
+			data_selection = data_selection[data_selection[key].isin(include[key])]
 	bids_dictionary = data_selection[data_selection['modality']==modality].drop_duplicates().T.to_dict().values()
 
 	infosource = pe.Node(interface=util.IdentityInterface(fields=['bids_dictionary']), name="infosource")

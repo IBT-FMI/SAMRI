@@ -113,7 +113,7 @@ def bids_glm():
 
 	glm.l1('~/ni_data/ofM.dr/bids/preprocessing/generic',
 		workflow_name='generic',
-		include={"subjects":["5689","5690","5691"]},
+		include={"subject":["5689","5690","5691"]},
 		habituation="confound",
 		mask="~/ni_data/templates/DSURQEc_200micron_mask.nii.gz",
 		keep_work=True,

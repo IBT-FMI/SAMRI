@@ -108,6 +108,16 @@ def bids_preprocessing():
 		functional_registration_method="composite",
 		negative_contrast_agent=True,
 		)
+def bids_glm():
+	from samri.pipelines import glm
+
+	glm.l1('~/ni_data/ofM.dr/bids/preprocessing/generic',
+		workflow_name='generic',
+		include={"subjects":["5689","5690","5691"]},
+		habituation="confound",
+		mask="~/ni_data/templates/DSURQEc_200micron_mask.nii.gz",
+		keep_work=True,
+		)
 
 def cbv_composite(data_path="~/ni_data/ofM.dr/",
 	workflow_name='composite',

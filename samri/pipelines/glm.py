@@ -28,7 +28,7 @@ def l1(preprocessing_dir,
 	keep_work=False,
 	l1_dir="",
 	mask="~/ni_data/templates/ds_QBI_chr_bin.nii.gz",
-	match_regex='sub-(?P<sub>[a-zA-Z0-9]+)/ses-(?P<ses>[a-zA-Z0-9]+)/func/.*?_acq-(?P<acq>[a-zA-Z0-9]+)_task-(?P<task>[a-zA-Z0-9]+)_(?P<mod>[a-zA-Z0-9]+)\.(?:tsv|nii|nii\.gz)',
+	match_regex='sub-(?P<sub>[a-zA-Z0-9]+)/ses-(?P<ses>[a-zA-Z0-9]+)/func/.*?_task-(?P<task>[a-zA-Z0-9]+)_acq-(?P<acq>[a-zA-Z0-9]+)_(?P<mod>[a-zA-Z0-9]+)\.(?:tsv|nii|nii\.gz)',
 	nprocs=N_PROCS,
 	tr=1,
 	workflow_name="generic",
@@ -80,7 +80,6 @@ def l1(preprocessing_dir,
 	data_selection = zip(*[datafind_res.outputs.sub, datafind_res.outputs.ses, datafind_res.outputs.acq, datafind_res.outputs.task, datafind_res.outputs.mod, out_paths])
 	data_selection = [list(i) for i in data_selection]
 	data_selection = pd.DataFrame(data_selection,columns=('subject','session','acquisition','task','modality','path'))
-
 	bids_dictionary = data_selection[data_selection['modality']==modality].drop_duplicates().T.to_dict().values()
 
 	infosource = pe.Node(interface=util.IdentityInterface(fields=['bids_dictionary']), name="infosource")

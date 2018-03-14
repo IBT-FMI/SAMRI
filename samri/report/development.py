@@ -197,31 +197,39 @@ def dr_activity():
 	from samri.utilities import bids_substitution_iterator
 	from samri.fetch.local import roi_from_atlaslabel
 
-	workflow_name = 'composite'
+	workflow_name = 'generic'
 	substitutions = bids_substitution_iterator(
 		["ofM","ofMaF","ofMcF1","ofMcF2","ofMpF"],
-		['5691',"5689","5690","5700"],
+		["5689","5690","6456","6461"],
+		#['5691',"5689","5690","5700","6451","6460","6456","6461","6462"],
+		#['5691',"5689","5690","5700",],
                 ["CogB",],
-                "~/ni_data/ofM.dr/",
+                "~/ni_data/ofM.dr/bids/",
                 workflow_name,
                 acquisitions=["EPI",],
-                check_file_format='{data_dir}/l1/{l1_dir}/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_acq-{acquisition}_task-{task}_cbv_tstat.nii.gz',
+                #validate_for_template='{data_dir}/l1/{l1_dir}/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_task-{task}_acq-{acquisition}_cbv_tstat.nii.gz',
+                validate_for_template='{data_dir}/l1/{l1_dir}/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_acq-{acquisition}_task-{task}_cbv_tstat.nii.gz',
 		)
-	fit, anova, subjectdf, voxeldf = roi.per_session(substitutions,
+	subjectdf, voxeldf = roi.per_session(substitutions,
+		#filename_template='{data_dir}/l1/{l1_dir}/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_task-{task}_acq-{acquisition}_cbv_tstat.nii.gz',
 		filename_template='{data_dir}/l1/{l1_dir}/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_acq-{acquisition}_task-{task}_cbv_tstat.nii.gz',
 		roi_mask="~/ni_data/templates/roi/DSURQEc_dr.nii.gz",
 		)
 	subjectdf['treatment']='Fluoxetine'
 	substitutions_ = bids_substitution_iterator(
 		["ofM","ofMaF","ofMcF1","ofMcF2","ofMpF"],
-		["6262","6255","5694","5706",'5704'],
+		["5694","5706",'5704','6455','6459','5794'],
+		#["6262","6255","5694","5706",'5704','6455','6459'],
+		#["6262","6255","5694","5706",'5704',],
                 ["CogB",],
-                "~/ni_data/ofM.dr/",
+                "~/ni_data/ofM.dr/bids/",
                 workflow_name,
                 acquisitions=["EPI",],
-		check_file_format='{data_dir}/l1/{l1_dir}/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_acq-{acquisition}_task-{task}_cbv_tstat.nii.gz',
+		#validate_for_template='{data_dir}/l1/{l1_dir}/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_task-{task}_acq-{acquisition}_cbv_tstat.nii.gz',
+		validate_for_template='{data_dir}/l1/{l1_dir}/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_acq-{acquisition}_task-{task}_cbv_tstat.nii.gz',
 		)
-	fit_, anova_, subjectdf_, voxeldf_ = roi.per_session(substitutions_,
+	subjectdf_, voxeldf_ = roi.per_session(substitutions_,
+		#filename_template='{data_dir}/l1/{l1_dir}/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_task-{task}_acq-{acquisition}_cbv_tstat.nii.gz',
 		filename_template='{data_dir}/l1/{l1_dir}/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_acq-{acquisition}_task-{task}_cbv_tstat.nii.gz',
 		roi_mask="~/ni_data/templates/roi/DSURQEc_dr.nii.gz",
 		)
@@ -230,7 +238,7 @@ def dr_activity():
 	subjectdf=pd.concat([subjectdf_,subjectdf])
 	subjectdf=subjectdf.rename(columns={'session': 'Session',})
 
-	subjectdf.to_csv('~/ni_data/ofM.dr/l1/{}/dr_summary.csv'.format(workflow_name))
+	subjectdf.to_csv('~/ni_data/ofM.dr/bids/l1/{}/dr_summary.csv'.format(workflow_name))
 
 def ctx_dr_connectivity():
 	import pandas as pd

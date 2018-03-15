@@ -103,10 +103,11 @@ def bids_preprocessing():
 	bruker(bids_base, "~/ni_data/templates/DSURQEc_200micron_average.nii",
 		functional_match={'task':['CogB',],'type':['cbv']},
 		structural_match={'acquisition':['TurboRARE',]},
-		#subjects=['5700'],
+		#subjects=['5706'],
 		actual_size=True,
 		functional_registration_method="composite",
 		negative_contrast_agent=True,
+		#keep_work=True,
 		)
 def bids_glm():
 	from samri.pipelines import glm

@@ -1,5 +1,5 @@
 from os import path, listdir, getcwd, remove
-from samri.pipelines.extra_functions import get_data_selection, get_bids_scan, write_bids_metadata_file,write_bids_events_file ,write_events_file, force_dummy_scans, BIDS_METADATA_EXTRACTION_DICTS
+from samri.pipelines.extra_functions import get_data_selection, get_bids_scan, write_bids_metadata_file, write_bids_events_file, force_dummy_scans, BIDS_METADATA_EXTRACTION_DICTS
 
 import re
 import inspect
@@ -164,7 +164,7 @@ def bruker(bids_base, template,
 	get_f_scan.inputs.bids_base = bids_base
 	get_f_scan.iterables = ("ind_type", func_ind)
 
-	dummy_scans = pe.Node(name='dummy_scans', interface=util.Function(function=force_dummy_scans,input_names=inspect.getargspec(force_dummy_scans)[0], output_names=['out_file']))
+	dummy_scans = pe.Node(name='dummy_scans', interface=util.Function(function=force_dummy_scans,input_names=inspect.getargspec(force_dummy_scans)[0], output_names=['out_file','deleted_scans']))
 	dummy_scans.inputs.desired_dummy_scans = DUMMY_SCANS
 
 	bandpass = pe.Node(interface=fsl.maths.TemporalFilter(), name="bandpass")
@@ -184,11 +184,10 @@ def bruker(bids_base, template,
 	bids_stim_filename.inputs.extension = ".tsv"
 	bids_stim_filename.inputs.metadata = data_selection
 
-	events_file = pe.Node(name='events_file', interface=util.Function(function=write_bids_events_file,input_names=inspect.getargspec(write_events_file)[0], output_names=['out_file']))
-	events_file.inputs.dummy_scans_ms = DUMMY_SCANS * tr * 1000
-	events_file.inputs.very_nasty_bruker_delay_hack = very_nasty_bruker_delay_hack
-	if not (strict or verbose):
-		events_file.inputs.ignore_exception = True
+	events_file = pe.Node(name='events_file', interface=util.Function(function=write_bids_events_file,input_names=inspect.getargspec(write_bids_events_file)[0], output_names=['out_file']))
+	#events_file.inputs.very_nasty_bruker_delay_hack = very_nasty_bruker_delay_hack
+	#if not (strict or verbose):
+	#	events_file.inputs.ignore_exception = True
 
 	datasink = pe.Node(nio.DataSink(), name='datasink')
 	datasink.inputs.base_directory = path.join(bids_base,"preprocessing",workflow_name)
@@ -202,7 +201,9 @@ def bruker(bids_base, template,
 		(get_f_scan, bids_stim_filename, [('scan_type', 'scan_type')]),
 		(get_f_scan, dummy_scans, [('nii_path', 'in_file')]),
 		(get_f_scan, dummy_scans, [('scan_path', 'scan_dir')]),
+		(dummy_scans, events_file, [('deleted_scans', 'forced_dummy_scans')]),
 		(get_f_scan, events_file, [
+			('nii_path', 'timecourse_file'),
 			('task', 'task'),
 			('scan_path', 'scan_dir')
 			]),

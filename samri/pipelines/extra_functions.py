@@ -88,15 +88,15 @@ def force_dummy_scans(in_file,
 
 	delete_scans = desired_dummy_scans - dummy_scans
 
+	img = nib.load(in_file)
 	if delete_scans <= 0:
-		img = nib.load(in_file)
 		nib.save(img,out_file)
 	else:
-		img = nib.load(in_file)
 		img_ = nib.Nifti1Image(img.get_data()[...,delete_scans:], img.affine, img.header)
 		nib.save(img_,out_file)
+	deleted_scans = delete_scans
 
-	return out_file
+	return out_file, deleted_scans
 
 def get_tr(in_file,
 	ndim=4,
@@ -205,6 +205,7 @@ def write_bids_events_file(scan_dir,
 	prefer_labbookdb=False,
 	timecourse_file='',
 	task='',
+	forced_dummy_scans=0.,
 	):
 	"""Adjust a BIDS event file to reflect delays introduced after the trigger and before the scan onset.
 
@@ -270,25 +271,27 @@ def write_bids_events_file(scan_dir,
 			sequence_file = os.path.join(scan_dir, sequence_files[0])
 			mydf = pd.read_csv(sequence_file, sep="\s")
 
-	if metadata_file and timecourse_file:
-		timecourse_file = os.path.abspath(os.path.expanduser(timecourse_file))
+	timecourse_file = os.path.abspath(os.path.expanduser(timecourse_file))
+	timecourse = nib.load(timecourse_file)
+	zooms = timecourse.header.get_zooms()
+	tr = float(zooms[-1])
+	delay = 0.
+	if forced_dummy_scans:
+		delay = forced_dummy_scans * tr
+	elif metadata_file:
 		metadata_file = os.path.abspath(os.path.expanduser(metadata_file))
 
-		timecourse = nib.load(timecourse_file)
-		zooms = timecourse.header.get_zooms()
-		tr = zooms[-1]
 		with open(metadata_file) as metadata:
 			    metadata = json.load(metadata)
-		delay = 0
 		try:
-			delay += metadata['NumberOfVolumesDiscardedByScanner'] / float(tr)
+			delay += metadata['NumberOfVolumesDiscardedByScanner'] * tr
 		except:
 			pass
 		try:
 			delay += metadata['DelayAfterTrigger']
 		except:
 			pass
-		mydf['onset'] = mydf['onset'] - delay
+	mydf['onset'] = mydf['onset'] - delay
 
 	mydf.to_csv(out_file, sep=str('\t'), index=False)
 
@@ -432,7 +435,7 @@ def get_scan(measurements_base, data_selection,
 
 	if not task:
 		task = filtered_data['task'].item()
-    
+
 	return scan_path, scan_type, task
 
 def getSesAndData(grouped_df=None,

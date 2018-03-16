@@ -1,5 +1,5 @@
 from os import path, remove
-from samri.pipelines.extra_functions import get_data_selection, get_scan, write_bids_metadata_file, write_events_file, BIDS_METADATA_EXTRACTION_DICTS
+from samri.pipelines.extra_functions import get_data_selection, get_scan, write_bids_metadata_file, write_bids_events_file, BIDS_METADATA_EXTRACTION_DICTS
 
 import argh
 import re
@@ -135,7 +135,7 @@ def bru2bids(measurements_base,
 	f_metadata_file = pe.Node(name='metadata_file', interface=util.Function(function=write_bids_metadata_file,input_names=inspect.getargspec(write_bids_metadata_file)[0], output_names=['out_file']))
 	f_metadata_file.inputs.extraction_dicts = BIDS_METADATA_EXTRACTION_DICTS
 
-	events_file = pe.Node(name='events_file', interface=util.Function(function=write_events_file,input_names=inspect.getargspec(write_events_file)[0], output_names=['out_file']))
+	events_file = pe.Node(name='events_file', interface=util.Function(function=write_bids_events_file,input_names=inspect.getargspec(write_bids_events_file)[0], output_names=['out_file']))
 	events_file.ignore_exception = True
 
 	datasink = pe.Node(nio.DataSink(), name='datasink')

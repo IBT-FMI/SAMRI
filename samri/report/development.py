@@ -189,19 +189,20 @@ def ctx_activity():
 
 	subjectdf.to_csv('~/ni_data/ofM.dr/l1/{}/ctx_summary.csv'.format(workflow_name))
 
-def dr_activity():
+def roi_activity(roi_mask="~/ni_data/templates/roi/DSURQEc_dr.nii.gz"):
 	import pandas as pd
 	from behaviopy.plotting import qualitative_times
 	from samri.plotting import summary
 	from samri.report import roi
 	from samri.utilities import bids_substitution_iterator
 	from samri.fetch.local import roi_from_atlaslabel
+	from os.path import basename, splitext
 
 	workflow_name = 'generic'
 	substitutions = bids_substitution_iterator(
 		["ofM","ofMaF","ofMcF1","ofMcF2","ofMpF"],
-		["5689","5690","6456","6461"],
-		#['5691',"5689","5690","5700","6451","6460","6456","6461","6462"],
+		#["5689","5690","6456","6461"],
+		['5691',"5689","5690","5700","6451","6460","6456","6461","6462"],
 		#['5691',"5689","5690","5700",],
                 ["CogB",],
                 "~/ni_data/ofM.dr/bids/",
@@ -213,13 +214,13 @@ def dr_activity():
 	subjectdf, voxeldf = roi.per_session(substitutions,
 		#filename_template='{data_dir}/l1/{l1_dir}/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_task-{task}_acq-{acquisition}_cbv_tstat.nii.gz',
 		filename_template='{data_dir}/l1/{l1_dir}/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_acq-{acquisition}_task-{task}_cbv_tstat.nii.gz',
-		roi_mask="~/ni_data/templates/roi/DSURQEc_dr.nii.gz",
+		roi_mask=roi_mask,
 		)
 	subjectdf['treatment']='Fluoxetine'
 	substitutions_ = bids_substitution_iterator(
 		["ofM","ofMaF","ofMcF1","ofMcF2","ofMpF"],
-		["5694","5706",'5704','6455','6459','5794'],
-		#["6262","6255","5694","5706",'5704','6455','6459'],
+		#["5694","5706",'5704','6455','6459','5794'],
+		["6262","6255","5694","5706",'5704','6455','6459'],
 		#["6262","6255","5694","5706",'5704',],
                 ["CogB",],
                 "~/ni_data/ofM.dr/bids/",
@@ -231,14 +232,17 @@ def dr_activity():
 	subjectdf_, voxeldf_ = roi.per_session(substitutions_,
 		#filename_template='{data_dir}/l1/{l1_dir}/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_task-{task}_acq-{acquisition}_cbv_tstat.nii.gz',
 		filename_template='{data_dir}/l1/{l1_dir}/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_acq-{acquisition}_task-{task}_cbv_tstat.nii.gz',
-		roi_mask="~/ni_data/templates/roi/DSURQEc_dr.nii.gz",
+		roi_mask=roi_mask,
 		)
 	subjectdf_['treatment']='Vehicle'
 
 	subjectdf=pd.concat([subjectdf_,subjectdf])
 	subjectdf=subjectdf.rename(columns={'session': 'Session',})
 
-	subjectdf.to_csv('~/ni_data/ofM.dr/bids/l1/{}/dr_summary.csv'.format(workflow_name))
+	roi_name = splitext(basename(roi_mask))[0]
+	if roi_name[-4:] == '.nii':
+		roi_name = roi_name[:-4]
+	subjectdf.to_csv('~/ni_data/ofM.dr/bids/l1/{}/{}.csv'.format(workflow_name, roi_name))
 
 def ctx_dr_connectivity():
 	import pandas as pd

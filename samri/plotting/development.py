@@ -4,7 +4,7 @@ from os import path
 from samri.analysis import fc
 from samri.utilities import bids_substitution_iterator
 from samri.fetch.local import roi_from_atlaslabel
-from samri.plotting import maps, connectivity
+from samri.plotting import maps
 from samri.analysis import fc
 
 def overview(workflow, identifiers,
@@ -226,6 +226,7 @@ def functional_connectivity(ts="~/ni_data/ofM.dr/preprocessing/as_composite/sub-
 	"""
 	simple fc example
 	"""
+	from samri.plotting import connectivity
 	figsize = (50,50)
 	# incl. plotting
 	correlation_matrix = fc.correlation_matrix(ts, labels_img, save_as = '~/correlation_matrix.csv')

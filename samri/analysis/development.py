@@ -41,14 +41,14 @@ def drp_seed_fc():
 
 	base = '~/ni_data/ofM.dr/bids/preprocessing/generic/'
 	base = os.path.abspath(os.path.expanduser(base))
-        validate = BIDSValidator()
-        for x in os.walk(base):
-                print(x[0])
-                print(validate.is_bids(x[0]))
-        layout = BIDSLayout(base)
-        df = layout.as_data_frame()
+	validate = BIDSValidator()
+	for x in os.walk(base):
+		print(x[0])
+		print(validate.is_bids(x[0]))
+	layout = BIDSLayout(base)
+	df = layout.as_data_frame()
 	df = df[df.type.isin(['cbv'])]
-        print(df)
+	print(df)
 
 	#substitutions = bids_substitution_iterator(
 	#	list(df['session'].unique()),

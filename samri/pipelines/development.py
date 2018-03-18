@@ -101,20 +101,20 @@ def bids_preprocessing():
 	bids_base = '~/ni_data/ofM.dr/bids'
 
 	bruker(bids_base, "~/ni_data/templates/DSURQEc_200micron_average.nii",
-		functional_match={'task':['CogB',],'type':['cbv']},
+		functional_match={'task':['CogB','JPogP'],'type':['cbv']},
 		structural_match={'acquisition':['TurboRARE',]},
-		#subjects=['5706'],
+		#subjects=['6451'],
 		actual_size=True,
 		functional_registration_method="composite",
 		negative_contrast_agent=True,
 		#keep_work=True,
 		)
-def bids_glm():
+def bids_l1():
 	from samri.pipelines import glm
 
 	glm.l1('~/ni_data/ofM.dr/bids/preprocessing/generic',
 		workflow_name='generic',
-		include={"subject":["5689","5690","5691"]},
+		include={"subject":["6451"]},
 		habituation="confound",
 		mask="~/ni_data/templates/DSURQEc_200micron_mask.nii.gz",
 		keep_work=True,
@@ -299,10 +299,3 @@ def test_dual_regression(group_level="migp"):
 		)
 	#fc.get_signal(substitutions_a,substitutions_b
 
-def run_level1_glm():
-	from samri.pipelines import preprocess, glm
-	glm.l1(preprocessing_dir='~/bandpass_ni_data/rsfM/preprocessing/composite',
-		workflow_name='as_composite',
-		habituation='confound',
-		mask="~/ni_data/templates/DSURQEc_200micron_mask.nii.gz",
-		keep_work=True)

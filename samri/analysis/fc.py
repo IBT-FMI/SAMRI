@@ -52,7 +52,9 @@ def add_fc_roi_data(data_path, seed_masker, brain_masker,
 
 	result = deepcopy(substitution)
 
-	if substitution:
+	if 'path' in substitution:
+		data_path = substitution['path']
+	elif substitution:
 		data_path = data_path.format(**substitution)
 	data_path = path.abspath(path.expanduser(data_path))
 
@@ -102,6 +104,8 @@ def seed_based(substitutions, seed, roi,
 	high_pass=0.004,
 	tr=1.,
 	save_results="",
+	n_procs=2,
+	cachedir='',
 	):
 	"""Plot a ROI t-values over the session timecourse
 
@@ -128,7 +132,7 @@ def seed_based(substitutions, seed, roi,
 			low_pass=low_pass,
 			high_pass=high_pass,
 			t_r=tr,
-			memory='nilearn_cache', memory_level=1, verbose=0
+			memory=cachedir, memory_level=1, verbose=0
 			)
 	brain_masker = NiftiMasker(
 			mask_img=roi_mask,
@@ -138,16 +142,15 @@ def seed_based(substitutions, seed, roi,
 			low_pass=low_pass,
 			high_pass=high_pass,
 			t_r=tr,
-			memory='nilearn_cache', memory_level=1, verbose=0
+			memory=cachedir, memory_level=1, verbose=0
 			)
 
 
-	n_jobs = mp.cpu_count()-2
-	fc_maps = Parallel(n_jobs=n_jobs, verbose=0, backend="threading")(map(delayed(add_fc_roi_data),
+	fc_maps = Parallel(n_jobs=n_procs, verbose=0, backend="threading")(map(delayed(add_fc_roi_data),
 		[ts_file_template]*len(substitutions),
 		[seed_masker]*len(substitutions),
 		[brain_masker]*len(substitutions),
-		[True]*len(substitution),
+		[True]*len(substitutions),
 		[save_results]*len(substitutions),
 		substitutions,
 		))

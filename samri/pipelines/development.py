@@ -1,7 +1,5 @@
 from os import path
 import pandas as pd
-from samri.analysis import fc
-from samri.pipelines import preprocess, glm
 from samri.utilities import bids_substitution_iterator
 
 def higher():
@@ -18,6 +16,7 @@ def dbu(
 	workflow_name="functional_registration",
 	preprocessing_dir="preprocessing",
 	):
+	from samri.pipelines import preprocess, glm
 	preprocessing.bruker(data_path,
 		functional_scan_types=["3GE_EPI_ET_mAb911_1Rep",],
 		structural_scan_types=-1,
@@ -38,6 +37,7 @@ def rs(
 	workflow_name="functional_registration",
 	preprocessing_dir="preprocessing",
 	):
+	from samri.pipelines import preprocess, glm
 	preprocessing.bruker(data_path,
 		functional_scan_types=["EPI_CBV",],
 		structural_scan_types=-1,
@@ -53,8 +53,9 @@ def rs(
 		)
 
 def ss():
+	from samri.pipelines import preprocess, glm
 	preprocessing.bruker('~/ni_data/ss/',
-		functional_match={'trial':['FshSbu','FshSbb']},
+		functional_match={'task':['FshSbu','FshSbb']},
 		structural_match={'acquisition':['TurboRARE']},
 		workflow_name='composite',
 		lowpass_sigma=2,
@@ -71,8 +72,9 @@ def ss():
 		)
 
 def aic():
+	from samri.pipelines import preprocess, glm
 	preprocessing.bruker('~/ni_data/test/',
-		functional_match={'trial':['CogB','CogB2m','JogB']},
+		functional_match={'task':['CogB','CogB2m','JogB']},
 		structural_match={'acquisition':['TurboRARE','TurboRARElowcov']},
 		workflow_name='composite',
 		lowpass_sigma=2,
@@ -94,14 +96,39 @@ def aic():
 		keep_work=True,
 		)
 
+def bids_preprocessing():
+	from samri.pipelines.preprocess import bruker
+	bids_base = '~/ni_data/ofM.dr/bids'
+
+	bruker(bids_base, "~/ni_data/templates/DSURQEc_200micron_average.nii",
+		functional_match={'task':['CogB','JPogP'],'type':['cbv']},
+		structural_match={'acquisition':['TurboRARE',]},
+		#subjects=['6451'],
+		actual_size=True,
+		functional_registration_method="composite",
+		negative_contrast_agent=True,
+		#keep_work=True,
+		)
+def bids_l1():
+	from samri.pipelines import glm
+
+	glm.l1('~/ni_data/ofM.dr/bids/preprocessing/generic',
+		workflow_name='generic',
+		include={"subject":["6451"]},
+		habituation="confound",
+		mask="~/ni_data/templates/DSURQEc_200micron_mask.nii.gz",
+		keep_work=True,
+		)
+
 def cbv_composite(data_path="~/ni_data/ofM.dr/",
 	workflow_name='composite',
 	preprocessing_dir="preprocessing",
 	l1_dir="l1",
 	):
+	from samri.pipelines import preprocess, glm
 	#preprocessing.bruker(data_path,
 	#	#exclude_measurements=['20151027_121613_4013_1_1'],
-	#	functional_match={'trial':['CogB','JogB']},
+	#	functional_match={'task':['CogB','JogB']},
 	#	structural_match={'acquisition':['TurboRARE','TurboRARElowcov']},
 	#	#subjects=["4007","4008","4011","4012","5687","5688","5695","5689","5690","5691","5703","5704","5706"],
 	#	#subjects=["4007","4008","5687","5688","5704",
@@ -142,6 +169,7 @@ def cbv_composite(data_path="~/ni_data/ofM.dr/",
 	#	)
 
 def anova_fc():
+	from samri.pipelines import preprocess, glm
 	glm.l2_anova("~/ni_data/ofM.dr/fc/drs_seed/",
 		workflow_name="anova_fc",
 		keep_work=True,
@@ -153,6 +181,7 @@ def anova_fc():
 		)
 def anova():
 	from samri.fetch.local import roi_from_atlaslabel
+	from samri.pipelines import preprocess, glm
 	roi = roi_from_atlaslabel("~/ni_data/templates/roi/DSURQEc_200micron_labels.nii",
 		mapping="~/ni_data/templates/roi/DSURQE_mapping.csv",
 		label_names=["cortex"],
@@ -204,11 +233,12 @@ def anova():
 	#	)
 
 def typical_resp(data_path='~/ni_data/ofM.dr/', l1_dir='l1', workflow_name='composite'):
+	from samri.pipelines import preprocess, glm
 	glm.l2_common_effect(path.join(data_path,l1_dir,workflow_name),
 		workflow_name="best_responders_old",
 		include={
 			'subject':["5689","5690","5691","5700","6262","6255","5694","5706"],
-			'trial':["CogB"],
+			'task':["CogB"],
 			},
 		groupby="session",
 		keep_work=True,
@@ -218,7 +248,7 @@ def typical_resp(data_path='~/ni_data/ofM.dr/', l1_dir='l1', workflow_name='comp
 		workflow_name="best_responders",
 		include={
 			'subject':["5699","5687","5691","5694","4005","6255","5706"],
-			'trial':["CogB"],
+			'task':["CogB"],
 			},
 		groupby="session",
 		keep_work=True,
@@ -227,6 +257,7 @@ def typical_resp(data_path='~/ni_data/ofM.dr/', l1_dir='l1', workflow_name='comp
 
 
 def dr_only():
+	from samri.pipelines import preprocess, glm
 	glm.l1("~/ni_data/ofM.dr/preprocessing/_composite",
 		mask="~/ni_data/templates/roi/f_dr_chr.nii.gz",
 		workflow_name="dr",
@@ -236,6 +267,7 @@ def dr_only():
 		)
 
 def dr_composite():
+	from samri.pipelines import preprocess, glm
 	preprocessing.bruker("~/ni_data/ofM.dr/",exclude_measurements=['20151027_121613_4013_1_1'], workflow_name="composite", very_nasty_bruker_delay_hack=True, negative_contrast_agent=True, functional_blur_xy=4, functional_registration_method="composite")
 	glm.l1("~/ni_data/ofM.dr/preprocessing/composite", workflow_name="composite", include={"subjects":[i for i in range(4001,4010)]+[4011,4012]}, habituation="confound",mask="~/ni_data/templates/ds_QBI_chr_bin.nii.gz",keep_work=True)
 	glm.l1("~/ni_data/ofM.dr/preprocessing/composite", workflow_name="composite_dr", include={"subjects":[i for i in range(4001,4010)]+[4011,4012]}, habituation="confound",mask="~/ni_data/templates/roi/f_dr_chr_bin.nii.gz",)
@@ -243,9 +275,11 @@ def dr_composite():
 	glm.l2_common_effect("~/ni_data/ofM.dr/l1/composite", workflow_name="sessionwise_composite", groupby="session", exclude={"subjects":["4001","4002","4003","4004","4005","4006","4009","4011","4013"]})
 	glm.l2_common_effect("~/ni_data/ofM.dr/l1/composite", workflow_name="sessionwise_composite_w4011", groupby="session", exclude={"subjects":["4001","4002","4003","4004","4005","4006","4009","4013"]})
 def vta_composite():
+	from samri.pipelines import preprocess, glm
 	preprocessing.bruker("~/ni_data/ofM.vta/",workflow_name="composite", very_nasty_bruker_delay_hack=False, negative_contrast_agent=True, functional_blur_xy=4, functional_registration_method="composite")
 
 def test_dual_regression(group_level="migp"):
+	from samri.analysis import fc
 	substitutions_a = bids_substitution_iterator(
 		["ofM",],
 		["5689","5690","5691"],
@@ -265,9 +299,3 @@ def test_dual_regression(group_level="migp"):
 		)
 	#fc.get_signal(substitutions_a,substitutions_b
 
-def run_level1_glm():
-	glm.l1(preprocessing_dir='~/bandpass_ni_data/rsfM/preprocessing/composite',
-		workflow_name='as_composite',
-		habituation='confound',
-		mask="~/ni_data/templates/DSURQEc_200micron_mask.nii.gz",
-		keep_work=True)

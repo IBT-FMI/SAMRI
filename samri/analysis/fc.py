@@ -52,7 +52,9 @@ def add_fc_roi_data(data_path, seed_masker, brain_masker,
 
 	result = deepcopy(substitution)
 
-	if substitution:
+	if 'path' in substitution:
+		data_path = substitution['path']
+	elif substitution:
 		data_path = data_path.format(**substitution)
 	data_path = path.abspath(path.expanduser(data_path))
 
@@ -94,7 +96,7 @@ def add_fc_roi_data(data_path, seed_masker, brain_masker,
 	return result
 
 def seed_based(substitutions, seed, roi,
-	ts_file_template="~/ni_data/ofM.dr/preprocessing/{preprocessing_dir}/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_trial-{trial}.nii.gz",
+	ts_file_template="~/ni_data/ofM.dr/preprocessing/{preprocessing_dir}/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_task-{task}.nii.gz",
 	smoothing_fwhm=.3,
 	detrend=True,
 	standardize=True,
@@ -102,6 +104,8 @@ def seed_based(substitutions, seed, roi,
 	high_pass=0.004,
 	tr=1.,
 	save_results="",
+	n_procs=2,
+	cachedir='',
 	):
 	"""Plot a ROI t-values over the session timecourse
 
@@ -128,7 +132,7 @@ def seed_based(substitutions, seed, roi,
 			low_pass=low_pass,
 			high_pass=high_pass,
 			t_r=tr,
-			memory='nilearn_cache', memory_level=1, verbose=0
+			memory=cachedir, memory_level=1, verbose=0
 			)
 	brain_masker = NiftiMasker(
 			mask_img=roi_mask,
@@ -138,16 +142,15 @@ def seed_based(substitutions, seed, roi,
 			low_pass=low_pass,
 			high_pass=high_pass,
 			t_r=tr,
-			memory='nilearn_cache', memory_level=1, verbose=0
+			memory=cachedir, memory_level=1, verbose=0
 			)
 
 
-	n_jobs = mp.cpu_count()-2
-	fc_maps = Parallel(n_jobs=n_jobs, verbose=0, backend="threading")(map(delayed(add_fc_roi_data),
+	fc_maps = Parallel(n_jobs=n_procs, verbose=0, backend="threading")(map(delayed(add_fc_roi_data),
 		[ts_file_template]*len(substitutions),
 		[seed_masker]*len(substitutions),
 		[brain_masker]*len(substitutions),
-		[True]*len(substitution),
+		[True]*len(substitutions),
 		[save_results]*len(substitutions),
 		substitutions,
 		))
@@ -159,7 +162,7 @@ def dual_regression(substitutions_a, substitutions_b,
 	components=9,
 	group_level="concat",
 	tr=1,
-	ts_file_template="{data_dir}/preprocessing/{preprocessing_dir}/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_trial-{scan}.nii.gz",
+	ts_file_template="{data_dir}/preprocessing/{preprocessing_dir}/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_task-{scan}.nii.gz",
 	):
 
 	all_merged_path = path.abspath(path.expanduser(all_merged_path))
@@ -194,7 +197,7 @@ def dual_regression(substitutions_a, substitutions_b,
 	ica_run = ica.run()
 
 def get_signal(substitutions_a, substitutions_b,
-	functional_file_template="~/ni_data/ofM.dr/preprocessing/{preprocessing_dir}/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_trial-{scan}.nii.gz",
+	functional_file_template="~/ni_data/ofM.dr/preprocessing/{preprocessing_dir}/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_task-{scan}.nii.gz",
 	mask="~/ni_data/templates/DSURQEc_200micron_bin.nii.gz",
 	):
 

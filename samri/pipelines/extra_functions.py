@@ -36,6 +36,12 @@ BIDS_METADATA_EXTRACTION_DICTS = [
 		'query_file':'configscan',
 		'regex':r'.*?,COILTABLE,1#\$Name,(?P<value>.*?)#\$Id.*?',
 		},
+	{'field_name':'RepetitionTime',
+		'query_file':'method',
+		'regex':r'^##\$PVM_RepetitionTime=(?P<value>.*?)$',
+		'scale': 1./1000.,
+		'type': float,
+		},
 	{'field_name':'PulseSequenceType',
 		'query_file':'method',
 		'regex':r'^##\$Method=<Bruker:(?P<value>.*?)>$',
@@ -82,15 +88,15 @@ def force_dummy_scans(in_file,
 
 	delete_scans = desired_dummy_scans - dummy_scans
 
+	img = nib.load(in_file)
 	if delete_scans <= 0:
-		img = nib.load(in_file)
 		nib.save(img,out_file)
 	else:
-		img = nib.load(in_file)
 		img_ = nib.Nifti1Image(img.get_data()[...,delete_scans:], img.affine, img.header)
 		nib.save(img_,out_file)
+	deleted_scans = delete_scans
 
-	return out_file
+	return out_file, deleted_scans
 
 def get_tr(in_file,
 	ndim=4,
@@ -125,6 +131,7 @@ def get_tr(in_file,
 
 def write_bids_metadata_file(scan_dir, extraction_dicts,
 	out_file="bids_metadata.json",
+	task_name=False,
 	):
 
 	import json
@@ -182,20 +189,23 @@ def write_bids_metadata_file(scan_dir, extraction_dicts,
 		adjustments_duration = adjustments_end - adjustments_start
 		metadata['DelayAfterTrigger'] = adjustments_duration.total_seconds()
 
+	if task_name:
+		metadata['TaskName'] = task_name
+
 	with open(out_file, 'w') as out_file_writeable:
 		json.dump(metadata, out_file_writeable, indent=1)
 		out_file_writeable.write("\n")  # `json.dump` does not add a newline at the end; we do it here.
 
 	return out_file
 
-
-def write_events_file(scan_dir,
+def write_bids_events_file(scan_dir,
 	db_path="~/syncdata/meta.db",
 	metadata_file='',
 	out_file="events.tsv",
 	prefer_labbookdb=False,
 	timecourse_file='',
-	trial='',
+	task='',
+	forced_dummy_scans=0.,
 	):
 	"""Adjust a BIDS event file to reflect delays introduced after the trigger and before the scan onset.
 
@@ -205,7 +215,7 @@ def write_events_file(scan_dir,
 	scan_dir : str
 		ParaVision scan directory path.
 	db_path : str, optional
-		LabbookDB database file path from which to source the evets profile for the identifier assigned to the `trial` parameter.
+		LabbookDB database file path from which to source the evets profile for the identifier assigned to the `task` parameter.
 	metadata_file : str, optional
 		Path to a BIDS metadata file.
 	out_file : str, optional
@@ -214,8 +224,8 @@ def write_events_file(scan_dir,
 		Whether to query the events file in the LabbookDB database file first (rather than look for the events file in the scan directory).
 	timecourse_file : str, optional
 		Path to a NIfTI file.
-	trial : str, optional
-		Trial identifier from a LabbookDB database.
+	task : str, optional
+		Task identifier from a LabbookDB database.
 
 	Returns
 	-------
@@ -239,20 +249,20 @@ def write_events_file(scan_dir,
 	if not prefer_labbookdb:
 		try:
 			scan_dir_contents = os.listdir(scan_dir)
-			sequence_files = [i for i in scan_dir_contents if "sequence" in i and "tsv" in i]
+			sequence_files = [i for i in scan_dir_contents if "events" in i and "tsv" in i]
 			sequence_file = os.path.join(scan_dir, sequence_files[0])
-			mydf = pd.read_csv(sequence_file, sep="\s")
+			mydf = pd.read_csv(sequence_file, sep="\s", engine='python')
 		except IndexError:
 			if os.path.isfile(db_path):
 				from labbookdb.report.tracking import bids_eventsfile
-				mydf = bids_eventsfile(db_path, trial)
+				mydf = bids_eventsfile(db_path, task)
 			else:
 				return '/dev/null'
 	else:
 		try:
 			if os.path.isfile(db_path):
 				from labbookdb.report.tracking import bids_eventsfile
-				mydf = bids_eventsfile(db_path, trial)
+				mydf = bids_eventsfile(db_path, task)
 			else:
 				return '/dev/null'
 		except ImportError:
@@ -261,25 +271,27 @@ def write_events_file(scan_dir,
 			sequence_file = os.path.join(scan_dir, sequence_files[0])
 			mydf = pd.read_csv(sequence_file, sep="\s")
 
-	if metadata_file and timecourse_file:
-		timecourse_file = os.path.abspath(os.path.expanduser(timecourse_file))
+	timecourse_file = os.path.abspath(os.path.expanduser(timecourse_file))
+	timecourse = nib.load(timecourse_file)
+	zooms = timecourse.header.get_zooms()
+	tr = float(zooms[-1])
+	delay = 0.
+	if forced_dummy_scans:
+		delay = forced_dummy_scans * tr
+	elif metadata_file:
 		metadata_file = os.path.abspath(os.path.expanduser(metadata_file))
 
-		timecourse = nib.load(timecourse_file)
-		zooms = timecourse.header.get_zooms()
-		tr = zooms[-1]
 		with open(metadata_file) as metadata:
 			    metadata = json.load(metadata)
-		delay = 0
 		try:
-			delay += metadata['NumberOfVolumesDiscardedByScanner'] / float(tr)
+			delay += metadata['NumberOfVolumesDiscardedByScanner'] * tr
 		except:
 			pass
 		try:
 			delay += metadata['DelayAfterTrigger']
 		except:
 			pass
-		mydf['onset'] = mydf['onset'] - delay
+	mydf['onset'] = mydf['onset'] - delay
 
 	mydf.to_csv(out_file, sep=str('\t'), index=False)
 
@@ -290,7 +302,7 @@ def get_scan(measurements_base, data_selection,
 	selector=None,
 	subject=None,
 	session=None,
-	trial=False,
+	task=False,
 	):
 	"""Return the path to a Bruker scan selected by subject, session, and scan type, based on metadata previously extracted with `samri.preprocessing.extra_functions.get_data_selection()`.
 
@@ -317,22 +329,94 @@ def get_scan(measurements_base, data_selection,
 	if not session:
 		session = selector[1]
 	filtered_data = data_selection[(data_selection["session"] == session)&(data_selection["subject"] == subject)]
-	if trial:
-		filtered_data = filtered_data[filtered_data["trial"] == trial]
+	if task:
+		filtered_data = filtered_data[filtered_data["task"] == task]
 	if scan_type:
 		filtered_data = filtered_data[filtered_data["scan_type"] == scan_type]
 	measurement_path = filtered_data["measurement"].item()
 	scan_subdir = filtered_data["scan"].item()
 	scan_path = os.path.join(measurements_base,measurement_path,scan_subdir)
 
-	if not trial:
-		trial = filtered_data['trial'].item()
+	if not task:
+		task = filtered_data['task'].item()
 
-	return scan_path, scan_type, trial
+	return scan_path, scan_type, task
+
+def getSesAndData(grouped_df=None,
+	):
+
+	subject_session, data_selection = grouped_df
+	return subject_session, data_selection
+
+def get_bids_scan(bids_base, data_selection,
+	ind_type = "",
+	selector=None,
+	subject=None,
+	session=None,
+	task=False,
+	):
+
+	"""Description...
+
+	Parameters
+	----------
+	bids_base : str
+		Path to the bids base path.
+	data_selection : pandas.DataFrame
+		A `pandas.DataFrame` object as produced by `samri.preprocessing.extra_functions.get_data_selection()`.
+	scan_type : str
+		The type of scan for which to determine the directory.
+	selector : iterable, optional
+		The first method of selecting the subject and scan, this value should be a length-2 list or tuple containing the subject and sthe session to be selected.
+	subject : string, optional
+		This has to be defined if `selector` is not defined. The subject for which to return a scan directory.
+	session : string, optional
+		This has to be defined if `selector` is not defined. The session for which to return a scan directory.
+	"""
+	import os #for some reason the import outside the function fails
+	import pandas as pd
+
+	filtered_data = []
+
+	if(selector):
+		subject = selector[0]
+		session = selector[1]
+		filtered_data = data_selection[(data_selection["session"] == session)&(data_selection["subject"] == subject)]
+		filtered_data = filtered_data[filtered_data["modality"] == "anat"]
+	else:
+		filtered_data = data_selection[data_selection.index==ind_type]
+
+	if(filtered_data.empty):
+		raise Exception("does not exist" + str(selector[0]) + str(selector[1]) + str(ind_type))
+	else:
+		acq = filtered_data['acq'].item()
+		typ = filtered_data['type'].item()
+		subject = filtered_data['subject'].item()
+		session = filtered_data['session'].item()
+		modality = filtered_data['modality'].item()
+		scan_type = filtered_data['scan_type'].item()
+		subject_session = [subject, session]
+
+		scan_path = os.path.join(bids_base, 'sub-' + subject + '/', 'ses-' + session + '/', modality )
+
+
+		file_name = ''
+		events_name = ''
+		if(modality == 'func'):
+			task = filtered_data['task'].item()
+			file_name = 'sub-' + subject + '_' + 'ses-' + session + '_' + 'task-' + task + '_' + 'acq-' + acq + '_' + typ
+			events_name = 'sub-' + subject + '_' + 'ses-' + session + '_' + 'task-' + task + '_' + 'acq-' + acq + '_' + 'events.tsv'
+		else:
+			file_name = 'sub-' + subject + '_' + 'ses-' + session + '_' + 'acq-' + acq + '_' + typ
+
+		nii_name = file_name + '.nii.gz'
+		nii_path = scan_path + '/' + file_name + '.nii'
+
+		return scan_path, modality, task, nii_path, nii_name, file_name, events_name, subject_session
 
 BIDS_KEY_DICTIONARY = {
 	'acquisition':['acquisition','ACQUISITION','acq','ACQ'],
-	'trial':['trial','TRIAL','stim','STIM','stimulation','STIMULATION'],
+	'task':['task','TASK','stim','STIM','stimulation','STIMULATION'],
 	}
 
 def assign_modality(scan_type, record):
@@ -411,7 +495,7 @@ def get_data_selection(workflow_base,
 	exclude_measurements=[],
 	):
 	"""
-	Return a `pandas.DaaFrame` object of the Bruker measurement directories located under a given base directory, and their respective scans, subjects, and trials.
+	Return a `pandas.DaaFrame` object of the Bruker measurement directories located under a given base directory, and their respective scans, subjects, and tasks.
 
 	Parameters
 	----------
@@ -419,10 +503,10 @@ def get_data_selection(workflow_base,
 		The path in which to query for Bruker measurement directories.
 	match : dict
 		A dictionary of matching criteria.
-		The keys of this dictionary must be full BIDS key names (e.g. "trial" or "acquisition"), and the values must be strings (e.g. "CogB") which, combined with the respective BIDS key, identify scans to be included (e.g. scans, the names of which containthe string "trial-CogB" - delimited on either side by an underscore or the limit of the string).
+		The keys of this dictionary must be full BIDS key names (e.g. "task" or "acquisition"), and the values must be strings (e.g. "CogB") which, combined with the respective BIDS key, identify scans to be included (e.g. scans, the names of which containthe string "task-CogB" - delimited on either side by an underscore or the limit of the string).
 	exclude : dict, optional
 		A dictionary of exclusion criteria.
-		The keys of this dictionary must be full BIDS key names (e.g. "trial" or "acquisition"), and the values must be strings (e.g. "CogB") which, combined with the respective BIDS key, identify scans to be excluded(e.g. a scans, the names of which contain the string "trial-CogB" - delimited on either side by an underscore or the limit of the string).
+		The keys of this dictionary must be full BIDS key names (e.g. "task" or "acquisition"), and the values must be strings (e.g. "CogB") which, combined with the respective BIDS key, identify scans to be excluded(e.g. a scans, the names of which contain the string "task-CogB" - delimited on either side by an underscore or the limit of the string).
 	measurements : list of str, optional
 		A list of measurement directory names to be included exclusively (i.e. whitelist).
 		If the list is empty, all directories (unless explicitly excluded via `exclude_measurements`) will be queried.

@@ -1,5 +1,5 @@
 from os import path, remove
-from samri.pipelines.extra_functions import get_data_selection, get_scan, write_bids_metadata_file, write_events_file, BIDS_METADATA_EXTRACTION_DICTS
+from samri.pipelines.extra_functions import get_data_selection, get_scan, write_bids_metadata_file, write_bids_events_file, BIDS_METADATA_EXTRACTION_DICTS
 
 import argh
 import re
@@ -17,6 +17,11 @@ from nipype.interfaces import bru2nii
 from samri.pipelines.utils import bids_naming, ss_to_path
 from samri.utilities import N_PROCS
 
+try:
+	    FileNotFoundError
+except NameError:
+	    FileNotFoundError = IOError
+
 N_PROCS=max(N_PROCS-4, 2)
 
 @argh.arg('-f','--functional-match', type=json.loads)
@@ -25,6 +30,7 @@ N_PROCS=max(N_PROCS-4, 2)
 def bru2bids(measurements_base,
 	measurements=[],
 	actual_size=True,
+	dataset_name=False,
 	debug=False,
 	exclude={},
 	functional_match={},
@@ -46,14 +52,17 @@ def bru2bids(measurements_base,
 		Whether to conserve the voxel size reported by the scanner when converting the data to NIfTI.
 		Setting this to `False` multiplies the voxel edge lengths by 10 (i.e. the volume by 1000); this is occasionally done in hackish small animal pipelines, which use routines designed exclusively for human data.
 		Unless you are looking to reproduce such a workflow, this should be set to `True`.
+	dataset_name : string, optional
+		A dataset name that will be written into the BIDS metadata file.
+		Generally not needed, as by default we use the dataset path to satisfy this BIDS requirement.
 	debug : bool, optional
 		Whether to enable debug support.
 		This prints the data selection before passing it to the nipype workflow management system, and turns on debug support in nipype (leading to more verbose logging).
 	exclude : dict, optional
-		A dictionary with any combination of "session", "subject", "trial" , and "acquisition" as keys and corresponding identifiers as values.
+		A dictionary with any combination of "session", "subject", "task" , and "acquisition" as keys and corresponding identifiers as values.
 		Only scans not matching any of the listed criteria will be included in the workfolow - i.e. this is a blacklist (for functional and structural scans).
 	functional_match : dict, optional
-		A dictionary with any combination of "session", "subject", "trial", and "acquisition" as keys and corresponding lists of identifiers as values.
+		A dictionary with any combination of "session", "subject", "task", and "acquisition" as keys and corresponding lists of identifiers as values.
 		Functional scans matching all identifiers will be included - i.e. this is a whitelist.
 	keep_work : bool, optional
 		Whether to keep the work directory (containing all the intermediary workflow steps, as managed by nipypye).
@@ -65,7 +74,7 @@ def bru2bids(measurements_base,
 		Maximum number of processes which to simultaneously spawn for the workflow.
 		If not explicitly defined, this is automatically calculated from the number of available cores and under the assumption that the workflow will be the main process running for the duration that it is running.
 	structural_match : dict, optional
-		A dictionary with any combination of "session", "subject", "trial", and "acquisition" as keys and corresponding lists of identifiers as values.
+		A dictionary with any combination of "session", "subject", "task", and "acquisition" as keys and corresponding lists of identifiers as values.
 		Functional scans matching all identifiers will be included - i.e. this is a whitelist.
 	"""
 
@@ -100,7 +109,7 @@ def bru2bids(measurements_base,
 	infosource = pe.Node(interface=util.IdentityInterface(fields=['subject_session'], mandatory_inputs=False), name="infosource")
 	infosource.iterables = [('subject_session', subjects_sessions)]
 
-	get_f_scan = pe.Node(name='get_f_scan', interface=util.Function(function=get_scan,input_names=inspect.getargspec(get_scan)[0], output_names=['scan_path','scan_type','trial']))
+	get_f_scan = pe.Node(name='get_f_scan', interface=util.Function(function=get_scan,input_names=inspect.getargspec(get_scan)[0], output_names=['scan_path','scan_type','task']))
 	get_f_scan.inputs.ignore_exception = True
 	get_f_scan.inputs.data_selection = data_selection
 	get_f_scan.inputs.measurements_base = measurements_base
@@ -126,7 +135,7 @@ def bru2bids(measurements_base,
 	f_metadata_file = pe.Node(name='metadata_file', interface=util.Function(function=write_bids_metadata_file,input_names=inspect.getargspec(write_bids_metadata_file)[0], output_names=['out_file']))
 	f_metadata_file.inputs.extraction_dicts = BIDS_METADATA_EXTRACTION_DICTS
 
-	events_file = pe.Node(name='events_file', interface=util.Function(function=write_events_file,input_names=inspect.getargspec(write_events_file)[0], output_names=['out_file']))
+	events_file = pe.Node(name='events_file', interface=util.Function(function=write_bids_events_file,input_names=inspect.getargspec(write_bids_events_file)[0], output_names=['out_file']))
 	events_file.ignore_exception = True
 
 	datasink = pe.Node(nio.DataSink(), name='datasink')
@@ -143,6 +152,7 @@ def bru2bids(measurements_base,
 		(get_f_scan, f_filename, [('scan_type', 'scan_type')]),
 		(get_f_scan, f_bru2nii, [('scan_path', 'input_dir')]),
 		(get_f_scan, f_metadata_file, [('scan_path', 'scan_dir')]),
+		(get_f_scan, f_metadata_file, [('task', 'task_name')]),
 		(f_metadata_filename, f_metadata_file, [('filename', 'out_file')]),
 		(f_filename, f_bru2nii, [('filename', 'output_filename')]),
 		(events_filename, events_file, [('filename', 'out_file')]),
@@ -151,7 +161,7 @@ def bru2bids(measurements_base,
 		(get_f_scan, events_filename, [('scan_type', 'scan_type')]),
 		(f_bru2nii, datasink, [('nii_file', 'func')]),
 		(get_f_scan, events_file, [
-			('trial', 'trial'),
+			('task', 'task'),
 			('scan_path', 'scan_dir')
 			]),
 		(events_file, datasink, [('out_file', 'func.@events')]),
@@ -175,7 +185,9 @@ def bru2bids(measurements_base,
 	workflow.base_dir = path.join(measurements_base)
 	workflow.config = workflow_config
 	workflow.write_graph(dotfilename=path.join(workflow.base_dir,workdir_name,"graph.dot"), graph2use="hierarchical", format="png")
+	out_dir = path.join(workflow.base_dir,"bids")
 
+	#Run workflow
 	if not keep_work or not keep_crashdump:
 		try:
 			workflow.run(plugin="MultiProc", plugin_args={'n_procs' : n_procs})
@@ -188,12 +200,12 @@ def bru2bids(measurements_base,
 	if not keep_crashdump:
 		try:
 			shutil.rmtree(crashdump_dir)
-		except FileNotFoundError:
+		except (FileNotFoundError, OSError):
 			pass
 
 	try:
 		if structural_scan_types.any():
-			get_s_scan = pe.Node(name='get_s_scan', interface=util.Function(function=get_scan, input_names=inspect.getargspec(get_scan)[0], output_names=['scan_path','scan_type','trial']))
+			get_s_scan = pe.Node(name='get_s_scan', interface=util.Function(function=get_scan, input_names=inspect.getargspec(get_scan)[0], output_names=['scan_path','scan_type','task']))
 			get_s_scan.inputs.ignore_exception = True
 			get_s_scan.inputs.data_selection = data_selection
 			get_s_scan.inputs.measurements_base = measurements_base
@@ -244,8 +256,9 @@ def bru2bids(measurements_base,
 			workflow.connect(workflow_connections)
 			workflow.base_dir = path.join(measurements_base)
 			workflow.config = workflow_config
-			workflow.write_graph(dotfilename=path.join(workflow.base_dir,workdir_name,"graph.dot"), graph2use="hierarchical", format="png")
+			workflow.write_graph(dotfilename=path.join(workflow.base_dir,workdir_name,"graph_structural.dot"), graph2use="hierarchical", format="png")
 
+			#Execute the workflow
 			if not keep_work or not keep_crashdump:
 				try:
 					workflow.run(plugin="MultiProc", plugin_args={'n_procs' : n_procs})
@@ -258,8 +271,22 @@ def bru2bids(measurements_base,
 			if not keep_crashdump:
 				try:
 					shutil.rmtree(crashdump_dir)
-				except FileNotFoundError:
+				except (FileNotFoundError, OSError):
 					pass
 	except UnboundLocalError:
 		pass
+
+	# This is needed because BIDS does not yet support CBV
+	with open(path.join(out_dir,".bidsignore"), "w") as f:
+		f.write('*_cbv.*')
+
+	# BIDS needs a descriptor file
+	if not dataset_name:
+		dataset_name = measurements_base
+	description = {
+		'Name':dataset_name,
+		'BIDSVersion':'1.0.2',
+		}
+	with open(path.join(out_dir,'dataset_description.json'), 'w') as f:
+		json.dump(description, f)
 

@@ -30,11 +30,11 @@ def bids_autofind(bids_dir,modality):
 	       raise ValueError("modality parameter needs to be one of "+", ".join(allowed_modalities)+".")
 
 	if modality in ("func","dwi"):
-	       match_regex = '.+/sub-(?P<sub>.+)/ses-(?P<ses>.+)/'+modality+'/.*?_trial-(?P<trial>.+)\.nii.gz'
+	       match_regex = '.+/sub-(?P<sub>.+)/ses-(?P<ses>.+)/'+modality+'/.*?_task-(?P<task>.+)\.nii.gz'
 	elif modality == "anat":
-	       match_regex = '.+/sub-(?P<sub>.+)/ses-(?P<ses>.+)/anat/.*?_(?P<trial>.+)\.nii.gz'
+	       match_regex = '.+/sub-(?P<sub>.+)/ses-(?P<ses>.+)/anat/.*?_(?P<task>.+)\.nii.gz'
 
-	path_template = bids_dir+"/sub-{subject}/ses-{session}/"+modality+"/sub-{subject}_ses-{session}_trial-{trial}.nii.gz"
+	path_template = bids_dir+"/sub-{subject}/ses-{session}/"+modality+"/sub-{subject}_ses-{session}_task-{task}.nii.gz"
 
 	datafind = nio.DataFinder()
 	datafind.inputs.root_paths = bids_dir
@@ -46,7 +46,7 @@ def bids_autofind(bids_dir,modality):
 		substitution = {}
 		substitution["subject"] = datafind_res.outputs.sub[ix]
 		substitution["session"] = datafind_res.outputs.ses[ix]
-		substitution["trial"] = datafind_res.outputs.trial[ix]
+		substitution["task"] = datafind_res.outputs.task[ix]
 		if path_template.format(**substitution) != i:
 			print("Original DataFinder path: "+i)
 			print("Reconstructed path: "+path_template.format(**substitution))
@@ -56,7 +56,7 @@ def bids_autofind(bids_dir,modality):
 	return path_template, substitutions
 
 def bids_substitution_iterator(sessions, subjects,
-	trials=[''],
+	tasks=[''],
 	data_dir='',
 	preprocessing_dir='',
 	acquisitions=[''],
@@ -75,7 +75,7 @@ def bids_substitution_iterator(sessions, subjects,
 		A list of session identifiers to include in the iterator.
 	subjects : list
 		A list of subject identifiers to include in the iterator.
-	trials : list, optional
+	tasks : list, optional
 		A list of scan types to include in the iterator.
 	data_dir : str, optional
 		Path to the data root (this is where SAMRI creates e.g. `preprocessing`, `l1`, or `l2` directories.
@@ -104,14 +104,14 @@ def bids_substitution_iterator(sessions, subjects,
 	if not preprocessing_workdir:
 		preprocessing_workdir = preprocessing_dir+"_work"
 	substitutions=[]
-	for subject, session, trial, acquisition, modality in product(subjects, sessions, trials, acquisitions, modalities):
+	for subject, session, task, acquisition, modality in product(subjects, sessions, tasks, acquisitions, modalities):
 		substitution={}
 		substitution["data_dir"] = data_dir
 		substitution["l1_dir"] = l1_dir
 		substitution["l1_workdir"] = l1_workdir
 		substitution["preprocessing_dir"] = preprocessing_dir
 		substitution["preprocessing_workdir"] = preprocessing_workdir
-		substitution["trial"] = trial
+		substitution["task"] = task
 		substitution["session"] = session
 		substitution["subject"] = subject
 		substitution["acquisition"] = acquisition

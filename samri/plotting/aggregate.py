@@ -1,4 +1,5 @@
 import matplotlib.pyplot as plt
+import numpy as np
 import pandas as pd
 import seaborn.apionly as sns
 from os import path
@@ -111,3 +112,53 @@ def registration_qc(df,
 		sns.plt.show()
 	if save_as:
 		plt.savefig(path.abspath(path.expanduser(save_as)), bbox_inches='tight')
+
+def roi_distributions(df_path,
+	small_roi_cutoff=500,
+	):
+	"""Plot the distributions of values inside 3D image regions of interest.
+
+	Parameters
+	----------
+
+	df_path : str
+		Path to a `pandas.DataFrame` object containing a 'value' and a 'Structure' column.
+	small_roi_cutoff : int, optional
+		Minimum number of rows per 'Structure' value required to add the respective 'Structure' value to the plot.
+	"""
+	sns.set(style="white", rc={"axes.facecolor": (0, 0, 0, 0)})
+
+	df_path = path.abspath(path.expanduser(df_path))
+
+	df = pd.read_csv(df_path)
+	if small_roi_cutoff:
+		for i in list(df['Structure'].unique()):
+			if len(df[df['Structure']==i]) < small_roi_cutoff:
+				df = df[df['Structure'] != i]
+	structures = list(df['Structure'].unique())
+	# Initialize the FacetGrid object
+	pal = sns.cubehelix_palette(len(structures), rot=-.5, light=.7)
+	g = sns.FacetGrid(df, row='Structure', hue='Structure', aspect=15, size=.5, palette=pal)
+
+	# Draw the densities in a few steps
+	g.map(sns.kdeplot, 'value', clip_on=False, gridsize=small_roi_cutoff, shade=True, alpha=1, lw=1.5, bw=.2)
+	g.map(sns.kdeplot, 'value', clip_on=False, gridsize=small_roi_cutoff, color="w", lw=2, bw=.2)
+	g.map(plt.axhline, y=0, lw=2, clip_on=False)
+
+	# Define and use a simple function to label the plot in axes coordinates
+	def label(x, color, label):
+	    ax = plt.gca()
+	    ax.text(0, .2, label, fontweight="bold", color=color,
+		    ha="left", va="center", transform=ax.transAxes)
+
+	g.map(label, 'value')
+
+	# Set the subplots to overlap
+	g.fig.subplots_adjust(hspace=-.25)
+
+	# Remove axes details that don't play will with overlap
+	g.set_titles("")
+	g.set(yticks=[])
+	g.despine(bottom=True, left=True)
+	plt.show()
+

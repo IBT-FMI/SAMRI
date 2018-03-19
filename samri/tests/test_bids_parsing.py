@@ -20,16 +20,16 @@ def test_bids_naming():
 	bruker_data_dir = path.join(DATA_DIR,'bruker')
 	data_selection = get_data_selection(bruker_data_dir,
 		match={
-			'trial':['JogB','CogB','CogB2m'],
+			'task':['JogB','CogB','CogB2m'],
 			'acquisition':['TurboRARE', 'TurboRARElowcov']},
 		)
 
 	name = bids_naming(
 			metadata=data_selection,
-			scan_type='acq-EPI_cbv_trial-CogB',
+			scan_type='acq-EPI_cbv_task-CogB',
 			subject_session=('5706','ofMpF'),
 			)
-	assert_and_feedback(name,'sub-5706_ses-ofMpF_acq-EPI_trial-CogB_cbv.nii.gz', debug=data_selection)
+	assert_and_feedback(name,'sub-5706_ses-ofMpF_task-CogB_acq-EPI_cbv.nii.gz', debug=data_selection)
 
 	name = bids_naming(
 			metadata=data_selection,
@@ -40,10 +40,10 @@ def test_bids_naming():
 
 	name = bids_naming(
 			metadata=data_selection,
-			scan_type='acq-EPI_cbv_trial-CogB',
+			scan_type='acq-EPI_cbv_task-CogB',
 			subject_session=('5704','ofMpF'),
 			)
-	assert_and_feedback(name,'sub-5704_ses-ofMpF_acq-EPI_trial-CogB_cbv.nii.gz', debug=data_selection)
+	assert_and_feedback(name,'sub-5704_ses-ofMpF_task-CogB_acq-EPI_cbv.nii.gz', debug=data_selection)
 
 	name = bids_naming(
 			metadata=data_selection,
@@ -60,8 +60,23 @@ def test_bids_naming():
 #	bruker_data_dir = path.join(DATA_DIR,'bruker')
 #	bru2bids(bruker_data_dir,
 #		debug=False,
-#		functional_match={'trial':['JogB','CogB','CogB2m'],},
+#		functional_match={'task':['JogB','CogB','CogB2m'],},
 #		structural_match={'acquisition':['TurboRARE', 'TurboRARElowcov']},
 #		actual_size=True,
 #		keep_work=False,
 #		)
+
+
+# will fail as well (see above)
+
+#def test_bruker_bids():
+#	from samri.pipelines.preprocess import bruker
+#
+#	bids_base = '~/ni_data/bruker/bids'
+#
+#	bruker(bids_base,
+#		"mouse",
+#		functional_match={'task':['JogB','CogB','CogB2m'],},
+#		structural_match={'acquisition':['TurboRARE', 'TurboRARElowcov']},
+#		functional_registration_method="composite")
+

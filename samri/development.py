@@ -17,8 +17,8 @@ def temporal_qc_separate():
 		)
 
 	for i in substitutions:
-		timecourses  = base_metrics('{data_dir}/{preprocessing_dir}/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_acq-{acquisition}_trial-{trial}.nii', i)
-		events_df = pd.read_csv('{data_dir}/{preprocessing_dir}/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_acq-{acquisition}_trial-{trial}_events.tsv'.format(**i), sep='\t')
+		timecourses  = base_metrics('{data_dir}/{preprocessing_dir}/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_acq-{acquisition}_task-{task}.nii', i)
+		events_df = pd.read_csv('{data_dir}/{preprocessing_dir}/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_acq-{acquisition}_task-{task}_events.tsv'.format(**i), sep='\t')
 		multi(timecourses,
 			designs=[],
 			events_dfs=[events_df],
@@ -47,7 +47,7 @@ def temporal_qc_al_in_one():
 		acquisitions=['EPIalladj','EPIcopyadjNODUM','EPIcopyadj','EPImoveGOP'],
 		)
 
-	timecourses  = iter_base_metrics('{data_dir}/{preprocessing_dir}/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_acq-{acquisition}_trial-{trial}.nii', substitutions)
+	timecourses  = iter_base_metrics('{data_dir}/{preprocessing_dir}/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_acq-{acquisition}_task-{task}.nii', substitutions)
 	multi(timecourses,
 		designs=[],
 		events_dfs=[],
@@ -103,7 +103,7 @@ def test_reg_qc(
 	if autofind:
 		path_template, substitutions = bids_autofind("~/ni_data/ofM.dr/preprocessing/composite","func")
 	else:
-		path_template = "{data_dir}/preprocessing/{preprocessing_dir}/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_acq-{acquisition}_trial-{trial}_cbv.nii.gz"
+		path_template = "{data_dir}/preprocessing/{preprocessing_dir}/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_acq-{acquisition}_task-{task}_cbv.nii.gz"
 		substitutions = bids_substitution_iterator(
 			["ofM", "ofMaF", "ofMcF1", "ofMcF2", "ofMpF"],
 			["5689","5690","5691","5694","5706","5700","5704","6255","6262"],
@@ -136,7 +136,7 @@ def reg_cc(
 	if autofind:
 		path_template, substitutions = bids_autofind("~/ni_data/ofM.dr/preprocessing/composite","func")
 	else:
-		path_template = "{data_dir}/preprocessing/{preprocessing_dir}/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_acq-{acquisition}_trial-{trial}_cbv.nii.gz"
+		path_template = "{data_dir}/preprocessing/{preprocessing_dir}/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_acq-{acquisition}_task-{task}_cbv.nii.gz"
 		substitutions = bids_substitution_iterator(
 			["ofM", "ofMaF", "ofMcF1", "ofMcF2", "ofMpF"],
 			["4001","4007","4008","4011","5692","5694","5699","5700","5704","6255","6262"],

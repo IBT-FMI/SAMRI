@@ -4,7 +4,7 @@ from os import path
 from samri.analysis import fc
 from samri.utilities import bids_substitution_iterator
 from samri.fetch.local import roi_from_atlaslabel
-from samri.plotting import maps, connectivity
+from samri.plotting import maps
 from samri.analysis import fc
 
 def overview(workflow, identifiers,
@@ -60,7 +60,7 @@ def plot_roi_per_session(l1_dir, roi_mask, color,
 			label_names=roi,
 			)
 	fit, anova, subjectdf, voxeldf = roi.per_session(substitutions,
-		t_file_template="{data_dir}/l1/{l1_dir}/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_trial-{trial}_tstat.nii.gz",
+		t_file_template="{data_dir}/l1/{l1_dir}/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_task-{task}_tstat.nii.gz",
 		roi_mask=roi_mask,
 		roi_mask_normalize=roi_mask_normalize,
 		)
@@ -81,12 +81,12 @@ def p_clusters(mask):
 		l1_dir="dr",
 		)
 	timecourses, designs, stat_maps, events_dfs, subplot_titles = summary.p_filtered_ts(substitutions,
-		ts_file_template="{data_dir}/preprocessing/{preprocessing_dir}/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_trial-{scan}.nii.gz",
-		beta_file_template="{data_dir}/l1/{l1_dir}/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_trial-{scan}_cope.nii.gz",
-		# p_file_template="{data_dir}/l1/{l1_dir}/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_trial-{scan}_pstat.nii.gz",
-		p_file_template="{data_dir}/l1/{l1_dir}/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_trial-{scan}_pfstat.nii.gz",
+		ts_file_template="{data_dir}/preprocessing/{preprocessing_dir}/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_task-{scan}.nii.gz",
+		beta_file_template="{data_dir}/l1/{l1_dir}/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_task-{scan}_cope.nii.gz",
+		# p_file_template="{data_dir}/l1/{l1_dir}/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_task-{scan}_pstat.nii.gz",
+		p_file_template="{data_dir}/l1/{l1_dir}/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_task-{scan}_pfstat.nii.gz",
 		design_file_template="{data_dir}/l1/{l1_workdir}/_subject_session_scan_{subject}.{session}.{scan}/modelgen/run0.mat",
-		event_file_template="{data_dir}/preprocessing/{preprocessing_dir}/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_trial-{scan}_events.tsv",
+		event_file_template="{data_dir}/preprocessing/{preprocessing_dir}/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_task-{scan}_events.tsv",
 		brain_mask=mask,
 		p_level=0.05,
 		)
@@ -121,10 +121,10 @@ def qc_regressor(sessions, subjects, scans, workflow_name, mask,
 
 	substitutions = bids_substitution_iterator(sessions,subjects,scans,data_dir,workflow_name)
 	timecourses, designs, stat_maps, events_dfs, subplot_titles = summary.ts_overviews(substitutions, mask,
-		ts_file_template="{data_dir}/preprocessing/{preprocessing_dir}/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_trial-{scan}.nii.gz",
-		beta_file_template="{data_dir}/l1/{l1_dir}/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_trial-{scan}_cope.nii.gz",
+		ts_file_template="{data_dir}/preprocessing/{preprocessing_dir}/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_task-{scan}.nii.gz",
+		beta_file_template="{data_dir}/l1/{l1_dir}/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_task-{scan}_cope.nii.gz",
 		design_file_template="{data_dir}/l1/{l1_workdir}/_subject_session_scan_{subject}.{session}.{scan}/modelgen/run0.mat",
-		event_file_template="{data_dir}/preprocessing/{preprocessing_dir}/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_trial-{scan}_events.tsv",
+		event_file_template="{data_dir}/preprocessing/{preprocessing_dir}/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_task-{scan}_events.tsv",
 		)
 
 	timeseries.multi(timecourses, designs, stat_maps, events_dfs, subplot_titles,
@@ -138,7 +138,7 @@ def single_ts_seed_connectivity(
 	save_as="fcs.pdf"
 	):
 	connectivity_img2 = fc.seed_based_connectivity(
-		"~/ni_data/ofM.dr/preprocessing/composite/sub-6255/ses-ofM/func/sub-6255_ses-ofM_trial-EPI_CBV_chr_longSOA.nii.gz",
+		"~/ni_data/ofM.dr/preprocessing/composite/sub-6255/ses-ofM/func/sub-6255_ses-ofM_task-EPI_CBV_chr_longSOA.nii.gz",
 		"~/ni_data/templates/roi/DSURQEc_dr.nii.gz",
 		save_as="~/fc.nii.gz"
 	)
@@ -185,7 +185,7 @@ def seed_connectivity_overview(
 		"composite",
 		)
 	fc_results = fc.seed_based(substitutions, "~/ni_data/templates/roi/DSURQEc_dr_xs.nii.gz", "~/ni_data/templates/DSURQEc_200micron_mask.nii.gz",
-		ts_file_template="~/ni_data/ofM.dr/preprocessing/{preprocessing_dir}/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_trial-{trial}.nii.gz",
+		ts_file_template="~/ni_data/ofM.dr/preprocessing/{preprocessing_dir}/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_task-{task}.nii.gz",
 		)
 
 	print([i['subject'] for i in fc_results])
@@ -219,13 +219,14 @@ def seed_connectivity_overview(
 			scale=0.4,
 			)
 
-def functional_connectivity(ts="~/ni_data/ofM.dr/preprocessing/as_composite/sub-5690/ses-ofM_aF/func/sub-5690_ses-ofM_aF_trial-EPI_CBV_chr_longSOA.nii.gz",
+def functional_connectivity(ts="~/ni_data/ofM.dr/preprocessing/as_composite/sub-5690/ses-ofM_aF/func/sub-5690_ses-ofM_aF_task-EPI_CBV_chr_longSOA.nii.gz",
 	labels_img='~/ni_data/templates/roi/DSURQEc_40micron_labels.nii',
 	labels = '~/ni_data/templates/roi/DSURQE_mapping.csv',
 	):
 	"""
 	simple fc example
 	"""
+	from samri.plotting import connectivity
 	figsize = (50,50)
 	# incl. plotting
 	correlation_matrix = fc.correlation_matrix(ts, labels_img, save_as = '~/correlation_matrix.csv')

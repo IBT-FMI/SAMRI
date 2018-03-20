@@ -67,5 +67,5 @@ def drp_seed_fc():
 		ts_file_template='~/ni_data/ofM.dr/bids/preprocessing/generic/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_acq-{acquisition}_task-{task}_cbv.nii.gz',
 		save_results="~/ni_data/ofM.dr/bids/fc/DSURQEc_drp/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_acq-{acquisition}_task-{task}_cbv_zstat.nii.gz",
 		n_procs=N_PROCS,
-		)
+		cachedir='/mnt/data/joblib')
 

@@ -130,3 +130,46 @@ def mean(img_path, mask_path):
 	else:
 		masker = NiftiMasker(mask_img=mask)
 		add_roi_data(img_path,masker)
+
+def atlasassignment(data_path='~/ni_data/ofM.dr/bids/l2/anova_ctx/anova_zfstat.nii.gz',
+	null_label=0.0,
+	verbose=False,
+	):
+	from copy import deepcopy
+
+	atlas_filename = '~/ni_data/templates/roi/DSURQEc_200micron_labels.nii'
+	mapping = '~/ni_data/templates/roi/DSURQE_mapping.csv'
+	atlas_filename = path.abspath(path.expanduser(atlas_filename))
+	mapping = path.abspath(path.expanduser(mapping))
+	data_path = path.abspath(path.expanduser(data_path))
+
+	data = nib.load(data_path)
+	atlas = nib.load(atlas_filename)
+	if not np.array_equal(data.affine,atlas.affine):
+		print('The affines of these atlas and data file are not identical. In order to perform this sensitive operation we need to know that there is perfect correspondence between the voxels of input data and atlas.')
+		return
+	mapping = pd.read_csv(mapping)
+	data = data.get_data().flatten()
+	atlas = atlas.get_data().flatten()
+	slices = []
+	for d, a in zip(data, atlas):
+		if a == null_label:
+			continue
+		my_slice = mapping[mapping['right label']==a]
+		if my_slice.empty:
+			my_slice = mapping[mapping['left label']==a]
+		if my_slice.empty:
+			continue
+		my_slice = deepcopy(my_slice)
+		my_slice['value'] = d
+		if verbose:
+			print(my_slice)
+		slices.append(my_slice)
+	df = pd.concat(slices)
+	save_as = path.splitext(data_path)[0]
+	if save_as[-4:] == '.nii':
+		save_as = save_as[:-4]
+	save_as += '_atlasassignment.csv'
+	df.to_csv(save_as)
+	return
+

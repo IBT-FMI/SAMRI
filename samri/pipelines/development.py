@@ -182,17 +182,18 @@ def anova_fc():
 def anova():
 	from samri.fetch.local import roi_from_atlaslabel
 	from samri.pipelines import preprocess, glm
-	roi = roi_from_atlaslabel("~/ni_data/templates/roi/DSURQEc_200micron_labels.nii",
-		mapping="~/ni_data/templates/roi/DSURQE_mapping.csv",
-		label_names=["cortex"],
-		save_as="/tmp/ctx.nii.gz")
-	glm.l2_anova("~/ni_data/ofM.dr/l1/composite/",
+	#roi = roi_from_atlaslabel("~/ni_data/templates/roi/DSURQEc_200micron_labels.nii",
+	#	mapping="~/ni_data/templates/roi/DSURQE_mapping.csv",
+	#	label_names=["cortex"],
+	#	save_as="/tmp/ctx.nii.gz")
+	glm.l2_anova("~/ni_data/ofM.dr/bids/l1/generic/",
 		workflow_name="anova_ctx",
 		keep_work=False,
-		mask="/tmp/ctx.nii.gz",
+	#	mask="/tmp/ctx.nii.gz",
+		mask="~/ni_data/templates/DSURQEc_200micron_mask.nii.gz",
 		include={
 			'session':['ofM','ofMaF','ofMcF1','ofMcF2','ofMpF'],
-			'subject':['5691',"5689","5690","5700"],
+			'subject':['5691',"5689","5690","5700","6451","6460","6456","6461","6462"],
 			},
 		)
 	#glm.l2_anova("~/ni_data/ofM.dr/l1/composite/",
@@ -232,22 +233,22 @@ def anova():
 	#		},
 	#	)
 
-def typical_resp(data_path='~/ni_data/ofM.dr/', l1_dir='l1', workflow_name='composite'):
+def typical_resp(data_path='~/ni_data/ofM.dr/bids/', l1_dir='l1', workflow_name='generic'):
 	from samri.pipelines import preprocess, glm
-	glm.l2_common_effect(path.join(data_path,l1_dir,workflow_name),
-		workflow_name="best_responders_old",
-		include={
-			'subject':["5689","5690","5691","5700","6262","6255","5694","5706"],
-			'task':["CogB"],
-			},
-		groupby="session",
-		keep_work=True,
-		mask="~/ni_data/templates/DSURQEc_200micron_mask.nii.gz",
-		)
+	#glm.l2_common_effect(path.join(data_path,l1_dir,workflow_name),
+	#	workflow_name="best_responders_old",
+	#	include={
+	#		'subject':["5689","5690","5691","5700","6262","6255","5694","5706"],
+	#		'task':["CogB"],
+	#		},
+	#	groupby="session",
+	#	keep_work=True,
+	#	mask="~/ni_data/templates/DSURQEc_200micron_mask.nii.gz",
+	#	)
 	glm.l2_common_effect(path.join(data_path,l1_dir,workflow_name),
 		workflow_name="best_responders",
 		include={
-			'subject':["5699","5687","5691","5694","4005","6255","5706"],
+			'subject':["6262","6255","5694","5706",'5704','6455','6459','5691',"5689","5690","5700","6451","6460","6456","6461","6462"],
 			'task':["CogB"],
 			},
 		groupby="session",

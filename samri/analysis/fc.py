@@ -399,12 +399,12 @@ def dendogram(correlation_matrix,
 
 	y = hier_clustering(correlation_matrix, method='centroid')
 	z = hier_clustering(y, orientation='right')
-	
+
 	fig = pylab.figure(figsize=figsize)
 	ax_1 = fig.add_axes([0.1,0.1,0.2,0.8])
 	ax_1.set_xticks([])
 	ax_1.set_yticks([])
-	
+
 	ax_2 = fig.add_axes([0.3,0.1,0.6,0.8])
 	index = z['leaves']
 	correlation_matrix = correlation_matrix[index,:]

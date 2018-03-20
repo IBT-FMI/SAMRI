@@ -352,7 +352,7 @@ def roi_masking(substitution, ts_file_template, beta_file_template, design_file_
 	except ValueError:
 		print('Not found',ts_file,beta_file,design_file,event_file)
 		return None,None,None,None,None
-	subplot_title = "\n ".join([str(substitution["subject"]),str(substitution["session"])])
+	subplot_title = "Subject {} | Session {}".format(str(substitution["subject"]),str(substitution["session"]))
 	timecourse = np.mean(timecourse, axis=0)
 	design = design*np.mean(betas)
 

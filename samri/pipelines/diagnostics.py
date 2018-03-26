@@ -1,6 +1,7 @@
 from os import path, listdir, getcwd, remove
 
 import inspect
+import json
 import re
 import shutil
 from copy import deepcopy
@@ -28,6 +29,8 @@ try:
 except NameError:
 	    FileNotFoundError = IOError
 
+@argh.arg('-e','--exclude', type=json.loads)
+@argh.arg('-i','--include', type=json.loads)
 def diagnose(bids_base,
 	components=None,
 	debug=False,

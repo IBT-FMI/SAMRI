@@ -281,7 +281,7 @@ def multi(timecourses,
 
 			ax.set_xlim([0,len(timecourse)])
 	else:
-		fig, ax = plt.subplots(figsize=(ax_size[0],ax_size[1]), facecolor='#eeeeee')
+		fig, ax = plt.subplots(facecolor='#eeeeee')
 
 		timecourse = timecourses[0]
 		subplot_title = subplot_titles[0]

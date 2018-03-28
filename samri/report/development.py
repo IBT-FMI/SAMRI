@@ -248,6 +248,31 @@ def ctx_connectivity(workflow_name = 'DSURQEc_drp'):
 
 	subjectdf.to_csv('~/ni_data/ofM.dr/bids/fc/{}/ctx_summary.csv'.format(workflow_name))
 
+def test_iter_signal():
+	from samri.report.snr import iter_significant_signal
+
+	substitutions=[
+		{"subject":5686,"session":"ofM","task":'CogB'},
+		{"subject":5690,"session":"ofM","task":'CogB'},
+		{"subject":5691,"session":"ofM","task":'CogB'},
+		{"subject":5691,"session":"ofM","task":'CogallB'},
+		]
+	df = iter_significant_signal('~/ni_data/ofM.dr/bids/l1/generic/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_acq-EPI_task-{task}_cbv_pfstat.nii.gz',
+		substitutions=substitutions,
+		mask_path='~/ni_data/templates/DSURQEc_200micron_mask.nii.gz',
+		)
+	print(df)
+
+def test_signal():
+	from samri.report.snr import significant_signal
+
+	substitution={"subject":5686,"session":"ofM","task":'CogB'}
+	mean, median = significant_signal('~/ni_data/ofM.dr/bids/l1/generic/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_acq-EPI_task-{task}_cbv_pfstat.nii.gz',
+		substitution=substitution,
+		mask_path='~/ni_data/templates/DSURQEc_200micron_mask.nii.gz',
+		)
+	print(mean,median)
+
 def ctx_pattern_mask_drs_sfc():
 	import pandas as pd
 	from behaviopy.plotting import qualitative_times

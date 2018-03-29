@@ -131,9 +131,10 @@ def mean(img_path, mask_path):
 		masker = NiftiMasker(mask_img=mask)
 		add_roi_data(img_path,masker)
 
-def atlasassignment(data_path='~/ni_data/ofM.dr/bids/l2/anova_ctx/anova_zfstat.nii.gz',
+def atlasassignment(data_path='~/ni_data/ofM.dr/bids/l2/anova/anova_zfstat.nii.gz',
 	null_label=0.0,
 	verbose=False,
+	lateralized=False,
 	):
 	from copy import deepcopy
 
@@ -155,16 +156,20 @@ def atlasassignment(data_path='~/ni_data/ofM.dr/bids/l2/anova_ctx/anova_zfstat.n
 	for d, a in zip(data, atlas):
 		if a == null_label:
 			continue
-		my_slice = mapping[mapping['right label']==a]
-		if my_slice.empty:
-			my_slice = mapping[mapping['left label']==a]
-		if my_slice.empty:
-			continue
-		my_slice = deepcopy(my_slice)
-		my_slice['value'] = d
-		if verbose:
-			print(my_slice)
-		slices.append(my_slice)
+		if lateralized:
+			pass
+			#!!!this still needs to be implemented
+		else:
+			my_slice = mapping[mapping['right label']==a]
+			if my_slice.empty:
+				my_slice = mapping[mapping['left label']==a]
+			if my_slice.empty:
+				continue
+			my_slice = deepcopy(my_slice)
+			my_slice['value'] = d
+			if verbose:
+				print(my_slice)
+			slices.append(my_slice)
 	df = pd.concat(slices)
 	save_as = path.splitext(data_path)[0]
 	if save_as[-4:] == '.nii':

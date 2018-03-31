@@ -1,4 +1,6 @@
 import matplotlib.pyplot as plt
+import matplotlib as mpl
+import matplotlib.patheffects as path_effects
 import numpy as np
 import pandas as pd
 import seaborn.apionly as sns
@@ -114,7 +116,17 @@ def registration_qc(df,
 		plt.savefig(path.abspath(path.expanduser(save_as)), bbox_inches='tight')
 
 def roi_distributions(df_path,
-	small_roi_cutoff=500,
+	ascending=False,
+	cmap='viridis',
+	exclude_tissue_type=[],
+	max_rois=7,
+	save_as=False,
+	small_roi_cutoff=8,
+	start=0.0,
+	stop=1.0,
+	text_side='left',
+	xlim=None,
+	ylim=None,
 	):
 	"""Plot the distributions of values inside 3D image regions of interest.
 
@@ -122,11 +134,38 @@ def roi_distributions(df_path,
 	----------
 
 	df_path : str
-		Path to a `pandas.DataFrame` object containing a 'value' and a 'Structure' column.
+		Path to a `pandas.DataFrame` object containing a 'value' a 'Structure', and a 'tissue type' column.
+	ascending : boolean, optional
+		Whether to plot the ROI distributions from lowest to highest mean
+		(if `False` the ROI distributions are plotted from highest to lowest mean).
+	cmap : string, optional
+		Name of matplotlib colormap which to color the plot array with.
+	exclude_tissue_type : list, optional
+		What tissue types to discount from plotting.
+		Values in this list will be ckecked on the 'tissue type' column of `df`.
+		This is commonly used to exclude cerebrospinal fluid ROIs from plotting.
+	max_rois : int, optional
+		How many ROIs to limit the plot to.
+	save_as : str, optional
+		Path to save the figure to.
 	small_roi_cutoff : int, optional
-		Minimum number of rows per 'Structure' value required to add the respective 'Structure' value to the plot.
+		Minimum number of rows per 'Structure' value required to add the respective 'Structure' value to the plot
+		(this corresponds to the minimum number of voxels which a ROI needs to have in order to be included in the plot).
+	start : float, optional
+		At which fraction of the colormap to start.
+	stop : float, optional
+		At which fraction of the colormap to stop.
+	text_side : {'left', 'right'}, optional
+		Which side of the plot to set the `df` 'Structure'-column values on.
+	xlim : list, optional
+		X-axis limits, passed to `seaborn.FacetGrid()`
+	ylim : list, optional
+		Y-axis limits, passed to `seaborn.FacetGrid()`
 	"""
-	sns.set(style="white", rc={"axes.facecolor": (0, 0, 0, 0)})
+
+	mpl.rcParams["xtick.major.size"] = 0.0
+	mpl.rcParams["ytick.major.size"] = 0.0
+	mpl.rcParams["axes.facecolor"] = (0, 0, 0, 0)
 
 	df_path = path.abspath(path.expanduser(df_path))
 
@@ -135,22 +174,61 @@ def roi_distributions(df_path,
 		for i in list(df['Structure'].unique()):
 			if len(df[df['Structure']==i]) < small_roi_cutoff:
 				df = df[df['Structure'] != i]
+	df['mean'] = df.groupby('Structure')['value'].transform('mean')
+	df = df.sort_values(['mean'],ascending=ascending)
+	if exclude_tissue_type:
+		df = df[~df['tissue type'].isin(exclude_tissue_type)]
+	if max_rois:
+		uniques = list(df['Structure'].unique())
+		keep = uniques[:max_rois]
+		df = df[df['Structure'].isin(keep)]
 	structures = list(df['Structure'].unique())
+
+	# Define colors
+	cm_subsection = np.linspace(start, stop, len(structures))
+	cmap = plt.get_cmap(cmap)
+	pal = [ cmap(x) for x in cm_subsection ]
+
 	# Initialize the FacetGrid object
-	pal = sns.cubehelix_palette(len(structures), rot=-.5, light=.7)
-	g = sns.FacetGrid(df, row='Structure', hue='Structure', aspect=15, size=.5, palette=pal)
+	aspect = mpl.rcParams['figure.figsize']
+	ratio = aspect[0]/float(aspect[1])
+	g = sns.FacetGrid(df,
+		row='Structure',
+		hue='Structure',
+		aspect=max_rois*ratio,
+		size=aspect[1]/max_rois,
+		palette=pal,
+		xlim=xlim,
+		ylim=ylim,
+		)
 
 	# Draw the densities in a few steps
-	g.map(sns.kdeplot, 'value', clip_on=False, gridsize=small_roi_cutoff, shade=True, alpha=1, lw=1.5, bw=.2)
-	g.map(sns.kdeplot, 'value', clip_on=False, gridsize=small_roi_cutoff, color="w", lw=2, bw=.2)
-	g.map(plt.axhline, y=0, lw=2, clip_on=False)
+	lw = mpl.rcParams['lines.linewidth']
+	g.map(sns.kdeplot, 'value', clip_on=False, gridsize=500, shade=True, alpha=1, lw=lw/4.*3, bw=.2)
+	g.map(sns.kdeplot, 'value', clip_on=False, gridsize=500, color="w", lw=lw, bw=.2)
+	g.map(plt.axhline, y=0, lw=lw, clip_on=False)
 
 	# Define and use a simple function to label the plot in axes coordinates
 	def label(x, color, label):
-	    ax = plt.gca()
-	    ax.text(0, .2, label, fontweight="bold", color=color,
-		    ha="left", va="center", transform=ax.transAxes)
-
+		ax = plt.gca()
+		if text_side == 'left':
+			text = ax.text(0, .04, label,
+				fontweight="bold",
+				color=color,
+				ha="left",
+				va="bottom",
+				transform=ax.transAxes,
+				)
+		if text_side == 'right':
+			text = ax.text(1, .04, label,
+				fontweight="bold",
+				color=color,
+				ha="right",
+				va="bottom",
+				transform=ax.transAxes,
+				)
+		text.set_path_effects([path_effects.Stroke(linewidth=lw, foreground='w'),
+                       path_effects.Normal()])
 	g.map(label, 'value')
 
 	# Set the subplots to overlap
@@ -160,5 +238,7 @@ def roi_distributions(df_path,
 	g.set_titles("")
 	g.set(yticks=[])
 	g.despine(bottom=True, left=True)
-	plt.show()
 
+	if save_as:
+		save_as = path.abspath(path.expanduser(save_as))
+		plt.savefig(save_as)

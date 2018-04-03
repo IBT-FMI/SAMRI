@@ -77,7 +77,6 @@ def per_session(substitutions, roi_mask,
 		roi_mask = path.abspath(path.expanduser(roi_mask))
 		roi_mask = nib.load(roi_mask)
 
-
 	masker = NiftiMasker(mask_img=roi_mask)
 
 	n_jobs = mp.cpu_count()-2

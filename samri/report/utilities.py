@@ -8,10 +8,22 @@ try: FileNotFoundError
 except NameError:
 	class FileNotFoundError(OSError):
 		pass
-def add_roi_data(img_path,masker,
+def add_roi_data(img_path, masker,
 	substitution=False,
 	):
-	"""Return a per-subject and a per-voxel dataframe containing the mean and voxelwise ROI t-scores"""
+	"""
+	Return a dataframe containing the subject- and session-wise mean of a Region of Interest (ROI) score.
+
+	Parameters
+	----------
+
+	img_path : str
+		Path to NIfTI file from which the ROI is to be extracted.
+	makser : nilearn.NiftiMasker
+		Nilearn `nifti1.Nifti1Image` object to use for masking the desired ROI.
+	substitution : dict, optional
+		A dictionary with keys which include 'subject' and 'session'.
+	"""
 	subject_data={}
 	if substitution:
 		img_path = img_path.format(**substitution)
@@ -24,24 +36,16 @@ def add_roi_data(img_path,masker,
 	except (FileNotFoundError, nib.py3k.FileNotFoundError):
 		return pd.DataFrame({}), pd.DataFrame({})
 	else:
-		subject_data["session"]=substitution["session"]
-		subject_data["subject"]=substitution["subject"]
-		voxel_datas=[]
-		for ix, i in enumerate(img):
-			voxel_data = deepcopy(subject_data)
-			voxel_data["voxel"]=ix
-			voxel_data["t"]=i
-			voxel_data = pd.DataFrame(voxel_data, index=[None])
-			voxel_datas.append(voxel_data)
-		vdf = pd.concat(voxel_datas)
-		subject_data["t"]=mean
-		sdf = pd.DataFrame(subject_data, index=[None])
-		return sdf, vdf
+		subject_data['session'] = substitution['session']
+		subject_data['subject'] = substitution['subject']
+		subject_data['t'] = mean
+		mask_path = path.abspath(masker.mask_img.get_filename())
+		subject_data['feature'] = mask_path
+		df = pd.DataFrame(subject_data, index=[None])
+		return df
 
-def add_pattern_data(substitution,img_path,pattern,
-	voxels=False,
-	):
-	"""Return a per-subject and a per-voxel dataframe containing the mean and voxelwise multivariate patern scores"""
+def add_pattern_data(substitution,img_path,pattern):
+	"""Return a dataframe containing the subject- and session-wise mean of a patern score."""
 	subject_data={}
 	if substitution:
 		img_path = img_path.format(**substitution)
@@ -57,18 +61,7 @@ def add_pattern_data(substitution,img_path,pattern,
 		pattern_score = np.nanmean(pattern_evaluation)
 		subject_data["session"]=substitution["session"]
 		subject_data["subject"]=substitution["subject"]
-		if voxels:
-			voxel_datas=[]
-			for ix, i in enumerate(pattern_evaluation):
-				voxel_data = deepcopy(subject_data)
-				voxel_data["voxel"]=ix
-				voxel_data["t"]=i
-				voxel_data = pd.DataFrame(voxel_data, index=[None])
-				voxel_datas.append(voxel_data)
-			vdf = pd.concat(voxel_datas)
-		else:
-			vdf = False
 		subject_data["t"]=pattern_score
-		sdf = pd.DataFrame(subject_data, index=[None])
-		return sdf, vdf
+		df = pd.DataFrame(subject_data, index=[None])
+		return df
 

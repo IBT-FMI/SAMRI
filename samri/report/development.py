@@ -2,7 +2,6 @@
 
 def pattern_fc():
 	import pandas as pd
-	from behaviopy.plotting import qualitative_times
 	from samri.plotting import summary
 	from samri.report import roi
 	from samri.utilities import bids_substitution_iterator
@@ -52,7 +51,6 @@ def pattern_fc():
 
 def pattern_activity():
 	import pandas as pd
-	from behaviopy.plotting import qualitative_times
 	from samri.plotting import summary
 	from samri.report import roi
 	from samri.utilities import bids_substitution_iterator
@@ -99,7 +97,6 @@ def pattern_activity():
 
 def label_activity(label):
 	import pandas as pd
-	from behaviopy.plotting import qualitative_times
 	from samri.plotting import summary
 	from samri.report import roi
 	from samri.utilities import bids_substitution_iterator
@@ -148,7 +145,6 @@ def label_activity(label):
 
 def roi_activity(roi_mask="~/ni_data/templates/roi/DSURQEc_dr.nii.gz"):
 	import pandas as pd
-	from behaviopy.plotting import qualitative_times
 	from samri.plotting import summary
 	from samri.report import roi
 	from samri.utilities import bids_substitution_iterator
@@ -203,7 +199,6 @@ def roi_activity(roi_mask="~/ni_data/templates/roi/DSURQEc_dr.nii.gz"):
 
 def ctx_connectivity(workflow_name = 'DSURQEc_drp'):
 	import pandas as pd
-	from behaviopy.plotting import qualitative_times
 	from samri.plotting import summary
 	from samri.report import roi
 	from samri.utilities import bids_substitution_iterator
@@ -250,7 +245,6 @@ def ctx_connectivity(workflow_name = 'DSURQEc_drp'):
 
 def ctx_pattern_mask_drs_sfc():
 	import pandas as pd
-	from behaviopy.plotting import qualitative_times
 	from samri.plotting import summary
 	from samri.report import roi
 	from samri.utilities import bids_substitution_iterator

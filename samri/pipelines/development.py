@@ -101,8 +101,10 @@ def bids_preprocessing():
 	bids_base = '~/ni_data/ofM.dr/bids'
 
 	bruker(bids_base, "~/ni_data/templates/DSURQEc_200micron_average.nii",
-		functional_match={'task':['CogB','JPogP'],'type':['cbv']},
-		structural_match={'acquisition':['TurboRARE',]},
+		#functional_match={'task':['CogB','JPogP'],'type':['cbv']},
+		#structural_match={'acquisition':['TurboRARE',]},
+		functional_match={'task':['JogB'],'type':['cbv']},
+		structural_match={'acquisition':['TurboRARElowcov',]},
 		#subjects=['6451'],
 		actual_size=True,
 		functional_registration_method="composite",
@@ -114,7 +116,7 @@ def bids_l1():
 
 	glm.l1('~/ni_data/ofM.dr/bids/preprocessing/generic',
 		workflow_name='generic',
-		include={"subject":["6451"]},
+		#include={"subject":["6451"]},
 		habituation="confound",
 		mask="~/ni_data/templates/DSURQEc_200micron_mask.nii.gz",
 		keep_work=True,
@@ -187,9 +189,8 @@ def anova():
 	#	label_names=["cortex"],
 	#	save_as="/tmp/ctx.nii.gz")
 	glm.l2_anova("~/ni_data/ofM.dr/bids/l1/generic/",
-		workflow_name="anova_ctx",
+		workflow_name="anova",
 		keep_work=False,
-	#	mask="/tmp/ctx.nii.gz",
 		mask="~/ni_data/templates/DSURQEc_200micron_mask.nii.gz",
 		include={
 			'session':['ofM','ofMaF','ofMcF1','ofMcF2','ofMpF'],

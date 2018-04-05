@@ -35,39 +35,6 @@ def overview(workflow, identifiers,
 		save_as=save_as,
 		)
 
-def plot_roi_per_session(l1_dir, roi_mask, color,
-	roi_mask_normalize="",
-	):
-	from samri.plotting import summary
-	from samri.report import roi
-
-	substitutions = bids_substitution_iterator(
-		["ofM","ofM_aF","ofM_cF1","ofM_cF2","ofM_pF"],
-		# ["5689","5690","5700"],
-		["6262","6255","5694","5706",'5704'],
-		# ["4007","4011","4012","5689","5690","5691"],
-		# ["4009","4011","4012","5689","5690","5691"],
-		# ["4008","4009","4011","4012",],
-		["EPI_CBV_chr_longSOA"],
-		"~/ni_data/ofM.dr/",
-		"",
-		l1_dir=l1_dir,
-		)
-
-	if isinstance(roi, list) and not "/" in roi[0]:
-		roi = roi_from_atlaslabel("~/ni_data/templates/roi/DSURQEc_200micron_labels.nii",
-			mapping="~/ni_data/templates/roi/DSURQE_mapping.csv",
-			label_names=roi,
-			)
-	fit, anova, subjectdf, voxeldf = roi.per_session(substitutions,
-		t_file_template="{data_dir}/l1/{l1_dir}/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_task-{task}_tstat.nii.gz",
-		roi_mask=roi_mask,
-		roi_mask_normalize=roi_mask_normalize,
-		)
-	summary.plot_roi_per_session(subjectdf, voxeldf, legend_loc=2, figure="per-participant", color=color, save_as="~/test.png")
-
-	print(anova)
-
 def p_clusters(mask):
 	from samri.plotting import summary, timeseries
 

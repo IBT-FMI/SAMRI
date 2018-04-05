@@ -10,6 +10,9 @@ except NameError:
 		pass
 def add_roi_data(img_path, masker,
 	substitution=False,
+	feature=[],
+	atlas='',
+	mapping='',
 	):
 	"""
 	Return a dataframe containing the subject- and session-wise mean of a Region of Interest (ROI) score.
@@ -23,6 +26,9 @@ def add_roi_data(img_path, masker,
 		Nilearn `nifti1.Nifti1Image` object to use for masking the desired ROI.
 	substitution : dict, optional
 		A dictionary with keys which include 'subject' and 'session'.
+	feature : list, optional
+		A list with labels which were used to dynalically generate the masker ROI.
+		This parameter will be ignored if a path can be established for the masker - via `masker.mask_img.get_filename()`.
 	"""
 	subject_data={}
 	if substitution:
@@ -34,13 +40,17 @@ def add_roi_data(img_path, masker,
 		img = img.flatten()
 		mean = np.nanmean(img)
 	except (FileNotFoundError, nib.py3k.FileNotFoundError):
-		return pd.DataFrame({}), pd.DataFrame({})
+		return pd.DataFrame({})
 	else:
 		subject_data['session'] = substitution['session']
 		subject_data['subject'] = substitution['subject']
 		subject_data['t'] = mean
-		mask_path = path.abspath(masker.mask_img.get_filename())
-		subject_data['feature'] = mask_path
+		mask_path = masker.mask_img.get_filename()
+		if mask_path:
+			feature = path.abspath(mask_path)
+		subject_data['feature'] = feature
+		subject_data['atlas'] = atlas
+		subject_data['mapping'] = mapping
 		df = pd.DataFrame(subject_data, index=[None])
 		return df
 

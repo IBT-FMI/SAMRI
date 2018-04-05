@@ -2,10 +2,23 @@ import multiprocessing
 import nipype.interfaces.io as nio
 from itertools import product
 from os import path
+from bids.grabbids import BIDSLayout
+from bids.grabbids import BIDSValidator
 
 N_PROCS=max(multiprocessing.cpu_count()-2,2)
 
-def bids_autofind(bids_dir,modality):
+def bids_autograb(bids_dir):
+	validate = BIDSValidator()
+	layout = BIDSLayout(bids_dir)
+	df = layout.as_data_frame()
+	print(df)
+
+
+def bids_autofind(bids_dir,
+	modality='',
+	path_template="{bids_dir}/sub-{{subject}}/ses-{{session}}/{modality}/sub-{{subject}}_ses-{{session}}_task-{{task}}.nii.gz",
+	match_regex='',
+	):
 	"""Automatically generate a BIDS path template and a substitution iterator (list of dicts, as produced by `samri.utilities.bids_substitution_iterator`, and used as a standard input SAMRI function input) from a BIDS-respecting directory.
 
 	Parameters
@@ -25,16 +38,16 @@ def bids_autofind(bids_dir,modality):
 
 	bids_dir = path.abspath(path.expanduser(bids_dir))
 
-	allowed_modalities = ("func","anat")
-	if modality not in allowed_modalities:
-	       raise ValueError("modality parameter needs to be one of "+", ".join(allowed_modalities)+".")
-
-	if modality in ("func","dwi"):
-	       match_regex = '.+/sub-(?P<sub>.+)/ses-(?P<ses>.+)/'+modality+'/.*?_task-(?P<task>.+)\.nii.gz'
+	if match_regex:
+		pass
+	elif modality in ("func","dwi"):
+	       match_regex = '.+/sub-(?P<sub>.+)/ses-(?P<ses>.+)/'+modality+'/.*?_task-(?P<task>.+).*?_acq-(?P<acquisition>.+)\.nii.gz'
+	elif modality == "":
+	       match_regex = '.+/sub-(?P<sub>.+)/ses-(?P<ses>.+)/.*?_acq-(?P<acquisition>.+).*?_task-(?P<task>.+).*?\.nii.gz'
 	elif modality == "anat":
-	       match_regex = '.+/sub-(?P<sub>.+)/ses-(?P<ses>.+)/anat/.*?_(?P<task>.+)\.nii.gz'
+	       match_regex = '.+/sub-(?P<sub>.+)/ses-(?P<ses>.+)/anat/.*?_(?P<task>.+).*?_acq-(?P<acquisition>.+)\.nii.gz'
 
-	path_template = bids_dir+"/sub-{subject}/ses-{session}/"+modality+"/sub-{subject}_ses-{session}_task-{task}.nii.gz"
+	path_template = path_template.format(bids_dir=bids_dir, modality=modality)
 
 	datafind = nio.DataFinder()
 	datafind.inputs.root_paths = bids_dir
@@ -44,16 +57,17 @@ def bids_autofind(bids_dir,modality):
 	substitutions = []
 	for ix, i in enumerate(datafind_res.outputs.out_paths):
 		substitution = {}
+		substitution["acquisition"] = datafind_res.outputs.acquisition[ix]
 		substitution["subject"] = datafind_res.outputs.sub[ix]
 		substitution["session"] = datafind_res.outputs.ses[ix]
 		substitution["task"] = datafind_res.outputs.task[ix]
 		if path_template.format(**substitution) != i:
 			print("Original DataFinder path: "+i)
-			print("Reconstructed path: "+path_template.format(**substitution))
+			print("Reconstructed path:       "+path_template.format(**substitution))
 			raise ValueError("The reconstructed file path based on the substitution dictionary and the path template, is not identical to the corresponding path, found by `nipype.interfaces.io.DataFinder`. See string values above.")
 		substitutions.append(substitution)
 
-	return path_template, substitutions
+	return substitutions
 
 def bids_substitution_iterator(sessions, subjects,
 	tasks=[''],

@@ -62,7 +62,9 @@ def from_img_threshold(image, threshold,
 
 def per_session(substitutions, roi_mask,
 	filename_template="~/ni_data/ofM.dr/l1/{l1_dir}/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_task-{scan}_tstat.nii.gz",
-	roi_mask_normalize="",
+	feature=[],
+	atlas=[],
+	mapping=[],
 	):
 
 	"""
@@ -77,40 +79,20 @@ def per_session(substitutions, roi_mask,
 		roi_mask = path.abspath(path.expanduser(roi_mask))
 		roi_mask = nib.load(roi_mask)
 
-
 	masker = NiftiMasker(mask_img=roi_mask)
 
 	n_jobs = mp.cpu_count()-2
-	roi_data = Parallel(n_jobs=n_jobs, verbose=0, backend="threading")(map(delayed(add_roi_data),
+	dfs = Parallel(n_jobs=n_jobs, verbose=0, backend="threading")(map(delayed(add_roi_data),
 		[filename_template]*len(substitutions),
 		[masker]*len(substitutions),
 		substitutions,
+		feature*len(substitutions),
+		[atlas]*len(substitutions),
+		[mapping]*len(substitutions),
 		))
-	subject_dfs, voxel_dfs = zip(*roi_data)
-	subjectdf = pd.concat(subject_dfs)
-	voxeldf = pd.concat(voxel_dfs)
-	if roi_mask_normalize:
-		#TODO: how relay this back to plot?
-		#figure="per-participant"
-		if isinstance(roi_mask_normalize,str):
-			mask_normalize = path.abspath(path.expanduser(roi_mask_normalize))
-		masker_normalize = NiftiMasker(mask_img=mask_normalize)
-		roi_data = Parallel(n_jobs=n_jobs, verbose=0, backend="threading")(map(delayed(add_roi_data),
-			[filename_template]*len(substitutions),
-			[masker_normalize]*len(substitutions),
-			substitutions,
-			))
-		subject_dfs_normalize, _ = zip(*roi_data)
-		subjectdf_normalize = pd.concat(subject_dfs_normalize)
+	df = pd.concat(dfs)
 
-		subjectdf['t'] = subjectdf['t']/subjectdf_normalize['t']
-		#this is a nasty hack to mitigate +/-inf values appearing if the normalization ROI mean is close to 0
-		subjectdf_ = deepcopy(subjectdf)
-		subjectdf_= subjectdf_.replace([np.inf, -np.inf], np.nan).dropna(subset=["t"], how="all")
-		subjectdf=subjectdf.replace([-np.inf], subjectdf_[['t']].min(axis=0)[0])
-		subjectdf=subjectdf.replace([np.inf], subjectdf_[['t']].max(axis=0)[0])
-
-	return subjectdf, voxeldf
+	return df
 
 
 def mean(img_path, mask_path):
@@ -131,9 +113,10 @@ def mean(img_path, mask_path):
 		masker = NiftiMasker(mask_img=mask)
 		add_roi_data(img_path,masker)
 
-def atlasassignment(data_path='~/ni_data/ofM.dr/bids/l2/anova_ctx/anova_zfstat.nii.gz',
+def atlasassignment(data_path='~/ni_data/ofM.dr/bids/l2/anova/anova_zfstat.nii.gz',
 	null_label=0.0,
 	verbose=False,
+	lateralized=False,
 	):
 	from copy import deepcopy
 
@@ -155,16 +138,20 @@ def atlasassignment(data_path='~/ni_data/ofM.dr/bids/l2/anova_ctx/anova_zfstat.n
 	for d, a in zip(data, atlas):
 		if a == null_label:
 			continue
-		my_slice = mapping[mapping['right label']==a]
-		if my_slice.empty:
-			my_slice = mapping[mapping['left label']==a]
-		if my_slice.empty:
-			continue
-		my_slice = deepcopy(my_slice)
-		my_slice['value'] = d
-		if verbose:
-			print(my_slice)
-		slices.append(my_slice)
+		if lateralized:
+			pass
+			#!!!this still needs to be implemented
+		else:
+			my_slice = mapping[mapping['right label']==a]
+			if my_slice.empty:
+				my_slice = mapping[mapping['left label']==a]
+			if my_slice.empty:
+				continue
+			my_slice = deepcopy(my_slice)
+			my_slice['value'] = d
+			if verbose:
+				print(my_slice)
+			slices.append(my_slice)
 	df = pd.concat(slices)
 	save_as = path.splitext(data_path)[0]
 	if save_as[-4:] == '.nii':

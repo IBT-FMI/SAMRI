@@ -62,7 +62,9 @@ def from_img_threshold(image, threshold,
 
 def per_session(substitutions, roi_mask,
 	filename_template="~/ni_data/ofM.dr/l1/{l1_dir}/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_task-{scan}_tstat.nii.gz",
-	roi_mask_normalize="",
+	feature=[],
+	atlas=[],
+	mapping=[],
 	):
 
 	"""
@@ -80,36 +82,17 @@ def per_session(substitutions, roi_mask,
 	masker = NiftiMasker(mask_img=roi_mask)
 
 	n_jobs = mp.cpu_count()-2
-	roi_data = Parallel(n_jobs=n_jobs, verbose=0, backend="threading")(map(delayed(add_roi_data),
+	dfs = Parallel(n_jobs=n_jobs, verbose=0, backend="threading")(map(delayed(add_roi_data),
 		[filename_template]*len(substitutions),
 		[masker]*len(substitutions),
 		substitutions,
+		feature*len(substitutions),
+		[atlas]*len(substitutions),
+		[mapping]*len(substitutions),
 		))
-	subject_dfs, voxel_dfs = zip(*roi_data)
-	subjectdf = pd.concat(subject_dfs)
-	voxeldf = pd.concat(voxel_dfs)
-	if roi_mask_normalize:
-		#TODO: how relay this back to plot?
-		#figure="per-participant"
-		if isinstance(roi_mask_normalize,str):
-			mask_normalize = path.abspath(path.expanduser(roi_mask_normalize))
-		masker_normalize = NiftiMasker(mask_img=mask_normalize)
-		roi_data = Parallel(n_jobs=n_jobs, verbose=0, backend="threading")(map(delayed(add_roi_data),
-			[filename_template]*len(substitutions),
-			[masker_normalize]*len(substitutions),
-			substitutions,
-			))
-		subject_dfs_normalize, _ = zip(*roi_data)
-		subjectdf_normalize = pd.concat(subject_dfs_normalize)
+	df = pd.concat(dfs)
 
-		subjectdf['t'] = subjectdf['t']/subjectdf_normalize['t']
-		#this is a nasty hack to mitigate +/-inf values appearing if the normalization ROI mean is close to 0
-		subjectdf_ = deepcopy(subjectdf)
-		subjectdf_= subjectdf_.replace([np.inf, -np.inf], np.nan).dropna(subset=["t"], how="all")
-		subjectdf=subjectdf.replace([-np.inf], subjectdf_[['t']].min(axis=0)[0])
-		subjectdf=subjectdf.replace([np.inf], subjectdf_[['t']].max(axis=0)[0])
-
-	return subjectdf, voxeldf
+	return df
 
 
 def mean(img_path, mask_path):

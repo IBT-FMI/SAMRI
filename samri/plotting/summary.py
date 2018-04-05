@@ -11,11 +11,13 @@ import matplotlib.pyplot as plt
 import seaborn.apionly as sns
 import statsmodels.formula.api as smf
 from joblib import Parallel, delayed
+from matplotlib import rcParams
 from nilearn.input_data import NiftiMasker
 from nipype.interfaces.io import DataFinder
 from os import path
 from statsmodels.sandbox.stats.multicomp import multipletests
 
+import samri.plotting.maps as maps
 from samri.report.utilities import add_pattern_data
 from samri.plotting import maps, timeseries
 
@@ -24,43 +26,113 @@ except NameError:
 	class FileNotFoundError(OSError):
 		pass
 
-def plot_roi_per_session(subjectdf, voxeldf,
-	legend_loc="best",
-	figure="per-participant",
-	tabref="tab",
-	xy_label=[],
-	color="#E69F00",
-	save_as=False
+def plot_roi_per_session(df,
+	x='Session',
+	y='Mean t-Statistic',
+	condition='treatment',
+	unit='subject',
+	ci=90,
+	palette=["#56B4E9", "#E69F00"],
+	dodge=True,
+	order=[],
+	feature_map='',
+	roi_left=0.02,
+	roi_bottom=0.74,
+	roi_width=0.3,
+	roi_height=0.2,
+	samri_style=True,
+	renames=[],
+	save_as='',
 	):
 	"""Plot a ROI t-values over the session timecourse
-
-	figure : {"per-participant", "per-voxel", "both"}
-	At what level to resolve the t-values. Per-participant compares participant means, per-voxel compares all voxel values, both creates two plots covering the aforementioned cases.
-
 	"""
 
-	names_for_plotting = {"ofM":u"naïve", "ofM_aF":"acute", "ofM_cF1":"chronic (2w)", "ofM_cF2":"chronic (4w)", "ofM_pF":"post"}
-	voxeldf = voxeldf.replace({"session": names_for_plotting})
-	subjectdf = subjectdf.replace({"session": names_for_plotting})
+	if samri_style:
+		plt.style.use(u'seaborn-darkgrid')
+		plt.style.use('ggplot')
 
-	if figure == "per-voxel":
-		ax = sns.pointplot(x="session", y="t", hue="subject", data=voxeldf, ci=90, dodge=True, jitter=True, legend_out=False, units="voxel")
-		if xy_label:
-			ax.set(xlabel=xy_label[0], ylabel=xy_label[1])
-	elif figure == "per-participant":
-		ax = sns.pointplot(x="session", y="t", data=subjectdf, ci=68.3, dodge=True, jitter=True, legend_out=False, units="subject", color=color)
-		if xy_label:
-			ax.set(xlabel=xy_label[0], ylabel=xy_label[1])
-	elif figure == "both":
-		f, (ax1, ax2) = plt.subplots(1,2)
-		ax1 = sns.pointplot(x="session", y="t", hue="subject", data=voxeldf, ci=68.3, dodge=True, jitter=True, legend_out=False, units="subject", ax=ax1)
-		ax2 = sns.pointplot(x="session", y="t", data=subjectdf, ci=68.3, dodge=True, jitter=True, legend_out=False, units="subject",ax=ax2, color=color)
-		if xy_label:
-			ax1.set(xlabel=xy_label[0], ylabel=xy_label[1])
-			ax2.set(xlabel=xy_label[0], ylabel=xy_label[1])
+	try:
+		df = path.abspath(path.expanduser(df))
+	except AttributeError:
+		pass
 
-	if(save_as):
-		plt.savefig(path.abspath(path.expanduser(save_as)))
+	# definitions for the axes
+	height = rcParams['figure.subplot.top']
+	bottom = rcParams['figure.subplot.bottom']
+	left = rcParams['figure.subplot.left']
+	width = rcParams['figure.subplot.right']
+
+	session_coordinates = [left, bottom, width, height]
+
+	roi_coordinates = [left+roi_left, bottom+roi_bottom, roi_width, roi_height]
+
+	fig = plt.figure(1)
+
+	if renames:
+		for key in renames:
+			for subkey in renames[key]:
+				df.loc[df[key] == subkey, key] = renames[key][subkey]
+
+	ax1 = plt.axes(session_coordinates)
+	ax = sns.pointplot(
+		x=x,
+		y=y,
+		units=unit,
+		data=df,
+		hue=condition,
+		dodge=dodge,
+		palette=sns.color_palette(palette),
+		order=order,
+		ax=ax1,
+		ci=ci,
+		)
+	ax.set_ylabel(y)
+
+	if feature_map:
+		ax2 = plt.axes(roi_coordinates)
+		maps.atlas_label(feature_map,
+			scale=0.3,
+			color="#E69F00",
+			ax=ax2,
+			annotate=False,
+			alpha=0.8,
+			)
+	else:
+		try:
+			features = df['feature'].unique()
+		except KeyError:
+			pass
+		else:
+			if len(features) > 1:
+				print('WARNING: The features list contains more than one feature. We will highlight the first one in the list. This may be incorrect.')
+			feature = features[0]
+			ax2 = plt.axes(roi_coordinates)
+			if path.isfile(feature):
+				maps.atlas_label(feature,
+					scale=0.3,
+					color="#E69F00",
+					ax=ax2,
+					annotate=False,
+					alpha=0.8,
+					)
+			else:
+				atlas = df['atlas'].unique()[0]
+				mapping = df['mapping'].unique()[0]
+				if isinstance(feature, str):
+					feature = [feature]
+				maps.atlas_label(atlas,
+					scale=0.3,
+					color="#E69F00",
+					ax=ax2,
+					mapping=mapping,
+					label_names=feature,
+					alpha=0.8,
+					annotate=False,
+					)
+
+
+	if save_as:
+		plt.savefig(path.abspath(path.expanduser(save_as)), bbox_inches='tight')
 
 
 def fc_per_session(substitutions, analytic_pattern,

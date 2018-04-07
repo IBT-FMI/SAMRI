@@ -62,18 +62,18 @@ def significant_signal(data_path,
 	return mean, median
 
 def iter_significant_signal(file_template, substitutions,
-        mask_path='',
+	mask_path='',
 	save_as='',
-        ):
-        """Create a `pandas.DataFrame` (optionally savable as `.csv`), containing the similarity scores and BIDS identifier fields for images from a BIDS directory.
-        """
+	):
+	"""Create a `pandas.DataFrame` (optionally savable as `.csv`), containing the similarity scores and BIDS identifier fields for images from a BIDS directory.
+	"""
 
-        n_jobs = mp.cpu_count()-2
-        iter_data = Parallel(n_jobs=n_jobs, verbose=0, backend="threading")(map(delayed(significant_signal),
-                [file_template]*len(substitutions),
-                substitutions,
-                [mask_path]*len(substitutions),
-                ))
+	n_jobs = mp.cpu_count()-2
+	iter_data = Parallel(n_jobs=n_jobs, verbose=0, backend="threading")(map(delayed(significant_signal),
+		[file_template]*len(substitutions),
+		substitutions,
+		[mask_path]*len(substitutions),
+		))
 
 	df_items = [
 		('Mean', [i[0] for i in iter_data]),
@@ -85,13 +85,13 @@ def iter_significant_signal(file_template, substitutions,
 			df[field] = [i[field] for i in substitutions]
 		except KeyError:
 			pass
-        if save_as:
-                save_as = path.abspath(path.expanduser(save_as))
-                if save_as.lower().endswith('.csv'):
-                        df.to_csv(save_as)
-                else:
-                        raise ValueError("Please specify an output path ending in any one of "+",".join((".csv",))+".")
-        return df
+	if save_as:
+		save_as = path.abspath(path.expanduser(save_as))
+		if save_as.lower().endswith('.csv'):
+			df.to_csv(save_as)
+		else:
+			raise ValueError("Please specify an output path ending in any one of "+",".join((".csv",))+".")
+	return df
 
 def base_metrics(file_path,
 	substitution={},
@@ -134,24 +134,24 @@ def base_metrics(file_path,
 	return df
 
 def iter_base_metrics(file_template, substitutions,
-        save_as='',
-        ):
-        """Create a `pandas.DataFrame` (optionally savable as `.csv`), containing the similarity scores and BIDS identifier fields for images from a BIDS directory.
-        """
+	save_as='',
+	):
+	"""Create a `pandas.DataFrame` (optionally savable as `.csv`), containing the similarity scores and BIDS identifier fields for images from a BIDS directory.
+	"""
 
-        n_jobs = mp.cpu_count()-2
-        base_metrics_data = Parallel(n_jobs=n_jobs, verbose=0, backend="threading")(map(delayed(base_metrics),
-                [file_template]*len(substitutions),
-                substitutions,
-                ))
+	n_jobs = mp.cpu_count()-2
+	base_metrics_data = Parallel(n_jobs=n_jobs, verbose=0, backend="threading")(map(delayed(base_metrics),
+		[file_template]*len(substitutions),
+		substitutions,
+		))
 
-        df = pd.concat(base_metrics_data)
+	df = pd.concat(base_metrics_data)
 
-        if save_as:
-                save_as = path.abspath(path.expanduser(save_as))
-                if save_as.lower().endswith('.csv'):
-                        df.to_csv(save_as)
-                else:
-                        raise ValueError("Please specify an output path ending in any one of "+",".join((".csv",))+".")
-        return df
+	if save_as:
+		save_as = path.abspath(path.expanduser(save_as))
+		if save_as.lower().endswith('.csv'):
+			df.to_csv(save_as)
+		else:
+			raise ValueError("Please specify an output path ending in any one of "+",".join((".csv",))+".")
+	return df
 

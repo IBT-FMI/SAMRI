@@ -35,7 +35,7 @@ def plot_roi_per_session(df,
 	palette=["#56B4E9", "#E69F00"],
 	dodge=True,
 	order=[],
-	feature_map='',
+	feature_map=True,
 	roi_left=0.02,
 	roi_bottom=0.74,
 	roi_width=0.3,
@@ -43,6 +43,8 @@ def plot_roi_per_session(df,
 	samri_style=True,
 	renames=[],
 	save_as='',
+	ax=None,
+	fig=None,
 	):
 	"""Plot a ROI t-values over the session timecourse
 	"""
@@ -66,14 +68,18 @@ def plot_roi_per_session(df,
 
 	roi_coordinates = [left+roi_left, bottom+roi_bottom, roi_width, roi_height]
 
-	fig = plt.figure(1)
+	if not fig:
+		fig = plt.figure(1)
 
 	if renames:
 		for key in renames:
 			for subkey in renames[key]:
 				df.loc[df[key] == subkey, key] = renames[key][subkey]
 
-	ax1 = plt.axes(session_coordinates)
+	if not ax:
+		ax1 = plt.axes(session_coordinates)
+	else:
+		ax1 = ax
 	ax = sns.pointplot(
 		x=x,
 		y=y,
@@ -88,7 +94,7 @@ def plot_roi_per_session(df,
 		)
 	ax.set_ylabel(y)
 
-	if feature_map:
+	if isinstance(feature_map, str):
 		ax2 = plt.axes(roi_coordinates)
 		maps.atlas_label(feature_map,
 			scale=0.3,
@@ -97,7 +103,7 @@ def plot_roi_per_session(df,
 			annotate=False,
 			alpha=0.8,
 			)
-	else:
+	elif feature_map:
 		try:
 			features = df['feature'].unique()
 		except KeyError:
@@ -134,6 +140,7 @@ def plot_roi_per_session(df,
 	if save_as:
 		plt.savefig(path.abspath(path.expanduser(save_as)), bbox_inches='tight')
 
+	return fig, ax
 
 def fc_per_session(substitutions, analytic_pattern,
 	legend_loc="best",

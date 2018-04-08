@@ -4,7 +4,7 @@ from os import path
 
 from nilearn.input_data import NiftiMasker
 from scipy.io import loadmat
-from samri.report.utilities import add_roi_data
+from samri.report.utilities import add_roi_data, add_pattern_data
 from joblib import Parallel, delayed
 
 import statsmodels.formula.api as smf
@@ -160,3 +160,33 @@ def atlasassignment(data_path='~/ni_data/ofM.dr/bids/l2/anova/anova_zfstat.nii.g
 	df.to_csv(save_as)
 	return
 
+def analytic_pattern_per_session(substitutions, analytic_pattern,
+	t_file_template="~/ni_data/ofM.dr/l1/{l1_dir}/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_task-{scan}_tstat.nii.gz",
+	):
+	"""Return a Pandas DataFrame (organized in long-format) containing the per-subject per-session scores of an analytic pattern.
+
+	Parameters
+	----------
+
+	sustitutions : list of dicts
+		A list of dictionaries countaining formatting strings as keys and strings as values.
+	analytic_pattern : str
+		Path to a NIfTI file to score the per-subject and per-session NIfTI files on.
+		Commonly this file is unthresholded.
+	t_file_template : str, optional
+		A formattable string containing as format fields keys present in the dictionaries passed to the `substitutions` variable.
+	"""
+
+	if isinstance(analytic_pattern,str):
+		analytic_pattern = path.abspath(path.expanduser(analytic_pattern))
+	pattern = nib.load(analytic_pattern)
+
+	n_jobs = mp.cpu_count()-2
+	dfs = Parallel(n_jobs=n_jobs, verbose=0, backend="threading")(map(delayed(add_pattern_data),
+		[t_file_template]*len(substitutions),
+		[pattern]*len(substitutions),
+		substitutions,
+		))
+	df = pd.concat(dfs)
+
+	return df

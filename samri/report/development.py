@@ -51,7 +51,6 @@ def pattern_fc():
 
 def pattern_activity():
 	import pandas as pd
-	from samri.plotting import summary
 	from samri.report import roi
 	from samri.utilities import bids_substitution_iterator
 	from samri.fetch.local import roi_from_atlaslabel
@@ -66,12 +65,9 @@ def pattern_activity():
                 acquisitions=["EPI",],
                 validate_for_template='{data_dir}/l1/{l1_dir}/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_acq-{acquisition}_task-{task}_cbv_tstat.nii.gz',
 		)
-	df = summary.analytic_pattern_per_session(substitutions,
+	df = roi.analytic_pattern_per_session(substitutions,
 		'~/ni_data/ofM.dr/bids/l2/best_responders/sessionofM/tstat1.nii.gz',
 		t_file_template='{data_dir}/l1/{l1_dir}/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_acq-{acquisition}_task-{task}_cbv_tstat.nii.gz',
-		figure="per-participant",
-		color="#309079",
-		xy_label=["Session","Pattern Score"],
 		)
 	df['treatment']='Fluoxetine'
 
@@ -84,7 +80,7 @@ def pattern_activity():
                 acquisitions=["EPI",],
                 validate_for_template='{data_dir}/l1/{l1_dir}/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_acq-{acquisition}_task-{task}_cbv_tstat.nii.gz',
 		)
-	df_ = summary.analytic_pattern_per_session(substitutions_,
+	df_ = roi.analytic_pattern_per_session(substitutions_,
 		'~/ni_data/ofM.dr/bids/l2/best_responders/sessionofM/tstat1.nii.gz',
 		t_file_template='{data_dir}/l1/{l1_dir}/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_acq-{acquisition}_task-{task}_cbv_tstat.nii.gz',
 		)

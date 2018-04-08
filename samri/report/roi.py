@@ -63,8 +63,8 @@ def from_img_threshold(image, threshold,
 def per_session(substitutions, roi_mask,
 	filename_template="~/ni_data/ofM.dr/l1/{l1_dir}/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_task-{scan}_tstat.nii.gz",
 	feature=[],
-	atlas=[],
-	mapping=[],
+	atlas='',
+	mapping='',
 	):
 
 	"""

@@ -151,7 +151,7 @@ def label_activity(label):
 
 	df.to_csv('~/ni_data/ofM.dr/bids/l1/{}/{}.csv'.format(workflow_name, label))
 
-def roi_activity(roi_mask="~/ni_data/templates/roi/DSURQEc_dr.nii.gz"):
+def roi_activity(roi_mask="~/ni_data/templates/roi/DSURQEc_drp.nii.gz"):
 	"""
 	Create a DataFrame containing the per-session per-subject mean values for the specified ROI.
 	Other parameter customizations are hard-coded below.
@@ -182,7 +182,7 @@ def roi_activity(roi_mask="~/ni_data/templates/roi/DSURQEc_dr.nii.gz"):
 		filename_template='{data_dir}/l1/{l1_dir}/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_acq-{acquisition}_task-{task}_cbv_tstat.nii.gz',
 		roi_mask=roi_mask,
 		)
-	df['treatment']='Fluoxetine'
+	df['treatment'] = 'Fluoxetine'
 	substitutions_ = bids_substitution_iterator(
 		["ofM","ofMaF","ofMcF1","ofMcF2","ofMpF"],
 		#["5694","5706",'5704','6455','6459','5794'],
@@ -200,26 +200,46 @@ def roi_activity(roi_mask="~/ni_data/templates/roi/DSURQEc_dr.nii.gz"):
 		filename_template='{data_dir}/l1/{l1_dir}/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_acq-{acquisition}_task-{task}_cbv_tstat.nii.gz',
 		roi_mask=roi_mask,
 		)
-	df_['treatment']='Vehicle'
+	df_['treatment'] = 'Vehicle'
+	substitutions__ = bids_substitution_iterator(
+		["ofM"],
+		#["5694","5706",'5704','6455','6459','5794'],
+		["6530","6532","6542","6548",'6549','6552','6553','6556','6557'],
+		#["6262","6255","56","5706",'5704',],
+                ["CogB",],
+                "~/ni_data/ofM.dr/bids/",
+                workflow_name,
+                acquisitions=["EPI",],
+		#validate_for_template='{data_dir}/l1/{l1_dir}/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_task-{task}_acq-{acquisition}_cbv_tstat.nii.gz',
+		validate_for_template='{data_dir}/l1/{l1_dir}/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_acq-{acquisition}_task-{task}_cbv_tstat.nii.gz',
+		)
+	df__ = roi.per_session(substitutions__,
+		#filename_template='{data_dir}/l1/{l1_dir}/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_task-{task}_acq-{acquisition}_cbv_tstat.nii.gz',
+		filename_template='{data_dir}/l1/{l1_dir}/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_acq-{acquisition}_task-{task}_cbv_tstat.nii.gz',
+		roi_mask=roi_mask,
+		)
+	df__['treatment'] = 'New'
 
-	df=pd.concat([df_,df])
-	df=df.rename(columns={'session': 'Session',})
+	df = pd.concat([df__,df_,df])
+	df = df.rename(columns={'session': 'Session',})
 
 	roi_name = splitext(basename(roi_mask))[0]
 	if roi_name[-4:] == '.nii':
 		roi_name = roi_name[:-4]
 	df.to_csv('~/ni_data/ofM.dr/bids/l1/{}/{}.csv'.format(workflow_name, roi_name))
 
-def ctx_connectivity(workflow_name = 'DSURQEc_drp'):
+def label_connectivity(workflow_name='DSURQEc_drp', labels=['cortex']):
 	import pandas as pd
 	from samri.plotting import summary
 	from samri.report import roi
 	from samri.utilities import bids_substitution_iterator
 	from samri.fetch.local import roi_from_atlaslabel
 
-	my_roi = roi_from_atlaslabel("~/ni_data/templates/roi/DSURQEc_200micron_labels.nii",
-		mapping="~/ni_data/templates/roi/DSURQE_mapping.csv",
-		label_names=["cortex"],
+	mapping='~/ni_data/templates/roi/DSURQE_mapping.csv'
+	atlas='~/ni_data/templates/roi/DSURQEc_200micron_labels.nii'
+	my_roi = roi_from_atlaslabel(atlas,
+		mapping=mapping,
+		label_names=labels,
 		)
 
 	substitutions = bids_substitution_iterator(
@@ -231,11 +251,14 @@ def ctx_connectivity(workflow_name = 'DSURQEc_drp'):
                 acquisitions=["EPI",],
 		validate_for_template='{data_dir}/fc/{preprocessing_dir}/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_acq-{acquisition}_task-{task}_cbv_zstat.nii.gz',
 		)
-	subjectdf, voxeldf = roi.per_session(substitutions,
+	df = roi.per_session(substitutions,
 		filename_template='{data_dir}/fc/{preprocessing_dir}/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_acq-{acquisition}_task-{task}_cbv_zstat.nii.gz',
 		roi_mask=my_roi,
+		feature=labels,
+		atlas=atlas,
+		mapping=mapping,
 		)
-	subjectdf['treatment']='Fluoxetine'
+	df['treatment']='Fluoxetine'
 	substitutions_ = bids_substitution_iterator(
                 ["ofM","ofMaF","ofMcF1","ofMcF2","ofMpF"],
 		["6262","6255","5694","5706",'5704','6455','6459'],
@@ -245,18 +268,21 @@ def ctx_connectivity(workflow_name = 'DSURQEc_drp'):
                 acquisitions=["EPI",],
 		validate_for_template='{data_dir}/fc/{preprocessing_dir}/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_acq-{acquisition}_task-{task}_cbv_zstat.nii.gz',
 		)
-	subjectdf_, voxeldf_ = roi.per_session(substitutions_,
+	df_ = roi.per_session(substitutions_,
 		filename_template='{data_dir}/fc/{preprocessing_dir}/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_acq-{acquisition}_task-{task}_cbv_zstat.nii.gz',
 		roi_mask=my_roi,
+		feature=labels,
+		atlas=atlas,
+		mapping=mapping,
 		)
-	subjectdf_['treatment']='Vehicle'
+	df_['treatment']='Vehicle'
 
-	subjectdf=pd.concat([subjectdf_,subjectdf])
-	subjectdf=subjectdf.rename(columns={'session': 'Session','t':'z'})
+	df = pd.concat([df_,df])
+	df = df.rename(columns={'session': 'Session','t':'z'})
 
-	subjectdf.to_csv('~/ni_data/ofM.dr/bids/fc/{}/ctx_summary.csv'.format(workflow_name))
+	df.to_csv('~/ni_data/ofM.dr/bids/fc/{}/{}_summary.csv'.format(workflow_name,'-'.join(labels)))
 
-def test_iter_signal():
+def signal():
 	from samri.report.snr import iter_significant_signal
 	from samri.utilities import bids_autofind
 
@@ -267,7 +293,7 @@ def test_iter_signal():
 	iter_significant_signal('~/ni_data/ofM.dr/bids/l1/generic/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_acq-{acquisition}_task-{task}_cbv_pfstat.nii.gz',
 		substitutions=substitutions,
 		mask_path='~/ni_data/templates/DSURQEc_200micron_mask.nii.gz',
-		save_as='~/ni_data/ofM.dr/bids/l1/generic/significant_signal.csv'
+		save_as='~/ni_data/ofM.dr/bids/l1/generic/total_significance.csv'
 		)
 
 def test_signal():

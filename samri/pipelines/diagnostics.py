@@ -107,10 +107,11 @@ def diagnose(bids_base,
 
 	paths = data_selection['path']
 
+
 	infosource = pe.Node(interface=util.IdentityInterface(fields=['path'], mandatory_inputs=False), name="infosource")
 	infosource.iterables = [('path', paths)]
 
-	dummy_scans = pe.Node(name='dummy_scans', interface=util.Function(function=force_dummy_scans,input_names=inspect.getargspec(force_dummy_scans)[0], output_names=['out_file']))
+	dummy_scans = pe.Node(name='dummy_scans', interface=util.Function(function=force_dummy_scans,input_names=inspect.getargspec(force_dummy_scans)[0], output_names=['out_file','deleted_scans']))
 	dummy_scans.inputs.desired_dummy_scans = 10
 
 	bids_filename = pe.Node(name='bids_filename', interface=util.Function(function=out_path,input_names=inspect.getargspec(out_path)[0], output_names=['filename']))

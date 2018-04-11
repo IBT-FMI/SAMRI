@@ -2,15 +2,6 @@ from os import path
 import pandas as pd
 from samri.utilities import bids_substitution_iterator
 
-def higher():
-	glm.l1('~/ni_data/test/preprocessing/composite',
-		workflow_name='higher',
-		# include={"subjects":["5689","5690","5691"]},
-		habituation="confound",
-		mask="~/ni_data/templates/DSURQEc_200micron_mask.nii.gz",
-		keep_work=True,
-		)
-
 def dbu(
 	data_path="~/ni_data/DBu/",
 	workflow_name="functional_registration",
@@ -257,7 +248,6 @@ def typical_resp(data_path='~/ni_data/ofM.dr/bids/', l1_dir='l1', workflow_name=
 		mask="~/ni_data/templates/DSURQEc_200micron_mask.nii.gz",
 		)
 
-
 def dr_only():
 	from samri.pipelines import preprocess, glm
 	glm.l1("~/ni_data/ofM.dr/preprocessing/_composite",
@@ -267,18 +257,6 @@ def dr_only():
 		habituation="confound",
 		keep_work=True,
 		)
-
-def dr_composite():
-	from samri.pipelines import preprocess, glm
-	preprocessing.bruker("~/ni_data/ofM.dr/",exclude_measurements=['20151027_121613_4013_1_1'], workflow_name="composite", very_nasty_bruker_delay_hack=True, negative_contrast_agent=True, functional_blur_xy=4, functional_registration_method="composite")
-	glm.l1("~/ni_data/ofM.dr/preprocessing/composite", workflow_name="composite", include={"subjects":[i for i in range(4001,4010)]+[4011,4012]}, habituation="confound",mask="~/ni_data/templates/ds_QBI_chr_bin.nii.gz",keep_work=True)
-	glm.l1("~/ni_data/ofM.dr/preprocessing/composite", workflow_name="composite_dr", include={"subjects":[i for i in range(4001,4010)]+[4011,4012]}, habituation="confound",mask="~/ni_data/templates/roi/f_dr_chr_bin.nii.gz",)
-	glm.l2_common_effect("~/ni_data/ofM.dr/l1/composite", workflow_name="subjectwise_composite", groupby="subject")
-	glm.l2_common_effect("~/ni_data/ofM.dr/l1/composite", workflow_name="sessionwise_composite", groupby="session", exclude={"subjects":["4001","4002","4003","4004","4005","4006","4009","4011","4013"]})
-	glm.l2_common_effect("~/ni_data/ofM.dr/l1/composite", workflow_name="sessionwise_composite_w4011", groupby="session", exclude={"subjects":["4001","4002","4003","4004","4005","4006","4009","4013"]})
-def vta_composite():
-	from samri.pipelines import preprocess, glm
-	preprocessing.bruker("~/ni_data/ofM.vta/",workflow_name="composite", very_nasty_bruker_delay_hack=False, negative_contrast_agent=True, functional_blur_xy=4, functional_registration_method="composite")
 
 def test_dual_regression(group_level="migp"):
 	from samri.analysis import fc

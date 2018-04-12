@@ -109,7 +109,6 @@ def bruker(bids_base, template,
 	autorotate=False,
 	strict=False,
 	verbose=False,
-	bandpass=False,
 	):
 	'''
 
@@ -162,13 +161,6 @@ def bruker(bids_base, template,
 
 	dummy_scans = pe.Node(name='dummy_scans', interface=util.Function(function=force_dummy_scans,input_names=inspect.getargspec(force_dummy_scans)[0], output_names=['out_file','deleted_scans']))
 	dummy_scans.inputs.desired_dummy_scans = DUMMY_SCANS
-
-	bandpass = pe.Node(interface=fsl.maths.TemporalFilter(), name="bandpass")
-	bandpass.inputs.highpass_sigma = highpass_sigma
-	if lowpass_sigma:
-		bandpass.inputs.lowpass_sigma = lowpass_sigma
-	else:
-		bandpass.inputs.lowpass_sigma = tr
 
 	events_file = pe.Node(name='events_file', interface=util.Function(function=write_bids_events_file,input_names=inspect.getargspec(write_bids_events_file)[0], output_names=['out_file']))
 
@@ -405,54 +397,27 @@ def bruker(bids_base, template,
 			(f_warp, blur, [('output_image', 'in_file')]),
 			(blur, invert, [(('out_file', fslmaths_invert_values), 'op_string')]),
 			(blur, invert, [('out_file', 'in_file')]),
+			(get_f_scan, invert, [('nii_name','output_image')]),
+			(invert, datasink, [('out_file', 'func')]),
 			])
-		if bandpass:
-			workflow_connections.extend([
-				(invert, bandpass, [('out_file', 'in_file')]),
-				(bandpass, datasink, [('out_file', 'func')]),
-				])
-		else:
-			workflow_connections.extend([
-				(invert, datasink, [('out_file', 'func')]),
-				])
 
 	elif functional_blur_xy:
 		workflow_connections.extend([
+			(get_f_scan, blur, [('nii_name','output_image')]),
 			(f_warp, blur, [('output_image', 'in_file')]),
-			(blur, bandpass, [('out_file', 'in_file')]),
+			(blur, datasink, [('out_file', 'func')]),
 			])
-		if bandpass:
-			workflow_connections.extend([
-				(blur, bandpass, [('out_file', 'in_file')]),
-				(bandpass, datasink, [('out_file', 'func')]),
-				])
-		else:
-			workflow_connections.extend([
-				(blur, datasink, [('out_file', 'func')]),
-				])
 
 	elif negative_contrast_agent:
 		workflow_connections.extend([
+			(get_f_scan, invert, [('nii_name','out_file')]),
 			(f_warp, invert, [(('output_image', fslmaths_invert_values), 'op_string')]),
 			(f_warp, invert, [('output_image', 'in_file')]),
-			])
-		if bandpass:
-			workflow_connections.extend([
-				(invert, bandpass, [('out_file', 'in_file')]),
-				(bandpass, datasink, [('out_file', 'func')]),
-				])
-		else:
-			workflow_connections.extend([
-				(invert, datasink, [('out_file', 'func')]),
-				])
-	elif bandpass:
-		workflow_connections.extend([
-			(get_f_scan, bandpass, [('nii_name', 'out_file')]),
-			(f_warp, bandpass, [('output_image', 'in_file')]),
-			(bandpass, datasink, [('out_file', 'func')]),
+			(invert, datasink, [('out_file', 'func')]),
 			])
 	else:
 		workflow_connections.extend([
+			(get_f_scan, f_warp, [('nii_name','output_image')]),
 			(f_warp, datasink, [('output_image', 'func')]),
 			])
 

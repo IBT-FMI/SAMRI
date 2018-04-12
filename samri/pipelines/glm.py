@@ -25,6 +25,7 @@ def l1(preprocessing_dir,
 	exclude={},
 	habituation='confound',
 	highpass_sigma=225,
+	lowpass_sigma=False,
 	include={},
 	keep_work=False,
 	l1_dir="",
@@ -159,11 +160,9 @@ def l1(preprocessing_dir,
 		(infosource, datafile_source, [('bids_dictionary', 'bids_dictionary')]),
 		(infosource, eventfile_source, [('bids_dictionary', 'bids_dictionary')]),
 		(eventfile_source, specify_model, [('out_file', 'event_files')]),
-		(datafile_source, specify_model, [('out_file', 'functional_runs')]),
 		(specify_model, level1design, [('session_info', 'session_info')]),
 		(level1design, modelgen, [('ev_files', 'ev_files')]),
 		(level1design, modelgen, [('fsf_files', 'fsf_file')]),
-		(datafile_source, glm, [('out_file', 'in_file')]),
 		(modelgen, glm, [('design_file', 'design')]),
 		(modelgen, glm, [('con_file', 'contrasts')]),
 		(infosource, datasink, [(('bids_dictionary',bids_dict_to_dir), 'container')]),
@@ -186,6 +185,25 @@ def l1(preprocessing_dir,
 		(glm, datasink, [('out_cope', '@cope')]),
 		(glm, datasink, [('out_varcb', '@varcb')]),
 		]
+
+	if highpass_sigma or lowpass_sigma:
+		bandpass = pe.Node(interface=fsl.maths.TemporalFilter(), name="bandpass")
+		bandpass.inputs.highpass_sigma = highpass_sigma
+		if lowpass_sigma:
+			bandpass.inputs.lowpass_sigma = lowpass_sigma
+		else:
+			bandpass.inputs.lowpass_sigma = tr
+		workflow_connections.extend([
+			(datafile_source, bandpass, [('out_file', 'in_file')]),
+			(bandpass, specify_model, [('out_file', 'functional_runs')]),
+			(bandpass, glm, [('out_file', 'in_file')]),
+			])
+	else:
+		workflow_connections.extend([
+			(datafile_source, specify_model, [('out_file', 'functional_runs')]),
+			(datafile_source, glm, [('out_file', 'in_file')]),
+			])
+
 
 	workdir_name = workflow_name+"_work"
 	workflow = pe.Workflow(name=workdir_name)

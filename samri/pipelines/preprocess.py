@@ -398,41 +398,63 @@ def bruker(bids_base, template,
 
 
 	invert = pe.Node(interface=fsl.ImageMaths(), name="invert")
+	blur = pe.Node(interface=afni.preprocess.BlurToFWHM(), name="blur")
+	blur.inputs.fwhmxy = functional_blur_xy
 	if functional_blur_xy and negative_contrast_agent:
-		blur = pe.Node(interface=afni.preprocess.BlurToFWHM(), name="blur")
-		blur.inputs.fwhmxy = functional_blur_xy
 		workflow_connections.extend([
 			(f_warp, blur, [('output_image', 'in_file')]),
 			(blur, invert, [(('out_file', fslmaths_invert_values), 'op_string')]),
 			(blur, invert, [('out_file', 'in_file')]),
-			(invert, bandpass, [('out_file', 'in_file')]),
 			])
-	elif functional_blur_xy:
-		blur = pe.Node(interface=afni.preprocess.BlurToFWHM(), name="blur")
-		blur.inputs.fwhmxy = functional_blur_xy
-		workflow_connections.extend([
-			(f_warp, blur, [('output_image', 'in_file')]),
-			(blur, bandpass, [('out_file', 'in_file')]),
-			])
-	elif negative_contrast_agent:
-		blur = pe.Node(interface=afni.preprocess.BlurToFWHM(), name="blur")
-		blur.inputs.fwhmxy = functional_blur_xy
-		workflow_connections.extend([
-			(f_warp, invert, [(('output_image', fslmaths_invert_values), 'op_string')]),
-			(f_warp, invert, [('output_image', 'in_file')]),
-			(invert, bandpass, [('out_file', 'in_file')]),
-			])
-	else:
 		if bandpass:
 			workflow_connections.extend([
-				(get_f_scan, bandpass, [('nii_name', 'out_file')]),
-				(f_warp, bandpass, [('output_image', 'in_file')]),
+				(invert, bandpass, [('out_file', 'in_file')]),
 				(bandpass, datasink, [('out_file', 'func')]),
 				])
 		else:
 			workflow_connections.extend([
-				(f_warp, datasink, [('output_image', 'func')]),
+				(invert, datasink, [('out_file', 'func')]),
 				])
+
+	elif functional_blur_xy:
+		workflow_connections.extend([
+			(f_warp, blur, [('output_image', 'in_file')]),
+			(blur, bandpass, [('out_file', 'in_file')]),
+			])
+		if bandpass:
+			workflow_connections.extend([
+				(blur, bandpass, [('out_file', 'in_file')]),
+				(bandpass, datasink, [('out_file', 'func')]),
+				])
+		else:
+			workflow_connections.extend([
+				(blur, datasink, [('out_file', 'func')]),
+				])
+
+	elif negative_contrast_agent:
+		workflow_connections.extend([
+			(f_warp, invert, [(('output_image', fslmaths_invert_values), 'op_string')]),
+			(f_warp, invert, [('output_image', 'in_file')]),
+			])
+		if bandpass:
+			workflow_connections.extend([
+				(invert, bandpass, [('out_file', 'in_file')]),
+				(bandpass, datasink, [('out_file', 'func')]),
+				])
+		else:
+			workflow_connections.extend([
+				(invert, datasink, [('out_file', 'func')]),
+				])
+	elif bandpass:
+		workflow_connections.extend([
+			(get_f_scan, bandpass, [('nii_name', 'out_file')]),
+			(f_warp, bandpass, [('output_image', 'in_file')]),
+			(bandpass, datasink, [('out_file', 'func')]),
+			])
+	else:
+		workflow_connections.extend([
+			(f_warp, datasink, [('output_image', 'func')]),
+			])
 
 
 	workflow_config = {'execution': {'crashdump_dir': path.join(bids_base,'preprocessing/crashdump'),}}

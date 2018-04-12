@@ -110,6 +110,7 @@ def bruker(bids_base, template,
 	strict=False,
 	verbose=False,
 	bandpass=False,
+	params = {},
 	):
 	'''
 
@@ -132,6 +133,9 @@ def bruker(bids_base, template,
 		raise ValueError("No species or template specified")
 		return -1
 
+	print('testo')
+	print(params)
+	print(params['smoothing_sigmas'])
 	bids_base = path.abspath(path.expanduser(bids_base))
 
 	data_selection = bids_data_selection(bids_base, structural_match, functional_match, subjects, sessions)
@@ -228,7 +232,13 @@ def bruker(bids_base, template,
 		get_s_scan.inputs.bids_base = bids_base
 
 		if actual_size:
-			s_register, s_warp, _, _ = DSURQEc_structural_registration(template, registration_mask)
+			
+			
+			if params:
+				s_register, s_warp, _, _ = DSURQEc_structural_registration(template, registration_mask, parameters = params)
+
+			else:
+				s_register, s_warp, _, _ = DSURQEc_structural_registration(template, registration_mask)
 			#TODO: incl. in func registration
 			if autorotate:
 				workflow_connections.extend([
@@ -320,7 +330,12 @@ def bruker(bids_base, template,
 	if functional_registration_method == "composite":
 		if not structural_scan_types.any():
 			raise ValueError('The option `registration="composite"` requires there to be a structural scan type.')
-		_, _, f_register, f_warp = DSURQEc_structural_registration(template, registration_mask)
+		
+		if params:
+			_, _, f_register, f_warp  = DSURQEc_structural_registration(template, registration_mask, parameters = params)
+
+		else:
+			_, _, f_register, f_warp  = DSURQEc_structural_registration(template, registration_mask)
 
 		temporal_mean = pe.Node(interface=fsl.MeanImage(), name="temporal_mean")
 

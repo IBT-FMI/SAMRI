@@ -40,6 +40,9 @@ def plot_roi_per_session(df,
 	roi_bottom=0.74,
 	roi_width=0.3,
 	roi_height=0.2,
+	roi_anat="~/ni_data/templates/DSURQEc_40micron_masked.nii.gz",
+	roi_threshold=None,
+	cut_coords=None,
 	samri_style=True,
 	renames=[],
 	save_as='',
@@ -96,13 +99,26 @@ def plot_roi_per_session(df,
 
 	if isinstance(feature_map, str):
 		ax2 = plt.axes(roi_coordinates)
-		maps.atlas_label(feature_map,
-			scale=0.3,
-			color="#E69F00",
-			ax=ax2,
-			annotate=False,
-			alpha=0.8,
-			)
+		if roi_threshold and cut_coords:
+			maps.stat(feature,
+				cut_coords=cut_coords,
+				template=roi_anat,
+				annotate=False,
+				scale=0.3,
+				show_plot=False,
+				interpolation=None,
+				threshold=roi_threshold,
+				draw_colorbar=False,
+				ax=ax2,
+				)
+		else:
+			maps.atlas_label(feature_map,
+				scale=0.3,
+				color="#E69F00",
+				ax=ax2,
+				annotate=False,
+				alpha=0.8,
+				)
 	elif feature_map:
 		try:
 			features = df['feature'].unique()
@@ -114,13 +130,26 @@ def plot_roi_per_session(df,
 			feature = features[0]
 			ax2 = plt.axes(roi_coordinates)
 			if path.isfile(feature):
-				maps.atlas_label(feature,
-					scale=0.3,
-					color="#E69F00",
-					ax=ax2,
-					annotate=False,
-					alpha=0.8,
-					)
+				if roi_threshold and cut_coords:
+					maps.stat(stat_maps=feature,
+						cut_coords=cut_coords,
+						template=roi_anat,
+						annotate=False,
+						scale=0.3,
+						show_plot=False,
+						interpolation=None,
+						threshold=roi_threshold,
+						draw_colorbar=False,
+						ax=ax2,
+						)
+				else:
+					maps.atlas_label(feature,
+						scale=0.3,
+						color="#E69F00",
+						ax=ax2,
+						annotate=False,
+						alpha=0.8,
+						)
 			else:
 				atlas = df['atlas'].unique()[0]
 				mapping = df['mapping'].unique()[0]

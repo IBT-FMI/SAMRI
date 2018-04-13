@@ -15,12 +15,14 @@ SLOT="0"
 IUSE="labbookdb"
 KEYWORDS=""
 
+# Numpy dependency to circumvent scikits_learn dependency bug:
+# https://bugs.gentoo.org/653052
 DEPEND=""
 RDEPEND="
 	dev-python/argh[${PYTHON_USEDEP}]
 	dev-python/joblib[${PYTHON_USEDEP}]
 	>=dev-python/matplotlib-2.0.2[${PYTHON_USEDEP}]
-	dev-python/numpy[${PYTHON_USEDEP}]
+	>=dev-python/numpy-1.13.3[${PYTHON_USEDEP}]
 	dev-python/pandas[${PYTHON_USEDEP}]
 	dev-python/seaborn[${PYTHON_USEDEP}]
 	dev-python/sqlalchemy[${PYTHON_USEDEP}]

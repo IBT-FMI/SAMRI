@@ -88,7 +88,7 @@ def measure_sim(path_template, substitutions, reference,
 
 	return file_data
 
-def get_scores(file_template, substitutions, reference,
+def iter_measure_sim(file_template, substitutions, reference,
 	metric="MI",
 	radius_or_number_of_bins = 8,
 	sampling_strategy = "None",

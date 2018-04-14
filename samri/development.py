@@ -61,10 +61,10 @@ def temporal_qc_al_in_one():
 
 def reg_gc():
 	from samri.plotting.aggregate import registration_qc
-	from samri.report.registration import get_scores
+	from samri.report.registration import iter_measure_sim
 	from samri.typesetting import inline_anova
 
-	df = get_scores(
+	df = iter_measure_sim(
 		"~/ni_data/ofM.dr/preprocessing/composite",
 		"~/ni_data/templates/DSURQEc_200micron_average.nii",
 		#modality="anat",
@@ -96,7 +96,7 @@ def test_reg_qc(
 	"""This could be used as a continuous integration test function once we can distribute demo data."""
 	from samri.utilities import bids_autofind
 	from samri.plotting.aggregate import registration_qc
-	from samri.report.registration import get_scores
+	from samri.report.registration import iter_measure_sim
 	from samri.typesetting import inline_anova
 	from samri.utilities import bids_substitution_iterator
 
@@ -114,7 +114,7 @@ def test_reg_qc(
 			check_file_format=path_template,
 			)
 
-	df = get_scores(path_template, substitutions,
+	df = iter_measure_sim(path_template, substitutions,
 		"~/ni_data/templates/DSURQEc_200micron_average.nii",
 		metric="CC",
 		radius_or_number_of_bins=radius,
@@ -129,7 +129,7 @@ def reg_cc(
 	):
 	from samri.utilities import bids_autofind
 	from samri.plotting.aggregate import registration_qc
-	from samri.report.registration import get_scores
+	from samri.report.registration import iter_measure_sim
 	from samri.typesetting import inline_anova
 	from samri.utilities import bids_substitution_iterator
 
@@ -147,7 +147,7 @@ def reg_cc(
 			check_file_format=path_template,
 			)
 
-	df = get_scores(path_template, substitutions,
+	df = iter_measure_sim(path_template, substitutions,
 		"~/ni_data/templates/DSURQEc_200micron_average.nii",
 		metric="CC",
 		radius_or_number_of_bins=radius,
@@ -166,13 +166,13 @@ def test_autofind():
 	"""
 	from samri.utilities import bids_autofind
 	from samri.plotting.aggregate import registration_qc
-	from samri.report.registration import get_scores
+	from samri.report.registration import iter_measure_sim
 	from samri.typesetting import inline_anova
 	from samri.utilities import bids_substitution_iterator
 
 	path_template, substitutions = bids_autofind("~/ni_data/ofM.dr/preprocessing/composite","func")
 
-	df = get_scores(path_template, substitutions,
+	df = iter_measure_sim(path_template, substitutions,
 		"~/ni_data/templates/DSURQEc_200micron_average.nii",
 		metric="CC",
 		radius_or_number_of_bins=10,

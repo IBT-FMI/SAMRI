@@ -18,7 +18,7 @@ from samri.pipelines.extra_functions import select_from_datafind_df
 from samri.pipelines.utils import bids_dict_to_source, ss_to_path, iterfield_selector, datasource_exclude, bids_dict_to_dir
 from samri.utilities import N_PROCS
 
-N_PROCS=max(N_PROCS-2, 2)
+N_PROCS=max(N_PROCS-8, 2)
 
 def l1(preprocessing_dir,
 	bf_path = '~/ni_data/irfs/chr_beta1.txt',

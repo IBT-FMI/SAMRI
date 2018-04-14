@@ -96,19 +96,18 @@ def bids_preprocessing():
 		#structural_match={'acquisition':['TurboRARE',]},
 		functional_match={'task':['JogB'],'type':['cbv']},
 		structural_match={'acquisition':['TurboRARE']},
-		subjects=['5667'],
+		#subjects=['5667','6542'],
 		#subjects=['6530','6532','6542','6548','6549','6552','6553','6556','6557'],
 		actual_size=True,
 		functional_registration_method="composite",
 		negative_contrast_agent=True,
-		keep_work=True,
 		)
 def bids_l1():
 	from samri.pipelines import glm
 
 	glm.l1('~/ni_data/ofM.dr/bids/preprocessing/generic',
 		workflow_name='generic',
-		include={'subject':['6530','6532','6542','6548','6549','6552','6553','6556','6557']},
+		#include={'subject':['6530','6532','6542','6548','6549','6552','6553','6556','6557']},
 		habituation="confound",
 		mask="~/ni_data/templates/DSURQEc_200micron_mask.nii.gz",
 		keep_work=True,

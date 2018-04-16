@@ -1,5 +1,6 @@
 from nipype.interfaces.base import BaseInterface, BaseInterfaceInputSpec, traits, File, TraitedSpec, Directory, CommandLineInputSpec, CommandLine, InputMultiPath, isdefined, Bunch, OutputMultiPath, load_template
 from nipype.interfaces.afni.base import AFNICommandOutputSpec, AFNICommandInputSpec, AFNICommand
+from nipype.interfaces.fsl.base import FSLCommandInputSpec, FSLCommand
 from nipype.utils.filemanip import split_filename
 from itertools import product
 from nibabel import load
@@ -852,3 +853,57 @@ class Level1Design(BaseInterface):
 					outputs['ev_files'][runno].append(
 						os.path.join(cwd, evfname))
 		return outputs
+
+class FSLOrientInput(FSLCommandInputSpec):
+
+	in_file = File(exists=True,
+		desc="image written after calculations",
+		argstr="%s",
+		position=1,
+		)
+	main_option = traits.Enum(
+		'getorient',
+		'getsform',
+		'getqform',
+		'setsform',
+		'setqform',
+		'getsformcode',
+		'getqformcode',
+		'setsformcode',
+		'setqformcode',
+		'copysform2qform',
+		'copyqform2sform',
+		'deleteorient',
+		'forceradiological',
+		'forceneurological',
+		'swaporient',
+		argstr="-%s",
+		position=0,
+		)
+
+class FSLOrientOutput(TraitedSpec):
+
+	out_file = File(exists=True, desc="image written after calculations")
+
+
+class FSLOrient(FSLCommand):
+
+	_cmd = "fslorient"
+	input_spec = FSLOrientInput
+	output_spec = FSLOrientOutput
+	_suffix = "_orient"
+
+	def _list_outputs(self):
+		outputs = self.output_spec().get()
+		outputs["out_file"] = self.inputs.out_file
+		if not isdefined(self.inputs.out_file):
+			outputs["out_file"] = self._gen_fname(
+				self.inputs.in_file, suffix=self._suffix)
+		outputs["out_file"] = os.path.abspath(outputs["out_file"])
+		return outputs
+
+	def _gen_filename(self, name):
+		if name == "out_file":
+			return self._list_outputs()["out_file"]
+		return None
+

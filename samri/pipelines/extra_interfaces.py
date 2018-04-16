@@ -423,34 +423,6 @@ class GenL2Model(BaseInterface):
 			outputs[field] = os.path.join(os.getcwd(),field.replace('_', '.'))
 		return outputs
 
-class Bru2InputSpec(CommandLineInputSpec):
-	input_dir = Directory(desc = "Input Directory", exists=True, mandatory=True, position=-1, argstr="%s")
-	group_by = traits.Str(desc='everything below this value will be set to zero', mandatory=False)
-	actual_size = traits.Bool(argstr='-a', desc="Keep actual size - otherwise x10 scale so animals match human.")
-	force_conversion = traits.Bool(argstr='-f', desc="Force conversion of localizers images (multiple slice orientations)")
-	output_filename = traits.Str(argstr="-o %s", desc="Output filename ('.nii' will be appended)", genfile=True)
-
-class Bru2OutputSpec(TraitedSpec):
-	nii_file = File(exists=True)
-
-class Bru2(CommandLine):
-	input_spec = Bru2InputSpec
-	output_spec = Bru2OutputSpec
-	_cmd = "Bru2"
-
-	def _list_outputs(self):
-		outputs = self._outputs().get()
-		if isdefined(self.inputs.output_filename):
-			output_filename1 = self.inputs.output_filename
-		else:
-			output_filename1 = self._gen_filename('output_filename')
-		outputs["nii_file"] = output_filename1+".nii"
-		return outputs
-
-	def _gen_filename(self, name):
-		if name == 'output_filename':
-			outfile = os.getcwd()+"/"+os.path.basename(os.path.normpath(self.inputs.input_dir))
-			return outfile
 
 class SubjectInfoInputSpec(BaseInterfaceInputSpec):
 	conditions = traits.List(traits.Str(exists=True))

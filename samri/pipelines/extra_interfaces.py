@@ -424,38 +424,6 @@ class GenL2Model(BaseInterface):
 		return outputs
 
 
-class SubjectInfoInputSpec(BaseInterfaceInputSpec):
-	conditions = traits.List(traits.Str(exists=True))
-	durations = traits.List(traits.List(traits.Float(exists=True)))
-	measurement_delay = traits.Float(exists=True, mandatory=True)
-	onsets = traits.List(traits.List(traits.Float(exists=True)))
-
-class SubjectInfoOutputSpec(TraitedSpec):
-	information = traits.List(Bunch())
-
-class SubjectInfo(BaseInterface):
-	input_spec = SubjectInfoInputSpec
-	output_spec = SubjectInfoOutputSpec
-
-	def _run_interface(self, runtime):
-		conditions = self.inputs.conditions
-		durations = self.inputs.durations
-		measurement_delay = self.inputs.measurement_delay
-		onsets = self.inputs.onsets
-		for idx_a, a in enumerate(onsets):
-			for idx_b, b in enumerate(a):
-				onsets[idx_a][idx_b] = b-measurement_delay
-
-		self.results = Bunch(conditions=conditions, onsets=onsets, durations=durations)
-
-		return runtime
-
-	def _list_outputs(self):
-		outputs = self._outputs().get()
-		outputs["information"] = [self.results]
-		return outputs
-
-
 class VoxelResizeInputSpec(BaseInterfaceInputSpec):
 	nii_files = traits.List(File(exists=True, mandatory=True))
 	resize_factors = traits.List(traits.Int([10,10,10], usedefault=True, desc="Factor by which to multiply the voxel size in the header"))

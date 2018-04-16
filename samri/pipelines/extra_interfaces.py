@@ -860,6 +860,7 @@ class FSLOrientInput(FSLCommandInputSpec):
 		desc="image written after calculations",
 		argstr="%s",
 		position=1,
+		copyfile=True,
 		)
 	main_option = traits.Enum(
 		'getorient',

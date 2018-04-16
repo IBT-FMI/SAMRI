@@ -483,64 +483,6 @@ class SubjectInfo(BaseInterface):
 		outputs["information"] = [self.results]
 		return outputs
 
-# class GetBrukerTimingInputSpec(BaseInterfaceInputSpec):
-# 	scan_directory = Directory(exists=True, mandatory=True)
-#
-# class GetBrukerTimingOutputSpec(TraitedSpec):
-# 	delay_s = traits.Float()
-# 	dummy_scans = traits.Int()
-# 	dummy_scans_ms = traits.Int()
-# 	total_delay_s = traits.Float()
-#
-# class GetBrukerTiming(BaseInterface):
-# 	input_spec = GetBrukerTimingInputSpec
-# 	output_spec = GetBrukerTimingOutputSpec
-#
-# 	def _run_interface(self, runtime):
-# 		from datetime import datetime
-# 		state_file_path = self.inputs.scan_directory+"/AdjStatePerScan"
-# 		state_file = open(state_file_path, "r")
-#
-# 		delay_seconds = dummy_scans = dummy_scans_ms = 0
-#
-# 		while True:
-# 			current_line = state_file.readline()
-# 			if "AdjScanStateTime" in current_line:
-# 				delay_datetime_line = state_file.readline()
-# 				break
-#
-# 		trigger_time, scanstart_time = [datetime.utcnow().strptime(i.split("+")[0], "<%Y-%m-%dT%H:%M:%S,%f") for i in delay_datetime_line.split(" ")]
-# 		delay = scanstart_time-trigger_time
-# 		delay_seconds=delay.total_seconds()
-#
-# 		method_file_path = self.inputs.scan_directory+"/method"
-# 		method_file = open(method_file_path, "r")
-#
-# 		read_variables=0 #count variables so that breaking takes place after both have been read
-# 		while True:
-# 			current_line = method_file.readline()
-# 			if "##$PVM_DummyScans=" in current_line:
-# 				dummy_scans = int(current_line.split("=")[1])
-# 				read_variables +=1 #count variables
-# 			if "##$PVM_DummyScansDur=" in current_line:
-# 				dummy_scans_ms = int(current_line.split("=")[1])
-# 				read_variables +=1 #count variables
-# 			if read_variables == 2:
-# 				break #prevent loop from going on forever
-#
-# 		total_delay_s = delay_seconds + dummy_scans_ms/1000
-#
-# 		self.result = [delay_seconds, dummy_scans, dummy_scans_ms, total_delay_s]
-#
-# 		return runtime
-#
-# 	def _list_outputs(self):
-# 		outputs = self._outputs().get()
-# 		outputs["delay_s"] = self.result[0]
-# 		outputs["dummy_scans"] = self.result[1]
-# 		outputs["dummy_scans_ms"] = self.result[2]
-# 		outputs["total_delay_s"] = self.result[3]
-# 		return outputs
 
 class VoxelResizeInputSpec(BaseInterfaceInputSpec):
 	nii_files = traits.List(File(exists=True, mandatory=True))

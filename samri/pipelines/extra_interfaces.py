@@ -1,5 +1,6 @@
 from nipype.interfaces.base import BaseInterface, BaseInterfaceInputSpec, traits, File, TraitedSpec, Directory, CommandLineInputSpec, CommandLine, InputMultiPath, isdefined, Bunch, OutputMultiPath, load_template
 from nipype.interfaces.afni.base import AFNICommandOutputSpec, AFNICommandInputSpec, AFNICommand
+from nipype.interfaces.fsl.base import FSLCommandInputSpec, FSLCommand
 from nipype.utils.filemanip import split_filename
 from itertools import product
 from nibabel import load
@@ -423,124 +424,6 @@ class GenL2Model(BaseInterface):
 			outputs[field] = os.path.join(os.getcwd(),field.replace('_', '.'))
 		return outputs
 
-class Bru2InputSpec(CommandLineInputSpec):
-	input_dir = Directory(desc = "Input Directory", exists=True, mandatory=True, position=-1, argstr="%s")
-	group_by = traits.Str(desc='everything below this value will be set to zero', mandatory=False)
-	actual_size = traits.Bool(argstr='-a', desc="Keep actual size - otherwise x10 scale so animals match human.")
-	force_conversion = traits.Bool(argstr='-f', desc="Force conversion of localizers images (multiple slice orientations)")
-	output_filename = traits.Str(argstr="-o %s", desc="Output filename ('.nii' will be appended)", genfile=True)
-
-class Bru2OutputSpec(TraitedSpec):
-	nii_file = File(exists=True)
-
-class Bru2(CommandLine):
-	input_spec = Bru2InputSpec
-	output_spec = Bru2OutputSpec
-	_cmd = "Bru2"
-
-	def _list_outputs(self):
-		outputs = self._outputs().get()
-		if isdefined(self.inputs.output_filename):
-			output_filename1 = self.inputs.output_filename
-		else:
-			output_filename1 = self._gen_filename('output_filename')
-		outputs["nii_file"] = output_filename1+".nii"
-		return outputs
-
-	def _gen_filename(self, name):
-		if name == 'output_filename':
-			outfile = os.getcwd()+"/"+os.path.basename(os.path.normpath(self.inputs.input_dir))
-			return outfile
-
-class SubjectInfoInputSpec(BaseInterfaceInputSpec):
-	conditions = traits.List(traits.Str(exists=True))
-	durations = traits.List(traits.List(traits.Float(exists=True)))
-	measurement_delay = traits.Float(exists=True, mandatory=True)
-	onsets = traits.List(traits.List(traits.Float(exists=True)))
-
-class SubjectInfoOutputSpec(TraitedSpec):
-	information = traits.List(Bunch())
-
-class SubjectInfo(BaseInterface):
-	input_spec = SubjectInfoInputSpec
-	output_spec = SubjectInfoOutputSpec
-
-	def _run_interface(self, runtime):
-		conditions = self.inputs.conditions
-		durations = self.inputs.durations
-		measurement_delay = self.inputs.measurement_delay
-		onsets = self.inputs.onsets
-		for idx_a, a in enumerate(onsets):
-			for idx_b, b in enumerate(a):
-				onsets[idx_a][idx_b] = b-measurement_delay
-
-		self.results = Bunch(conditions=conditions, onsets=onsets, durations=durations)
-
-		return runtime
-
-	def _list_outputs(self):
-		outputs = self._outputs().get()
-		outputs["information"] = [self.results]
-		return outputs
-
-# class GetBrukerTimingInputSpec(BaseInterfaceInputSpec):
-# 	scan_directory = Directory(exists=True, mandatory=True)
-#
-# class GetBrukerTimingOutputSpec(TraitedSpec):
-# 	delay_s = traits.Float()
-# 	dummy_scans = traits.Int()
-# 	dummy_scans_ms = traits.Int()
-# 	total_delay_s = traits.Float()
-#
-# class GetBrukerTiming(BaseInterface):
-# 	input_spec = GetBrukerTimingInputSpec
-# 	output_spec = GetBrukerTimingOutputSpec
-#
-# 	def _run_interface(self, runtime):
-# 		from datetime import datetime
-# 		state_file_path = self.inputs.scan_directory+"/AdjStatePerScan"
-# 		state_file = open(state_file_path, "r")
-#
-# 		delay_seconds = dummy_scans = dummy_scans_ms = 0
-#
-# 		while True:
-# 			current_line = state_file.readline()
-# 			if "AdjScanStateTime" in current_line:
-# 				delay_datetime_line = state_file.readline()
-# 				break
-#
-# 		trigger_time, scanstart_time = [datetime.utcnow().strptime(i.split("+")[0], "<%Y-%m-%dT%H:%M:%S,%f") for i in delay_datetime_line.split(" ")]
-# 		delay = scanstart_time-trigger_time
-# 		delay_seconds=delay.total_seconds()
-#
-# 		method_file_path = self.inputs.scan_directory+"/method"
-# 		method_file = open(method_file_path, "r")
-#
-# 		read_variables=0 #count variables so that breaking takes place after both have been read
-# 		while True:
-# 			current_line = method_file.readline()
-# 			if "##$PVM_DummyScans=" in current_line:
-# 				dummy_scans = int(current_line.split("=")[1])
-# 				read_variables +=1 #count variables
-# 			if "##$PVM_DummyScansDur=" in current_line:
-# 				dummy_scans_ms = int(current_line.split("=")[1])
-# 				read_variables +=1 #count variables
-# 			if read_variables == 2:
-# 				break #prevent loop from going on forever
-#
-# 		total_delay_s = delay_seconds + dummy_scans_ms/1000
-#
-# 		self.result = [delay_seconds, dummy_scans, dummy_scans_ms, total_delay_s]
-#
-# 		return runtime
-#
-# 	def _list_outputs(self):
-# 		outputs = self._outputs().get()
-# 		outputs["delay_s"] = self.result[0]
-# 		outputs["dummy_scans"] = self.result[1]
-# 		outputs["dummy_scans_ms"] = self.result[2]
-# 		outputs["total_delay_s"] = self.result[3]
-# 		return outputs
 
 class VoxelResizeInputSpec(BaseInterfaceInputSpec):
 	nii_files = traits.List(File(exists=True, mandatory=True))
@@ -970,3 +853,58 @@ class Level1Design(BaseInterface):
 					outputs['ev_files'][runno].append(
 						os.path.join(cwd, evfname))
 		return outputs
+
+class FSLOrientInput(FSLCommandInputSpec):
+
+	in_file = File(exists=True,
+		desc="image written after calculations",
+		argstr="%s",
+		position=1,
+		copyfile=True,
+		)
+	main_option = traits.Enum(
+		'getorient',
+		'getsform',
+		'getqform',
+		'setsform',
+		'setqform',
+		'getsformcode',
+		'getqformcode',
+		'setsformcode',
+		'setqformcode',
+		'copysform2qform',
+		'copyqform2sform',
+		'deleteorient',
+		'forceradiological',
+		'forceneurological',
+		'swaporient',
+		argstr="-%s",
+		position=0,
+		)
+
+class FSLOrientOutput(TraitedSpec):
+
+	out_file = File(exists=True, desc="image written after calculations")
+
+
+class FSLOrient(FSLCommand):
+
+	_cmd = "fslorient"
+	input_spec = FSLOrientInput
+	output_spec = FSLOrientOutput
+	_suffix = "_orient"
+
+	def _list_outputs(self):
+		outputs = self.output_spec().get()
+		outputs["out_file"] = self.inputs.out_file
+		if not isdefined(self.inputs.out_file):
+			outputs["out_file"] = self._gen_fname(
+				self.inputs.in_file, suffix=self._suffix)
+		outputs["out_file"] = os.path.abspath(outputs["out_file"])
+		return outputs
+
+	def _gen_filename(self, name):
+		if name == "out_file":
+			return self._list_outputs()["out_file"]
+		return None
+

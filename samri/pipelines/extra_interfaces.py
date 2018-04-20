@@ -5,10 +5,11 @@ from nipype.utils.filemanip import split_filename
 from itertools import product
 from nibabel import load
 
+import csv
 import nibabel as nb
 import numpy as np
-import csv
 import os
+import shutil
 
 def scale_timings(timelist, input_units, output_units, time_repetition):
 	"""Scales timings given input and output units (scans/secs)
@@ -426,11 +427,20 @@ class GenL2Model(BaseInterface):
 
 
 class VoxelResizeInputSpec(BaseInterfaceInputSpec):
-	nii_files = traits.List(File(exists=True, mandatory=True))
-	resize_factors = traits.List(traits.Int([10,10,10], usedefault=True, desc="Factor by which to multiply the voxel size in the header"))
+	in_file = File(exists=True, mandatory=True)
+	out_file = traits.Str(
+		default_value="fslorient_out.nii.gz",
+		usedefault=True,
+		desc="image written after calculations",
+		)
+	resize_factors = traits.List(
+		traits.Int([10,10,10],
+		usedefault=True,
+		desc="Factor by which to multiply the voxel size in the header",
+		))
 
 class VoxelResizeOutputSpec(TraitedSpec):
-	resized_files = traits.List(File(exists=True))
+	out_file = traits.List(File(exists=True))
 
 class VoxelResize(BaseInterface):
 	input_spec = VoxelResizeInputSpec
@@ -438,36 +448,35 @@ class VoxelResize(BaseInterface):
 
 	def _run_interface(self, runtime):
 		import nibabel as nb
-		nii_files = self.inputs.nii_files
+		nii_file = self.inputs.in_file
 		resize_factors = self.inputs.resize_factors
 
-		self.result = []
-		for nii_file in nii_files:
-			nii_img = nb.load(nii_file)
-			aff = nii_img.affine
-			# take original image affine, and scale the voxel size and first voxel coordinates for each dimension
-			aff[0,0] = aff[0,0]*resize_factors[0]
-			aff[0,3] = aff[0,3]*resize_factors[0]
-			aff[1,1] = aff[1,1]*resize_factors[1]
-			aff[1,3] = aff[1,3]*resize_factors[1]
-			aff[2,2] = aff[2,2]*resize_factors[2]
-			aff[2,3] = aff[2,3]*resize_factors[2]
-			#apply the affine
-			nii_img.set_sform(aff)
-			nii_img.set_qform(aff)
+		nii_img = nb.load(in_file)
+		aff = nii_img.affine
+		# take original image affine, and scale the voxel size and first voxel coordinates for each dimension
+		aff[0,0] = aff[0,0]*resize_factors[0]
+		aff[0,3] = aff[0,3]*resize_factors[0]
+		aff[1,1] = aff[1,1]*resize_factors[1]
+		aff[1,3] = aff[1,3]*resize_factors[1]
+		aff[2,2] = aff[2,2]*resize_factors[2]
+		aff[2,3] = aff[2,3]*resize_factors[2]
+		#apply the affine
+		nii_img.set_sform(aff)
+		nii_img.set_qform(aff)
 
-			#set the sform and qform codes to "scanner" (other settings will lead to AFNI/meica.py assuming talairach space)
-			nii_img.header["qform_code"] = 1
-			nii_img.header["sform_code"] = 1
+		#set the sform and qform codes to "scanner" (other settings will lead to AFNI/meica.py assuming talairach space)
+		nii_img.header["qform_code"] = 1
+		nii_img.header["sform_code"] = 1
 
-			_, fname = os.path.split(nii_file)
-			nii_img.to_filename(fname)
-			self.result.append(os.path.abspath(fname))
+		out_file = self.inputs.out_file
+		nii_img.to_filename(out_file)
+		self.result = os.path.abspath(out_file)
+
 		return runtime
 
 	def _list_outputs(self):
 		outputs = self._outputs().get()
-		outputs["resized_files"] = self.result
+		outputs['out_file'] = self.result
 		return outputs
 
 class MEICAInputSpec(CommandLineInputSpec):
@@ -854,13 +863,22 @@ class Level1Design(BaseInterface):
 						os.path.join(cwd, evfname))
 		return outputs
 
+
 class FSLOrientInput(FSLCommandInputSpec):
 
 	in_file = File(exists=True,
+		mandatory=True,
+		desc="image written after calculations",
+		copyfile=True,
+		output_name='out_file',
+		name_source='dest_file',
+		)
+	out_file = traits.Str(
+		default_value="fslorient_out.nii.gz",
+		usedefault=True,
 		desc="image written after calculations",
 		argstr="%s",
 		position=1,
-		copyfile=True,
 		)
 	main_option = traits.Enum(
 		'getorient',
@@ -892,19 +910,17 @@ class FSLOrient(FSLCommand):
 	_cmd = "fslorient"
 	input_spec = FSLOrientInput
 	output_spec = FSLOrientOutput
-	_suffix = "_orient"
+
+
+	def run(self, **inputs):
+		print(self.inputs.in_file)
+		print(self.inputs.out_file)
+		shutil.copyfile(self.inputs.in_file, self.inputs.out_file)
+		FSLCommand.run(self)
 
 	def _list_outputs(self):
 		outputs = self.output_spec().get()
 		outputs["out_file"] = self.inputs.out_file
-		if not isdefined(self.inputs.out_file):
-			outputs["out_file"] = self._gen_fname(
-				self.inputs.in_file, suffix=self._suffix)
-		outputs["out_file"] = os.path.abspath(outputs["out_file"])
+		outputs["out_file"] = path.abspath(outputs["out_file"])
 		return outputs
-
-	def _gen_filename(self, name):
-		if name == "out_file":
-			return self._list_outputs()["out_file"]
-		return None
 

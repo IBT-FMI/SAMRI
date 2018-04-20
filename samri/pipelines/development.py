@@ -92,10 +92,12 @@ def bids_preprocessing():
 	bids_base = '~/ni_data/ofM.dr/bids'
 
 	bruker(bids_base, "~/ni_data/templates/DSURQEc_200micron_average.nii",
-		#functional_match={'task':['CogB','JPogP'],'type':['cbv']},
-		#structural_match={'acquisition':['TurboRARE',]},
-		functional_match={'task':['JogB'],'type':['cbv']},
-		structural_match={'acquisition':['TurboRARE']},
+		#functional_match={'acquisition':['EPIlowcov',],},
+		#structural_match={'acquisition':['TurboRARElowcov',]},
+		#functional_match={'task':['JogB','CogB',],'acquisition':['EPI',],},
+		functional_match={'task':['JogB','CogB',],'acquisition':['EPIlowcov',],},
+		#functional_match={'task':['JogB'],'type':['cbv']},
+		structural_match={'acquisition':['TurboRARElowcov']},
 		#subjects=['5667','6542'],
 		#subjects=['6530','6532','6542','6548','6549','6552','6553','6556','6557'],
 		actual_size=True,

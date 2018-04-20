@@ -8,12 +8,11 @@ import shutil
 from copy import deepcopy
 from itertools import product
 
-import nipype.interfaces.ants as ants
 import nipype.interfaces.io as nio
 import nipype.interfaces.utility as util		# utility
 import nipype.pipeline.engine as pe				# pypeline engine
 import pandas as pd
-from nipype.interfaces import afni, bru2nii, fsl, nipy
+from nipype.interfaces import ants, afni, bru2nii, fsl, nipy
 
 from samri.pipelines.nodes import *
 from samri.pipelines.utils import bids_naming, ss_to_path, sss_filename, fslmaths_invert_values

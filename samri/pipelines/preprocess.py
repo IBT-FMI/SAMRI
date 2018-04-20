@@ -212,7 +212,7 @@ def legacy_bruker(bids_base, template,
 		(temporal_mean, f_threshold, [('out_file', 'in_file')]),
 		(f_threshold, f_fast, [('out_file', 'in_files')]),
 		(f_fast, f_bet, [('restored_image', 'in_file')]),
-		(f_bet, f_deleteorient, [('out_file', 'in_file')]),
+		(f_bet, f_mean_deleteorient, [('out_file', 'in_file')]),
 		]
 
 	if realign == "space":
@@ -305,11 +305,14 @@ def legacy_bruker(bids_base, template,
 		f_antsintroduction.inputs.transformation_model = 'GR'
 		f_antsintroduction.inputs.max_iterations = [8,15,8]
 
+		f_warp = pe.Node(interface=ants.WarpTimeSeriesImageMultiTransform(), name='f_warp')
+		f_warp.inputs.reference_image = template
+		f_warp.inputs.dimension = 4
+
 		workflow_connections.extend([
-			(f_deleteorient, f_antsintroduction, [('out_file', 'input_image')]),
-			(f_biascorrect, f_register, [('output_image', 'moving_image')]),
-			(f_register, f_warp, [('composite_transform', 'transforms')]),
-				(realigner, f_warp, [('realigned_files', 'input_image')]),
+			(f_mean_deleteorient, f_antsintroduction, [('out_file', 'input_image')]),
+			(f_antsintroduction, f_warp, [('affine_transformation', 'transformation_series')]),
+			(f_deleteorient, f_warp, [('out_file', 'input_image')]),
 			])
 		if realign == "space":
 			workflow_connections.extend([

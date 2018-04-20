@@ -660,9 +660,7 @@ def bruker(bids_base, template,
 			workflow_connections.extend([
 				(dummy_scans, f_warp, [('out_file', 'input_image')]),
 				])
-
-
-	if functional_registration_method == "composite":
+	elif functional_registration_method == "composite":
 		if not structural_scan_types.any():
 			raise ValueError('The option `registration="composite"` requires there to be a structural scan type.')
 		_, _, f_register, f_warp = DSURQEc_structural_registration(template, registration_mask)
@@ -699,7 +697,6 @@ def bruker(bids_base, template,
 				(dummy_scans, temporal_mean, [('out_file', 'in_file')]),
 				(dummy_scans, f_warp, [('out_file', 'input_image')]),
 				])
-
 	elif functional_registration_method == "functional":
 		f_register, f_warp = functional_registration(template)
 

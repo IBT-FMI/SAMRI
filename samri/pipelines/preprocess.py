@@ -123,11 +123,11 @@ def legacy_bruker(bids_base, template,
 	'''
 	if template:
 		if template == "mouse":
-			from samri.fetch.templates import fetch_rat_waxholm, fetch_mouse_DSURQE
+			from samri.fetch.templates import fetch_mouse_DSURQE
 			template = fetch_mouse_DSURQE()['template']
 			registration_mask = fetch_mouse_DSURQE()['mask']
 		elif template == "rat":
-			from samri.fetch.templates import fetch_rat_waxholm, fetch_mouse_DSURQE
+			from samri.fetch.templates import fetch_rat_waxholm
 			template = fetch_rat_waxholm()['template']
 			registration_mask = fetch_rat_waxholm()['mask']
 		else:
@@ -481,11 +481,11 @@ def bruker(bids_base, template,
 	'''
 	if template:
 		if template == "mouse":
-			from samri.fetch.templates import fetch_rat_waxholm, fetch_mouse_DSURQE
+			from samri.fetch.templates import fetch_mouse_DSURQE
 			template = fetch_mouse_DSURQE()['template']
 			registration_mask = fetch_mouse_DSURQE()['mask']
 		elif template == "rat":
-			from samri.fetch.templates import fetch_rat_waxholm, fetch_mouse_DSURQE
+			from samri.fetch.templates import fetch_rat_waxholm
 			template = fetch_rat_waxholm()['template']
 			registration_mask = fetch_rat_waxholm()['mask']
 		else:

@@ -1,5 +1,6 @@
 from os import path, listdir, getcwd, remove
 from samri.pipelines.extra_functions import get_data_selection, get_bids_scan, write_bids_metadata_file, write_bids_events_file, force_dummy_scans, BIDS_METADATA_EXTRACTION_DICTS
+from samri.pipelines.extra_interfaces import VoxelResize
 
 import re
 import inspect
@@ -86,7 +87,7 @@ def bids_data_selection(base, structural_match, functional_match, subjects, sess
 
 	return df
 
-def bruker_legacy(bids_base, template,
+def legacy_bruker(bids_base, template,
 	DEBUG=False,
 	exclude={},
 	functional_match={},
@@ -168,6 +169,15 @@ def bruker_legacy(bids_base, template,
 
 	events_file = pe.Node(name='events_file', interface=util.Function(function=write_bids_events_file,input_names=inspect.getargspec(write_bids_events_file)[0], output_names=['out_file']))
 
+	temporal_mean = pe.Node(interface=fsl.MeanImage(), name="temporal_mean")
+
+	f_resize = pe.Node(interface=VoxelResize(), name="f_resize")
+
+	f_percentile = pe.Node(interface=fsl.ImageStats(), name="f_percentile")
+	f_percentileinputs.op_string = '-p 98'
+
+	f_threshold = pe.Node(interface=fsl.Threshold(), name="f_threshold")
+
 	datasink = pe.Node(nio.DataSink(), name='datasink')
 	datasink.inputs.base_directory = path.join(bids_base,"preprocessing",workflow_name)
 	datasink.inputs.parameterization = False
@@ -178,6 +188,7 @@ def bruker_legacy(bids_base, template,
 		(get_f_scan, dummy_scans, [('nii_path', 'in_file')]),
 		(get_f_scan, dummy_scans, [('scan_path', 'scan_dir')]),
 		(dummy_scans, events_file, [('deleted_scans', 'forced_dummy_scans')]),
+		(dummy_scans, f_resize, [('out_file', 'in_file')]),
 		(get_f_scan, events_file, [
 			('nii_path', 'timecourse_file'),
 			('task', 'task'),
@@ -192,7 +203,7 @@ def bruker_legacy(bids_base, template,
 		realigner = pe.Node(interface=spm.Realign(), name="realigner")
 		realigner.inputs.register_to_mean = True
 		workflow_connections.extend([
-			(dummy_scans, realigner, [('out_file', 'in_file')]),
+			(f_resize, realigner, [('out_file', 'in_file')]),
 			])
 
 	elif realign == "spacetime":
@@ -201,17 +212,17 @@ def bruker_legacy(bids_base, template,
 		realigner.inputs.tr = tr
 		realigner.inputs.slice_info = 3 #3 for coronal slices (2 for horizontal, 1 for sagittal)
 		workflow_connections.extend([
-			(dummy_scans, realigner, [('out_file', 'in_file')]),
+			(f_resize, realigner, [('out_file', 'in_file')]),
 			])
 
 	elif realign == "time":
 		realigner = pe.Node(interface=fsl.SliceTimer(), name="slicetimer")
 		realigner.inputs.time_repetition = tr
 		workflow_connections.extend([
-			(dummy_scans, realigner, [('out_file', 'in_file')]),
+			(f_resize, realigner, [('out_file', 'in_file')]),
 			])
 
-	voxel_resize = pe.Node(interface=nipy.SpaceTimeRealigner(), name="voxel_resize")
+
 
 	if structural_scan_types.any():
 		get_s_scan = pe.Node(name='get_s_scan', interface=util.Function(function=get_bids_scan, input_names=inspect.getargspec(get_bids_scan)[0], output_names=['scan_path','scan_type','task', 'nii_path', 'nii_name', 'file_name', 'events_name', 'subject_session']))
@@ -221,6 +232,8 @@ def bruker_legacy(bids_base, template,
 
 		s_cutoff = pe.Node(interface=fsl.ImageMaths(), name="s_cutoff")
 		s_cutoff.inputs.op_string = "-thrP 20 -uthrp 98"
+
+		s_resize = pe.Node(interface=VoxelResize(), name="s_resize")
 
 		s_BET = pe.Node(interface=fsl.BET(), name="s_BET")
 		s_BET.inputs.mask = True
@@ -269,69 +282,7 @@ def bruker_legacy(bids_base, template,
 			(get_s_scan, s_biascorrect, [('nii_path', 'input_image')]),
 			])
 
-	if functional_registration_method == "structural":
-		if not structural_scan_types:
-			raise ValueError('The option `registration="structural"` requires there to be a structural scan type.')
-		workflow_connections.extend([
-			(s_register, f_warp, [('composite_transform', 'transforms')]),
-			])
-		if realign == "space":
-			workflow_connections.extend([
-				(realigner, f_warp, [('realigned_files', 'input_image')]),
-				])
-		elif realign == "spacetime":
-			workflow_connections.extend([
-				(realigner, f_warp, [('out_file', 'input_image')]),
-				])
-		elif realign == "time":
-			workflow_connections.extend([
-				(realigner, f_warp, [('slice_time_corrected_file', 'input_image')]),
-				])
-		else:
-			workflow_connections.extend([
-				(dummy_scans, f_warp, [('out_file', 'input_image')]),
-				])
-
-
-	if functional_registration_method == "composite":
-		if not structural_scan_types.any():
-			raise ValueError('The option `registration="composite"` requires there to be a structural scan type.')
-		_, _, f_register, f_warp = DSURQEc_structural_registration(template, registration_mask)
-
-		temporal_mean = pe.Node(interface=fsl.MeanImage(), name="temporal_mean")
-
-		merge = pe.Node(util.Merge(2), name='merge')
-
-		workflow_connections.extend([
-			(temporal_mean, f_biascorrect, [('out_file', 'input_image')]),
-			(f_biascorrect, f_register, [('output_image', 'moving_image')]),
-			(s_biascorrect, f_register, [('output_image', 'fixed_image')]),
-			(f_register, merge, [('composite_transform', 'in1')]),
-			(s_register, merge, [('composite_transform', 'in2')]),
-			(merge, f_warp, [('out', 'transforms')]),
-			])
-		if realign == "space":
-			workflow_connections.extend([
-				(realigner, temporal_mean, [('realigned_files', 'in_file')]),
-				(realigner, f_warp, [('realigned_files', 'input_image')]),
-				])
-		elif realign == "spacetime":
-			workflow_connections.extend([
-				(realigner, temporal_mean, [('out_file', 'in_file')]),
-				(realigner, f_warp, [('out_file', 'input_image')]),
-				])
-		elif realign == "time":
-			workflow_connections.extend([
-				(realigner, temporal_mean, [('slice_time_corrected_file', 'in_file')]),
-				(realigner, f_warp, [('slice_time_corrected_file', 'input_image')]),
-				])
-		else:
-			workflow_connections.extend([
-				(dummy_scans, temporal_mean, [('out_file', 'in_file')]),
-				(dummy_scans, f_warp, [('out_file', 'input_image')]),
-				])
-
-	elif functional_registration_method == "functional":
+	if functional_registration_method == "functional":
 		f_register, f_warp = functional_registration(template)
 
 		temporal_mean = pe.Node(interface=fsl.MeanImage(), name="temporal_mean")
@@ -371,6 +322,66 @@ def bruker_legacy(bids_base, template,
 				(dummy_scans, temporal_mean, [('out_file', 'in_file')]),
 				(dummy_scans, f_warp, [('out_file', 'input_image')]),
 				])
+	elif functional_registration_method == "structural":
+		if not structural_scan_types:
+			raise ValueError('The option `registration="structural"` requires there to be a structural scan type.')
+		workflow_connections.extend([
+			(s_register, f_warp, [('composite_transform', 'transforms')]),
+			])
+		if realign == "space":
+			workflow_connections.extend([
+				(realigner, f_warp, [('realigned_files', 'input_image')]),
+				])
+		elif realign == "spacetime":
+			workflow_connections.extend([
+				(realigner, f_warp, [('out_file', 'input_image')]),
+				])
+		elif realign == "time":
+			workflow_connections.extend([
+				(realigner, f_warp, [('slice_time_corrected_file', 'input_image')]),
+				])
+		else:
+			workflow_connections.extend([
+				(dummy_scans, f_warp, [('out_file', 'input_image')]),
+				])
+	elif functional_registration_method == "composite":
+		if not structural_scan_types.any():
+			raise ValueError('The option `registration="composite"` requires there to be a structural scan type.')
+		_, _, f_register, f_warp = DSURQEc_structural_registration(template, registration_mask)
+
+		temporal_mean = pe.Node(interface=fsl.MeanImage(), name="temporal_mean")
+
+		merge = pe.Node(util.Merge(2), name='merge')
+
+		workflow_connections.extend([
+			(temporal_mean, f_biascorrect, [('out_file', 'input_image')]),
+			(f_biascorrect, f_register, [('output_image', 'moving_image')]),
+			(s_biascorrect, f_register, [('output_image', 'fixed_image')]),
+			(f_register, merge, [('composite_transform', 'in1')]),
+			(s_register, merge, [('composite_transform', 'in2')]),
+			(merge, f_warp, [('out', 'transforms')]),
+			])
+		if realign == "space":
+			workflow_connections.extend([
+				(realigner, temporal_mean, [('realigned_files', 'in_file')]),
+				(realigner, f_warp, [('realigned_files', 'input_image')]),
+				])
+		elif realign == "spacetime":
+			workflow_connections.extend([
+				(realigner, temporal_mean, [('out_file', 'in_file')]),
+				(realigner, f_warp, [('out_file', 'input_image')]),
+				])
+		elif realign == "time":
+			workflow_connections.extend([
+				(realigner, temporal_mean, [('slice_time_corrected_file', 'in_file')]),
+				(realigner, f_warp, [('slice_time_corrected_file', 'input_image')]),
+				])
+		else:
+			workflow_connections.extend([
+				(dummy_scans, temporal_mean, [('out_file', 'in_file')]),
+				(dummy_scans, f_warp, [('out_file', 'input_image')]),
+				])
+
 
 
 	invert = pe.Node(interface=fsl.ImageMaths(), name="invert")

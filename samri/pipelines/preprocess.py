@@ -178,6 +178,16 @@ def legacy_bruker(bids_base, template,
 
 	f_threshold = pe.Node(interface=fsl.Threshold(), name="f_threshold")
 
+	f_fast = pe.Node(interface=fsl.FAST(), name="f_fast")
+	f_fast.inputs.no_pve = True
+	f_fast.inputs.output_biascorrected = True
+
+	f_deleteorient = pe.Node(interface=fsl.FSLOrient(), name="f_deleteorient")
+	f_deleteorient.inputs.main_option = 'deleteorient'
+
+	f_mean_deleteorient = pe.Node(interface=fsl.FSLOrient(), name="f_deleteorient")
+	f_mean_deleteorient.inputs.main_option = 'deleteorient'
+
 	datasink = pe.Node(nio.DataSink(), name='datasink')
 	datasink.inputs.base_directory = path.join(bids_base,"preprocessing",workflow_name)
 	datasink.inputs.parameterization = False
@@ -197,6 +207,13 @@ def legacy_bruker(bids_base, template,
 		(events_file, datasink, [('out_file', 'func.@events')]),
 		(get_f_scan, events_file, [('events_name', 'out_file')]),
 		(get_f_scan, datasink, [(('subject_session',ss_to_path), 'container')]),
+		(temporal_mean, f_percentile, [('out_file', 'in_file')]),
+		# here we divide by 1 assuming 10 percent noise
+		(f_percentile, f_threshold, [(('out_stat', lambda x: x/10.), 'thresh')]),
+		(temporal_mean, f_threshold, [('out_file', 'in_file')]),
+		(f_threshold, f_fast, [('out_file', 'in_files')]),
+		(f_fast, f_bet, [('restored_image', 'in_file')]),
+		(f_bet, f_deleteorient, [('out_file', 'in_file')]),
 		]
 
 	if realign == "space":
@@ -221,8 +238,6 @@ def legacy_bruker(bids_base, template,
 		workflow_connections.extend([
 			(f_resize, realigner, [('out_file', 'in_file')]),
 			])
-
-
 
 	if structural_scan_types.any():
 		get_s_scan = pe.Node(name='get_s_scan', interface=util.Function(function=get_bids_scan, input_names=inspect.getargspec(get_bids_scan)[0], output_names=['scan_path','scan_type','task', 'nii_path', 'nii_name', 'file_name', 'events_name', 'subject_session']))
@@ -283,44 +298,39 @@ def legacy_bruker(bids_base, template,
 			])
 
 	if functional_registration_method == "functional":
-		f_register, f_warp = functional_registration(template)
 
-		temporal_mean = pe.Node(interface=fsl.MeanImage(), name="temporal_mean")
-
-		#f_cutoff = pe.Node(interface=fsl.ImageMaths(), name="f_cutoff")
-		#f_cutoff.inputs.op_string = "-thrP 30"
-
-		#f_BET = pe.Node(interface=fsl.BET(), name="f_BET")
-		#f_BET.inputs.mask = True
-		#f_BET.inputs.frac = 0.5
+		f_antsintroduction = pe.Node(interface=ants.legacy.antsIntroduction(), name='ants_introduction')
+		f_antsintroduction.inputs.dimension = 3
+		f_antsintroduction.inputs.reference_image = template
+		f_antsintroduction.inputs.bias_field_correction = 1
+		f_antsintroduction.inputs.transformation_model = 'GR'
+		f_antsintroduction.inputs.max_iterations = [8,15,8]
 
 		workflow_connections.extend([
-			(temporal_mean, f_biascorrect, [('out_file', 'input_image')]),
-			#(f_biascorrect, f_cutoff, [('output_image', 'in_file')]),
-			#(f_cutoff, f_BET, [('out_file', 'in_file')]),
-			#(f_BET, f_register, [('out_file', 'moving_image')]),
+			(f_deleteorient, f_antsintroduction, [('out_file', 'input_image')]),
 			(f_biascorrect, f_register, [('output_image', 'moving_image')]),
 			(f_register, f_warp, [('composite_transform', 'transforms')]),
+				(realigner, f_warp, [('realigned_files', 'input_image')]),
 			])
 		if realign == "space":
 			workflow_connections.extend([
 				(realigner, temporal_mean, [('realigned_files', 'in_file')]),
-				(realigner, f_warp, [('realigned_files', 'input_image')]),
+				(realigner, f_deleteorient, [('realigned_files', 'in_file')]),
 				])
 		elif realign == "spacetime":
 			workflow_connections.extend([
 				(realigner, temporal_mean, [('out_file', 'in_file')]),
-				(realigner, f_warp, [('out_file', 'input_image')]),
+				(realigner, f_deleteorient, [('out_file', 'in_file')]),
 				])
 		elif realign == "time":
 			workflow_connections.extend([
 				(realigner, temporal_mean, [('slice_time_corrected_file', 'in_file')]),
-				(realigner, f_warp, [('slice_time_corrected_file', 'input_image')]),
+				(realigner, f_deleteorient, [('slice_time_corrected_file', 'in_file')]),
 				])
 		else:
 			workflow_connections.extend([
-				(dummy_scans, temporal_mean, [('out_file', 'in_file')]),
-				(dummy_scans, f_warp, [('out_file', 'input_image')]),
+				(f_resize, temporal_mean, [('out_file', 'in_file')]),
+				(f_resize, f_deleteorient, [('out_file', 'in_file')]),
 				])
 	elif functional_registration_method == "structural":
 		if not structural_scan_types:

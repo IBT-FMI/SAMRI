@@ -38,7 +38,7 @@ def fetch_rat_waxholm(template_dir="~/.samri_files/templates/rat/waxholm/", verb
 	url_labels = 'https://www.nitrc.org/frs/download.php/9439/WHS_SD_rat_atlas_v2.label'
 	labels = _fetch_files(path.abspath(path.expanduser(template_dir)), [('WHS_SD_rat_atlas_v2.label', url_labels, {})],
 			verbose=verbose)[0]
-		
+
 	# resample template
 	commands = ["ResampleImage 3 WHS_SD_rat_T2star_v1.01.nii.gz _200micron_WHS_SD_rat_T2star_v1.01.nii.gz 0.2x0.2x0.2 size=1 spacing=0 4",
 		"SmoothImage 3 _200micron_WHS_SD_rat_T2star_v1.01.nii.gz 0.4 200micron_WHS_SD_rat_T2star_v1.01.nii.gz",

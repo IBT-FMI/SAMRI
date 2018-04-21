@@ -133,3 +133,22 @@ def fetch_mouse_DSURQE(template_dir="~/.samri_files/templates/mouse/DSURQE/", ve
 				("atlas", path.abspath(path.expanduser(template_dir)) + "/DSURQEc_" + str(resolution) + "micron_labels.nii"),
 				("mask", path.abspath(path.expanduser(template_dir)) + "/DSURQEc_"+ str(resolution) +"micron_mask.nii"),
 				("labels", labels)])
+
+def fetch_mouse_AMBMC(template_dir="~/.samri_files/templates/mouse/AMBMC/", verbose=1, resolution=15):
+	"""Download and load Australian Mose Brain Mapping Consortium (AMBMC) Template.
+
+
+	Returns
+	-------
+	dict
+		Dictionary containing template
+		template - mri anatomy file; nifti file
+
+	References
+	----------
+	.. [1] Janke AL, Ullmann JF. (2015) Robust methods to create ex vivo minimum deformation atlases for brain mapping. Methods. 2015 Feb;73:18-26. doi: 10.1016/j.ymeth.2015.01.005
+	.. [2] Janke AL, Ullmann J, Kurniawan N, Paxinos G, Keller M, Yang Z, Richards K, Egan G, Petrou S, Galloway G, Reutens D. (2012) 15μm average mouse models in Waxholm space from 16.4T 30μm images. In 20th Annual ISMRM Scientific Meeting and Exhibition, Melbourne, Australia.
+
+	"""
+	# Fill in analogous to aforementioned templates, reconstructing the userspace ambmc.sh script, and bearing in mind that a "legacy" distorted-header file should also be provided.
+	return {}

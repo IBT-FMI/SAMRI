@@ -309,9 +309,13 @@ def legacy_bruker(bids_base, template,
 		f_warp.inputs.reference_image = template
 		f_warp.inputs.dimension = 4
 
+		warp_merge = pe.Node(util.Merge(2), name='warp_merge')
+
 		workflow_connections.extend([
 			(f_mean_deleteorient, f_antsintroduction, [('out_file', 'input_image')]),
-			(f_antsintroduction, f_warp, [('affine_transformation', 'transformation_series')]),
+			(f_antsintroduction, warp_merge, [('warp_field', 'in1')]),
+			(f_antsintroduction, warp_merge, [('affine_transformation', 'in2')]),
+			(warp_merge, f_warp, [('out', 'transformation_series')]),
 			(f_deleteorient, f_warp, [('out_file', 'input_image')]),
 			])
 		if realign == "space":
@@ -397,8 +401,10 @@ def legacy_bruker(bids_base, template,
 
 
 	invert = pe.Node(interface=fsl.ImageMaths(), name="invert")
+
 	blur = pe.Node(interface=afni.preprocess.BlurToFWHM(), name="blur")
 	blur.inputs.fwhmxy = functional_blur_xy
+
 	if functional_blur_xy and negative_contrast_agent:
 		workflow_connections.extend([
 			(f_warp, blur, [('output_image', 'in_file')]),

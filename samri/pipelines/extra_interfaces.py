@@ -440,7 +440,7 @@ class VoxelResizeInputSpec(BaseInterfaceInputSpec):
 		))
 
 class VoxelResizeOutputSpec(TraitedSpec):
-	out_file = traits.List(File(exists=True))
+	out_file = File(exists=True)
 
 class VoxelResize(BaseInterface):
 	input_spec = VoxelResizeInputSpec
@@ -451,7 +451,7 @@ class VoxelResize(BaseInterface):
 		nii_file = self.inputs.in_file
 		resize_factors = self.inputs.resize_factors
 
-		nii_img = nb.load(in_file)
+		nii_img = nb.load(nii_file)
 		aff = nii_img.affine
 		# take original image affine, and scale the voxel size and first voxel coordinates for each dimension
 		aff[0,0] = aff[0,0]*resize_factors[0]

@@ -1,6 +1,6 @@
 from os import path, listdir, getcwd, remove
 from samri.pipelines.extra_functions import get_data_selection, get_bids_scan, write_bids_metadata_file, write_bids_events_file, force_dummy_scans, BIDS_METADATA_EXTRACTION_DICTS
-from samri.pipelines.extra_interfaces import VoxelResize
+from samri.pipelines.extra_interfaces import VoxelResize, FSLOrient
 
 import re
 import inspect
@@ -13,6 +13,7 @@ import nipype.interfaces.utility as util		# utility
 import nipype.pipeline.engine as pe				# pypeline engine
 import pandas as pd
 from nipype.interfaces import ants, afni, bru2nii, fsl, nipy
+from nipype.interfaces.ants import legacy
 
 from samri.pipelines.nodes import *
 from samri.pipelines.utils import bids_naming, ss_to_path, sss_filename, fslmaths_invert_values
@@ -129,7 +130,7 @@ def legacy_bruker(bids_base, template,
 			template = fetch_rat_waxholm()['template']
 			registration_mask = fetch_rat_waxholm()['mask']
 		else:
-			pass
+			template = path.abspath(path.expanduser(template))
 	else:
 		raise ValueError("No species or template specified")
 		return -1
@@ -170,9 +171,10 @@ def legacy_bruker(bids_base, template,
 	temporal_mean = pe.Node(interface=fsl.MeanImage(), name="temporal_mean")
 
 	f_resize = pe.Node(interface=VoxelResize(), name="f_resize")
+	f_resize.inputs.resize_factors = [10,10,10]
 
 	f_percentile = pe.Node(interface=fsl.ImageStats(), name="f_percentile")
-	f_percentileinputs.op_string = '-p 98'
+	f_percentile.inputs.op_string = '-p 98'
 
 	f_threshold = pe.Node(interface=fsl.Threshold(), name="f_threshold")
 
@@ -180,10 +182,12 @@ def legacy_bruker(bids_base, template,
 	f_fast.inputs.no_pve = True
 	f_fast.inputs.output_biascorrected = True
 
-	f_deleteorient = pe.Node(interface=fsl.FSLOrient(), name="f_deleteorient")
+	f_bet = pe.Node(interface=fsl.BET(), name="f_BET")
+
+	f_deleteorient = pe.Node(interface=FSLOrient(), name="f_deleteorient")
 	f_deleteorient.inputs.main_option = 'deleteorient'
 
-	f_mean_deleteorient = pe.Node(interface=fsl.FSLOrient(), name="f_deleteorient")
+	f_mean_deleteorient = pe.Node(interface=FSLOrient(), name="f_mean_deleteorient")
 	f_mean_deleteorient.inputs.main_option = 'deleteorient'
 
 	datasink = pe.Node(nio.DataSink(), name='datasink')
@@ -237,70 +241,72 @@ def legacy_bruker(bids_base, template,
 			(f_resize, realigner, [('out_file', 'in_file')]),
 			])
 
-	if structural_scan_types.any():
-		get_s_scan = pe.Node(name='get_s_scan', interface=util.Function(function=get_bids_scan, input_names=inspect.getargspec(get_bids_scan)[0], output_names=['scan_path','scan_type','task', 'nii_path', 'nii_name', 'file_name', 'events_name', 'subject_session']))
-		get_s_scan.inputs.ignore_exception = True
-		get_s_scan.inputs.data_selection = data_selection
-		get_s_scan.inputs.bids_base = bids_base
+	#if structural_scan_types.any():
+	#	get_s_scan = pe.Node(name='get_s_scan', interface=util.Function(function=get_bids_scan, input_names=inspect.getargspec(get_bids_scan)[0], output_names=['scan_path','scan_type','task', 'nii_path', 'nii_name', 'file_name', 'events_name', 'subject_session']))
+	#	get_s_scan.inputs.ignore_exception = True
+	#	get_s_scan.inputs.data_selection = data_selection
+	#	get_s_scan.inputs.bids_base = bids_base
 
-		s_cutoff = pe.Node(interface=fsl.ImageMaths(), name="s_cutoff")
-		s_cutoff.inputs.op_string = "-thrP 20 -uthrp 98"
+	#	s_cutoff = pe.Node(interface=fsl.ImageMaths(), name="s_cutoff")
+	#	s_cutoff.inputs.op_string = "-thrP 20 -uthrp 98"
 
-		s_resize = pe.Node(interface=VoxelResize(), name="s_resize")
+	#	s_resize = pe.Node(interface=VoxelResize(), name="s_resize")
 
-		s_BET = pe.Node(interface=fsl.BET(), name="s_BET")
-		s_BET.inputs.mask = True
-		s_BET.inputs.frac = 0.3
-		s_BET.inputs.robust = True
+	#	s_BET = pe.Node(interface=fsl.BET(), name="s_BET")
+	#	s_BET.inputs.mask = True
+	#	s_BET.inputs.frac = 0.3
+	#	s_BET.inputs.robust = True
 
-		ants_introduction = pe.Node(interface=ants.legacy.antsIntroduction(), name='ants_introduction')
-		ants_introduction.inputs.dimension = 3
-		ants_introduction.inputs.reference = template
-		ants_introduction.inputs.bias_field_correction = 1
-		ants_introduction.inputs.transformation_model = 'GR'
-		ants_introduction.inputs.max_iterations = [8,15,8]
+	#	ants_introduction = pe.Node(interface=legacy.antsIntroduction(), name='ants_introduction')
+	#	ants_introduction.inputs.dimension = 3
+	#	ants_introduction.inputs.reference_image = template
+	#	#will need updating to `1`
+	#	ants_introduction.inputs.bias_field_correction = True
+	#	ants_introduction.inputs.transformation_model = 'GR'
+	#	ants_introduction.inputs.max_iterations = [8,15,8]
 
-		s_mask = pe.Node(interface=fsl.ApplyMask(), name="s_mask")
-		s_register, s_warp, f_warp = structural_registration(template)
+	#	s_mask = pe.Node(interface=fsl.ApplyMask(), name="s_mask")
+	#	s_register, s_warp, f_warp = structural_registration(template)
 
-		workflow_connections.extend([
-			(get_s_scan, s_reg_biascorrect, [('nii_path', 'input_image')]),
-			(s_reg_biascorrect, s_cutoff, [('output_image', 'in_file')]),
-			(s_cutoff, s_BET, [('out_file', 'in_file')]),
-			(s_biascorrect, s_mask, [('output_image', 'in_file')]),
-			(s_BET, s_mask, [('mask_file', 'mask_file')]),
-			])
+	#	workflow_connections.extend([
+	#		(get_s_scan, s_reg_biascorrect, [('nii_path', 'input_image')]),
+	#		(s_reg_biascorrect, s_cutoff, [('output_image', 'in_file')]),
+	#		(s_cutoff, s_BET, [('out_file', 'in_file')]),
+	#		(s_biascorrect, s_mask, [('output_image', 'in_file')]),
+	#		(s_BET, s_mask, [('mask_file', 'mask_file')]),
+	#		])
 
-		#TODO: incl. in func registration
-		if autorotate:
-			workflow_connections.extend([
-				(s_mask, s_rotated, [('out_file', 'out_file')]),
-				(s_rotated, s_register, [('out_file', 'moving_image')]),
-				])
-		else:
-			workflow_connections.extend([
-				(s_mask, s_register, [('out_file', 'moving_image')]),
-				(s_register, s_warp, [('composite_transform', 'transforms')]),
-				(get_s_scan, s_warp, [('nii_path', 'input_image')]),
-				(s_warp, datasink, [('output_image', 'anat')]),
-				])
+	#	#TODO: incl. in func registration
+	#	if autorotate:
+	#		workflow_connections.extend([
+	#			(s_mask, s_rotated, [('out_file', 'out_file')]),
+	#			(s_rotated, s_register, [('out_file', 'moving_image')]),
+	#			])
+	#	else:
+	#		workflow_connections.extend([
+	#			(s_mask, s_register, [('out_file', 'moving_image')]),
+	#			(s_register, s_warp, [('composite_transform', 'transforms')]),
+	#			(get_s_scan, s_warp, [('nii_path', 'input_image')]),
+	#			(s_warp, datasink, [('output_image', 'anat')]),
+	#			])
 
 
-		if autorotate:
-			s_rotated = autorotate(template)
+	#	if autorotate:
+	#		s_rotated = autorotate(template)
 
-		workflow_connections.extend([
-			(get_f_scan, get_s_scan, [('subject_session', 'selector')]),
-			(get_s_scan, s_warp, [('nii_name','output_image')]),
-			(get_s_scan, s_biascorrect, [('nii_path', 'input_image')]),
-			])
+	#	workflow_connections.extend([
+	#		(get_f_scan, get_s_scan, [('subject_session', 'selector')]),
+	#		(get_s_scan, s_warp, [('nii_name','output_image')]),
+	#		(get_s_scan, s_biascorrect, [('nii_path', 'input_image')]),
+	#		])
 
 	if functional_registration_method == "functional":
 
-		f_antsintroduction = pe.Node(interface=ants.legacy.antsIntroduction(), name='ants_introduction')
+		f_antsintroduction = pe.Node(interface=legacy.antsIntroduction(), name='ants_introduction')
 		f_antsintroduction.inputs.dimension = 3
 		f_antsintroduction.inputs.reference_image = template
-		f_antsintroduction.inputs.bias_field_correction = 1
+		#will need updating to `1`
+		f_antsintroduction.inputs.bias_field_correction = True
 		f_antsintroduction.inputs.transformation_model = 'GR'
 		f_antsintroduction.inputs.max_iterations = [8,15,8]
 
@@ -428,9 +434,13 @@ def legacy_bruker(bids_base, template,
 			(invert, datasink, [('out_file', 'func')]),
 			])
 	else:
+
+		f_rename = pe.Node(util.Rename(), name='f_rename')
+
 		workflow_connections.extend([
-			(get_f_scan, f_warp, [('nii_name','output_image')]),
-			(f_warp, datasink, [('output_image', 'func')]),
+			(get_f_scan, f_rename, [('nii_name','format_string')]),
+			(f_warp, f_rename, [('output_image', 'in_file')]),
+			(f_rename, datasink, [('out_file', 'func')]),
 			])
 
 

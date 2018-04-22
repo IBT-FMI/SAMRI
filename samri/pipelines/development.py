@@ -104,6 +104,25 @@ def bids_preprocessing():
 		functional_registration_method="composite",
 		negative_contrast_agent=True,
 		)
+
+def legacy_preprocessing():
+	from samri.pipelines.preprocess import legacy_bruker
+	bids_base = '~/ni_data/ofM.dr/bids'
+
+	legacy_bruker(bids_base, "~/ni_data/templates/ambmc-legacy_120micronx10.nii",
+		#functional_match={'acquisition':['EPIlowcov',],},
+		structural_match={'acquisition':['TurboRARElowcov',]},
+		functional_match={'task':['JogB'],'type':['bold'],'acquisition':['EPIlowcov',]},
+		#functional_match={'task':['JogB','CogB',],'acquisition':['EPI',],},
+		#functional_match={'task':['JogB','CogB',],'acquisition':['EPIlowcov',],},
+		#functional_match={'task':['JogB'],'type':['cbv']},
+		#structural_match={'acquisition':['TurboRARElowcov']},
+		#subjects=['5667','6542'],
+		#subjects=['6530','6532','6542','6548','6549','6552','6553','6556','6557'],
+		functional_registration_method="functional",
+		negative_contrast_agent=False,
+		workflow_name='legacy',
+		)
 def bids_l1():
 	from samri.pipelines import glm
 

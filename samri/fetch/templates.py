@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 from nilearn.datasets.utils import _fetch_files
 
 import subprocess

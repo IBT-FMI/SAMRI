@@ -33,6 +33,8 @@ debug = True
 afni.base.AFNICommand.set_default_output_type('NIFTI_GZ')
 fsl.FSLCommand.set_default_output_type('NIFTI_GZ')
 
+def divideby_10(x):
+	return x/10.
 
 def filterData(df, col_name, entries):
 
@@ -72,7 +74,11 @@ def bids_data_selection(base, structural_match, functional_match, subjects, sess
 	if(functional_match):
 		_df = filterData(df, 'task', functional_match['task'])
 		try:
-			_df = filterData(df, 'type', functional_match['type'])
+			_df = filterData(_df, 'type', functional_match['type'])
+		except:
+			pass
+		try:
+			_df = filterData(_df, 'type', functional_match['acq'])
 		except:
 			pass
 		res_df = res_df.append(_df)
@@ -138,10 +144,6 @@ def legacy_bruker(bids_base, template,
 	bids_base = path.abspath(path.expanduser(bids_base))
 
 	data_selection = bids_data_selection(bids_base, structural_match, functional_match, subjects, sessions)
-
-	# generate functional and structural scan types
-	functional_scan_types = data_selection.loc[data_selection.modality == 'func']['scan_type'].values
-	structural_scan_types = data_selection.loc[data_selection.modality == 'anat']['scan_type'].values
 
 	# we start to define nipype workflow elements (nodes, connections, meta)
 	subjects_sessions = data_selection[["subject","session"]].drop_duplicates().values.tolist()
@@ -210,8 +212,8 @@ def legacy_bruker(bids_base, template,
 		(get_f_scan, events_file, [('events_name', 'out_file')]),
 		(get_f_scan, datasink, [(('subject_session',ss_to_path), 'container')]),
 		(temporal_mean, f_percentile, [('out_file', 'in_file')]),
-		# here we divide by 1 assuming 10 percent noise
-		(f_percentile, f_threshold, [(('out_stat', lambda x: x/10.), 'thresh')]),
+		# here we divide by 10 assuming 10 percent noise
+		(f_percentile, f_threshold, [(('out_stat', divideby_10), 'thresh')]),
 		(temporal_mean, f_threshold, [('out_file', 'in_file')]),
 		(f_threshold, f_fast, [('out_file', 'in_files')]),
 		(f_fast, f_bet, [('restored_image', 'in_file')]),

@@ -9,6 +9,8 @@ The package is compatible with small rodent data acquired via Bruker systems.
 
 ## Installation
 
+Depending on your preferred package manager you may choose one of the following methods:
+
 ### Gentoo Linux
 SAMRI is available for Portage (the package manager of Gentoo Linux, derivative distributions, as well as BSD) via the [Chymeric Overlay](https://github.com/TheChymera/overlay).
 Upon enabling the overlay, the package can be emerged:
@@ -60,11 +62,30 @@ Many SAMRI functions which take multiple paths as inputs, rely on what we call *
 These are pairs of one filename template string and a list of dictionaries (which are internally used by functions adhering to this input standard in order to format the aforementioned strings).
 BIDS-Iterator Inputs can be produced via the `samri.utilities.bids_substitution_iterator()` function.
 
-## Dependencies:
+## Dependencies
 
-* [argh](https://github.com/neithere/argh) - in Portage as dev-python/argh
-* [Bru2Nii](https://github.com/neurolabusc/Bru2Nii) - in Portage as sci-biology/bru2nii
-* [FSL](http://fsl.fmrib.ox.ac.uk/fsl/fslwiki/) - in Portage as sci-biology/fsl
-* [nipy](https://github.com/nipy/nipy) - in Portage as sci-libs/nipy
-* [nipype](https://github.com/nipy/nipype) - in Portage as sci-libs/nipype
-* [scipy](https://www.scipy.org) - thealt LinuxDays test
+The most precise description of the dependency graph (including conditionality) can be extracted from the [SAMRI ebuild](.gentoo/sci-biology/samri/samri-99999.ebuild).
+For manual dependency management and overview you may use the following list:
+
+* [argh](https://github.com/neithere/argh)
+* [joblib](https://github.com/joblib/joblib)
+* [matplotlib](https://matplotlib.org/) (>=`2.0.2`)
+* [NumPy](https://www.numpy.org) (>=`1.13.3`)
+* [pandas](https://pandas.pydata.org/)
+* [seaborn](https://seaborn.pydata.org/)
+* [statsmodels](https://github.com/statsmodels/statsmodels/)
+* [FSL](http://fsl.fmrib.ox.ac.uk/fsl/fslwiki/) (>=`5.0.9`)
+* [Bru2Nii](https://github.com/neurolabusc/Bru2Nii)
+* [nibabel](https://github.com/nipy/nibabel)
+* [nipy](https://github.com/nipy/nipy) (>=`0.4.1`)
+* [nipype](https://github.com/nipy/nipype) (=`0.14.0_pre20170830`)
+* [SciPy](https://www.scipy.org)
+* [PyBIDS](https://github.com/INCF/pybids)
+* [ANTs](https://github.com/ANTsX/ANTs/)
+* [AFNI](https://afni.nimh.nih.gov/)
+* [nilearn](https://nilearn.github.io/)
+
+Needed only in conjunction with LabbookDB metadata management:
+* [SQLAlchemy](http://www.sqlalchemy.org/library.html)
+* [LabbookDB](https://github.com/TheChymera/LabbookDB)
+

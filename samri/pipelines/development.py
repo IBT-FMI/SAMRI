@@ -122,6 +122,7 @@ def legacy_preprocessing():
 		functional_registration_method="functional",
 		negative_contrast_agent=False,
 		workflow_name='legacy',
+		keep_work=True,
 		)
 def bids_l1():
 	from samri.pipelines import glm

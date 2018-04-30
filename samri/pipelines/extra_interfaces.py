@@ -454,12 +454,9 @@ class VoxelResize(BaseInterface):
 		nii_img = nb.load(nii_file)
 		aff = nii_img.affine
 		# take original image affine, and scale the voxel size and first voxel coordinates for each dimension
-		aff[0,0] = aff[0,0]*resize_factors[0]
-		aff[0,3] = aff[0,3]*resize_factors[0]
-		aff[1,1] = aff[1,1]*resize_factors[1]
-		aff[1,3] = aff[1,3]*resize_factors[1]
-		aff[2,2] = aff[2,2]*resize_factors[2]
-		aff[2,3] = aff[2,3]*resize_factors[2]
+		aff[0] = aff[0]*resize_factors[0]
+		aff[1] = aff[1]*resize_factors[1]
+		aff[2] = aff[2]*resize_factors[2]
 		#apply the affine
 		nii_img.set_sform(aff)
 		nii_img.set_qform(aff)
@@ -872,14 +869,16 @@ class FSLOrientInput(FSLCommandInputSpec):
 		copyfile=True,
 		output_name='out_file',
 		name_source='dest_file',
-		)
-	out_file = traits.Str(
-		default_value="fslorient_out.nii.gz",
-		usedefault=True,
-		desc="image written after calculations",
 		argstr="%s",
 		position=1,
 		)
+	#out_file = traits.Str(
+	#	default_value="fslorient_out.nii.gz",
+	#	usedefault=True,
+	#	desc="image written after calculations",
+	#	argstr="%s",
+	#	position=1,
+	#	)
 	main_option = traits.Enum(
 		'getorient',
 		'getsform',
@@ -911,16 +910,13 @@ class FSLOrient(FSLCommand):
 	input_spec = FSLOrientInput
 	output_spec = FSLOrientOutput
 
-
-	def run(self, **inputs):
-		print(self.inputs.in_file)
-		print(self.inputs.out_file)
-		shutil.copyfile(self.inputs.in_file, self.inputs.out_file)
-		FSLCommand.run(self)
+	#def run(self, **inputs):
+	#	shutil.copyfile(self.inputs.in_file, self.inputs.out_file)
+	#	FSLCommand.run(self)
 
 	def _list_outputs(self):
 		outputs = self.output_spec().get()
-		outputs["out_file"] = self.inputs.out_file
-		outputs["out_file"] = path.abspath(outputs["out_file"])
+		outputs["out_file"] = self.inputs.in_file
+		outputs["out_file"] = os.path.abspath(outputs["out_file"])
 		return outputs
 

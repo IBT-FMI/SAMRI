@@ -186,8 +186,14 @@ def legacy_bruker(bids_base, template,
 
 	f_bet = pe.Node(interface=fsl.BET(), name="f_BET")
 
+	f_swapdim = pe.Node(interface=fsl.SwapDimensions(), name="f_swapdim")
+	f_swapdim.inputs.new_dims = ('x','-z','-y')
+
 	f_deleteorient = pe.Node(interface=FSLOrient(), name="f_deleteorient")
 	f_deleteorient.inputs.main_option = 'deleteorient'
+
+	f_mean_swapdim = pe.Node(interface=fsl.SwapDimensions(), name="f_mean_swapdim")
+	f_mean_swapdim.inputs.new_dims = ('x','-z','-y')
 
 	f_mean_deleteorient = pe.Node(interface=FSLOrient(), name="f_mean_deleteorient")
 	f_mean_deleteorient.inputs.main_option = 'deleteorient'
@@ -218,6 +224,7 @@ def legacy_bruker(bids_base, template,
 		(f_threshold, f_fast, [('out_file', 'in_files')]),
 		(f_fast, f_bet, [('restored_image', 'in_file')]),
 		(f_bet, f_mean_deleteorient, [('out_file', 'in_file')]),
+		(f_mean_deleteorient, f_mean_swapdim, [('out_file', 'in_file')]),
 		]
 
 	if realign == "space":
@@ -319,11 +326,12 @@ def legacy_bruker(bids_base, template,
 		warp_merge = pe.Node(util.Merge(2), name='warp_merge')
 
 		workflow_connections.extend([
-			(f_mean_deleteorient, f_antsintroduction, [('out_file', 'input_image')]),
+			(f_mean_swapdim, f_antsintroduction, [('out_file', 'input_image')]),
 			(f_antsintroduction, warp_merge, [('warp_field', 'in1')]),
 			(f_antsintroduction, warp_merge, [('affine_transformation', 'in2')]),
 			(warp_merge, f_warp, [('out', 'transformation_series')]),
-			(f_deleteorient, f_warp, [('out_file', 'input_image')]),
+			(f_deleteorient, f_swapdim, [('out_file', 'in_file')]),
+			(f_swapdim, f_warp, [('out_file', 'input_image')]),
 			])
 		if realign == "space":
 			workflow_connections.extend([

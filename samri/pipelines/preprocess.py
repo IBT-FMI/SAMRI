@@ -1,34 +1,30 @@
-from os import path, listdir, getcwd, remove
-from samri.pipelines.extra_functions import get_data_selection, get_bids_scan, write_bids_metadata_file, write_bids_events_file, force_dummy_scans, BIDS_METADATA_EXTRACTION_DICTS
-from samri.pipelines.extra_interfaces import VoxelResize, FSLOrient
-
-import re
 import inspect
+import os
+import re
 import shutil
 from copy import deepcopy
 from itertools import product
+from os import path
 
 import nipype.interfaces.io as nio
 import nipype.interfaces.utility as util
 import nipype.pipeline.engine as pe
 import pandas as pd
+from bids.grabbids import BIDSLayout
+from bids.grabbids import BIDSValidator
 from nipype.interfaces import ants, afni, bru2nii, fsl, nipy
 from nipype.interfaces.ants import legacy
 
+from samri.fetch.templates import fetch_rat_waxholm, fetch_mouse_DSURQE
+from samri.pipelines.extra_functions import get_data_selection, get_bids_scan, write_bids_metadata_file, write_bids_events_file, force_dummy_scans, BIDS_METADATA_EXTRACTION_DICTS
+from samri.pipelines.extra_interfaces import VoxelResize, FSLOrient
 from samri.pipelines.nodes import *
 from samri.pipelines.utils import bids_naming, ss_to_path, sss_filename, fslmaths_invert_values
 from samri.utilities import N_PROCS
-from samri.fetch.templates import fetch_rat_waxholm, fetch_mouse_DSURQE
-
-from bids.grabbids import BIDSLayout
-from bids.grabbids import BIDSValidator
-import os
 
 DUMMY_SCANS=10
 N_PROCS=max(N_PROCS-4, 2)
 
-
-debug = True
 #set all outputs to compressed NIfTI
 afni.base.AFNICommand.set_default_output_type('NIFTI_GZ')
 fsl.FSLCommand.set_default_output_type('NIFTI_GZ')
@@ -94,7 +90,7 @@ def bids_data_selection(base, structural_match, functional_match, subjects, sess
 	return df
 
 def legacy_bruker(bids_base, template,
-	DEBUG=False,
+	debug=False,
 	exclude={},
 	functional_match={},
 	structural_match={},
@@ -477,7 +473,7 @@ def legacy_bruker(bids_base, template,
 
 
 def bruker(bids_base, template,
-	DEBUG=False,
+	debug=False,
 	exclude={},
 	functional_match={},
 	structural_match={},

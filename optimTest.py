@@ -111,7 +111,7 @@ def objective(args):
     df = layout.as_data_frame()
 
     df = df[df['modality'] == 'anat']
-    print('--df--')
+    print('--df---')
     print(df)
 
     similarity = 0

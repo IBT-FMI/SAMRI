@@ -15,7 +15,7 @@ def significant_signal(data_path,
 	substitution={},
 	mask_path='',
 	):
-	"""Return the mean inverse logarithm of a p-value map.
+	"""Return the mean and median inverse logarithm of a p-value map.
 
 	Parameters
 	----------
@@ -65,7 +65,27 @@ def iter_significant_signal(file_template, substitutions,
 	mask_path='',
 	save_as='',
 	):
-	"""Create a `pandas.DataFrame` (optionally savable as `.csv`), containing the similarity scores and BIDS identifier fields for images from a BIDS directory.
+	"""
+	Create a `pandas.DataFrame` (optionally savable as `.csv`), containing the means and medians of a number of p-value maps specified by a file template supporting substitution and a substitution list of dictionaries.
+	This function is an iteration wrapper of `samri.report.snr.significant_signal()` using the SAMRI file_template/substitution model.
+
+	Parameters
+	----------
+
+	file_template : str
+		A formattable string containing as format fields keys present in the dictionaries passed to the `substitutions` variable.
+	substitutions : list of dicts
+		A list of dictionaries countaining formatting strings as keys and strings as values.
+	mask_path : str, optional
+		Path to a mask in the same coordinate space as the p-value maps.
+	save_as : str, optional
+		Path to which to save the Pandas DataFrame.
+
+	Returns
+	-------
+
+	pandas.DataFrame
+		Pandas DataFrame object containing a row for each analyzed file and columns named 'Mean', 'Median', and (provided the respective key is present in the `sustitutions` variable) 'subject', 'session', 'task', and 'acquisition'.
 	"""
 
 	n_jobs = mp.cpu_count()-2
@@ -96,6 +116,24 @@ def iter_significant_signal(file_template, substitutions,
 def base_metrics(file_path,
 	substitution={},
 	):
+	"""Return base metrics (mean, median, mode, standard deviation) at each 4th dimension point of a 4D NIfTI file.
+
+	Parameters
+	----------
+
+	file_path : str
+		A string giving the path to the NIfTI file to be analyzed.
+		This string may contain format fields present as keys in the `substitution` dictionary.
+	substitution : dict, optional
+		A dictionary containing formatting strings as keys and strings as values.
+
+	Returns
+	-------
+
+	pandas.DataFrame
+		Pandas DataFrame object containing a row for each analyzed file and columns named 'Mean', 'Median', 'Mode', and 'Standard Deviation', and (provided the respective key is present in the `sustitution` variable) 'subject', 'session', 'task', and 'acquisition'.
+	"""
+
 
 	if substitution:
 		file_path = file_path.format(**substitution)
@@ -109,7 +147,6 @@ def base_metrics(file_path,
 	medians = []
 	modes = []
 	for i in data:
-		#i = i[17:20]
 		i_std = np.std(i)
 		stds.append(i_std)
 		i_mean = np.mean(i)
@@ -120,10 +157,10 @@ def base_metrics(file_path,
 		modes.append(i_mode[0])
 
 	df_items = [
-		('Standard Deviation', stds),
 		('Mean', means),
 		('Median', medians),
 		('Mode', modes),
+		('Standard Deviation', stds),
 		]
 	df = pd.DataFrame.from_items(df_items)
 	for field in ['subject','session','task','acquisition']:
@@ -136,7 +173,25 @@ def base_metrics(file_path,
 def iter_base_metrics(file_template, substitutions,
 	save_as='',
 	):
-	"""Create a `pandas.DataFrame` (optionally savable as `.csv`), containing the similarity scores and BIDS identifier fields for images from a BIDS directory.
+	"""
+	Create a `pandas.DataFrame` (optionally savable as `.csv`), containing base metrics (mean, median, mode, standard deviation) at each 4th dimension point of a 4D NIfTI file.
+	This function is an iteration wrapper of `samri.report.snr.base_metrics()` using the SAMRI file_template/substitution model.
+
+	Parameters
+	----------
+
+	file_template : str
+		A formattable string containing as format fields keys present in the dictionaries passed to the `substitutions` variable.
+	substitutions : list of dicts
+		A list of dictionaries countaining formatting strings as keys and strings as values.
+	save_as : str, optional
+		Path to which to save the Pandas DataFrame.
+
+	Returns
+	-------
+
+	pandas.DataFrame
+		Pandas DataFrame object containing a row for each analyzed file and columns named 'Mean', 'Median', 'Mode', and 'Standard Deviation', and (provided the respective key is present in the `sustitutions` variable) 'subject', 'session', 'task', and 'acquisition'.
 	"""
 
 	n_jobs = mp.cpu_count()-2

@@ -30,6 +30,7 @@ afni.base.AFNICommand.set_default_output_type('NIFTI_GZ')
 fsl.FSLCommand.set_default_output_type('NIFTI_GZ')
 
 def divideby_10(x):
+	"""This is a wrapper function needed in order for nipype workflow connections to accept inline division."""
 	return x/10.
 
 def filterData(df, col_name, entries):

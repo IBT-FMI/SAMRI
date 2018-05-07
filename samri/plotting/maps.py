@@ -410,6 +410,7 @@ def atlas_label(atlas,
 	return display
 
 def contour_slices(bg_image, file_template,
+	autoinvert=True,
 	alpha=[0.9],
 	colors=['r','g','b'],
 	dimming=0.,
@@ -438,6 +439,9 @@ def contour_slices(bg_image, file_template,
 	file_template : str
 		String template giving the path to the overlay stack.
 		To create multiple overlays, this template will iteratively be substituted with each of the substitution dictionaries in the `substitutions` parameter.
+	autoinvert : boolean, optional
+		Whether to automatically invert data matrix values if all are detected to be less or equal to 0.
+		This is particularly useful when dealing with e.g. negative contrast agent CBV scans.
 	alpha : list, optional
 		List of floats, specifying with how much alpha to draw each contour.
 	colors : list, optional
@@ -463,6 +467,7 @@ def contour_slices(bg_image, file_template,
 		Either a list of 2 integers giving the desired number of rows and columns (in this order), or a string, which is either 'landscape' or 'portrait', and which prompts the function to auto-determine the best number of rows and columns given the number of slices and the `scale` attribute.
 	save_as : str, optional
 		Path under which to save the output figure.
+		The string may contain formatting fields from the first dictionary in the `substitutions` variable.
 	scale : float, optional
 		The expected ratio of the slice height dividrd by the sum of the slice height and width.
 		This somewhat complex metric controls the row and column distribution of slices in the 'landscape' and 'portrait' plotting shapes.
@@ -480,6 +485,9 @@ def contour_slices(bg_image, file_template,
 
 	.. [matplotlibrc_title] https://stackoverflow.com/questions/30109465/matplotlib-set-title-color-in-stylesheet
 	"""
+
+	if len(substitutions) == 0:
+		print('ERROR: You have specified a substitution dictionary of length 0. There needs to be at least one set of substitutions. If your string contains no formatting fields, please pass a list containing an empty dictionary to the `sbstitution parameter` (this is also its default value).')
 
 	if samri_style:
 		plotting_module_path = path.dirname(path.realpath(__file__))
@@ -519,7 +527,10 @@ def contour_slices(bg_image, file_template,
 				ndim += 1
 			img.header['dim'][0] = ndim
 			img.header['pixdim'][ndim+1:] = 0
-			data = data.T[0].T
+			data = np.mean(data,axis=(ndim-1))
+			img = nib.nifti1.Nifti1Image(data, img.affine, img.header)
+		if autoinvert and (data <= 0.9).all():
+			data = -data
 			img = nib.nifti1.Nifti1Image(data, img.affine, img.header)
 		for level_percentile in levels_percentile:
 			level = np.percentile(data,level_percentile)
@@ -590,7 +601,6 @@ def contour_slices(bg_image, file_template,
 				nrows=int(nrows), ncols=int(ncols),
 				)
 		flat_axes = list(ax.flatten())
-
 		for ix, ax_i in enumerate(flat_axes):
 			try:
 				display = nilearn.plotting.plot_anat(bg_img,
@@ -632,6 +642,7 @@ def contour_slices(bg_image, file_template,
 		fig.suptitle(figure_title, color=title_color)
 
 	if save_as:
+		save_as = save_as.format(**substitutions[0])
 		save_as = path.abspath(path.expanduser(save_as))
 		plt.savefig(save_as,
 			facecolor=fig.get_facecolor(),

@@ -189,12 +189,6 @@ def legacy_bruker(bids_base, template,
 	f_deleteorient = pe.Node(interface=FSLOrient(), name="f_deleteorient")
 	f_deleteorient.inputs.main_option = 'deleteorient'
 
-	f_mean_swapdim = pe.Node(interface=fsl.SwapDimensions(), name="f_mean_swapdim")
-	f_mean_swapdim.inputs.new_dims = ('x','-z','-y')
-
-	f_mean_deleteorient = pe.Node(interface=FSLOrient(), name="f_mean_deleteorient")
-	f_mean_deleteorient.inputs.main_option = 'deleteorient'
-
 	datasink = pe.Node(nio.DataSink(), name='datasink')
 	datasink.inputs.base_directory = path.join(bids_base,"preprocessing",workflow_name)
 	datasink.inputs.parameterization = False
@@ -220,15 +214,15 @@ def legacy_bruker(bids_base, template,
 		(temporal_mean, f_threshold, [('out_file', 'in_file')]),
 		(f_threshold, f_fast, [('out_file', 'in_files')]),
 		(f_fast, f_bet, [('restored_image', 'in_file')]),
-		(f_bet, f_mean_deleteorient, [('out_file', 'in_file')]),
-		(f_mean_deleteorient, f_mean_swapdim, [('out_file', 'in_file')]),
+		(f_resize, f_deleteorient, [('out_file', 'in_file')]),
+		(f_deleteorient, f_swapdim, [('out_file', 'in_file')]),
 		]
 
 	if realign == "space":
 		realigner = pe.Node(interface=spm.Realign(), name="realigner")
 		realigner.inputs.register_to_mean = True
 		workflow_connections.extend([
-			(f_resize, realigner, [('out_file', 'in_file')]),
+			(f_swapdim, realigner, [('out_file', 'in_file')]),
 			])
 
 	elif realign == "spacetime":
@@ -237,14 +231,14 @@ def legacy_bruker(bids_base, template,
 		realigner.inputs.tr = tr
 		realigner.inputs.slice_info = 3 #3 for coronal slices (2 for horizontal, 1 for sagittal)
 		workflow_connections.extend([
-			(f_resize, realigner, [('out_file', 'in_file')]),
+			(f_swapdim, realigner, [('out_file', 'in_file')]),
 			])
 
 	elif realign == "time":
 		realigner = pe.Node(interface=fsl.SliceTimer(), name="slicetimer")
 		realigner.inputs.time_repetition = tr
 		workflow_connections.extend([
-			(f_resize, realigner, [('out_file', 'in_file')]),
+			(f_swapdim, realigner, [('out_file', 'in_file')]),
 			])
 
 	#if structural_scan_types.any():
@@ -320,35 +314,37 @@ def legacy_bruker(bids_base, template,
 		f_warp.inputs.reference_image = template
 		f_warp.inputs.dimension = 4
 
+		f_copysform2qform = pe.Node(interface=FSLOrient(), name='f_copysform2qform')
+		f_copysform2qform.inputs.main_option = 'copysform2qform'
+
 		warp_merge = pe.Node(util.Merge(2), name='warp_merge')
 
 		workflow_connections.extend([
-			(f_mean_swapdim, f_antsintroduction, [('out_file', 'input_image')]),
+			(f_bet, f_antsintroduction, [('out_file', 'input_image')]),
 			(f_antsintroduction, warp_merge, [('warp_field', 'in1')]),
 			(f_antsintroduction, warp_merge, [('affine_transformation', 'in2')]),
 			(warp_merge, f_warp, [('out', 'transformation_series')]),
-			(f_deleteorient, f_swapdim, [('out_file', 'in_file')]),
-			(f_swapdim, f_warp, [('out_file', 'input_image')]),
+			(f_warp, f_copysform2qform, [('output_image', 'in_file')]),
 			])
 		if realign == "space":
 			workflow_connections.extend([
 				(realigner, temporal_mean, [('realigned_files', 'in_file')]),
-				(realigner, f_deleteorient, [('realigned_files', 'in_file')]),
+				(realigner, f_warp, [('realigned_files', 'input_image')]),
 				])
 		elif realign == "spacetime":
 			workflow_connections.extend([
 				(realigner, temporal_mean, [('out_file', 'in_file')]),
-				(realigner, f_deleteorient, [('out_file', 'in_file')]),
+				(realigner, f_warp, [('out_file', 'input_image')]),
 				])
 		elif realign == "time":
 			workflow_connections.extend([
 				(realigner, temporal_mean, [('slice_time_corrected_file', 'in_file')]),
-				(realigner, f_deleteorient, [('slice_time_corrected_file', 'in_file')]),
+				(realigner, f_warp, [('slice_time_corrected_file', 'input_image')]),
 				])
 		else:
 			workflow_connections.extend([
 				(f_resize, temporal_mean, [('out_file', 'in_file')]),
-				(f_resize, f_deleteorient, [('out_file', 'in_file')]),
+				(f_swapdim, f_warp, [('out_file', 'input_image')]),
 				])
 	elif functional_registration_method == "structural":
 		if not structural_scan_types:
@@ -419,7 +415,7 @@ def legacy_bruker(bids_base, template,
 
 	if functional_blur_xy and negative_contrast_agent:
 		workflow_connections.extend([
-			(f_warp, blur, [('output_image', 'in_file')]),
+			(f_copysform2qform, blur, [('out_file', 'in_file')]),
 			(blur, invert, [(('out_file', fslmaths_invert_values), 'op_string')]),
 			(blur, invert, [('out_file', 'in_file')]),
 			(get_f_scan, invert, [('nii_name','output_image')]),
@@ -429,15 +425,15 @@ def legacy_bruker(bids_base, template,
 	elif functional_blur_xy:
 		workflow_connections.extend([
 			(get_f_scan, blur, [('nii_name','output_image')]),
-			(f_warp, blur, [('output_image', 'in_file')]),
+			(f_copysform2qform, blur, [('out_file', 'in_file')]),
 			(blur, datasink, [('out_file', 'func')]),
 			])
 
 	elif negative_contrast_agent:
 		workflow_connections.extend([
 			(get_f_scan, invert, [('nii_name','out_file')]),
-			(f_warp, invert, [(('output_image', fslmaths_invert_values), 'op_string')]),
-			(f_warp, invert, [('output_image', 'in_file')]),
+			(f_copysform2qform, invert, [(('out_file', fslmaths_invert_values), 'op_string')]),
+			(f_copysform2qform, invert, [('out_file', 'in_file')]),
 			(invert, datasink, [('out_file', 'func')]),
 			])
 	else:
@@ -446,7 +442,7 @@ def legacy_bruker(bids_base, template,
 
 		workflow_connections.extend([
 			(get_f_scan, f_rename, [('nii_name','format_string')]),
-			(f_warp, f_rename, [('output_image', 'in_file')]),
+			(f_copysform2qform, f_rename, [('out_file', 'in_file')]),
 			(f_rename, datasink, [('out_file', 'func')]),
 			])
 

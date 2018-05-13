@@ -516,6 +516,7 @@ def contour_slices(bg_image, file_template,
 	for substitution in substitutions:
 		filename = file_template.format(**substitution)
 		filename = path.abspath(path.expanduser(filename))
+		print(filename)
 		img = nib.load(filename)
 		data = img.get_data()
 		if img.header['dim'][0] > 3:
@@ -532,10 +533,18 @@ def contour_slices(bg_image, file_template,
 		if autoinvert and (data <= 0.9).all():
 			data = -data
 			img = nib.nifti1.Nifti1Image(data, img.affine, img.header)
+		#we should only be looking at the percentile of the active slice
 		for level_percentile in levels_percentile:
 			level = np.percentile(data,level_percentile)
 			levels.append(level)
 		slice_row = img.header['srow_y']
+		# we reconstruct broken headers (legacy pipelines with deleted orientation) here:
+		if list(set(slice_row[:3])) == [0.]:
+			slice_row = img.header['pixdim'][1:4]
+			slice_row = np.append(slice_row, [0])
+			slice_row[0] = 0
+			slice_row[2] = 0
+		print(slice_row)
 		subthreshold_start_slices = 0
 		while True:
 			for i in np.arange(data.shape[1]):
@@ -573,6 +582,10 @@ def contour_slices(bg_image, file_template,
 		cut_coords = cut_coords[::-1]
 	if force_reverse_slice_order:
 		cut_coords = cut_coords[::-1]
+	print(cut_coords)
+	print(min_slice)
+	print(max_slice)
+	print(slice_spacing)
 
 	if not linewidths:
 		linewidths = (rcParams['axes.linewidth'],)*len(imgs)
@@ -613,8 +626,16 @@ def contour_slices(bg_image, file_template,
 			except IndexError:
 				ax_i.axis('off')
 			else:
+				save_as = save_as.format(**substitutions[0])
+				save_as = path.abspath(path.expanduser(save_as))
+				plt.savefig(save_as,
+					facecolor=fig.get_facecolor(),
+					)
 				for img_ix, img in enumerate(imgs):
 					color = colors[img_ix]
+					#print(np.shape(bg_img))
+					#print(np.shape(img))
+					#print(levels[img_ix])
 					display.add_contours(img,
 							alpha=alpha[img_ix],
 							colors=[color],

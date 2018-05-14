@@ -92,21 +92,17 @@ def bids_data_selection(base, structural_match, functional_match, subjects, sess
 
 def legacy_bruker(bids_base, template,
 	debug=False,
-	exclude={},
 	functional_match={},
 	structural_match={},
 	sessions=[],
 	subjects=[],
 	functional_blur_xy=False,
 	functional_registration_method="structural",
-	highpass_sigma=225,
-	lowpass_sigma=None,
 	negative_contrast_agent=False,
 	n_procs=N_PROCS,
 	realign="time",
 	registration_mask=False,
 	tr=1,
-	very_nasty_bruker_delay_hack=False,
 	workflow_name="generic",
 	keep_work=False,
 	autorotate=False,
@@ -114,7 +110,7 @@ def legacy_bruker(bids_base, template,
 	verbose=False,
 	):
 	'''
-	Perform realignment and registration
+	Legacy realignment and registration workflow representative of the tweaks and workarounds commonly used in the pre-SAMRI period.
 
 	Parameters
 	----------
@@ -470,34 +466,79 @@ def legacy_bruker(bids_base, template,
 
 
 def bruker(bids_base, template,
-	debug=False,
-	exclude={},
-	functional_match={},
-	structural_match={},
-	sessions=[],
-	subjects=[],
 	actual_size=True,
+	autorotate=False,
+	debug=False,
 	functional_blur_xy=False,
+	functional_match={},
 	functional_registration_method="structural",
-	highpass_sigma=225,
-	lowpass_sigma=None,
+	keep_work=False,
 	negative_contrast_agent=False,
 	n_procs=N_PROCS,
 	realign="time",
 	registration_mask=False,
-	tr=1,
-	very_nasty_bruker_delay_hack=False,
-	workflow_name="generic",
-	keep_work=False,
-	autorotate=False,
+	sessions=[],
 	strict=False,
+	structural_match={},
+	subjects=[],
+	tr=1,
 	verbose=False,
+	workflow_name="generic",
 	):
 	'''
+	Generic preprocessing and registration workflow for small animal data in BIDS format.
 
-	realign: {"space","time","spacetime",""}
+	Parameters
+	----------
+	bids_base : str
+		Path to the BIDS data set root.
+	template : str
+		Path to the template to register the data to.
+	actual_size : bool, optional
+		Whether to keep the data at its original scale; if `False`, the spatial representation will be stretched 10-fold in each dimension.
+	autorotate : bool, optional
+		Whether to use a multi-rotation-state transformation start.
+		This allows the registration to commence with the best rotational fit, and may help if the orientation of the data is malformed with respect to the header.
+	debug : bool, optional
+		Whether to enable nipype debug mode.
+		This increases logging.
+	functional_blur_xy : float, optional
+		Factor by which to smooth data in the xy-plane; if parameter evaluates to false, no smoothing will be applied.
+		Ideally this value should correspond to the resolution or smoothness in the z-direction (assuing z represents the lower-resolution slice-encoding direction).
+	functional_match : dict, optional
+		Dictionary specifying a whitelist to use for functional data inclusion into the workflow; if dictionary is empty no whitelist is present and all data will be considered.
+		The dictionary should have keys which are 'acquisition', 'task', or 'modality', and values which are lists of acceptable strings for the respective BIDS field.
+	functional_registration_method : {'composite','functional','structural'}, optional
+		How to register the functional scan to the template.
+		Values mean the following: 'composite' that it will be registered to the structural scan which will in turn be registered to the template, 'functional' that it will be registered directly, 'structural' that it will be registered exactly as the structural scan.
+	keep_work : bool, str
+		Whether to keep the work directory after workflow conclusion (this directory contains all the intermediary processing commands, inputs, and outputs --- it is invaluable for debugging but many times larger in size than the actual output).
+	negative_contrast_agent : bool, optional
+		Whether the scan was acquired witn a negative contrast agent given the imaging modality; if true the values will be inverted with respect to zero.
+		This is commonly used for iron nano-particle Cerebral Blood Volume (CBV) measurements.
+	n_procs : int, optional
+		Number of processors to maximally use for the workflow; if unspecified a best guess will be estimate based on hardware (but not on current load).
+	realign : {"space","time","spacetime",""}, optional
 		Parameter that dictates slictiming correction and realignment of slices. "time" (FSL.SliceTimer) is default, since it works safely. Use others only with caution!
-
+	registration_mask : str, optional
+		Mask to use for the registration process.
+		This mask will constrain the area for similarity metric evaluation, but the data will not be cropped.
+	sessions : list, optional
+		A whitelist of sessions to include in the workflow, if the list is empty there is no whitelist and all sessions will be considered.
+	strict : bool, str
+		Whether to fail on individual iteration failures.
+	structural_match : dict, optional
+		Dictionary specifying a whitelist to use for structural data inclusion into the workflow; if dictionary is empty no whitelist is present and all data will be considered.
+		The dictionary should have keys which are 'acquisition', or 'modality', and values which are lists of acceptable strings for the respective BIDS field.
+	subjects : list, optional
+		A whitelist of subjects to include in the workflow, if the list is empty there is no whitelist and all sessions will be considered.
+	tr : float, optional
+		Repetition time, explicitly.
+		WARNING! This is a parameter waiting for deprecation.
+	verbose : bool, str
+		Whether to provide large amounts of command line output.
+	workflow_name : str, optional
+		Top level name for the output directory.
 	'''
 	if template:
 		if template == "mouse":

@@ -109,7 +109,7 @@ def legacy_preprocessing():
 	from samri.pipelines.preprocess import legacy_bruker
 	bids_base = '~/ni_data/ofM.dr/bids'
 
-	legacy_bruker(bids_base, "~/ni_data/templates/ambmc-legacy_120micronx10.nii",
+	legacy_bruker(bids_base, "~/ni_data/templates/lambmc_120micron.nii",
 		#functional_match={'acquisition':['EPIlowcov',],},
 		structural_match={'acquisition':['TurboRARElowcov',]},
 		functional_match={'task':['JogB'],'type':['bold'],'acquisition':['EPIlowcov',]},

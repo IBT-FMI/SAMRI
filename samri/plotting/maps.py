@@ -496,9 +496,7 @@ def contour_slices(bg_image, file_template,
 
 	bg_image = path.abspath(path.expanduser(bg_image))
 	bg_img = nib.load(bg_image)
-	print(bg_img.header)
 	if bg_img.header['dim'][0] > 3:
-		print(bg_img.header)
 		bg_data = bg_img.get_data()
 		ndim = 0
 		for i in range(len(bg_img.header['dim'])-1):
@@ -510,16 +508,6 @@ def contour_slices(bg_image, file_template,
 		bg_img.header['pixdim'][ndim+1:] = 0
 		bg_data = bg_data.T[0].T
 		bg_img = nib.nifti1.Nifti1Image(bg_data, bg_img.affine, bg_img.header)
-	for ix, i in enumerate(['srow_x','srow_y','srow_z']):
-		print(bg_img.affine)
-		bg_data = bg_img.get_data()
-		bg_data = bg_data.T[0].T
-		if list(set(bg_img.header[i][:3])) == [0.]:
-			srow = np.array([0.,0.,0.,0.])
-			srow[ix] = bg_img.header['pixdim'][ix+1]
-			bg_img.header[i] = srow
-		#bg_img = nib.nifti1.Nifti1Image(bg_data, bg_img.affine, bg_img.header)
-	print(bg_img.header)
 
 	imgs = []
 	bounds = []
@@ -528,7 +516,6 @@ def contour_slices(bg_image, file_template,
 	for substitution in substitutions:
 		filename = file_template.format(**substitution)
 		filename = path.abspath(path.expanduser(filename))
-		print(filename)
 		img = nib.load(filename)
 		data = img.get_data()
 		if img.header['dim'][0] > 3:
@@ -549,15 +536,7 @@ def contour_slices(bg_image, file_template,
 		for level_percentile in levels_percentile:
 			level = np.percentile(data,level_percentile)
 			levels.append(level)
-		slice_row = img.header['srow_y']
-		# we reconstruct broken headers (legacy pipelines with deleted orientation) here:
-		if list(set(slice_row[:3])) == [0.]:
-			slice_row = img.header['pixdim'][1:4]
-			slice_row = np.append(slice_row, [0])
-			# we only read out values 1 and 3 anyway, so the following may be unneeded:
-			slice_row[0] = 0
-			slice_row[2] = 0
-		print(slice_row)
+		slice_row = img.affine[1]
 		subthreshold_start_slices = 0
 		while True:
 			for i in np.arange(data.shape[1]):
@@ -595,16 +574,11 @@ def contour_slices(bg_image, file_template,
 		cut_coords = cut_coords[::-1]
 	if force_reverse_slice_order:
 		cut_coords = cut_coords[::-1]
-	#print(cut_coords)
-	#print(min_slice)
-	#print(max_slice)
-	#print(slice_spacing)
 
 	if not linewidths:
 		linewidths = (rcParams['axes.linewidth'],)*len(imgs)
 
 	if len(cut_coords) > 3:
-		print('longer than 3 cur coords')
 		cut_coord_length = len(cut_coords)
 		if legend_template:
 			cut_coord_length += 1
@@ -631,29 +605,22 @@ def contour_slices(bg_image, file_template,
 		for ix, ax_i in enumerate(flat_axes):
 			try:
 				display = nilearn.plotting.plot_anat(bg_img,
-					#axes=ax_i,
+					axes=ax_i,
 					display_mode='y',
-					#cut_coords=[cut_coords[ix]],
-					#annotate=False,
+					cut_coords=[cut_coords[ix]],
+					annotate=False,
 					dim=dimming,
 					)
 			except IndexError:
-				print('exception triggered')
 				ax_i.axis('off')
 			else:
-				print('exception not triggered')
-				print(cut_coords[ix])
 				save_as = save_as.format(**substitutions[0])
 				save_as = path.abspath(path.expanduser(save_as))
 				plt.savefig(save_as,
 					facecolor=fig.get_facecolor(),
 					)
-				return
 				for img_ix, img in enumerate(imgs):
 					color = colors[img_ix]
-					#print(np.shape(bg_img))
-					#print(np.shape(img))
-					#print(levels[img_ix])
 					display.add_contours(img,
 							alpha=alpha[img_ix],
 							colors=[color],
@@ -669,7 +636,6 @@ def contour_slices(bg_image, file_template,
 			else:
 				plt.legend(loc='lower left',bbox_to_anchor=(1.1, 0.))
 	else:
-		print('shorter than 3 cur coords')
 		display = nilearn.plotting.plot_anat(bg_img,
 			display_mode='y',
 			cut_coords=cut_coords,

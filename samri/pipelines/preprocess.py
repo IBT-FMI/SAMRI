@@ -91,34 +91,74 @@ def bids_data_selection(base, structural_match, functional_match, subjects, sess
 	return df
 
 def legacy_bruker(bids_base, template,
+	autorotate=False,
 	debug=False,
-	functional_match={},
-	structural_match={},
-	sessions=[],
-	subjects=[],
 	functional_blur_xy=False,
-	functional_registration_method="structural",
+	functional_match={},
+	keep_work=False,
 	negative_contrast_agent=False,
 	n_procs=N_PROCS,
 	realign="time",
 	registration_mask=False,
-	tr=1,
-	workflow_name="generic",
-	keep_work=False,
-	autorotate=False,
+	sessions=[],
 	strict=False,
+	structural_match={},
+	subjects=[],
+	tr=1,
 	verbose=False,
+	workflow_name="generic",
 	):
 	'''
 	Legacy realignment and registration workflow representative of the tweaks and workarounds commonly used in the pre-SAMRI period.
 
 	Parameters
 	----------
-
-	realign: {"space","time","spacetime",""}
+	bids_base : str
+		Path to the BIDS data set root.
+	template : str
+		Path to the template to register the data to.
+	autorotate : bool, optional
+		Whether to use a multi-rotation-state transformation start.
+		This allows the registration to commence with the best rotational fit, and may help if the orientation of the data is malformed with respect to the header.
+	debug : bool, optional
+		Whether to enable nipype debug mode.
+		This increases logging.
+	functional_blur_xy : float, optional
+		Factor by which to smooth data in the xy-plane; if parameter evaluates to false, no smoothing will be applied.
+		Ideally this value should correspond to the resolution or smoothness in the z-direction (assuing z represents the lower-resolution slice-encoding direction).
+	functional_match : dict, optional
+		Dictionary specifying a whitelist to use for functional data inclusion into the workflow; if dictionary is empty no whitelist is present and all data will be considered.
+		The dictionary should have keys which are 'acquisition', 'task', or 'modality', and values which are lists of acceptable strings for the respective BIDS field.
+	keep_work : bool, str
+		Whether to keep the work directory after workflow conclusion (this directory contains all the intermediary processing commands, inputs, and outputs --- it is invaluable for debugging but many times larger in size than the actual output).
+	negative_contrast_agent : bool, optional
+		Whether the scan was acquired witn a negative contrast agent given the imaging modality; if true the values will be inverted with respect to zero.
+		This is commonly used for iron nano-particle Cerebral Blood Volume (CBV) measurements.
+	n_procs : int, optional
+		Number of processors to maximally use for the workflow; if unspecified a best guess will be estimate based on hardware (but not on current load).
+	realign : {"space","time","spacetime",""}, optional
 		Parameter that dictates slictiming correction and realignment of slices. "time" (FSL.SliceTimer) is default, since it works safely. Use others only with caution!
-
+	registration_mask : str, optional
+		Mask to use for the registration process.
+		This mask will constrain the area for similarity metric evaluation, but the data will not be cropped.
+	sessions : list, optional
+		A whitelist of sessions to include in the workflow, if the list is empty there is no whitelist and all sessions will be considered.
+	strict : bool, str
+		Whether to fail on individual iteration failures.
+	structural_match : dict, optional
+		Dictionary specifying a whitelist to use for structural data inclusion into the workflow; if dictionary is empty no whitelist is present and all data will be considered.
+		The dictionary should have keys which are 'acquisition', or 'modality', and values which are lists of acceptable strings for the respective BIDS field.
+	subjects : list, optional
+		A whitelist of subjects to include in the workflow, if the list is empty there is no whitelist and all sessions will be considered.
+	tr : float, optional
+		Repetition time, explicitly.
+		WARNING! This is a parameter waiting for deprecation.
+	verbose : bool, str
+		Whether to provide large amounts of command line output.
+	workflow_name : str, optional
+		Top level name for the output directory.
 	'''
+
 	if template:
 		if template == "mouse":
 			from samri.fetch.templates import fetch_mouse_DSURQE
@@ -296,113 +336,50 @@ def legacy_bruker(bids_base, template,
 	#		(get_s_scan, s_biascorrect, [('nii_path', 'input_image')]),
 	#		])
 
-	if functional_registration_method == "functional":
+	f_antsintroduction = pe.Node(interface=legacy.antsIntroduction(), name='ants_introduction')
+	f_antsintroduction.inputs.dimension = 3
+	f_antsintroduction.inputs.reference_image = template
+	#will need updating to `1`
+	f_antsintroduction.inputs.bias_field_correction = True
+	f_antsintroduction.inputs.transformation_model = 'GR'
+	f_antsintroduction.inputs.max_iterations = [8,15,8]
 
-		f_antsintroduction = pe.Node(interface=legacy.antsIntroduction(), name='ants_introduction')
-		f_antsintroduction.inputs.dimension = 3
-		f_antsintroduction.inputs.reference_image = template
-		#will need updating to `1`
-		f_antsintroduction.inputs.bias_field_correction = True
-		f_antsintroduction.inputs.transformation_model = 'GR'
-		f_antsintroduction.inputs.max_iterations = [8,15,8]
+	f_warp = pe.Node(interface=ants.WarpTimeSeriesImageMultiTransform(), name='f_warp')
+	f_warp.inputs.reference_image = template
+	f_warp.inputs.dimension = 4
 
-		f_warp = pe.Node(interface=ants.WarpTimeSeriesImageMultiTransform(), name='f_warp')
-		f_warp.inputs.reference_image = template
-		f_warp.inputs.dimension = 4
+	f_copysform2qform = pe.Node(interface=FSLOrient(), name='f_copysform2qform')
+	f_copysform2qform.inputs.main_option = 'copysform2qform'
 
-		f_copysform2qform = pe.Node(interface=FSLOrient(), name='f_copysform2qform')
-		f_copysform2qform.inputs.main_option = 'copysform2qform'
+	warp_merge = pe.Node(util.Merge(2), name='warp_merge')
 
-		warp_merge = pe.Node(util.Merge(2), name='warp_merge')
-
+	workflow_connections.extend([
+		(f_bet, f_antsintroduction, [('out_file', 'input_image')]),
+		(f_antsintroduction, warp_merge, [('warp_field', 'in1')]),
+		(f_antsintroduction, warp_merge, [('affine_transformation', 'in2')]),
+		(warp_merge, f_warp, [('out', 'transformation_series')]),
+		(f_warp, f_copysform2qform, [('output_image', 'in_file')]),
+		])
+	if realign == "space":
 		workflow_connections.extend([
-			(f_bet, f_antsintroduction, [('out_file', 'input_image')]),
-			(f_antsintroduction, warp_merge, [('warp_field', 'in1')]),
-			(f_antsintroduction, warp_merge, [('affine_transformation', 'in2')]),
-			(warp_merge, f_warp, [('out', 'transformation_series')]),
-			(f_warp, f_copysform2qform, [('output_image', 'in_file')]),
+			(realigner, temporal_mean, [('realigned_files', 'in_file')]),
+			(realigner, f_warp, [('realigned_files', 'input_image')]),
 			])
-		if realign == "space":
-			workflow_connections.extend([
-				(realigner, temporal_mean, [('realigned_files', 'in_file')]),
-				(realigner, f_warp, [('realigned_files', 'input_image')]),
-				])
-		elif realign == "spacetime":
-			workflow_connections.extend([
-				(realigner, temporal_mean, [('out_file', 'in_file')]),
-				(realigner, f_warp, [('out_file', 'input_image')]),
-				])
-		elif realign == "time":
-			workflow_connections.extend([
-				(realigner, temporal_mean, [('slice_time_corrected_file', 'in_file')]),
-				(realigner, f_warp, [('slice_time_corrected_file', 'input_image')]),
-				])
-		else:
-			workflow_connections.extend([
-				(f_resize, temporal_mean, [('out_file', 'in_file')]),
-				(f_swapdim, f_warp, [('out_file', 'input_image')]),
-				])
-	elif functional_registration_method == "structural":
-		if not structural_scan_types:
-			raise ValueError('The option `registration="structural"` requires there to be a structural scan type.')
+	elif realign == "spacetime":
 		workflow_connections.extend([
-			(s_register, f_warp, [('composite_transform', 'transforms')]),
+			(realigner, temporal_mean, [('out_file', 'in_file')]),
+			(realigner, f_warp, [('out_file', 'input_image')]),
 			])
-		if realign == "space":
-			workflow_connections.extend([
-				(realigner, f_warp, [('realigned_files', 'input_image')]),
-				])
-		elif realign == "spacetime":
-			workflow_connections.extend([
-				(realigner, f_warp, [('out_file', 'input_image')]),
-				])
-		elif realign == "time":
-			workflow_connections.extend([
-				(realigner, f_warp, [('slice_time_corrected_file', 'input_image')]),
-				])
-		else:
-			workflow_connections.extend([
-				(dummy_scans, f_warp, [('out_file', 'input_image')]),
-				])
-	elif functional_registration_method == "composite":
-		if not structural_scan_types.any():
-			raise ValueError('The option `registration="composite"` requires there to be a structural scan type.')
-		_, _, f_register, f_warp = DSURQEc_structural_registration(template, registration_mask)
-
-		temporal_mean = pe.Node(interface=fsl.MeanImage(), name="temporal_mean")
-
-		merge = pe.Node(util.Merge(2), name='merge')
-
+	elif realign == "time":
 		workflow_connections.extend([
-			(temporal_mean, f_biascorrect, [('out_file', 'input_image')]),
-			(f_biascorrect, f_register, [('output_image', 'moving_image')]),
-			(s_biascorrect, f_register, [('output_image', 'fixed_image')]),
-			(f_register, merge, [('composite_transform', 'in1')]),
-			(s_register, merge, [('composite_transform', 'in2')]),
-			(merge, f_warp, [('out', 'transforms')]),
+			(realigner, temporal_mean, [('slice_time_corrected_file', 'in_file')]),
+			(realigner, f_warp, [('slice_time_corrected_file', 'input_image')]),
 			])
-		if realign == "space":
-			workflow_connections.extend([
-				(realigner, temporal_mean, [('realigned_files', 'in_file')]),
-				(realigner, f_warp, [('realigned_files', 'input_image')]),
-				])
-		elif realign == "spacetime":
-			workflow_connections.extend([
-				(realigner, temporal_mean, [('out_file', 'in_file')]),
-				(realigner, f_warp, [('out_file', 'input_image')]),
-				])
-		elif realign == "time":
-			workflow_connections.extend([
-				(realigner, temporal_mean, [('slice_time_corrected_file', 'in_file')]),
-				(realigner, f_warp, [('slice_time_corrected_file', 'input_image')]),
-				])
-		else:
-			workflow_connections.extend([
-				(dummy_scans, temporal_mean, [('out_file', 'in_file')]),
-				(dummy_scans, f_warp, [('out_file', 'input_image')]),
-				])
-
-
+	else:
+		workflow_connections.extend([
+			(f_resize, temporal_mean, [('out_file', 'in_file')]),
+			(f_swapdim, f_warp, [('out_file', 'input_image')]),
+			])
 
 	invert = pe.Node(interface=fsl.ImageMaths(), name="invert")
 
@@ -540,6 +517,7 @@ def bruker(bids_base, template,
 	workflow_name : str, optional
 		Top level name for the output directory.
 	'''
+
 	if template:
 		if template == "mouse":
 			from samri.fetch.templates import fetch_mouse_DSURQE

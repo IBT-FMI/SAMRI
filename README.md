@@ -11,13 +11,21 @@ The package is compatible with small rodent data acquired via Bruker systems.
 
 Depending on your preferred package manager you may choose one of the following methods:
 
-### Gentoo Linux
-SAMRI is available for Portage (the package manager of Gentoo Linux, derivative distributions, as well as BSD) via the [Chymeric Overlay](https://github.com/TheChymera/overlay).
+### Portage (e.g. on Gentoo Linux)
+SAMRI is available via Portage (the package manager of Gentoo Linux, derivative distributions, and installable on [any other Linux distribution](https://wiki.gentoo.org/wiki/Project:Prefix), or BSD) via the [Chymeric Overlay](https://github.com/TheChymera/overlay).
 Upon enabling the overlay, the package can be emerged:
 
 ````
 emerge samri
 ````
+
+Alternatively, the live (i.e. latest) version of the package can be installed along with all of its dependencies without the need to enable to overlay:
+
+```
+git clone git@github.com:IBT-FMI/SAMRI.git
+cd SAMRI/.gentoo
+./install.sh
+```
 
 ### Python Package Manager (Users)
 Python's `setuptools` allows you to install Python packages independently of your distribution (or operating system, even).

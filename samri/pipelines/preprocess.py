@@ -235,7 +235,8 @@ def bruker(bids_base, template,
 			
 			
 			if params:
-				s_register, s_warp, _, _ = DSURQEc_structural_registration(template, registration_mask, parameters = params)
+				s_register, s_warp, _, _ = DSURQEc_structural_registration(template, parameters = params)
+				#s_register, s_warp, _, _ = DSURQEc_structural_registration(template, registration_mask, parameters = params)
 
 			else:
 				s_register, s_warp, _, _ = DSURQEc_structural_registration(template, registration_mask)
@@ -332,7 +333,8 @@ def bruker(bids_base, template,
 			raise ValueError('The option `registration="composite"` requires there to be a structural scan type.')
 		
 		if params:
-			_, _, f_register, f_warp  = DSURQEc_structural_registration(template, registration_mask, parameters = params)
+			_, _, f_register, f_warp  = DSURQEc_structural_registration(template, parameters = params)
+			#_, _, f_register, f_warp  = DSURQEc_structural_registration(template, registration_mask, parameters = params)
 
 		else:
 			_, _, f_register, f_warp  = DSURQEc_structural_registration(template, registration_mask)

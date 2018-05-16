@@ -138,13 +138,14 @@ def structural_registration(template, num_threads=4):
 	return registration, s_warp, f_warp
 
 def DSURQEc_structural_registration(template,
-	mask="~/ni_data/templates/DSURQEc_200micron_mask.nii.gz",
+#	mask="~/ni_data/templates/DSURQEc_200micron_mask.nii.gz",
+	mask = None,
 	num_threads=4,
 	phase_dictionary=PHASES,
 	#s_phases=["s_rigid","affine","syn"],
 	s_phases = ["s_rigid"],
 	f_phases=["f_rigid",],
-	parameters = {},
+	parameters = None,
 	):
 
 	s_parameters = [phase_dictionary[selection] for selection in s_phases]
@@ -168,6 +169,8 @@ def DSURQEc_structural_registration(template,
 	s_registration.inputs.convergence_window_size = [i["convergence_window_size"] for i in s_parameters]
 	#s_registration.inputs.smoothing_sigmas = [i["smoothing_sigmas"] for i in s_parameters]
 	print('inside reg')
+	print('---------------------')
+	print([parameters["smoothing_sigmas"]])
 #	print([i["shrink_factors"] for i in s_parameters])
 #	print(parameters['smoothing_sigmas'])
 #	print(s_parameters['shrink_factors'])

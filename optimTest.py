@@ -94,6 +94,11 @@ def objective(args):
     #parameters = {"smoothing_sigmas": np.asarray(args
     _pa = {'smoothing_sigmas': [args['sigma1'], args['sigma2']]}
     print(_pa['smoothing_sigmas'])
+
+    # overwrite phases with params
+    # for phase in phases:
+        # Phases['f_rigid'] = ... args['f_rigid']
+
     bruker(bids_base,
 	"mouse",
 	functional_match={'task':['JogB','CoglB','CogB2m'],},
@@ -102,7 +107,7 @@ def objective(args):
 	sessions = ['ofMr1'],
 	actual_size=True,
 	functional_registration_method="composite",
-	params = {'smoothing_sigmas': [float(args['sigma1']), float(args['sigma2'])]},
+	params = {'smoothing_sigmas': [float(args['sigma1']), float(args['sigma2']), ]},
 	bandpass = False,
 	)
        # somehow grab results
@@ -132,9 +137,9 @@ def objective(args):
 # TODO: extend
 
 space = {
-	'sigma1': 1,
-	'sigma2': 0,
-	}
+        'sigma1' : hp.choice('sigma1',[4,2]),
+        'sigma2' : hp.choice('sigma2',[2,0]),
+        }
 
 global bids_base
 global template

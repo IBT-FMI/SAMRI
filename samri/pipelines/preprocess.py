@@ -74,13 +74,13 @@ def bids_data_selection(base, structural_match, functional_match, subjects, sess
                 except:
                         pass
                 res_df = res_df.append(_df)
-                if(structural_match):
-                        try:
-                                for match in structural_match.keys():
-                                        _df = filterData(_df, match, structural_match[match])
-                        except:
-                                pass
-                        res_df = res_df.append(_df)
+	if(structural_match):
+		try:
+			for match in structural_match.keys():
+				_df = filterData(_df, match, structural_match[match])
+		except:
+			pass
+		res_df = res_df.append(_df)
         df = res_df
         if(subjects):
                 df = filterData(df, 'subject', subjects)

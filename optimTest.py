@@ -91,7 +91,7 @@ PHASES = {
 
 
 def objective(args):
-    #parameters = {"smoothing_sigmas": np.asarray(args
+#    #parameters = {"smoothing_sigeas": np.asarray(args
     _pa = {'smoothing_sigmas': [args['sigma1'], args['sigma2']]}
     print(_pa['smoothing_sigmas'])
 
@@ -130,6 +130,9 @@ def objective(args):
     # remove preprocessing folder for next round
     shutil.rmtree(preprocess_path)
 
+#    print(_pa['smoothing_sigmas'])
+#    similarity = _pa['smoothing_sigmas'][0] + _pa['smoothing_sigmas'][1]
+
     return -similarity
 
 # parameterspace
@@ -137,8 +140,8 @@ def objective(args):
 # TODO: extend
 
 space = {
-        'sigma1' : hp.choice('sigma1',[4,2]),
-        'sigma2' : hp.choice('sigma2',[2,0]),
+        'sigma1' : hp.choice('sigma1',[8,4,2,1]),
+        'sigma2' : hp.choice('sigma2',[4,2,1,0]),
         }
 
 global bids_base
@@ -160,6 +163,6 @@ if __name__ == "__main__":
     best = fmin(objective, space, algo=tpe.suggest, max_evals=2)
     # measure similarity
 
-    print(best[0])
+    print(best)
 
     # result for optimizer

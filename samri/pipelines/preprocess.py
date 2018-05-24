@@ -66,7 +66,7 @@ def bids_data_selection(base, structural_match, functional_match, subjects, sess
 	df.loc[df.modality == 'func', 'scan_type'] = 'task-' + df['task'] + '_acq-'+ df['acq']
 	df.loc[df.modality == 'anat', 'scan_type'] = 'acq-'+df['acq'] +'_' + df['type']
 
-        res_df = pd.DataFrame()
+	res_df = pd.DataFrame()
 	if(functional_match):
 		_df = df
 		try:

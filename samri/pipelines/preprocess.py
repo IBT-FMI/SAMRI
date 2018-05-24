@@ -67,27 +67,28 @@ def bids_data_selection(base, structural_match, functional_match, subjects, sess
 	df.loc[df.modality == 'anat', 'scan_type'] = 'acq-'+df['acq'] +'_' + df['type']
 
         res_df = pd.DataFrame()
-        if(functional_match):
-                try:
-                        for match in functional_match.keys():
-                                _df = filterData(_df, match, functional_match[match])
-                except:
-                        pass
-                res_df = res_df.append(_df)
+	if(functional_match):
+		_df = df
+		try:
+			for match in functional_match.keys():
+				_df = filterData(_df, match, functional_match[match])
+				res_df = res_df.append(_df)
+		except:
+			pass
 	if(structural_match):
+		_df = df
 		try:
 			for match in structural_match.keys():
 				_df = filterData(_df, match, structural_match[match])
+				res_df = res_df.append(_df)
 		except:
 			pass
-		res_df = res_df.append(_df)
-        df = res_df
-        if(subjects):
-                df = filterData(df, 'subject', subjects)
-        if(sessions):
-                df = filterData(df, 'session', sessions)
-
-        return df
+	df = res_df
+	if(subjects):
+		df = filterData(df, 'subject', subjects)
+	if(sessions):
+		df = filterData(df, 'session', sessions)
+	return df
 
 
 

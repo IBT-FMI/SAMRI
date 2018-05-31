@@ -126,7 +126,7 @@ def reg_cc(
 	radius=5,
 	autofind=False,
 	plot=False,
-	metrics = ['CC']
+	metrics = ['CC','GC','MI'],
 	):
 	from samri.utilities import bids_autofind
 	from samri.plotting.aggregate import registration_qc
@@ -135,7 +135,7 @@ def reg_cc(
 	from samri.utilities import bids_substitution_iterator
 
 	if autofind:
-		path_template, substitutions = bids_autofind("/media/nexus/storage2/ni_data/christian_bids_data/bids/preprocessing/generic","func")
+		path_template, substitutions = bids_autofind("~/ni_data/ofM.dr/preprocessing/composite","func")
 	else:
 		path_template = "{data_dir}/preprocessing/{preprocessing_dir}/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_acq-{acquisition}_task-{task}_cbv.nii.gz"
 		substitutions = bids_substitution_iterator(
@@ -151,12 +151,12 @@ def reg_cc(
 
 	for metric in metrics:
 		df = iter_measure_sim(path_template, substitutions,
-			"~/.samri_files/templates/mouse/DSURQE/DSURQEc_200micron_average.nii",
+			"~/ni_data/templates/DSURQEc_200micron_average.nii",
 			metric=metric,
 			radius_or_number_of_bins=radius,
 			sampling_strategy="Regular",
 			sampling_percentage=0.33,
-			save_as="f_reg_quality.csv",
+			save_as="f_reg_quality_" + metric +  ".csv",
 			)
 
 def metadata():

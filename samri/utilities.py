@@ -26,7 +26,7 @@ def bids_autofind(bids_dir,
 	bids_dir : str
 		Path to BIDS-formatted directory
 	modality : {"func", "anat"}
-		Which modality to source data for (corrently only supports "func", and "anat" - ideally we could extend this to include "dwi").
+		Which modality to source data for (currently only supports "func", and "anat" - ideally we could extend this to include "dwi").
 
 	Returns
 	-------

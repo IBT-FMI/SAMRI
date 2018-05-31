@@ -66,7 +66,7 @@ def reg_gc():
 
 	df = iter_measure_sim(
 		"~/ni_data/ofM.dr/preprocessing/composite",
-		"~/ni_data/templates/DSURQEc_200micron_average.nii",
+		"~/.samri_files/templates/mouse/DSURQE/DSURQEc_200micron_average.nii",
 		#modality="anat",
 		metric="GC",
 		radius_or_number_of_bins = 0,
@@ -126,6 +126,7 @@ def reg_cc(
 	radius=5,
 	autofind=False,
 	plot=False,
+	metrics = ['CC']
 	):
 	from samri.utilities import bids_autofind
 	from samri.plotting.aggregate import registration_qc
@@ -134,7 +135,7 @@ def reg_cc(
 	from samri.utilities import bids_substitution_iterator
 
 	if autofind:
-		path_template, substitutions = bids_autofind("~/ni_data/ofM.dr/preprocessing/composite","func")
+		path_template, substitutions = bids_autofind("/media/nexus/storage2/ni_data/christian_bids_data/bids/preprocessing/generic","func")
 	else:
 		path_template = "{data_dir}/preprocessing/{preprocessing_dir}/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_acq-{acquisition}_task-{task}_cbv.nii.gz"
 		substitutions = bids_substitution_iterator(
@@ -147,14 +148,16 @@ def reg_cc(
 			check_file_format=path_template,
 			)
 
-	df = iter_measure_sim(path_template, substitutions,
-		"~/ni_data/templates/DSURQEc_200micron_average.nii",
-		metric="CC",
-		radius_or_number_of_bins=radius,
-		sampling_strategy="Regular",
-		sampling_percentage=0.33,
-		save_as="f_reg_quality.csv",
-		)
+
+	for metric in metrics:
+		df = iter_measure_sim(path_template, substitutions,
+			"~/.samri_files/templates/mouse/DSURQE/DSURQEc_200micron_average.nii",
+			metric=metric,
+			radius_or_number_of_bins=radius,
+			sampling_strategy="Regular",
+			sampling_percentage=0.33,
+			save_as="f_reg_quality.csv",
+			)
 
 def metadata():
 	from samri.pipelines.extra_functions import get_data_selection

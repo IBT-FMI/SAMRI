@@ -67,7 +67,7 @@ def bids_autofind(bids_dir,
 			raise ValueError("The reconstructed file path based on the substitution dictionary and the path template, is not identical to the corresponding path, found by `nipype.interfaces.io.DataFinder`. See string values above.")
 		substitutions.append(substitution)
 
-	return substitutions
+	return path_template, substitutions
 
 def bids_substitution_iterator(sessions, subjects,
 	tasks=[''],

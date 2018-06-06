@@ -7,6 +7,12 @@ The resulting interfaces aim to maximize reproducibility, simplify batch process
 
 The package is compatible with small rodent data acquired via Bruker systems.
 
+## Examples
+
+```
+SAMRI bru2bids -f '{"acquisition":["ssEPI","ssEPI2seg"]}' -s '{"acquisition":["TurboRARE","TurboRAREhd"]}' . --measurements 20180529_*
+```
+
 ## Installation
 
 Depending on your preferred package manager you may choose one of the following methods:

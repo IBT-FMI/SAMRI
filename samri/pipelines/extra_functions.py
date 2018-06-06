@@ -302,7 +302,7 @@ def get_scan(measurements_base, data_selection,
 	selector=None,
 	subject=None,
 	session=None,
-	task=False,
+	task=None,
 	):
 	"""Return the path to a Bruker scan selected by subject, session, and scan type, based on metadata previously extracted with `samri.preprocessing.extra_functions.get_data_selection()`.
 
@@ -335,10 +335,16 @@ def get_scan(measurements_base, data_selection,
 		filtered_data = filtered_data[filtered_data["scan_type"] == scan_type]
 	measurement_path = filtered_data["measurement"].item()
 	scan_subdir = filtered_data["scan"].item()
-	scan_path = os.path.join(measurements_base,measurement_path,scan_subdir)
+	if measurement_path[0] == '/':
+		scan_path = os.path.join(measurement_path,scan_subdir)
+	else:
+		scan_path = os.path.join(measurements_base,measurement_path,scan_subdir)
 
 	if not task:
-		task = filtered_data['task'].item()
+		try:
+			task = filtered_data['task'].item()
+		except KeyError:
+			pass
 
 	return scan_path, scan_type, task
 

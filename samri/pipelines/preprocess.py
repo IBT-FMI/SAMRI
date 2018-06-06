@@ -66,29 +66,31 @@ def bids_data_selection(base, structural_match, functional_match, subjects, sess
 	df.loc[df.modality == 'func', 'scan_type'] = 'task-' + df['task'] + '_acq-'+ df['acq']
 	df.loc[df.modality == 'anat', 'scan_type'] = 'acq-'+df['acq'] +'_' + df['type']
 
-	#TODO: make nicer, generalize to all functional match entries... dict vs list von subjects,etc. und acq / acquistion mismatch
 	res_df = pd.DataFrame()
 	if(functional_match):
-		_df = filterData(df, 'task', functional_match['task'])
+		_df = df
 		try:
-			_df = filterData(_df, 'type', functional_match['type'])
+			for match in functional_match.keys():
+				_df = filterData(_df, match, functional_match[match])
+				res_df = res_df.append(_df)
 		except:
 			pass
+	if(structural_match):
+		_df = df
 		try:
-			_df = filterData(_df, 'type', functional_match['acq'])
+			for match in structural_match.keys():
+				_df = filterData(_df, match, structural_match[match])
+				res_df = res_df.append(_df)
 		except:
 			pass
-		res_df = res_df.append(_df)
-		if(structural_match):
-			_df = filterData(df, 'acq', structural_match['acquisition'])
-			res_df = res_df.append(_df)
 	df = res_df
 	if(subjects):
 		df = filterData(df, 'subject', subjects)
 	if(sessions):
 		df = filterData(df, 'session', sessions)
-
 	return df
+
+
 
 def legacy_bruker(bids_base, template,
 	autorotate=False,

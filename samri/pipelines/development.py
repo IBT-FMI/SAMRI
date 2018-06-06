@@ -91,7 +91,8 @@ def bids_preprocessing():
 	from samri.pipelines.preprocess import bruker
 	bids_base = '~/ni_data/ofM.dr/bids'
 
-	bruker(bids_base, "~/ni_data/templates/DSURQEc_200micron_average.nii",
+	bruker(bids_base, "~/ni_data/templates/dsurqec_200micron.nii",
+		registration_mask="~/ni_data/templates/dsurqec_200micron_mask.nii",
 		#functional_match={'acquisition':['EPIlowcov',],},
 		#structural_match={'acquisition':['TurboRARElowcov',]},
 		#functional_match={'task':['JogB','CogB',],'acquisition':['EPI',],},
@@ -109,10 +110,10 @@ def legacy_preprocessing():
 	from samri.pipelines.preprocess import legacy_bruker
 	bids_base = '~/ni_data/ofM.dr/bids'
 
-	legacy_bruker(bids_base, "~/ni_data/templates/lambmc_120micron.nii",
+	legacy_bruker(bids_base, "~/ni_data/templates/lambmc_180micron.nii",
 		#functional_match={'acquisition':['EPIlowcov',],},
 		structural_match={'acquisition':['TurboRARElowcov',]},
-		functional_match={'task':['JogB'],'type':['bold'],'acquisition':['EPIlowcov',]},
+		functional_match={'task':['JogB','CogB'],'acquisition':['EPIlowcov',]},
 		#functional_match={'task':['JogB','CogB',],'acquisition':['EPI',],},
 		#functional_match={'task':['JogB','CogB',],'acquisition':['EPIlowcov',],},
 		#functional_match={'task':['JogB'],'type':['cbv']},

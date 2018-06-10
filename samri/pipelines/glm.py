@@ -29,7 +29,7 @@ def l1(preprocessing_dir,
 	include={},
 	keep_work=False,
 	l1_dir="",
-	mask="~/ni_data/templates/ds_QBI_chr_bin.nii.gz",
+	mask="",
 	match_regex='sub-(?P<sub>[a-zA-Z0-9]+)/ses-(?P<ses>[a-zA-Z0-9]+)/func/.*?_task-(?P<task>[a-zA-Z0-9]+)_acq-(?P<acq>[a-zA-Z0-9]+)_(?P<mod>[a-zA-Z0-9]+)\.(?:tsv|nii|nii\.gz)',
 	nprocs=N_PROCS,
 	tr=1,
@@ -73,9 +73,9 @@ def l1(preprocessing_dir,
 		Name of the workflow; this will also be the name of the final output directory produced under `l1_dir`.
 	"""
 
-	preprocessing_dir = path.expanduser(preprocessing_dir)
+	preprocessing_dir = path.abspath(path.expanduser(preprocessing_dir))
 	if not l1_dir:
-		l1_dir = path.abspath(path.join(preprocessing_dir,"..","..","l1"))
+		l1_dir = path.join(preprocessing_dir,"l1")
 
 	datafind = nio.DataFinder()
 	datafind.inputs.root_paths = preprocessing_dir
@@ -128,6 +128,7 @@ def l1(preprocessing_dir,
 		raise ValueError('The value you have provided for the `habituation` parameter, namely "{}", is invalid. Please choose one of: {"confound","in_main_contrast","separate_contrast"}'.format(habituation))
 
 	modelgen = pe.Node(interface=fsl.FEATModel(), name='modelgen')
+	modelgen.inputs.ignore_exception = True
 
 	glm = pe.Node(interface=fsl.GLM(), name='glm', iterfield='design')
 	glm.inputs.out_cope = "cope.nii.gz"
@@ -138,6 +139,7 @@ def l1(preprocessing_dir,
 	glm.inputs.out_p_name = "p_stat.nii.gz"
 	if mask:
 		glm.inputs.mask = path.abspath(path.expanduser(mask))
+	glm.inputs.ignore_exception = True
 
 	cope_filename = pe.Node(name='cope_filename', interface=util.Function(function=bids_dict_to_source,input_names=inspect.getargspec(bids_dict_to_source)[0], output_names=['filename']))
 	cope_filename.inputs.source_format = "sub-{subject}_ses-{session}_acq-{acquisition}_task-{task}_{modality}_cope.nii.gz"

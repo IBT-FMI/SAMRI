@@ -87,6 +87,16 @@ def aic():
 		keep_work=True,
 		)
 
+def glm_only():
+	from samri.pipelines import glm
+	glm.l1('~/ni_data/ofM.vta/bids/',
+		workflow_name='composite',
+		include={"subject":["SN2143","SN2145","SN3974","SN3975"]},
+		habituation="confound",
+		keep_work=True,
+		mask="",
+		)
+
 def bids_preprocessing():
 	from samri.pipelines.preprocess import bruker
 	bids_base = '~/ni_data/ofM.dr/bids'

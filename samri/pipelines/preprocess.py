@@ -43,11 +43,17 @@ def filterData(df, col_name, entries):
 			res_df = res_df.append(_df)
 	return res_df
 
-def bids_data_selection(base, structural_match, functional_match, subjects, sessions):
+def bids_data_selection(base, structural_match, functional_match, subjects, sessions,
+	verbose=False,
+	):
 	validate = BIDSValidator()
-	for x in os.walk(base):
-		print(x[0])
-		print(validate.is_bids(x[0]))
+	if verbose:
+		for x in os.walk(base):
+			print(x[0])
+			if validate.is_bids(x[0]):
+				print("Is not BIDS-formatted.")
+			else:
+				print("Detected!")
 	layout = BIDSLayout(base)
 	df = layout.as_data_frame()
 	# drop event files
@@ -66,24 +72,27 @@ def bids_data_selection(base, structural_match, functional_match, subjects, sess
 	df.loc[df.modality == 'func', 'scan_type'] = 'task-' + df['task'] + '_acq-'+ df['acq']
 	df.loc[df.modality == 'anat', 'scan_type'] = 'acq-'+df['acq'] +'_' + df['type']
 
-	res_df = pd.DataFrame()
-	if(functional_match):
-		_df = df
-		try:
-			for match in functional_match.keys():
-				_df = filterData(_df, match, functional_match[match])
-				res_df = res_df.append(_df)
-		except:
-			pass
-	if(structural_match):
-		_df = df
-		try:
-			for match in structural_match.keys():
-				_df = filterData(_df, match, structural_match[match])
-				res_df = res_df.append(_df)
-		except:
-			pass
-	df = res_df
+	#TODO: The following should be collapsed into one criterion category
+	if functional_match or structural_match:
+		res_df = pd.DataFrame()
+		if functional_match:
+			_df = deepcopy(df)
+			try:
+				for match in functional_match.keys():
+					_df = filterData(_df, match, functional_match[match])
+					res_df = res_df.append(_df)
+			except:
+				pass
+		if structural_match:
+			_df = deepcopy(df)
+			try:
+				for match in structural_match.keys():
+					_df = filterData(_df, match, structural_match[match])
+					res_df = res_df.append(_df)
+			except:
+				pass
+		df = res_df
+
 	if(subjects):
 		df = filterData(df, 'subject', subjects)
 	if(sessions):
@@ -182,7 +191,6 @@ def legacy_bruker(bids_base, template,
 
 	# we start to define nipype workflow elements (nodes, connections, meta)
 	subjects_sessions = data_selection[["subject","session"]].drop_duplicates().values.tolist()
-
 	_func_ind = data_selection[data_selection["modality"] == "func"]
 	func_ind = _func_ind.index.tolist()
 

@@ -99,17 +99,20 @@ def glm_only():
 
 def bids_preprocessing():
 	from samri.pipelines.preprocess import bruker
+	from labbookdb.report.development import animal_multiselect
+
 	bids_base = '~/ni_data/ofM.dr/bids'
 
+	animal_list = animal_multiselect()
 	bruker(bids_base, "~/ni_data/templates/dsurqec_200micron.nii",
 		registration_mask="~/ni_data/templates/dsurqec_200micron_mask.nii",
 		#functional_match={'acquisition':['EPIlowcov',],},
 		#structural_match={'acquisition':['TurboRARElowcov',]},
 		#functional_match={'task':['JogB','CogB',],'acquisition':['EPI',],},
-		functional_match={'task':['JogB','CogB',],'acquisition':['EPIlowcov',],},
+		#functional_match={'task':['JogB','CogB',],'acquisition':['EPIlowcov',],},
 		#functional_match={'task':['JogB'],'type':['cbv']},
-		structural_match={'acquisition':['TurboRARElowcov']},
-		#subjects=['5667','6542'],
+		#structural_match={'acquisition':['TurboRARElowcov']},
+		subjects=animal_list,
 		#subjects=['6530','6532','6542','6548','6549','6552','6553','6556','6557'],
 		actual_size=True,
 		functional_registration_method="composite",

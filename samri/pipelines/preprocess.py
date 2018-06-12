@@ -34,7 +34,23 @@ def divideby_10(x):
 	return x/10.
 
 def filterData(df, col_name, entries):
+	"""Filter a Pandas DataFrame if the `col_name` entry corresponds to any item in the `entries` list.
 
+	Parameters
+	----------
+
+	df : pandas.DataFrame
+		A Pandas DataFrame with a column name corresponding to the value of `col_name`.
+	col_name : str
+		The name of a column in `df`.
+	entries : list
+		A list of values which may be present on the `col_name` column of the `df` DataFrame.
+
+	Returns
+	-------
+	pandas.DataFrame
+		A filtered Pandas DataFrame.
+	"""
 	res_df = pd.DataFrame()
 	in_df = df[col_name].dropna().unique().tolist()
 	for entry in entries:
@@ -98,8 +114,6 @@ def bids_data_selection(base, structural_match, functional_match, subjects, sess
 	if(sessions):
 		df = filterData(df, 'session', sessions)
 	return df
-
-
 
 def legacy_bruker(bids_base, template,
 	autorotate=False,

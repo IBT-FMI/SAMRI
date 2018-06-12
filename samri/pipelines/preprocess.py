@@ -10,8 +10,6 @@ import nipype.interfaces.io as nio
 import nipype.interfaces.utility as util
 import nipype.pipeline.engine as pe
 import pandas as pd
-from bids.grabbids import BIDSLayout
-from bids.grabbids import BIDSValidator
 from nipype.interfaces import ants, afni, bru2nii, fsl, nipy
 from nipype.interfaces.ants import legacy
 
@@ -19,7 +17,7 @@ from samri.fetch.templates import fetch_rat_waxholm, fetch_mouse_DSURQE
 from samri.pipelines.extra_functions import get_data_selection, get_bids_scan, write_bids_metadata_file, write_bids_events_file, force_dummy_scans, BIDS_METADATA_EXTRACTION_DICTS
 from samri.pipelines.extra_interfaces import VoxelResize, FSLOrient
 from samri.pipelines.nodes import *
-from samri.pipelines.utils import bids_naming, ss_to_path, sss_filename, fslmaths_invert_values
+from samri.pipelines.utils import bids_naming, bids_data_selection, filter_data, fslmaths_invert_values, ss_to_path, sss_filename
 from samri.utilities import N_PROCS
 
 DUMMY_SCANS=10
@@ -32,88 +30,6 @@ fsl.FSLCommand.set_default_output_type('NIFTI_GZ')
 def divideby_10(x):
 	"""This is a wrapper function needed in order for nipype workflow connections to accept inline division."""
 	return x/10.
-
-def filterData(df, col_name, entries):
-	"""Filter a Pandas DataFrame if the `col_name` entry corresponds to any item in the `entries` list.
-
-	Parameters
-	----------
-
-	df : pandas.DataFrame
-		A Pandas DataFrame with a column name corresponding to the value of `col_name`.
-	col_name : str
-		The name of a column in `df`.
-	entries : list
-		A list of values which may be present on the `col_name` column of the `df` DataFrame.
-
-	Returns
-	-------
-	pandas.DataFrame
-		A filtered Pandas DataFrame.
-	"""
-	res_df = pd.DataFrame()
-	in_df = df[col_name].dropna().unique().tolist()
-	for entry in entries:
-		if(entry in in_df):
-			_df = df[df[col_name] == entry]
-			res_df = res_df.append(_df)
-	return res_df
-
-def bids_data_selection(base, structural_match, functional_match, subjects, sessions,
-	verbose=False,
-	):
-	validate = BIDSValidator()
-	if verbose:
-		for x in os.walk(base):
-			print(x[0])
-			if validate.is_bids(x[0]):
-				print("Is not BIDS-formatted.")
-			else:
-				print("Detected!")
-	layout = BIDSLayout(base)
-	df = layout.as_data_frame()
-	# drop event files
-	df = df[df.type != 'events']
-	# rm .json
-	df = df.loc[df.path.str.contains('.nii')]
-	# generate scan types for later
-	df['scan_type'] = ""
-	#print(df.path.str.startswith('task', beg=0,end=len('task')))
-	beg = df.path.str.find('task-')
-	end = df.path.str.find('.')
-	#df.loc[df.modality == 'func', 'scan_type'] = 'acq-'+df['acq']+'_task-'+  df.path.str.partition('task-')[2].str.partition('.')[0]
-	#df.loc[df.modality == 'anat', 'scan_type'] = 'acq-'+df['acq']+'_' + df['type']
-	#TODO: fix task!=type
-	df.loc[df.modality == 'func', 'task'] = df.path.str.partition('task-')[2].str.partition('_')[0]
-	df.loc[df.modality == 'func', 'scan_type'] = 'task-' + df['task'] + '_acq-'+ df['acq']
-	df.loc[df.modality == 'anat', 'scan_type'] = 'acq-'+df['acq'] +'_' + df['type']
-
-	#TODO: The following should be collapsed into one criterion category
-	if functional_match or structural_match:
-		res_df = pd.DataFrame()
-		if functional_match:
-			_df = deepcopy(df)
-			try:
-				for match in functional_match.keys():
-					_df = filterData(_df, match, functional_match[match])
-					res_df = res_df.append(_df)
-			except:
-				pass
-		if structural_match:
-			_df = deepcopy(df)
-			try:
-				for match in structural_match.keys():
-					_df = filterData(_df, match, structural_match[match])
-					res_df = res_df.append(_df)
-			except:
-				pass
-		df = res_df
-
-	if(subjects):
-		df = filterData(df, 'subject', subjects)
-	if(sessions):
-		df = filterData(df, 'session', sessions)
-	return df
 
 def legacy_bruker(bids_base, template,
 	autorotate=False,

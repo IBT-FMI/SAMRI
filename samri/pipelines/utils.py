@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
-import pandas as pd
 from __future__ import print_function, division, unicode_literals, absolute_import
+import pandas as pd
 from bids.grabbids import BIDSLayout
 from bids.grabbids import BIDSValidator
 from copy import deepcopy

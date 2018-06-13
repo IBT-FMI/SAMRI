@@ -265,16 +265,6 @@ def anova():
 
 def typical_resp(data_path='~/ni_data/ofM.dr/bids/', l1_dir='l1', workflow_name='generic'):
 	from samri.pipelines import preprocess, glm
-	#glm.l2_common_effect(path.join(data_path,l1_dir,workflow_name),
-	#	workflow_name="best_responders_old",
-	#	include={
-	#		'subject':["5689","5690","5691","5700","6262","6255","5694","5706"],
-	#		'task':["CogB"],
-	#		},
-	#	groupby="session",
-	#	keep_work=True,
-	#	mask="~/ni_data/templates/DSURQEc_200micron_mask.nii.gz",
-	#	)
 	glm.l2_common_effect(path.join(data_path,l1_dir,workflow_name),
 		workflow_name="best_responders",
 		include={
@@ -284,16 +274,6 @@ def typical_resp(data_path='~/ni_data/ofM.dr/bids/', l1_dir='l1', workflow_name=
 		groupby="session",
 		keep_work=True,
 		mask="~/ni_data/templates/DSURQEc_200micron_mask.nii.gz",
-		)
-
-def dr_only():
-	from samri.pipelines import preprocess, glm
-	glm.l1("~/ni_data/ofM.dr/preprocessing/_composite",
-		mask="~/ni_data/templates/roi/f_dr_chr.nii.gz",
-		workflow_name="dr",
-		# include={"subjects":["5689","5690","5691"]},
-		habituation="confound",
-		keep_work=True,
 		)
 
 def test_dual_regression(group_level="migp"):

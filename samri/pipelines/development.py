@@ -112,8 +112,9 @@ def bids_preprocessing():
 		#functional_match={'task':['JogB','CogB',],'acquisition':['EPIlowcov',],},
 		#functional_match={'task':['JogB'],'type':['cbv']},
 		#structural_match={'acquisition':['TurboRARElowcov']},
-		subjects=animal_list,
+		#subjects=animal_list,
 		#subjects=['6530','6532','6542','6548','6549','6552','6553','6556','6557'],
+		subjects=['5673','5668','5675','6557'],
 		actual_size=True,
 		functional_registration_method="composite",
 		negative_contrast_agent=True,
@@ -142,6 +143,7 @@ def bids_l1():
 	from samri.pipelines import glm
 
 	glm.l1('~/ni_data/ofM.dr/bids/preprocessing/generic',
+		l1_dir='~/ni_data/ofM.dr/bids/l1/generic',
 		workflow_name='generic',
 		#include={'subject':['6530','6532','6542','6548','6549','6552','6553','6556','6557']},
 		habituation="confound",

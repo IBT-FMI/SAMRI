@@ -76,6 +76,8 @@ def l1(preprocessing_dir,
 	preprocessing_dir = path.abspath(path.expanduser(preprocessing_dir))
 	if not l1_dir:
 		l1_dir = path.join(preprocessing_dir,"l1")
+	else:
+		l1_dir = path.abspath(path.expanduser(l1_dir))
 
 	datafind = nio.DataFinder()
 	datafind.inputs.root_paths = preprocessing_dir

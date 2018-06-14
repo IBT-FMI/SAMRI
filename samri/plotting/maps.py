@@ -16,6 +16,7 @@ from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 
 from samri.fetch.local import roi_from_atlaslabel
 from samri.plotting.utilities import QUALITATIVE_COLORSET
+from samri.utils import collapse
 
 COLORS_PLUS = plt.cm.autumn(np.linspace(0., 1, 128))
 COLORS_MINUS = plt.cm.winter(np.linspace(0, 1, 128))
@@ -519,16 +520,7 @@ def contour_slices(bg_image, file_template,
 		img = nib.load(filename)
 		data = img.get_data()
 		if img.header['dim'][0] > 3:
-			ndim = 0
-			for i in range(len(img.header['dim'])-1):
-				current_dim = img.header['dim'][i+1]
-				if current_dim == 1:
-					break
-				ndim += 1
-			img.header['dim'][0] = ndim
-			img.header['pixdim'][ndim+1:] = 0
-			data = np.mean(data,axis=(ndim-1))
-			img = nib.nifti1.Nifti1Image(data, img.affine, img.header)
+			img = collapse(img)
 		if autoinvert and (data <= 0.9).all():
 			data = -data
 			img = nib.nifti1.Nifti1Image(data, img.affine, img.header)

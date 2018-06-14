@@ -39,6 +39,7 @@ def legacy_bruker(bids_base, template,
 	keep_work=False,
 	negative_contrast_agent=False,
 	n_procs=N_PROCS,
+	out_base=None,
 	realign="time",
 	registration_mask=False,
 	sessions=[],
@@ -47,7 +48,7 @@ def legacy_bruker(bids_base, template,
 	subjects=[],
 	tr=1,
 	verbose=False,
-	workflow_name="generic",
+	workflow_name='generic',
 	):
 	'''
 	Legacy realignment and registration workflow representative of the tweaks and workarounds commonly used in the pre-SAMRI period.
@@ -77,6 +78,8 @@ def legacy_bruker(bids_base, template,
 		This is commonly used for iron nano-particle Cerebral Blood Volume (CBV) measurements.
 	n_procs : int, optional
 		Number of processors to maximally use for the workflow; if unspecified a best guess will be estimate based on hardware (but not on current load).
+	out_dir : str, optional
+		Output directory --- inside which a directory named `workflow_name`(as well as associated directories) will be created.
 	realign : {"space","time","spacetime",""}, optional
 		Parameter that dictates slictiming correction and realignment of slices. "time" (FSL.SliceTimer) is default, since it works safely. Use others only with caution!
 	registration_mask : str, optional
@@ -99,6 +102,11 @@ def legacy_bruker(bids_base, template,
 	workflow_name : str, optional
 		Top level name for the output directory.
 	'''
+
+	if not out_dir:
+		out_dir = path.join(bids_base,'preprocessing')
+	else:
+		out_dir = path.abspath(path.expanduser(out_dir))
 
 	if template:
 		if template == "mouse":
@@ -166,7 +174,7 @@ def legacy_bruker(bids_base, template,
 	f_deleteorient.inputs.main_option = 'deleteorient'
 
 	datasink = pe.Node(nio.DataSink(), name='datasink')
-	datasink.inputs.base_directory = path.join(bids_base,"preprocessing",workflow_name)
+	datasink.inputs.base_directory = path.join(out_dir,workflow_name)
 	datasink.inputs.parameterization = False
 	if not (strict or verbose):
 		datasink.inputs.ignore_exception = True
@@ -373,7 +381,7 @@ def legacy_bruker(bids_base, template,
 	workdir_name = workflow_name+"_work"
 	workflow = pe.Workflow(name=workdir_name)
 	workflow.connect(workflow_connections)
-	workflow.base_dir = path.join(bids_base,"preprocessing")
+	workflow.base_dir = path.join(out_dir)
 	workflow.config = workflow_config
 	workflow.write_graph(dotfilename=path.join(workflow.base_dir,workdir_name,"graph.dot"), graph2use="hierarchical", format="png")
 
@@ -392,6 +400,7 @@ def bruker(bids_base, template,
 	keep_work=False,
 	negative_contrast_agent=False,
 	n_procs=N_PROCS,
+	out_dir=None,
 	realign="time",
 	registration_mask=False,
 	sessions=[],
@@ -400,7 +409,7 @@ def bruker(bids_base, template,
 	subjects=[],
 	tr=1,
 	verbose=False,
-	workflow_name="generic",
+	workflow_name='generic',
 	):
 	'''
 	Generic preprocessing and registration workflow for small animal data in BIDS format.
@@ -435,6 +444,8 @@ def bruker(bids_base, template,
 		This is commonly used for iron nano-particle Cerebral Blood Volume (CBV) measurements.
 	n_procs : int, optional
 		Number of processors to maximally use for the workflow; if unspecified a best guess will be estimate based on hardware (but not on current load).
+	out_dir : str, optional
+		Output directory --- inside which a directory named `workflow_name`(as well as associated directories) will be created.
 	realign : {"space","time","spacetime",""}, optional
 		Parameter that dictates slictiming correction and realignment of slices. "time" (FSL.SliceTimer) is default, since it works safely. Use others only with caution!
 	registration_mask : str, optional
@@ -457,6 +468,11 @@ def bruker(bids_base, template,
 	workflow_name : str, optional
 		Top level name for the output directory.
 	'''
+
+	if not out_dir:
+		out_dir = path.join(bids_base,'preprocessing')
+	else:
+		out_dir = path.abspath(path.expanduser(out_dir))
 
 	if template:
 		if template == "mouse":
@@ -507,7 +523,7 @@ def bruker(bids_base, template,
 	events_file = pe.Node(name='events_file', interface=util.Function(function=write_bids_events_file,input_names=inspect.getargspec(write_bids_events_file)[0], output_names=['out_file']))
 
 	datasink = pe.Node(nio.DataSink(), name='datasink')
-	datasink.inputs.base_directory = path.join(bids_base,"preprocessing",workflow_name)
+	datasink.inputs.base_directory = path.join(out_dir,workflow_name)
 	datasink.inputs.parameterization = False
 	if not (strict or verbose):
 		datasink.inputs.ignore_exception = True
@@ -761,7 +777,7 @@ def bruker(bids_base, template,
 			])
 
 
-	workflow_config = {'execution': {'crashdump_dir': path.join(bids_base,'preprocessing/crashdump'),}}
+	workflow_config = {'execution': {'crashdump_dir': path.join(out_dir,'crashdump'),}}
 	if debug:
 		workflow_config['logging'] = {
 			'workflow_level':'DEBUG',
@@ -774,7 +790,7 @@ def bruker(bids_base, template,
 	workdir_name = workflow_name+"_work"
 	workflow = pe.Workflow(name=workdir_name)
 	workflow.connect(workflow_connections)
-	workflow.base_dir = path.join(bids_base,"preprocessing")
+	workflow.base_dir = path.join(out_dir)
 	workflow.config = workflow_config
 	workflow.write_graph(dotfilename=path.join(workflow.base_dir,workdir_name,"graph.dot"), graph2use="hierarchical", format="png")
 

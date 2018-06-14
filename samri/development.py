@@ -7,7 +7,7 @@ def dr_full():
 
 	bids_base = '~/ni_data/ofM.dr/bids'
 
-	animal_list = animal_multiselect()
+	animal_list = animal_multiselect(cage_treatments=['cFluDW','cFluDW_','cFluIP'])
 	bruker(bids_base, "~/ni_data/templates/dsurqec_200micron.nii",
 		registration_mask="~/ni_data/templates/dsurqec_200micron_mask.nii",
 		functional_match={'type':['cbv',],},
@@ -16,23 +16,42 @@ def dr_full():
 		actual_size=True,
 		functional_registration_method="composite",
 		negative_contrast_agent=True,
-		out_dir='~/ni_data/ofM.dr/preprocess',
+		out_dir='~/ni_data/ofM.dr/preprocessing',
 		)
 	bruker(bids_base, "~/ni_data/templates/dsurqec_200micron.nii",
 		registration_mask="~/ni_data/templates/dsurqec_200micron_mask.nii",
 		functional_match={'type':['bold',],},
 		structural_match={'acquisition':['TurboRARE','TurboRARElowcov'],},
-		#functional_match={'task':['JogB','CogB',],'acquisition':['EPIlowcov',],},
 		subjects=animal_list,
 		actual_size=True,
 		functional_registration_method="composite",
 		negative_contrast_agent=False,
-		out_dir='~/ni_data/ofM.dr/preprocess',
+		out_dir='~/ni_data/ofM.dr/preprocessing',
+		)
+	# Animal list selection needs fixing in LabbookDB database, so we do the following animals manually
+	bruker(bids_base, "~/ni_data/templates/dsurqec_200micron.nii",
+		registration_mask="~/ni_data/templates/dsurqec_200micron_mask.nii",
+		functional_match={'type':['cbv',],},
+		structural_match={'acquisition':['TurboRARE','TurboRARElowcov'],},
+		subjects=['4001','4005','4006','4007','4008','4009','4011','4012','4013'], # Known Resoponders
+		actual_size=True,
+		functional_registration_method="composite",
+		negative_contrast_agent=True,
+		out_dir='~/ni_data/ofM.dr/preprocessing',
+		)
+	bruker(bids_base, "~/ni_data/templates/dsurqec_200micron.nii",
+		registration_mask="~/ni_data/templates/dsurqec_200micron_mask.nii",
+		functional_match={'type':['bold',],},
+		structural_match={'acquisition':['TurboRARE','TurboRARElowcov'],},
+		subjects=['4001','4005','4006','4007','4008','4009','4011','4012','4013'], # Known Resoponders
+		actual_size=True,
+		functional_registration_method="composite",
+		negative_contrast_agent=False,
+		out_dir='~/ni_data/ofM.dr/preprocessing',
 		)
 	glm.l1('~/ni_data/ofM.dr/preprocessing/generic',
 		out_dir='~/ni_data/ofM.dr/l1',
 		workflow_name='generic',
-		#include={'subject':['6530','6532','6542','6548','6549','6552','6553','6556','6557']},
 		habituation="confound",
 		mask="~/ni_data/templates/DSURQEc_200micron_mask.nii.gz",
 		keep_work=True,
@@ -47,7 +66,7 @@ def dr_full():
 		mask_path='~/ni_data/templates/DSURQEc_200micron_mask.nii.gz',
 		save_as='~/ni_data/ofM.dr/bids/l1/generic/total_significance.csv'
 		)
-def bids_new():
+def more():
 	from labbookdb.report.development import animal_multiselect
 	from samri.pipelines import glm
 	from samri.pipelines.preprocess import bruker
@@ -55,43 +74,33 @@ def bids_new():
 	from samri.utilities import bids_autofind
 
 	bids_base = '~/ni_data/ofM.dr/bids'
-
-	animal_list = animal_multiselect()
 	bruker(bids_base, "~/ni_data/templates/dsurqec_200micron.nii",
 		registration_mask="~/ni_data/templates/dsurqec_200micron_mask.nii",
-		#functional_match={'acquisition':['EPIlowcov',],},
-		#structural_match={'acquisition':['TurboRARElowcov',]},
-		#functional_match={'task':['JogB','CogB',],'acquisition':['EPI',],},
-		#functional_match={'task':['JogB','CogB',],'acquisition':['EPIlowcov',],},
-		#functional_match={'task':['JogB'],'type':['cbv']},
-		#structural_match={'acquisition':['TurboRARElowcov']},
-		#subjects=animal_list,
-		#subjects=['6530','6532','6542','6548','6549','6552','6553','6556','6557'],
-		#subjects=['5673','5668','5675','6557'],
+		functional_match={'type':['cbv',],},
+		structural_match={'acquisition':['TurboRARE','TurboRARElowcov'],},
+		subjects=['4001','4005','4006','4007','4008','4009','4011','4012','4013'], # Known Resoponders
 		actual_size=True,
 		functional_registration_method="composite",
 		negative_contrast_agent=True,
+		out_dir='~/ni_data/ofM.dr/preprocessing',
 		)
-
-	glm.l1('~/ni_data/ofM.dr/bids/preprocessing/generic',
-		l1_dir='~/ni_data/ofM.dr/bids/l1/generic',
+	bruker(bids_base, "~/ni_data/templates/dsurqec_200micron.nii",
+		registration_mask="~/ni_data/templates/dsurqec_200micron_mask.nii",
+		functional_match={'type':['bold',],},
+		structural_match={'acquisition':['TurboRARE','TurboRARElowcov'],},
+		subjects=['4001','4005','4006','4007','4008','4009','4011','4012','4013'], # Known Resoponders
+		actual_size=True,
+		functional_registration_method="composite",
+		negative_contrast_agent=False,
+		out_dir='~/ni_data/ofM.dr/preprocessing',
+		)
+	glm.l1('~/ni_data/ofM.dr/preprocessing/generic',
+		out_dir='~/ni_data/ofM.dr/l1',
 		workflow_name='generic',
-		#include={'subject':['6530','6532','6542','6548','6549','6552','6553','6556','6557']},
 		habituation="confound",
 		mask="~/ni_data/templates/DSURQEc_200micron_mask.nii.gz",
 		keep_work=True,
 		)
-
-	substitutions = bids_autofind('~/ni_data/ofM.dr/bids/l1/generic/',
-		path_template="{bids_dir}/sub-{{subject}}/ses-{{session}}/sub-{{subject}}_ses-{{session}}_acq-{{acquisition}}_task-{{task}}_cbv_pfstat.nii.gz",
-		match_regex='.+/sub-(?P<sub>.+)/ses-(?P<ses>.+)/.*?_acq-(?P<acquisition>.+).*?_task-(?P<task>.+)_cbv_pfstat\.nii.gz',
-		)
-	iter_significant_signal('~/ni_data/ofM.dr/bids/l1/generic/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_acq-{acquisition}_task-{task}_cbv_pfstat.nii.gz',
-		substitutions=substitutions,
-		mask_path='~/ni_data/templates/DSURQEc_200micron_mask.nii.gz',
-		save_as='~/ni_data/ofM.dr/bids/l1/generic/total_significance.csv'
-		)
-
 
 def temporal_qc_separate():
 	import matplotlib.pyplot as plt

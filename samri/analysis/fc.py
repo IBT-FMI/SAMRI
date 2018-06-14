@@ -19,7 +19,7 @@ def add_fc_roi_data(data_path, seed_masker, brain_masker,
 	save_as="",
 	substitution={},
 	):
-	"""Return a per-subject volumetric image of the seed-based functional connectivity (FC) with respect to the `seed_masker` inside the `brain_masker`.
+	"""Return a volumetric image of the seed-based functional connectivity (FC) with respect to the `seed_masker` inside the `brain_masker`.
 
 	Parameters
 	----------

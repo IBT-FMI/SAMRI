@@ -217,42 +217,43 @@ def test_reg_qc(
 		sampling_percentage=0.33,
 		save_as="f_reg_quality.csv",
 		)
+
 def reg_cc(
-	radius=5,
-	autofind=False,
-	plot=False,
-	metrics = ['CC','GC','MI'],
-	):
-	from samri.utilities import bids_autofind
-	from samri.plotting.aggregate import registration_qc
-	from samri.report.registration import iter_measure_sim
-	from samri.typesetting import inline_anova
-	from samri.utilities import bids_substitution_iterator
+        path = "~/ni_data/ofM.dr/preprocessing/composite",
+        template = "~/ni_data/templates/DSURQEc_200micron_average.nii",
+        radius=5,
+        autofind=False,
+        plot=False,
+        save = "f_reg_quality.csv",
+        ):
+        from samri.utilities import bids_autofind
+        from samri.plotting.aggregate import registration_qc
+        from samri.report.registration import iter_measure_sim
+        from samri.typesetting import inline_anova
+        from samri.utilities import bids_substitution_iterator
 
-	if autofind:
-		path_template, substitutions = bids_autofind("~/ni_data/ofM.dr/preprocessing/composite","func")
-	else:
-		path_template = "{data_dir}/preprocessing/{preprocessing_dir}/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_acq-{acquisition}_task-{task}_cbv.nii.gz"
-		substitutions = bids_substitution_iterator(
-			["ofM", "ofMaF", "ofMcF1", "ofMcF2", "ofMpF"],
-			["4001","4007","4008","4011","5692","5694","5699","5700","5704","6255","6262"],
-			["CogB","JogB"],
-			"~/ni_data/ofM.dr/",
-			"composite",
-			acquisitions=['EPI','EPIlowcov'],
-			check_file_format=path_template,
-			)
+        if autofind:
+                path_template, substitutions = bids_autofind(path,"func")
+        else:
+                path_template = "{data_dir}/preprocessing/{preprocessing_dir}/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_acq-{acquisition}_task-{task}_cbv.nii.gz"
+                substitutions = bids_substitution_iterator(
+                        ["ofM", "ofMaF", "ofMcF1", "ofMcF2", "ofMpF"],
+                        ["4001","4007","4008","4011","5692","5694","5699","5700","5704","6255","6262"],
+                        ["CogB","JogB"],
+                        "~/ni_data/ofM.dr/",
+                        "composite",
+                        acquisitions=['EPI','EPIlowcov'],
+                        check_file_format=path_template,
+                        )
 
-
-	for metric in metrics:
-		df = iter_measure_sim(path_template, substitutions,
-			"~/ni_data/templates/DSURQEc_200micron_average.nii",
-			metric=metric,
-			radius_or_number_of_bins=radius,
-			sampling_strategy="Regular",
-			sampling_percentage=0.33,
-			save_as="f_reg_quality_" + metric +  ".csv",
-			)
+        df = iter_measure_sim(path_template, substitutions,
+                template,
+                metric="CC",
+                radius_or_number_of_bins=radius,
+                sampling_strategy="Regular",
+                sampling_percentage=0.33,
+                save_as=save,
+                )
 
 def metadata():
 	from samri.pipelines.extra_functions import get_data_selection

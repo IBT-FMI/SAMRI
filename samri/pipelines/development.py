@@ -139,65 +139,6 @@ def legacy_preprocessing():
 		workflow_name='legacy',
 		keep_work=True,
 		)
-def bids_l1():
-	from samri.pipelines import glm
-
-	glm.l1('~/ni_data/ofM.dr/bids/preprocessing/generic',
-		l1_dir='~/ni_data/ofM.dr/bids/l1/generic',
-		workflow_name='generic',
-		#include={'subject':['6530','6532','6542','6548','6549','6552','6553','6556','6557']},
-		habituation="confound",
-		mask="~/ni_data/templates/DSURQEc_200micron_mask.nii.gz",
-		keep_work=True,
-		)
-
-def cbv_composite(data_path="~/ni_data/ofM.dr/",
-	workflow_name='composite',
-	preprocessing_dir="preprocessing",
-	l1_dir="l1",
-	):
-	from samri.pipelines import preprocess, glm
-	#preprocessing.bruker(data_path,
-	#	#exclude_measurements=['20151027_121613_4013_1_1'],
-	#	functional_match={'task':['CogB','JogB']},
-	#	structural_match={'acquisition':['TurboRARE','TurboRARElowcov']},
-	#	#subjects=["4007","4008","4011","4012","5687","5688","5695","5689","5690","5691","5703","5704","5706"],
-	#	#subjects=["4007","4008","5687","5688","5704",
-	#	#	"5692","6262","5694","5700","6255","5699"],
-	#	#subjects=["4001","4011","5703","5706",],
-	#	workflow_name=workflow_name,
-	#	lowpass_sigma=2,
-	#	highpass_sigma=225,
-	#	very_nasty_bruker_delay_hack=True,
-	#	negative_contrast_agent=True,
-	#	functional_blur_xy=.4,
-	#	functional_registration_method="composite",
-	#	keep_work=True,
-	#	template="~/ni_data/templates/DSURQEc_200micron_average.nii",
-	#	registration_mask="~/ni_data/templates/DSURQEc_200micron_mask.nii.gz",
-	#	actual_size=True,
-	#	verbose=True,
-	#	)
-	#glm.l1(path.join(data_path,preprocessing_dir,workflow_name),
-	#	workflow_name=workflow_name,
-	#	# include={"subjects":["5689","5690","5691"]},
-	#	habituation="confound",
-	#	mask="~/ni_data/templates/DSURQEc_200micron_mask.nii.gz",
-	#	keep_work=True,
-	#	)
-	glm.l2_common_effect(path.join(data_path,l1_dir,workflow_name),
-		workflow_name="composite_subjects",
-		groupby="subject",
-		keep_work=True,
-		mask="~/ni_data/templates/DSURQEc_200micron_mask.nii.gz",
-		)
-	#glm.l2_common_effect(path.join(data_path,l1_dir,workflow_name),
-	#	workflow_name="composite_sessions_responders",
-	#	exclude={"scans":["EPI_BOLD_"],"subjects":["4001","4002","4003","4004","4006","4008","4009","5674","5703","5704","5706"]},
-	#	groupby="session",
-	#	keep_work=True,
-	#	mask="~/ni_data/templates/DSURQEc_200micron_mask.nii.gz",
-	#	)
 
 def anova_fc():
 	from samri.pipelines import preprocess, glm

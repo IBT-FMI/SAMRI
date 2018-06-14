@@ -4,7 +4,7 @@ from os import path
 
 from nilearn.input_data import NiftiMasker
 from scipy.io import loadmat
-from samri.report.utilities import add_roi_data, add_pattern_data
+from samri.report.utilities import roi_df, pattern_df
 from joblib import Parallel, delayed
 
 import statsmodels.formula.api as smf
@@ -82,7 +82,7 @@ def per_session(substitutions, roi_mask,
 	masker = NiftiMasker(mask_img=roi_mask)
 
 	n_jobs = mp.cpu_count()-2
-	dfs = Parallel(n_jobs=n_jobs, verbose=0, backend="threading")(map(delayed(add_roi_data),
+	dfs = Parallel(n_jobs=n_jobs, verbose=0, backend="threading")(map(delayed(roi_df),
 		[filename_template]*len(substitutions),
 		[masker]*len(substitutions),
 		substitutions,
@@ -111,7 +111,7 @@ def mean(img_path, mask_path):
 		print(img[mask])
 	else:
 		masker = NiftiMasker(mask_img=mask)
-		add_roi_data(img_path,masker)
+		roi_df(img_path,masker)
 
 def atlasassignment(data_path='~/ni_data/ofM.dr/bids/l2/anova/anova_zfstat.nii.gz',
 	null_label=0.0,
@@ -182,7 +182,7 @@ def analytic_pattern_per_session(substitutions, analytic_pattern,
 	pattern = nib.load(analytic_pattern)
 
 	n_jobs = mp.cpu_count()-2
-	dfs = Parallel(n_jobs=n_jobs, verbose=0, backend="threading")(map(delayed(add_pattern_data),
+	dfs = Parallel(n_jobs=n_jobs, verbose=0, backend="threading")(map(delayed(pattern_df),
 		[t_file_template]*len(substitutions),
 		[pattern]*len(substitutions),
 		substitutions,

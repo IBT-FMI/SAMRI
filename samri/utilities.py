@@ -16,7 +16,7 @@ def bids_autograb(bids_dir):
 
 def bids_autofind(bids_dir,
 	modality='',
-	path_template="{bids_dir}/sub-{{subject}}/ses-{{session}}/{modality}/sub-{{subject}}_ses-{{session}}_task-{{task}}.nii.gz",
+	path_template="{bids_dir}/sub-{{subject}}/ses-{{session}}/{modality}/sub-{{subject}}_ses-{{session}}_task-{{task}}_acq-{{acquisition}}.nii.gz",
 	match_regex='',
 	):
 	"""Automatically generate a BIDS path template and a substitution iterator (list of dicts, as produced by `samri.utilities.bids_substitution_iterator`, and used as a standard input SAMRI function input) from a BIDS-respecting directory.
@@ -26,7 +26,7 @@ def bids_autofind(bids_dir,
 	bids_dir : str
 		Path to BIDS-formatted directory
 	modality : {"func", "anat"}
-		Which modality to source data for (corrently only supports "func", and "anat" - ideally we could extend this to include "dwi").
+		Which modality to source data for (currently only supports "func", and "anat" - ideally we could extend this to include "dwi").
 
 	Returns
 	-------
@@ -67,7 +67,7 @@ def bids_autofind(bids_dir,
 			raise ValueError("The reconstructed file path based on the substitution dictionary and the path template, is not identical to the corresponding path, found by `nipype.interfaces.io.DataFinder`. See string values above.")
 		substitutions.append(substitution)
 
-	return substitutions
+	return path_template, substitutions
 
 def bids_substitution_iterator(sessions, subjects,
 	tasks=[''],

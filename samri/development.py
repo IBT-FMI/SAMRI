@@ -224,7 +224,7 @@ def reg_cc(
         radius=5,
         autofind=False,
         plot=False,
-        save = "f_reg_quality.csv",
+        save = "f_reg_quality",
         metrics = ['CC','GC','MI'],
         ):
         from samri.utilities import bids_autofind
@@ -244,7 +244,7 @@ def reg_cc(
                         "~/ni_data/ofM.dr/",
                         "composite",
                         acquisitions=['EPI','EPIlowcov'],
-                        check_file_format=path_template,
+                        validate_for_template=path_template,
                         )
 
 
@@ -255,7 +255,7 @@ def reg_cc(
                         radius_or_number_of_bins=radius,
                         sampling_strategy="Regular",
                         sampling_percentage=0.33,
-                        save_as= save + “_” + metric +  ".csv",
+			save_as= save + "_" + metric +  ".csv",
                         )
 
 

@@ -282,7 +282,7 @@ def label_connectivity(workflow_name='DSURQEc_drp', labels=['cortex']):
 
 	df.to_csv('~/ni_data/ofM.dr/bids/fc/{}/{}_summary.csv'.format(workflow_name,'-'.join(labels)))
 
-def signal():
+def total_significance():
 	from samri.report.snr import iter_significant_signal
 	from samri.utilities import bids_autofind
 

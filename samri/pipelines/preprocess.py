@@ -10,8 +10,6 @@ import nipype.interfaces.io as nio
 import nipype.interfaces.utility as util
 import nipype.pipeline.engine as pe
 import pandas as pd
-from bids.grabbids import BIDSLayout
-from bids.grabbids import BIDSValidator
 from nipype.interfaces import ants, afni, bru2nii, fsl, nipy
 from nipype.interfaces.ants import legacy
 
@@ -19,7 +17,7 @@ from samri.fetch.templates import fetch_rat_waxholm, fetch_mouse_DSURQE
 from samri.pipelines.extra_functions import get_data_selection, get_bids_scan, write_bids_metadata_file, write_bids_events_file, force_dummy_scans, BIDS_METADATA_EXTRACTION_DICTS
 from samri.pipelines.extra_interfaces import VoxelResize, FSLOrient
 from samri.pipelines.nodes import *
-from samri.pipelines.utils import bids_naming, ss_to_path, sss_filename, fslmaths_invert_values
+from samri.pipelines.utils import bids_naming, bids_data_selection, filter_data, fslmaths_invert_values, ss_to_path, sss_filename
 from samri.utilities import N_PROCS
 
 DUMMY_SCANS=10
@@ -33,65 +31,6 @@ def divideby_10(x):
 	"""This is a wrapper function needed in order for nipype workflow connections to accept inline division."""
 	return x/10.
 
-def filterData(df, col_name, entries):
-
-	res_df = pd.DataFrame()
-	in_df = df[col_name].dropna().unique().tolist()
-	for entry in entries:
-		if(entry in in_df):
-			_df = df[df[col_name] == entry]
-			res_df = res_df.append(_df)
-	return res_df
-
-def bids_data_selection(base, structural_match, functional_match, subjects, sessions):
-	validate = BIDSValidator()
-	for x in os.walk(base):
-		print(x[0])
-		print(validate.is_bids(x[0]))
-	layout = BIDSLayout(base)
-	df = layout.as_data_frame()
-	# drop event files
-	df = df[df.type != 'events']
-	# rm .json
-	df = df.loc[df.path.str.contains('.nii')]
-	# generate scan types for later
-	df['scan_type'] = ""
-	#print(df.path.str.startswith('task', beg=0,end=len('task')))
-	beg = df.path.str.find('task-')
-	end = df.path.str.find('.')
-	#df.loc[df.modality == 'func', 'scan_type'] = 'acq-'+df['acq']+'_task-'+  df.path.str.partition('task-')[2].str.partition('.')[0]
-	#df.loc[df.modality == 'anat', 'scan_type'] = 'acq-'+df['acq']+'_' + df['type']
-	#TODO: fix task!=type
-	df.loc[df.modality == 'func', 'task'] = df.path.str.partition('task-')[2].str.partition('_')[0]
-	df.loc[df.modality == 'func', 'scan_type'] = 'task-' + df['task'] + '_acq-'+ df['acq']
-	df.loc[df.modality == 'anat', 'scan_type'] = 'acq-'+df['acq'] +'_' + df['type']
-
-	res_df = pd.DataFrame()
-	if(functional_match):
-		_df = df
-		try:
-			for match in functional_match.keys():
-				_df = filterData(_df, match, functional_match[match])
-				res_df = res_df.append(_df)
-		except:
-			pass
-	if(structural_match):
-		_df = df
-		try:
-			for match in structural_match.keys():
-				_df = filterData(_df, match, structural_match[match])
-				res_df = res_df.append(_df)
-		except:
-			pass
-	df = res_df
-	if(subjects):
-		df = filterData(df, 'subject', subjects)
-	if(sessions):
-		df = filterData(df, 'session', sessions)
-	return df
-
-
-
 def legacy_bruker(bids_base, template,
 	autorotate=False,
 	debug=False,
@@ -100,6 +39,7 @@ def legacy_bruker(bids_base, template,
 	keep_work=False,
 	negative_contrast_agent=False,
 	n_procs=N_PROCS,
+	out_base=None,
 	realign="time",
 	registration_mask=False,
 	sessions=[],
@@ -108,7 +48,7 @@ def legacy_bruker(bids_base, template,
 	subjects=[],
 	tr=1,
 	verbose=False,
-	workflow_name="generic",
+	workflow_name='generic',
 	):
 	'''
 	Legacy realignment and registration workflow representative of the tweaks and workarounds commonly used in the pre-SAMRI period.
@@ -138,6 +78,8 @@ def legacy_bruker(bids_base, template,
 		This is commonly used for iron nano-particle Cerebral Blood Volume (CBV) measurements.
 	n_procs : int, optional
 		Number of processors to maximally use for the workflow; if unspecified a best guess will be estimate based on hardware (but not on current load).
+	out_dir : str, optional
+		Output directory --- inside which a directory named `workflow_name`(as well as associated directories) will be created.
 	realign : {"space","time","spacetime",""}, optional
 		Parameter that dictates slictiming correction and realignment of slices. "time" (FSL.SliceTimer) is default, since it works safely. Use others only with caution!
 	registration_mask : str, optional
@@ -161,6 +103,11 @@ def legacy_bruker(bids_base, template,
 		Top level name for the output directory.
 	'''
 
+	if not out_dir:
+		out_dir = path.join(bids_base,'preprocessing')
+	else:
+		out_dir = path.abspath(path.expanduser(out_dir))
+
 	if template:
 		if template == "mouse":
 			from samri.fetch.templates import fetch_mouse_DSURQE
@@ -182,7 +129,6 @@ def legacy_bruker(bids_base, template,
 
 	# we start to define nipype workflow elements (nodes, connections, meta)
 	subjects_sessions = data_selection[["subject","session"]].drop_duplicates().values.tolist()
-
 	_func_ind = data_selection[data_selection["modality"] == "func"]
 	func_ind = _func_ind.index.tolist()
 
@@ -228,7 +174,7 @@ def legacy_bruker(bids_base, template,
 	f_deleteorient.inputs.main_option = 'deleteorient'
 
 	datasink = pe.Node(nio.DataSink(), name='datasink')
-	datasink.inputs.base_directory = path.join(bids_base,"preprocessing",workflow_name)
+	datasink.inputs.base_directory = path.join(out_dir,workflow_name)
 	datasink.inputs.parameterization = False
 	if not (strict or verbose):
 		datasink.inputs.ignore_exception = True
@@ -435,7 +381,7 @@ def legacy_bruker(bids_base, template,
 	workdir_name = workflow_name+"_work"
 	workflow = pe.Workflow(name=workdir_name)
 	workflow.connect(workflow_connections)
-	workflow.base_dir = path.join(bids_base,"preprocessing")
+	workflow.base_dir = path.join(out_dir)
 	workflow.config = workflow_config
 	workflow.write_graph(dotfilename=path.join(workflow.base_dir,workdir_name,"graph.dot"), graph2use="hierarchical", format="png")
 
@@ -454,6 +400,7 @@ def bruker(bids_base, template,
 	keep_work=False,
 	negative_contrast_agent=False,
 	n_procs=N_PROCS,
+	out_dir=None,
 	realign="time",
 	registration_mask=False,
 	sessions=[],
@@ -462,7 +409,7 @@ def bruker(bids_base, template,
 	subjects=[],
 	tr=1,
 	verbose=False,
-	workflow_name="generic",
+	workflow_name='generic',
 	):
 	'''
 	Generic preprocessing and registration workflow for small animal data in BIDS format.
@@ -497,6 +444,8 @@ def bruker(bids_base, template,
 		This is commonly used for iron nano-particle Cerebral Blood Volume (CBV) measurements.
 	n_procs : int, optional
 		Number of processors to maximally use for the workflow; if unspecified a best guess will be estimate based on hardware (but not on current load).
+	out_dir : str, optional
+		Output directory --- inside which a directory named `workflow_name`(as well as associated directories) will be created.
 	realign : {"space","time","spacetime",""}, optional
 		Parameter that dictates slictiming correction and realignment of slices. "time" (FSL.SliceTimer) is default, since it works safely. Use others only with caution!
 	registration_mask : str, optional
@@ -519,6 +468,11 @@ def bruker(bids_base, template,
 	workflow_name : str, optional
 		Top level name for the output directory.
 	'''
+
+	if not out_dir:
+		out_dir = path.join(bids_base,'preprocessing')
+	else:
+		out_dir = path.abspath(path.expanduser(out_dir))
 
 	if template:
 		if template == "mouse":
@@ -569,7 +523,7 @@ def bruker(bids_base, template,
 	events_file = pe.Node(name='events_file', interface=util.Function(function=write_bids_events_file,input_names=inspect.getargspec(write_bids_events_file)[0], output_names=['out_file']))
 
 	datasink = pe.Node(nio.DataSink(), name='datasink')
-	datasink.inputs.base_directory = path.join(bids_base,"preprocessing",workflow_name)
+	datasink.inputs.base_directory = path.join(out_dir,workflow_name)
 	datasink.inputs.parameterization = False
 	if not (strict or verbose):
 		datasink.inputs.ignore_exception = True
@@ -823,7 +777,7 @@ def bruker(bids_base, template,
 			])
 
 
-	workflow_config = {'execution': {'crashdump_dir': path.join(bids_base,'preprocessing/crashdump'),}}
+	workflow_config = {'execution': {'crashdump_dir': path.join(out_dir,'crashdump'),}}
 	if debug:
 		workflow_config['logging'] = {
 			'workflow_level':'DEBUG',
@@ -836,7 +790,7 @@ def bruker(bids_base, template,
 	workdir_name = workflow_name+"_work"
 	workflow = pe.Workflow(name=workdir_name)
 	workflow.connect(workflow_connections)
-	workflow.base_dir = path.join(bids_base,"preprocessing")
+	workflow.base_dir = path.join(out_dir)
 	workflow.config = workflow_config
 	workflow.write_graph(dotfilename=path.join(workflow.base_dir,workdir_name,"graph.dot"), graph2use="hierarchical", format="png")
 

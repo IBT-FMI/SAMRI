@@ -1,6 +1,92 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import print_function, division, unicode_literals, absolute_import
+import pandas as pd
+from bids.grabbids import BIDSLayout
+from bids.grabbids import BIDSValidator
+from copy import deepcopy
+
+def bids_data_selection(base, structural_match, functional_match, subjects, sessions,
+	verbose=False,
+	):
+	validate = BIDSValidator()
+	if verbose:
+		for x in os.walk(base):
+			print(x[0])
+			if validate.is_bids(x[0]):
+				print("Is not BIDS-formatted.")
+			else:
+				print("Detected!")
+	layout = BIDSLayout(base)
+	df = layout.as_data_frame()
+	# drop event files
+	df = df[df.type != 'events']
+	# rm .json
+	df = df.loc[df.path.str.contains('.nii')]
+	# generate scan types for later
+	df['scan_type'] = ""
+	#print(df.path.str.startswith('task', beg=0,end=len('task')))
+	beg = df.path.str.find('task-')
+	end = df.path.str.find('.')
+	#df.loc[df.modality == 'func', 'scan_type'] = 'acq-'+df['acq']+'_task-'+  df.path.str.partition('task-')[2].str.partition('.')[0]
+	#df.loc[df.modality == 'anat', 'scan_type'] = 'acq-'+df['acq']+'_' + df['type']
+	#TODO: fix task!=type
+	df.loc[df.modality == 'func', 'task'] = df.path.str.partition('task-')[2].str.partition('_')[0]
+	df.loc[df.modality == 'func', 'scan_type'] = 'task-' + df['task'] + '_acq-'+ df['acq']
+	df.loc[df.modality == 'anat', 'scan_type'] = 'acq-'+df['acq'] +'_' + df['type']
+
+	#TODO: The following should be collapsed into one criterion category
+	if functional_match or structural_match:
+		res_df = pd.DataFrame()
+		if functional_match:
+			_df = deepcopy(df)
+			try:
+				for match in functional_match.keys():
+					_df = filter_data(_df, match, functional_match[match])
+					res_df = res_df.append(_df)
+			except:
+				pass
+		if structural_match:
+			_df = deepcopy(df)
+			try:
+				for match in structural_match.keys():
+					_df = filter_data(_df, match, structural_match[match])
+					res_df = res_df.append(_df)
+			except:
+				pass
+		df = res_df
+
+	if(subjects):
+		df = filter_data(df, 'subject', subjects)
+	if(sessions):
+		df = filter_data(df, 'session', sessions)
+	return df
+
+def filter_data(df, col_name, entries):
+	"""Filter a Pandas DataFrame if the `col_name` entry corresponds to any item in the `entries` list.
+
+	Parameters
+	----------
+
+	df : pandas.DataFrame
+		A Pandas DataFrame with a column name corresponding to the value of `col_name`.
+	col_name : str
+		The name of a column in `df`.
+	entries : list
+		A list of values which may be present on the `col_name` column of the `df` DataFrame.
+
+	Returns
+	-------
+	pandas.DataFrame
+		A filtered Pandas DataFrame.
+	"""
+	res_df = pd.DataFrame()
+	in_df = df[col_name].dropna().unique().tolist()
+	for entry in entries:
+		if(entry in in_df):
+			_df = df[df[col_name] == entry]
+			res_df = res_df.append(_df)
+	return res_df
 
 def parse_paravision_date(pv_date):
 	"""Convert ParaVision-style datetime string to Python datetime object.
@@ -158,10 +244,14 @@ def bids_naming(subject_session, scan_type, metadata,
 	selection =  metadata[(metadata['subject']==subject)&(metadata['session']==session)&(metadata['scan_type']==scan_type)]
 	if selection.empty:
 		return
-	task = selection['task']
-	if not task.isnull().all():
-		task = task.item()
-		filename += '_task-{}'.format(task)
+	try:
+		task = selection['task']
+	except KeyError:
+		pass
+	else:
+		if not task.isnull().all():
+			task = task.item()
+			filename += '_task-{}'.format(task)
 	if 'acq' in extra:
 		acq = selection['acquisition']
 		if not acq.isnull().all():

@@ -28,8 +28,8 @@ def l1(preprocessing_dir,
 	lowpass_sigma=False,
 	include={},
 	keep_work=False,
-	l1_dir="",
-	mask="~/ni_data/templates/ds_QBI_chr_bin.nii.gz",
+	out_dir="",
+	mask="",
 	match_regex='sub-(?P<sub>[a-zA-Z0-9]+)/ses-(?P<ses>[a-zA-Z0-9]+)/func/.*?_task-(?P<task>[a-zA-Z0-9]+)_acq-(?P<acq>[a-zA-Z0-9]+)_(?P<mod>[a-zA-Z0-9]+)\.(?:tsv|nii|nii\.gz)',
 	nprocs=N_PROCS,
 	tr=1,
@@ -57,7 +57,7 @@ def l1(preprocessing_dir,
 	keep_work : bool, optional
 		Whether to keep the work directory (containing all the intermediary workflow steps, as managed by nipypye).
 		This is useful for debugging and quality control.
-	l1_dir : str, optional
+	out_dir : str, optional
 		Path to the directory inside which both the working directory and the output directory will be created.
 	mask : str, optional
 		Path to the brain mask which shall be used to define the brain volume in the analysis.
@@ -70,12 +70,14 @@ def l1(preprocessing_dir,
 	tr : int, optional
 		Repetition time, in seconds.
 	workflow_name : str, optional
-		Name of the workflow; this will also be the name of the final output directory produced under `l1_dir`.
+		Name of the workflow; this will also be the name of the final output directory produced under `out_dir`.
 	"""
 
-	preprocessing_dir = path.expanduser(preprocessing_dir)
-	if not l1_dir:
-		l1_dir = path.abspath(path.join(preprocessing_dir,"..","..","l1"))
+	preprocessing_dir = path.abspath(path.expanduser(preprocessing_dir))
+	if not out_dir:
+		out_dir = path.join(bids_base,'l1')
+	else:
+		out_dir = paht.abspath(path.expanduser(out_dir))
 
 	datafind = nio.DataFinder()
 	datafind.inputs.root_paths = preprocessing_dir
@@ -128,6 +130,7 @@ def l1(preprocessing_dir,
 		raise ValueError('The value you have provided for the `habituation` parameter, namely "{}", is invalid. Please choose one of: {"confound","in_main_contrast","separate_contrast"}'.format(habituation))
 
 	modelgen = pe.Node(interface=fsl.FEATModel(), name='modelgen')
+	modelgen.inputs.ignore_exception = True
 
 	glm = pe.Node(interface=fsl.GLM(), name='glm', iterfield='design')
 	glm.inputs.out_cope = "cope.nii.gz"
@@ -138,6 +141,7 @@ def l1(preprocessing_dir,
 	glm.inputs.out_p_name = "p_stat.nii.gz"
 	if mask:
 		glm.inputs.mask = path.abspath(path.expanduser(mask))
+	glm.inputs.ignore_exception = True
 
 	cope_filename = pe.Node(name='cope_filename', interface=util.Function(function=bids_dict_to_source,input_names=inspect.getargspec(bids_dict_to_source)[0], output_names=['filename']))
 	cope_filename.inputs.source_format = "sub-{subject}_ses-{session}_acq-{acquisition}_task-{task}_{modality}_cope.nii.gz"
@@ -153,7 +157,7 @@ def l1(preprocessing_dir,
 	pfstat_filename.inputs.source_format = "sub-{subject}_ses-{session}_acq-{acquisition}_task-{task}_{modality}_pfstat.nii.gz"
 
 	datasink = pe.Node(nio.DataSink(), name='datasink')
-	datasink.inputs.base_directory = path.join(l1_dir,workflow_name)
+	datasink.inputs.base_directory = path.join(out_dir,workflow_name)
 	datasink.inputs.parameterization = False
 
 	workflow_connections = [
@@ -208,13 +212,13 @@ def l1(preprocessing_dir,
 	workdir_name = workflow_name+"_work"
 	workflow = pe.Workflow(name=workdir_name)
 	workflow.connect(workflow_connections)
-	workflow.base_dir = l1_dir
-	workflow.config = {"execution": {"crashdump_dir": path.join(l1_dir,"crashdump")}}
+	workflow.base_dir = out_dir
+	workflow.config = {"execution": {"crashdump_dir": path.join(out_dir,"crashdump")}}
 	workflow.write_graph(dotfilename=path.join(workflow.base_dir,workdir_name,"graph.dot"), graph2use="hierarchical", format="png")
 
 	workflow.run(plugin="MultiProc",  plugin_args={'n_procs' : nprocs})
 	if not keep_work:
-		shutil.rmtree(path.join(l1_dir,workdir_name))
+		shutil.rmtree(path.join(out_dir,workdir_name))
 
 def getlen(a):
 	return len(a)

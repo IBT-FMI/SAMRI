@@ -329,30 +329,3 @@ def multi(timecourses,
 		save_as = path.abspath(path.expanduser(save_as))
 		plt.savefig(save_as)
 
-if __name__ == '__main__':
-	# plot_fsl_design("~/ni_data/ofM.dr/level1/first_level/_condition_ofM_subject_4001/modelgen/run0.mat")
-	# stim = {"durations":[[20.0], [20.0], [20.0], [20.0], [20.0], [20.0]], "onsets":[[172.44299999999998], [352.443], [532.443], [712.443], [892.443], [1072.443]]}
-	# plot_stim_design("~/level1/first_level/_condition_ERC_ofM_subject_5503/_scan_type_T2_TurboRARE/_scan_type_EPI_CBV_alej/modelgen/run0.mat",stim)
-	# plot_stim_design(
-		# "~/run0_dg.mat",
-		# "~/report_dg.rst"
-		# )
-
-	# plt.style.use(u'seaborn-darkgrid')
-	# plt.style.use(u'ggplot')
-	#
-	roi_based(
-		roi="~/ni_data/templates/roi/f_dr_chr_bin.nii.gz",
-		events_file_template="~/ni_data/ofM.dr/preprocessing/{workflow}/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_task-{scan}_events.tsv",
-		beta_file_template="~/ni_data/ofM.dr/l1/{workflow}/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_task-{scan}_cope.nii.gz",
-		ts_file_template="~/ni_data/ofM.dr/preprocessing/{workflow}/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_task-{scan}.nii.gz",
-		design_file_template="~/ni_data/ofM.dr/l1/{workflow}_work/_subject_session_scan_{subject}.{session}.{scan}/modelgen/run0.mat",
-		substitutions={"workflow":"composite","subject":4007,"session":"ofM_cF2","scan":"EPI_CBV_jb_long"},
-		scale_design=3,
-		)
-
-	# roi_based(subject=4007, roi="dr", workflows=["generic"], melodic_hit=5)
-	# roi_based(subject=4001, roi="dr", workflows=["generic"])
-	# roi_based(subject=4012, workflows=["norealign","generic"], melodic_hit=5)
-	# roi_based(subject=4012, session="ofM_cF1", workflows=["norealign","generic"])
-	plt.show()

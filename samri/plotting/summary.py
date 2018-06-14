@@ -18,7 +18,7 @@ from os import path
 from statsmodels.sandbox.stats.multicomp import multipletests
 
 import samri.plotting.maps as maps
-from samri.report.utilities import add_pattern_data
+from samri.report.utilities import pattern_df
 from samri.plotting import maps, timeseries
 
 try: FileNotFoundError

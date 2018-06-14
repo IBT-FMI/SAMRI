@@ -259,7 +259,7 @@ def reg_cc(
 
         for metric in metrics:
                 df = iter_measure_sim(path_template, substitutions,
-                        "~/ni_data/templates/DSURQEc_200micron_average.nii",
+                        template,
                         metric=metric,
                         radius_or_number_of_bins=radius,
                         sampling_strategy="Regular",

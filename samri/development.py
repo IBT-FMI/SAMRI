@@ -230,7 +230,7 @@ def test_reg_qc(
 def reg_cc(
         path = "~/ni_data/ofM.dr/preprocessing/composite",
         template = "~/ni_data/templates/DSURQEc_200micron_average.nii",
-        radius=5,
+        radius=8,
         autofind=False,
         plot=False,
         save = "f_reg_quality",

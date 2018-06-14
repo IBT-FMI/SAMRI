@@ -225,6 +225,7 @@ def reg_cc(
         autofind=False,
         plot=False,
         save = "f_reg_quality.csv",
+        metrics = ['CC','GC','MI'],
         ):
         from samri.utilities import bids_autofind
         from samri.plotting.aggregate import registration_qc
@@ -246,14 +247,17 @@ def reg_cc(
                         check_file_format=path_template,
                         )
 
-        df = iter_measure_sim(path_template, substitutions,
-                template,
-                metric="CC",
-                radius_or_number_of_bins=radius,
-                sampling_strategy="Regular",
-                sampling_percentage=0.33,
-                save_as=save,
-                )
+
+        for metric in metrics:
+                df = iter_measure_sim(path_template, substitutions,
+                        "~/ni_data/templates/DSURQEc_200micron_average.nii",
+                        metric=metric,
+                        radius_or_number_of_bins=radius,
+                        sampling_strategy="Regular",
+                        sampling_percentage=0.33,
+                        save_as= save + “_” + metric +  ".csv",
+                        )
+
 
 def metadata():
 	from samri.pipelines.extra_functions import get_data_selection

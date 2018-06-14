@@ -5,11 +5,57 @@ import scipy.stats as sps
 import multiprocessing as mp
 from os import path
 from joblib import Parallel, delayed
+from samri.utilities import collapse
 
 try:
 	FileNotFoundError
 except NameError:
 	FileNotFoundError = IOError
+
+def threshold_volume(in_file,
+	masker='',
+	threshold=45,
+	threshold_is_percentile=True,
+	):
+	"""Return the volume which lies above a given threshold in a NIfTI (implicitly, in the volume units of the respective NIfTI).
+
+	Parameters
+	----------
+	in_file : str
+		Path to a NIfTI file.
+		4D files will be collapsed to 3D using the mean function.
+	masker : str or nilearn.NiftiMasker, optional
+		Path to a NIfTI file containing a mask (1 and 0 values) or a `nilearn.NiftiMasker` object.
+		NOT YET SUPPORTED!
+	threshold : float, optional
+		A float giving the voxel value threshold.
+	threshold_is_percentile : bool, optional
+		Whether `threshold` is to be interpreted not literally, but as a percentile of the data matrix.
+		This is useful for making sure that the volume estimation is not susceptible to the absolute value range, but only the value distribution.
+
+	Returns
+	-------
+	float
+		The volume (in volume units of the respective NIfTI) containing values above the given threshold.
+	"""
+
+	in_file = path.abspath(path.expanduser(in_file))
+	img = nib.load(in_file)
+	if img.header['dim'][0] > 3:
+		img = collapse(img)
+	elif img.header['dim'][0] > 4:
+		raise ValueError("Files with more than 4 dimensions are not currently supported.")
+	data = img.get_data()
+	x_len = (img.affine[0][0]**2+img.affine[0][1]**2+img.affine[0][2]**2)**(1/2.)
+	y_len = (img.affine[1][0]**2+img.affine[1][1]**2+img.affine[1][2]**2)**(1/2.)
+	z_len = (img.affine[2][0]**2+img.affine[2][1]**2+img.affine[2][2]**2)**(1/2.)
+	voxel_volume = x_len*y_len*z_len
+	if threshold_is_percentile:
+		threshold = np.percentile(data,threshold)
+	threshold_voxels = (data > threshold).sum()
+	threshold_volume = voxel_volume * threshold_voxels
+
+	return threshold_volume
 
 def significant_signal(data_path,
 	substitution={},

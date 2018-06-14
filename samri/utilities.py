@@ -1,5 +1,7 @@
 import multiprocessing
+import nibabel as nib
 import nipype.interfaces.io as nio
+import numpy as np
 from itertools import product
 from os import path
 from bids.grabbids import BIDSLayout
@@ -138,3 +140,17 @@ def bids_substitution_iterator(sessions, subjects,
 		else:
 			substitutions.append(substitution)
 	return substitutions
+
+def collapse(img):
+	ndim = 0
+	data = img.get_data()
+	for i in range(len(img.header['dim'])-1):
+		current_dim = img.header['dim'][i+1]
+		if current_dim == 1:
+			break
+		ndim += 1
+	img.header['dim'][0] = ndim
+	img.header['pixdim'][ndim+1:] = 0
+	data = np.mean(data,axis=(ndim-1))
+	img = nib.nifti1.Nifti1Image(data, img.affine, img.header)
+	return img

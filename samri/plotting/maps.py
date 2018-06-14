@@ -16,7 +16,7 @@ from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 
 from samri.fetch.local import roi_from_atlaslabel
 from samri.plotting.utilities import QUALITATIVE_COLORSET
-from samri.utils import collapse
+from samri.utilities import collapse
 
 COLORS_PLUS = plt.cm.autumn(np.linspace(0., 1, 128))
 COLORS_MINUS = plt.cm.winter(np.linspace(0, 1, 128))

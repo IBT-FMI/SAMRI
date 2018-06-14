@@ -1,5 +1,7 @@
 import multiprocessing
+import nibabel as nib
 import nipype.interfaces.io as nio
+import numpy as np
 from itertools import product
 from os import path
 from bids.grabbids import BIDSLayout

@@ -104,7 +104,7 @@ def scaled_plot(stat_map, template, fig, ax,
 	Axis to draw to.
 
 	overlay: string or array_like
-	A path to a NIfTI file, or a nibabel object (e.g. Nifti1Image), giving an image fr which to draw the contours on top of the statistic plot.
+	A path to a NIfTI file, or a nibabel object (e.g. Nifti1Image), giving an image for which to draw the contours on top of the statistic plot.
 
 	"""
 	# Make sure that if the variables are paths, they are absolute

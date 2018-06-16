@@ -393,7 +393,7 @@ def legacy_bruker(bids_base, template,
 			shutil.rmtree(workdir)
 		except OSError as e:
 			if str(e) == 'Cannot call rmtree on a symbolic link':
-				logger.error('Not deleting top level workdir (`{}`), as it is a symlink. Deleinng only contents instead'.format(workdir))
+				print('Not deleting top level workdir (`{}`), as it is a symlink. Deleinng only contents instead'.format(workdir))
 				for file_object in os.listdir(workdir):
 					file_object_path = os.path.join(workdir, file_object)
 					if os.path.isfile(file_object_path):
@@ -816,7 +816,7 @@ def bruker(bids_base, template,
 			shutil.rmtree(workdir)
 		except OSError as e:
 			if str(e) == 'Cannot call rmtree on a symbolic link':
-				logger.error('Not deleting top level workdir (`{}`), as it is a symlink. Deleinng only contents instead'.format(workdir))
+				print('Not deleting top level workdir (`{}`), as it is a symlink. Deleinng only contents instead'.format(workdir))
 				for file_object in os.listdir(workdir):
 					file_object_path = os.path.join(workdir, file_object)
 					if os.path.isfile(file_object_path):

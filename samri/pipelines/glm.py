@@ -77,7 +77,7 @@ def l1(preprocessing_dir,
 	if not out_dir:
 		out_dir = path.join(bids_base,'l1')
 	else:
-		out_dir = paht.abspath(path.expanduser(out_dir))
+		out_dir = path.abspath(path.expanduser(out_dir))
 
 	datafind = nio.DataFinder()
 	datafind.inputs.root_paths = preprocessing_dir
@@ -274,7 +274,7 @@ def seed_fc(preprocessing_dir,
 	if not out_dir:
 		out_dir = path.join(bids_base,'l1')
 	else:
-		out_dir = paht.abspath(path.expanduser(out_dir))
+		out_dir = path.abspath(path.expanduser(out_dir))
 
 	datafind = nio.DataFinder()
 	datafind.inputs.root_paths = preprocessing_dir

@@ -379,6 +379,7 @@ def legacy_bruker(bids_base, template,
 			}
 
 	workdir_name = workflow_name+"_work"
+	#this gives the name of the workdir, the output name is passed to the datasink
 	workflow = pe.Workflow(name=workdir_name)
 	workflow.connect(workflow_connections)
 	workflow.base_dir = path.join(out_dir)
@@ -387,7 +388,20 @@ def legacy_bruker(bids_base, template,
 
 	workflow.run(plugin="MultiProc", plugin_args={'n_procs' : n_procs, 'memory_gb' : 500})
 	if not keep_work:
-		shutil.rmtree(path.join(workflow.base_dir,workdir_name))
+		workdir = path.join(workflow.base_dir,workdir_name)
+		try:
+			shutil.rmtree(workdir)
+		except OSError as e:
+			if str(e) == 'Cannot call rmtree on a symbolic link':
+				logger.error('Not deleting top level workdir (`{}`), as it is a symlink. Deleinng only contents instead'.format(workdir))
+				for file_object in os.listdir(workdir):
+					file_object_path = os.path.join(workdir, file_object)
+					if os.path.isfile(file_object_path):
+						os.unlink(file_object_path)
+					else:
+						shutil.rmtree(file_object_path)
+			else:
+				raise OSError(str(e))
 
 
 def bruker(bids_base, template,
@@ -788,6 +802,7 @@ def bruker(bids_base, template,
 			}
 
 	workdir_name = workflow_name+"_work"
+	#this gives the name of the workdir, the output name is passed to the datasink
 	workflow = pe.Workflow(name=workdir_name)
 	workflow.connect(workflow_connections)
 	workflow.base_dir = path.join(out_dir)
@@ -796,5 +811,17 @@ def bruker(bids_base, template,
 
 	workflow.run(plugin="MultiProc", plugin_args={'n_procs' : n_procs, 'memory_gb' : 500})
 	if not keep_work:
-		shutil.rmtree(path.join(workflow.base_dir,workdir_name))
-
+		workdir = path.join(workflow.base_dir,workdir_name)
+		try:
+			shutil.rmtree(workdir)
+		except OSError as e:
+			if str(e) == 'Cannot call rmtree on a symbolic link':
+				logger.error('Not deleting top level workdir (`{}`), as it is a symlink. Deleinng only contents instead'.format(workdir))
+				for file_object in os.listdir(workdir):
+					file_object_path = os.path.join(workdir, file_object)
+					if os.path.isfile(file_object_path):
+						os.unlink(file_object_path)
+					else:
+						shutil.rmtree(file_object_path)
+			else:
+				raise OSError(str(e))

@@ -18,7 +18,7 @@ from samri.pipelines.extra_functions import select_from_datafind_df
 from samri.pipelines.utils import bids_dict_to_source, ss_to_path, iterfield_selector, datasource_exclude, bids_dict_to_dir
 from samri.utilities import N_PROCS
 
-N_PROCS=max(N_PROCS-8, 2)
+N_PROCS=max(N_PROCS-2, 1)
 
 def l1(preprocessing_dir,
 	bf_path = '~/ni_data/irfs/chr_beta1.txt',
@@ -141,6 +141,7 @@ def l1(preprocessing_dir,
 	glm.inputs.out_p_name = "p_stat.nii.gz"
 	if mask:
 		glm.inputs.mask = path.abspath(path.expanduser(mask))
+	glm.interface.estimated_memory_gb = 6
 	glm.inputs.ignore_exception = True
 
 	cope_filename = pe.Node(name='cope_filename', interface=util.Function(function=bids_dict_to_source,input_names=inspect.getargspec(bids_dict_to_source)[0], output_names=['filename']))
@@ -193,6 +194,7 @@ def l1(preprocessing_dir,
 	if highpass_sigma or lowpass_sigma:
 		bandpass = pe.Node(interface=fsl.maths.TemporalFilter(), name="bandpass")
 		bandpass.inputs.highpass_sigma = highpass_sigma
+		bandpass.interface.estimated_memory_gb = 6
 		if lowpass_sigma:
 			bandpass.inputs.lowpass_sigma = lowpass_sigma
 		else:

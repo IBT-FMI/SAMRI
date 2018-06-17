@@ -21,7 +21,7 @@ from samri.pipelines.utils import bids_naming, bids_data_selection, filter_data,
 from samri.utilities import N_PROCS
 
 DUMMY_SCANS=10
-N_PROCS=max(N_PROCS-4, 2)
+N_PROCS=max(N_PROCS-2, 1)
 
 #set all outputs to compressed NIfTI
 afni.base.AFNICommand.set_default_output_type('NIFTI_GZ')
@@ -386,7 +386,7 @@ def legacy_bruker(bids_base, template,
 	workflow.config = workflow_config
 	workflow.write_graph(dotfilename=path.join(workflow.base_dir,workdir_name,"graph.dot"), graph2use="hierarchical", format="png")
 
-	workflow.run(plugin="MultiProc", plugin_args={'n_procs' : n_procs, 'memory_gb' : 500})
+	workflow.run(plugin="MultiProc", plugin_args={'n_procs' : n_procs})
 	if not keep_work:
 		workdir = path.join(workflow.base_dir,workdir_name)
 		try:
@@ -809,7 +809,7 @@ def bruker(bids_base, template,
 	workflow.config = workflow_config
 	workflow.write_graph(dotfilename=path.join(workflow.base_dir,workdir_name,"graph.dot"), graph2use="hierarchical", format="png")
 
-	workflow.run(plugin="MultiProc", plugin_args={'n_procs' : n_procs, 'memory_gb' : 500})
+	workflow.run(plugin="MultiProc", plugin_args={'n_procs' : n_procs})
 	if not keep_work:
 		workdir = path.join(workflow.base_dir,workdir_name)
 		try:

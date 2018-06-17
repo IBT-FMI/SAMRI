@@ -33,12 +33,20 @@ def dr_full():
 	#	out_dir='~/ni_data/ofM.dr/preprocessing',
 	#	)
 
+def dr_continued():
+	from labbookdb.report.development import animal_multiselect
+	from samri.pipelines import glm
+	from samri.pipelines.preprocess import bruker
+	from samri.report.snr import iter_significant_signal
+	from samri.utilities import bids_autofind
+
 	# Model fitting
 	glm.l1('~/ni_data/ofM.dr/preprocessing/generic',
 		out_dir='~/ni_data/ofM.dr/l1',
 		workflow_name='generic',
 		habituation="confound",
 		mask="~/ni_data/templates/DSURQEc_200micron_mask.nii.gz",
+		# We need the workdir to extract the betas
 		keep_work=True,
 		)
 
@@ -47,6 +55,8 @@ def dr_full():
 		path_template="{bids_dir}/sub-{{subject}}/ses-{{session}}/sub-{{subject}}_ses-{{session}}_acq-{{acquisition}}_task-{{task}}_cbv_pfstat.nii.gz",
 		match_regex='.+/sub-(?P<sub>.+)/ses-(?P<ses>.+)/.*?_acq-(?P<acquisition>.+).*?_task-(?P<task>.+)_cbv_pfstat\.nii.gz',
 		)
+	print(substitutions)
+	return
 	iter_significant_signal('~/ni_data/ofM.dr/l1/generic/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_acq-{acquisition}_task-{task}_cbv_pfstat.nii.gz',
 		substitutions=substitutions,
 		mask_path='~/ni_data/templates/DSURQEc_200micron_mask.nii.gz',

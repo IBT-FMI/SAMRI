@@ -188,13 +188,10 @@ def bru2bids(measurements_base,
 	out_dir = path.join(workflow.base_dir,"bids")
 
 	#Run workflow
-	if not keep_work or not keep_crashdump:
-		try:
-			workflow.run(plugin="MultiProc", plugin_args={'n_procs' : n_procs})
-		except RuntimeError:
-			pass
-	else:
+	try:
 		workflow.run(plugin="MultiProc", plugin_args={'n_procs' : n_procs})
+	except RuntimeError:
+		pass
 	if not keep_work:
 		shutil.rmtree(path.join(workflow.base_dir,workdir_name))
 	if not keep_crashdump:

@@ -249,7 +249,7 @@ def write_bids_events_file(scan_dir,
 	if not prefer_labbookdb:
 		try:
 			scan_dir_contents = os.listdir(scan_dir)
-			sequence_files = [i for i in scan_dir_contents if "sequence" in i and "tsv" in i]
+			sequence_files = [i for i in scan_dir_contents if ("sequence" in i and "tsv" in i) or ('events' and 'tsv' in i)]
 			sequence_file = os.path.join(scan_dir, sequence_files[0])
 			mydf = pd.read_csv(sequence_file, sep="\s", engine='python')
 		except IndexError:

@@ -145,17 +145,17 @@ def l1(preprocessing_dir,
 	glm.inputs.ignore_exception = True
 
 	cope_filename = pe.Node(name='cope_filename', interface=util.Function(function=bids_dict_to_source,input_names=inspect.getargspec(bids_dict_to_source)[0], output_names=['filename']))
-	cope_filename.inputs.source_format = "sub-{subject}_ses-{session}_acq-{acquisition}_task-{task}_{modality}_cope.nii.gz"
+	cope_filename.inputs.source_format = "sub-{subject}_ses-{session}_task-{task}_acq-{acquisition}_{modality}_cope.nii.gz"
 	varcb_filename = pe.Node(name='varcb_filename', interface=util.Function(function=bids_dict_to_source,input_names=inspect.getargspec(bids_dict_to_source)[0], output_names=['filename']))
-	varcb_filename.inputs.source_format = "sub-{subject}_ses-{session}_acq-{acquisition}_task-{task}_{modality}_varcb.nii.gz"
+	varcb_filename.inputs.source_format = "sub-{subject}_ses-{session}_task-{task}_acq-{acquisition}_{modality}_varcb.nii.gz"
 	tstat_filename = pe.Node(name='tstat_filename', interface=util.Function(function=bids_dict_to_source,input_names=inspect.getargspec(bids_dict_to_source)[0], output_names=['filename']))
-	tstat_filename.inputs.source_format = "sub-{subject}_ses-{session}_acq-{acquisition}_task-{task}_{modality}_tstat.nii.gz"
+	tstat_filename.inputs.source_format = "sub-{subject}_ses-{session}_task-{task}_acq-{acquisition}_{modality}_tstat.nii.gz"
 	zstat_filename = pe.Node(name='zstat_filename', interface=util.Function(function=bids_dict_to_source,input_names=inspect.getargspec(bids_dict_to_source)[0], output_names=['filename']))
-	zstat_filename.inputs.source_format = "sub-{subject}_ses-{session}_acq-{acquisition}_task-{task}_{modality}_zstat.nii.gz"
+	zstat_filename.inputs.source_format = "sub-{subject}_ses-{session}_task-{task}_acq-{acquisition}_{modality}_zstat.nii.gz"
 	pstat_filename = pe.Node(name='pstat_filename', interface=util.Function(function=bids_dict_to_source,input_names=inspect.getargspec(bids_dict_to_source)[0], output_names=['filename']))
-	pstat_filename.inputs.source_format = "sub-{subject}_ses-{session}_acq-{acquisition}_task-{task}_{modality}_pstat.nii.gz"
+	pstat_filename.inputs.source_format = "sub-{subject}_ses-{session}_task-{task}_acq-{acquisition}_{modality}_pstat.nii.gz"
 	pfstat_filename = pe.Node(name='pfstat_filename', interface=util.Function(function=bids_dict_to_source,input_names=inspect.getargspec(bids_dict_to_source)[0], output_names=['filename']))
-	pfstat_filename.inputs.source_format = "sub-{subject}_ses-{session}_acq-{acquisition}_task-{task}_{modality}_pfstat.nii.gz"
+	pfstat_filename.inputs.source_format = "sub-{subject}_ses-{session}_task-{task}_acq-{acquisition}_{modality}_pfstat.nii.gz"
 
 	datasink = pe.Node(nio.DataSink(), name='datasink')
 	datasink.inputs.base_directory = path.join(out_dir,workflow_name)
@@ -341,17 +341,17 @@ def seed_fc(preprocessing_dir,
 	glm.inputs.ignore_exception = True
 
 	cope_filename = pe.Node(name='cope_filename', interface=util.Function(function=bids_dict_to_source,input_names=inspect.getargspec(bids_dict_to_source)[0], output_names=['filename']))
-	cope_filename.inputs.source_format = "sub-{subject}_ses-{session}_acq-{acquisition}_task-{task}_{modality}_cope.nii.gz"
+	cope_filename.inputs.source_format = "sub-{subject}_ses-{session}_task-{task}_acq-{acquisition}_{modality}_cope.nii.gz"
 	varcb_filename = pe.Node(name='varcb_filename', interface=util.Function(function=bids_dict_to_source,input_names=inspect.getargspec(bids_dict_to_source)[0], output_names=['filename']))
-	varcb_filename.inputs.source_format = "sub-{subject}_ses-{session}_acq-{acquisition}_task-{task}_{modality}_varcb.nii.gz"
+	varcb_filename.inputs.source_format = "sub-{subject}_ses-{session}_task-{task}_acq-{acquisition}_{modality}_varcb.nii.gz"
 	tstat_filename = pe.Node(name='tstat_filename', interface=util.Function(function=bids_dict_to_source,input_names=inspect.getargspec(bids_dict_to_source)[0], output_names=['filename']))
-	tstat_filename.inputs.source_format = "sub-{subject}_ses-{session}_acq-{acquisition}_task-{task}_{modality}_tstat.nii.gz"
+	tstat_filename.inputs.source_format = "sub-{subject}_ses-{session}_task-{task}_acq-{acquisition}_{modality}_tstat.nii.gz"
 	zstat_filename = pe.Node(name='zstat_filename', interface=util.Function(function=bids_dict_to_source,input_names=inspect.getargspec(bids_dict_to_source)[0], output_names=['filename']))
-	zstat_filename.inputs.source_format = "sub-{subject}_ses-{session}_acq-{acquisition}_task-{task}_{modality}_zstat.nii.gz"
+	zstat_filename.inputs.source_format = "sub-{subject}_ses-{session}_task-{task}_acq-{acquisition}_{modality}_zstat.nii.gz"
 	pstat_filename = pe.Node(name='pstat_filename', interface=util.Function(function=bids_dict_to_source,input_names=inspect.getargspec(bids_dict_to_source)[0], output_names=['filename']))
-	pstat_filename.inputs.source_format = "sub-{subject}_ses-{session}_acq-{acquisition}_task-{task}_{modality}_pstat.nii.gz"
+	pstat_filename.inputs.source_format = "sub-{subject}_ses-{session}_task-{task}_acq-{acquisition}_{modality}_pstat.nii.gz"
 	pfstat_filename = pe.Node(name='pfstat_filename', interface=util.Function(function=bids_dict_to_source,input_names=inspect.getargspec(bids_dict_to_source)[0], output_names=['filename']))
-	pfstat_filename.inputs.source_format = "sub-{subject}_ses-{session}_acq-{acquisition}_task-{task}_{modality}_pfstat.nii.gz"
+	pfstat_filename.inputs.source_format = "sub-{subject}_ses-{session}_task-{task}_acq-{acquisition}_{modality}_pfstat.nii.gz"
 
 	datasink = pe.Node(nio.DataSink(), name='datasink')
 	datasink.inputs.base_directory = path.join(out_dir,workflow_name)

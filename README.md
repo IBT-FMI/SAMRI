@@ -1,3 +1,5 @@
+![SAMRI](./logo.svg)
+
 # SAMRI
 [![Build Status](https://travis-ci.org/IBT-FMI/SAMRI.svg?branch=master)](https://travis-ci.org/IBT-FMI/SAMRI)
 

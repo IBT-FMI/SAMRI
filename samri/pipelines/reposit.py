@@ -5,6 +5,7 @@ import argh
 import re
 import inspect
 import json
+import os
 import shutil
 import time
 
@@ -274,7 +275,9 @@ def bru2bids(measurements_base,
 		pass
 
 	# This is needed because BIDS does not yet support CBV
-	with open(path.join(out_dir,".bidsignore"), "w") as f:
+	if not os.path.exists(out_dir):
+		os.makedirs(out_dir)
+	with open(path.join(out_dir,".bidsignore"), "w+") as f:
 		f.write('*_cbv.*')
 
 	# BIDS needs a descriptor file

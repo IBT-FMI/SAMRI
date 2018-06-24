@@ -404,7 +404,7 @@ def legacy_bruker(bids_base, template,
 				raise OSError(str(e))
 
 
-def bruker(bids_base, template,
+def full_prep(bids_base, template,
 	actual_size=True,
 	autorotate=False,
 	debug=False,

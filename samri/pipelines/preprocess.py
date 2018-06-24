@@ -416,7 +416,7 @@ def full_prep(bids_base, template,
 	n_procs=N_PROCS,
 	out_dir=None,
 	realign="time",
-	registration_mask=False,
+	registration_mask="",
 	sessions=[],
 	strict=False,
 	structural_match={},
@@ -658,7 +658,7 @@ def full_prep(bids_base, template,
 			])
 
 	if functional_registration_method == "structural":
-		if not structural_scan_types:
+		if not structural_scan_types.any():
 			raise ValueError('The option `registration="structural"` requires there to be a structural scan type.')
 		workflow_connections.extend([
 			(s_register, f_warp, [('composite_transform', 'transforms')]),

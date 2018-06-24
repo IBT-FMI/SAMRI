@@ -38,6 +38,7 @@ def bru2bids(measurements_base,
 	keep_crashdump=False,
 	keep_work=False,
 	n_procs=N_PROCS,
+	out_base=None,
 	structural_match={},
 	):
 	"""
@@ -74,12 +75,19 @@ def bru2bids(measurements_base,
 	n_procs : int, optional
 		Maximum number of processes which to simultaneously spawn for the workflow.
 		If not explicitly defined, this is automatically calculated from the number of available cores and under the assumption that the workflow will be the main process running for the duration that it is running.
+	out_base : str, optional
+		Base directory in which to place the BIDS reposited data.
+		If not present the BIDS records will be created in the `measurements_base` directory.
 	structural_match : dict, optional
 		A dictionary with any combination of "session", "subject", "task", and "acquisition" as keys and corresponding lists of identifiers as values.
 		Functional scans matching all identifiers will be included - i.e. this is a whitelist.
 	"""
 
 	measurements_base = path.abspath(path.expanduser(measurements_base))
+	if out_base:
+		out_base = path.abspath(path.expanduser(out_base))
+	else:
+		out_base = measurements_base
 
 	# define measurement directories to be processed, and populate the list either with the given include_measurements, or with an intelligent selection
 	data_selection = pd.DataFrame([])
@@ -140,7 +148,7 @@ def bru2bids(measurements_base,
 	events_file.ignore_exception = True
 
 	datasink = pe.Node(nio.DataSink(), name='datasink')
-	datasink.inputs.base_directory = path.join(measurements_base,"bids")
+	datasink.inputs.base_directory = path.join(out_base,"bids")
 	datasink.inputs.parameterization = False
 
 	workflow_connections = [
@@ -169,7 +177,7 @@ def bru2bids(measurements_base,
 		(f_metadata_file, datasink, [('out_file', 'func.@metadata')]),
 		]
 
-	crashdump_dir = path.join(measurements_base,'bids_crashdump')
+	crashdump_dir = path.join(out_base,'bids_crashdump')
 	workflow_config = {'execution': {'crashdump_dir': crashdump_dir}}
 	if debug:
 		workflow_config['logging'] = {
@@ -183,10 +191,10 @@ def bru2bids(measurements_base,
 	workdir_name = 'bids_work'
 	workflow = pe.Workflow(name=workdir_name)
 	workflow.connect(workflow_connections)
-	workflow.base_dir = path.join(measurements_base)
+	workflow.base_dir = path.join(out_base)
 	workflow.config = workflow_config
 	workflow.write_graph(dotfilename=path.join(workflow.base_dir,workdir_name,"graph.dot"), graph2use="hierarchical", format="png")
-	out_dir = path.join(workflow.base_dir,"bids")
+	out_base = path.join(workflow.base_dir,"bids")
 
 	#Run workflow
 	try:
@@ -238,7 +246,7 @@ def bru2bids(measurements_base,
 				(s_bru2nii, datasink, [('nii_file', 'anat')]),
 				(s_metadata_file, datasink, [('out_file', 'anat.@metadata')]),
 				]
-			crashdump_dir = path.join(measurements_base,'bids_crashdump')
+			crashdump_dir = path.join(out_base,'bids_crashdump')
 			workflow_config = {'execution': {'crashdump_dir': crashdump_dir}}
 			if debug:
 				workflow_config['logging'] = {
@@ -252,7 +260,7 @@ def bru2bids(measurements_base,
 			workdir_name = 'bids_work'
 			workflow = pe.Workflow(name=workdir_name)
 			workflow.connect(workflow_connections)
-			workflow.base_dir = path.join(measurements_base)
+			workflow.base_dir = path.join(out_base)
 			workflow.config = workflow_config
 			workflow.write_graph(dotfilename=path.join(workflow.base_dir,workdir_name,"graph_structural.dot"), graph2use="hierarchical", format="png")
 
@@ -275,9 +283,9 @@ def bru2bids(measurements_base,
 		pass
 
 	# This is needed because BIDS does not yet support CBV
-	if not os.path.exists(out_dir):
-		os.makedirs(out_dir)
-	with open(path.join(out_dir,".bidsignore"), "w+") as f:
+	if not os.path.exists(out_base):
+		os.makedirs(out_base)
+	with open(path.join(out_base,".bidsignore"), "w+") as f:
 		f.write('*_cbv.*')
 
 	# BIDS needs a descriptor file
@@ -287,6 +295,6 @@ def bru2bids(measurements_base,
 		'Name':dataset_name,
 		'BIDSVersion':'1.0.2',
 		}
-	with open(path.join(out_dir,'dataset_description.json'), 'w') as f:
+	with open(path.join(out_base,'dataset_description.json'), 'w') as f:
 		json.dump(description, f)
 

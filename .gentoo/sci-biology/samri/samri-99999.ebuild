@@ -54,4 +54,5 @@ python_test() {
 		echo "Executing ${EPYTHON} ${i}"
 		${EPYTHON} "$i" || die "Example Python script $i failed with ${EPYTHON}"
 	done
+	./test_scripts.sh || die "Test scripts failed."
 }

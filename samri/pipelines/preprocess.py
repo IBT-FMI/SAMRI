@@ -21,7 +21,7 @@ from samri.pipelines.utils import bids_naming, bids_data_selection, filter_data,
 from samri.utilities import N_PROCS
 
 DUMMY_SCANS=10
-N_PROCS=max(N_PROCS-4, 2)
+N_PROCS=max(N_PROCS-2, 1)
 
 #set all outputs to compressed NIfTI
 afni.base.AFNICommand.set_default_output_type('NIFTI_GZ')
@@ -379,18 +379,32 @@ def legacy_bruker(bids_base, template,
 			}
 
 	workdir_name = workflow_name+"_work"
+	#this gives the name of the workdir, the output name is passed to the datasink
 	workflow = pe.Workflow(name=workdir_name)
 	workflow.connect(workflow_connections)
 	workflow.base_dir = path.join(out_dir)
 	workflow.config = workflow_config
 	workflow.write_graph(dotfilename=path.join(workflow.base_dir,workdir_name,"graph.dot"), graph2use="hierarchical", format="png")
 
-	workflow.run(plugin="MultiProc", plugin_args={'n_procs' : n_procs, 'memory_gb' : 500})
+	workflow.run(plugin="MultiProc", plugin_args={'n_procs' : n_procs})
 	if not keep_work:
-		shutil.rmtree(path.join(workflow.base_dir,workdir_name))
+		workdir = path.join(workflow.base_dir,workdir_name)
+		try:
+			shutil.rmtree(workdir)
+		except OSError as e:
+			if str(e) == 'Cannot call rmtree on a symbolic link':
+				print('Not deleting top level workdir (`{}`), as it is a symlink. Deleinng only contents instead'.format(workdir))
+				for file_object in os.listdir(workdir):
+					file_object_path = os.path.join(workdir, file_object)
+					if os.path.isfile(file_object_path):
+						os.unlink(file_object_path)
+					else:
+						shutil.rmtree(file_object_path)
+			else:
+				raise OSError(str(e))
 
 
-def bruker(bids_base, template,
+def full_prep(bids_base, template,
 	actual_size=True,
 	autorotate=False,
 	debug=False,
@@ -402,7 +416,7 @@ def bruker(bids_base, template,
 	n_procs=N_PROCS,
 	out_dir=None,
 	realign="time",
-	registration_mask=False,
+	registration_mask="",
 	sessions=[],
 	strict=False,
 	structural_match={},
@@ -644,7 +658,7 @@ def bruker(bids_base, template,
 			])
 
 	if functional_registration_method == "structural":
-		if not structural_scan_types:
+		if not structural_scan_types.any():
 			raise ValueError('The option `registration="structural"` requires there to be a structural scan type.')
 		workflow_connections.extend([
 			(s_register, f_warp, [('composite_transform', 'transforms')]),
@@ -788,13 +802,26 @@ def bruker(bids_base, template,
 			}
 
 	workdir_name = workflow_name+"_work"
+	#this gives the name of the workdir, the output name is passed to the datasink
 	workflow = pe.Workflow(name=workdir_name)
 	workflow.connect(workflow_connections)
 	workflow.base_dir = path.join(out_dir)
 	workflow.config = workflow_config
 	workflow.write_graph(dotfilename=path.join(workflow.base_dir,workdir_name,"graph.dot"), graph2use="hierarchical", format="png")
 
-	workflow.run(plugin="MultiProc", plugin_args={'n_procs' : n_procs, 'memory_gb' : 500})
+	workflow.run(plugin="MultiProc", plugin_args={'n_procs' : n_procs})
 	if not keep_work:
-		shutil.rmtree(path.join(workflow.base_dir,workdir_name))
-
+		workdir = path.join(workflow.base_dir,workdir_name)
+		try:
+			shutil.rmtree(workdir)
+		except OSError as e:
+			if str(e) == 'Cannot call rmtree on a symbolic link':
+				print('Not deleting top level workdir (`{}`), as it is a symlink. Deleinng only contents instead'.format(workdir))
+				for file_object in os.listdir(workdir):
+					file_object_path = os.path.join(workdir, file_object)
+					if os.path.isfile(file_object_path):
+						os.unlink(file_object_path)
+					else:
+						shutil.rmtree(file_object_path)
+			else:
+				raise OSError(str(e))

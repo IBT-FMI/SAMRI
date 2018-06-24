@@ -5,10 +5,14 @@ def dr_full():
 	from samri.report.snr import iter_significant_signal
 	from samri.utilities import bids_autofind
 
+	# Assuming data cobnverted to BIDS
 	bids_base = '~/ni_data/ofM.dr/bids'
 
+	# Preprocess
 	animal_list = animal_multiselect(cage_treatments=['cFluDW','cFluDW_','cFluIP'])
-	bruker(bids_base, "~/ni_data/templates/dsurqec_200micron.nii",
+	# Animal list selection needs fixing in LabbookDB database, so we add the following animals manually
+	animal_list.extend(['4001','4002','4003','4004','4005','4006','4007','4008','4009','4011','4012','4013','6557'])
+	full_prep(bids_base, "~/ni_data/templates/dsurqec_200micron.nii",
 		registration_mask="~/ni_data/templates/dsurqec_200micron_mask.nii",
 		functional_match={'type':['cbv',],},
 		structural_match={'acquisition':['TurboRARE','TurboRARElowcov'],},
@@ -18,54 +22,85 @@ def dr_full():
 		negative_contrast_agent=True,
 		out_dir='~/ni_data/ofM.dr/preprocessing',
 		)
-	bruker(bids_base, "~/ni_data/templates/dsurqec_200micron.nii",
-		registration_mask="~/ni_data/templates/dsurqec_200micron_mask.nii",
-		functional_match={'type':['bold',],},
-		structural_match={'acquisition':['TurboRARE','TurboRARElowcov'],},
-		subjects=animal_list,
-		actual_size=True,
-		functional_registration_method="composite",
-		negative_contrast_agent=False,
-		out_dir='~/ni_data/ofM.dr/preprocessing',
-		)
-	# Animal list selection needs fixing in LabbookDB database, so we do the following animals manually
-	bruker(bids_base, "~/ni_data/templates/dsurqec_200micron.nii",
-		registration_mask="~/ni_data/templates/dsurqec_200micron_mask.nii",
-		functional_match={'type':['cbv',],},
-		structural_match={'acquisition':['TurboRARE','TurboRARElowcov'],},
-		subjects=['4001','4005','4006','4007','4008','4009','4011','4012','4013'], # Known Resoponders
-		actual_size=True,
-		functional_registration_method="composite",
-		negative_contrast_agent=True,
-		out_dir='~/ni_data/ofM.dr/preprocessing',
-		)
-	bruker(bids_base, "~/ni_data/templates/dsurqec_200micron.nii",
-		registration_mask="~/ni_data/templates/dsurqec_200micron_mask.nii",
-		functional_match={'type':['bold',],},
-		structural_match={'acquisition':['TurboRARE','TurboRARElowcov'],},
-		subjects=['4001','4005','4006','4007','4008','4009','4011','4012','4013'], # Known Resoponders
-		actual_size=True,
-		functional_registration_method="composite",
-		negative_contrast_agent=False,
-		out_dir='~/ni_data/ofM.dr/preprocessing',
-		)
+	#bruker(bids_base, "~/ni_data/templates/dsurqec_200micron.nii",
+	#	registration_mask="~/ni_data/templates/dsurqec_200micron_mask.nii",
+	#	functional_match={'type':['bold',],},
+	#	structural_match={'acquisition':['TurboRARE','TurboRARElowcov'],},
+	#	subjects=animal_list,
+	#	actual_size=True,
+	#	functional_registration_method="composite",
+	#	negative_contrast_agent=False,
+	#	out_dir='~/ni_data/ofM.dr/preprocessing',
+	#	)
+	# Model fitting
 	glm.l1('~/ni_data/ofM.dr/preprocessing/generic',
 		out_dir='~/ni_data/ofM.dr/l1',
 		workflow_name='generic',
 		habituation="confound",
 		mask="~/ni_data/templates/DSURQEc_200micron_mask.nii.gz",
+		# We need the workdir to extract the betas
 		keep_work=True,
 		)
 
-	substitutions = bids_autofind('~/ni_data/ofM.dr/bids/l1/generic/',
-		path_template="{bids_dir}/sub-{{subject}}/ses-{{session}}/sub-{{subject}}_ses-{{session}}_acq-{{acquisition}}_task-{{task}}_cbv_pfstat.nii.gz",
-		match_regex='.+/sub-(?P<sub>.+)/ses-(?P<ses>.+)/.*?_acq-(?P<acquisition>.+).*?_task-(?P<task>.+)_cbv_pfstat\.nii.gz',
+	# Determining Responders by Significance
+	substitutions = bids_autofind('~/ni_data/ofM.dr/l1/generic/',
+		path_template="{bids_dir}/sub-{{subject}}/ses-{{session}}/sub-{{subject}}_ses-{{session}}_task-{{task}}_acq-{{acquisition}}_cbv_pfstat.nii.gz",
+		match_regex='.+/sub-(?P<sub>.+)/ses-(?P<ses>.+)/.*?_task-(?P<task>.+).*?_acq-(?P<acquisition>.+)_cbv_pfstat\.nii.gz',
 		)
-	iter_significant_signal('~/ni_data/ofM.dr/bids/l1/generic/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_acq-{acquisition}_task-{task}_cbv_pfstat.nii.gz',
+	iter_significant_signal('~/ni_data/ofM.dr/l1/generic/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_task-{task}_acq-{{acquisition}}_cbv_pfstat.nii.gz',
 		substitutions=substitutions,
 		mask_path='~/ni_data/templates/DSURQEc_200micron_mask.nii.gz',
-		save_as='~/ni_data/ofM.dr/bids/l1/generic/total_significance.csv'
+		save_as='~/ni_data/ofM.dr/l1/generic/total_significance.csv'
 		)
+
+	# Determining Responders by a priori pattern
+	glm.l2_common_effect('~/ni_data/ofM.dr/l1/',
+		workflow_name="a_priori_responders",
+		include={
+			'subject':['4001','4005','4006','4007','4008','4009','4011','4012','4013'],
+			},
+		groupby="session",
+		keep_work=True,
+		mask="~/ni_data/templates/DSURQEc_200micron_mask.nii.gz",
+		)
+def dr_cont():
+	from labbookdb.report.development import animal_multiselect
+	from samri.pipelines import glm
+	from samri.pipelines.preprocess import bruker
+	from samri.report.snr import iter_significant_signal
+	from samri.utilities import bids_autofind
+
+	# Assuming data cobnverted to BIDS
+	bids_base = '~/ni_data/ofM.dr/bids'
+
+	# Preprocess
+	#animal_list = animal_multiselect(cage_treatments=['cFluDW','cFluDW_','cFluIP'])
+	# Animal list selection needs fixing in LabbookDB database, so we add the following animals manually
+	#animal_list.extend(['4001','4002','4003','4004','4005','4006','4007','4008','4009','4011','4012','4013','6557'])
+
+	# Determining Responders by Significance
+	_ , substitutions = bids_autofind('~/ni_data/ofM.dr/l1/generic/',
+		path_template="{bids_dir}/sub-{{subject}}/ses-{{session}}/sub-{{subject}}_ses-{{session}}_task-{{task}}_acq-{{acquisition}}_cbv_pfstat.nii.gz",
+		match_regex='.+/sub-(?P<sub>.+)/ses-(?P<ses>.+)/.*?_task-(?P<task>.+).*?_acq-(?P<acquisition>.+)_cbv_pfstat\.nii.gz',
+		)
+	print(substitutions)
+	iter_significant_signal('~/ni_data/ofM.dr/l1/generic/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_task-{task}_acq-{{acquisition}}_cbv_pfstat.nii.gz',
+		substitutions=substitutions,
+		mask_path='~/ni_data/templates/DSURQEc_200micron_mask.nii.gz',
+		save_as='~/ni_data/ofM.dr/l1/generic/total_significance.csv'
+		)
+
+	# Determining Responders by a priori pattern
+	glm.l2_common_effect('~/ni_data/ofM.dr/l1/',
+		workflow_name="a_priori_responders",
+		include={
+			'subject':['4001','4005','4006','4007','4008','4009','4011','4012','4013'],
+			},
+		groupby="session",
+		keep_work=True,
+		mask="~/ni_data/templates/DSURQEc_200micron_mask.nii.gz",
+		)
+
 def more():
 	from labbookdb.report.development import animal_multiselect
 	from samri.pipelines import glm

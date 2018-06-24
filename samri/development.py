@@ -12,7 +12,7 @@ def dr_full():
 	animal_list = animal_multiselect(cage_treatments=['cFluDW','cFluDW_','cFluIP'])
 	# Animal list selection needs fixing in LabbookDB database, so we add the following animals manually
 	animal_list.extend(['4001','4002','4003','4004','4005','4006','4007','4008','4009','4011','4012','4013','6557'])
-	bruker(bids_base, "~/ni_data/templates/dsurqec_200micron.nii",
+	full_prep(bids_base, "~/ni_data/templates/dsurqec_200micron.nii",
 		registration_mask="~/ni_data/templates/dsurqec_200micron_mask.nii",
 		functional_match={'type':['cbv',],},
 		structural_match={'acquisition':['TurboRARE','TurboRARElowcov'],},

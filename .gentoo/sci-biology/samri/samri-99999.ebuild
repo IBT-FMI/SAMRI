@@ -51,7 +51,7 @@ python_test() {
 	export PATH=${TEST_DIR}/scripts:$PATH
 	export PYTHONIOENCODING=utf-8
 	pytest || die
-	for i in samri/examples/*.py; do
+	for i in examples/*.py; do
 		echo "Executing ${EPYTHON} ${i}"
 		${EPYTHON} "$i" || die "Example Python script $i failed with ${EPYTHON}"
 	done

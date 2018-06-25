@@ -11,7 +11,7 @@ import matplotlib.pyplot as plt
 
 
 def evaluateQuality():
-	data_dir = path.join(path.dirname(path.realpath(__file__)),"../../example_data/")
+	data_dir = path.join(path.dirname(path.realpath(__file__)),"../example_data/")
 	df_path = path.join(data_dir,"f_reg_quality.csv")
 
 	registration_qc(df_path,

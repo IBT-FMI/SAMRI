@@ -12,7 +12,7 @@ The package is compatible with small rodent data acquired via Bruker systems.
 ## Examples
 
 To execute the examples below, actual 	small animal imaging data is required.
-The examples include lines to fetch such data (starting with `wget` and `unzip`), which can however be omitted if data is already present.
+This section includes lines to fetch such data (starting with `wget` and `unzip`), which can however be omitted if data is already present.
 If dependencies were managed via Portage (e.g. on Gentoo Linux) mouse brain atlases may already be present under `/usr/share/mouse-brain-atlases` and test data under `/usr/share/samri_bindata`.
 
 ```

@@ -11,8 +11,25 @@ The package is compatible with small rodent data acquired via Bruker systems.
 
 ## Examples
 
+To execute the examples below, actual 	small animal imaging data is required.
+The examples include lines to fetch such data (starting with `wget` and `unzip`), which can however be omitted if data is already present.
+If dependencies were managed via Portage (e.g. on Gentoo Linux) mouse brain atlases may already be present under `/usr/share/mouse-brain-atlases` and test data under `/usr/share/samri_bindata`.
+
 ```
-SAMRI bru2bids -f '{"acquisition":["ssEPI","ssEPI2seg"]}' -s '{"acquisition":["TurboRARE","TurboRAREhd"]}' . --measurements 20180529_*
+wget http://chymera.eu/pkgdata/mouse-brain-atlases-0.1.20180623.zip
+unzip mouse-brain-atlases
+wget http://chymera.eu/pkgdata/samri_bindata-0.1.1.zip
+unzip samri_bindata
+```
+
+### Convert Bruker ParaVision raw directories to BIDS-compliant NIfTI collections
+```
+SAMRI bru2bids -o . -f '{"acquisition":["EPI"]}' -s '{"acquisition":["TurboRARE"]}' samri_bindata
+```
+
+### Run a full preprocessing pipeline including template registration on the BIDS input
+```
+SAMRI full-prep -o preprocessing --registration-mask mouse-brain-atlases/dsurqec_200micron_mask.nii --functional-registration-method composite --negative-contrast-agent bids mouse-brain-atlases/dsurqec_200micron.nii
 ```
 
 ## Installation
@@ -100,6 +117,10 @@ For manual dependency management and overview you may use the following list:
 * [ANTs](https://github.com/ANTsX/ANTs/)
 * [AFNI](https://afni.nimh.nih.gov/)
 * [nilearn](https://nilearn.github.io/)
+
+Needed if no other data is available for testing and development:
+* Mouse Brain Atlases: [download link](http://chymera.eu/pkgdata/mouse-brain-atlases-0.1.20180623.zip)
+* SAMRI example binary data: [download link](http://chymera.eu/pkgdata/samri_bindata-0.1.1.zip)
 
 Needed only in conjunction with LabbookDB metadata management:
 * [SQLAlchemy](http://www.sqlalchemy.org/library.html)

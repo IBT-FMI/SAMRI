@@ -12,12 +12,12 @@ HOMEPAGE="https://github.com/IBT-FMI/SAMRI"
 
 LICENSE="GPL-3"
 SLOT="0"
-IUSE="labbookdb"
+IUSE="atlases labbookdb test"
 KEYWORDS=""
 
 # Numpy dependency to circumvent scikits_learn dependency bug:
 # https://bugs.gentoo.org/653052
-DEPEND=""
+DEPEND="test? ( sci-biology/samri_bindata )"
 RDEPEND="
 	dev-python/argh[${PYTHON_USEDEP}]
 	dev-python/joblib[${PYTHON_USEDEP}]
@@ -29,6 +29,7 @@ RDEPEND="
 	dev-python/statsmodels[${PYTHON_USEDEP}]
 	>=sci-biology/fsl-5.0.9
 	sci-biology/bru2nii
+	atlases? ( sci-biology/mouse-brain-atlases )
 	labbookdb? ( sci-libs/labbookdb[${PYTHON_USEDEP}] )
 	sci-libs/nibabel[${PYTHON_USEDEP}]
 	>=sci-libs/nipy-0.4.1[${PYTHON_USEDEP}]

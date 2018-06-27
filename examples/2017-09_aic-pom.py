@@ -5,7 +5,7 @@ from samri.typesetting import inline_anova
 
 this_path = path.dirname(path.realpath(__file__))
 
-data_dir = path.join(this_path,"../../example_data/")
+data_dir = path.join(this_path,"../example_data/")
 df_path = path.join(data_dir,"f_reg_quality.csv")
 
 plt.style.use(path.join(this_path,"dark.conf"))

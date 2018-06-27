@@ -37,7 +37,7 @@ RDEPEND="
 	sci-libs/pybids[${PYTHON_USEDEP}]
 	sci-libs/scipy[${PYTHON_USEDEP}]
 	sci-biology/ants
-	=sci-biology/afni-9999
+	sci-biology/afni-9999
 	sci-biology/nilearn[${PYTHON_USEDEP}]
 	"
 
@@ -51,7 +51,7 @@ python_test() {
 	export PATH=${TEST_DIR}/scripts:$PATH
 	export PYTHONIOENCODING=utf-8
 	pytest || die
-	for i in samri/examples/*.py; do
+	for i in examples/*.py; do
 		echo "Executing ${EPYTHON} ${i}"
 		${EPYTHON} "$i" || die "Example Python script $i failed with ${EPYTHON}"
 	done

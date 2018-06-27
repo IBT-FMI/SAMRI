@@ -7,7 +7,7 @@ SAMRI (Small Animal Magnetic Resonance Imaging) - pronounced "Sam-rye" - provide
 SAMRI integrates functionalities from a number of other packages (listed under the dependencies section below) to create higher-level tools.
 The resulting interfaces aim to maximize reproducibility, simplify batch processing, and minimize the number of function calls required to generate figures and statistical summaries from the raw data.
 
-The package is compatible with small rodent data acquired via Bruker systems.
+The package is compatible with small rodent data acquired via Bruker ParaVision.
 
 ## Examples
 
@@ -22,12 +22,12 @@ wget http://chymera.eu/pkgdata/samri_bindata-0.1.1.zip
 unzip samri_bindata
 ```
 
-#### Convert Bruker ParaVision raw directories to BIDS-compliant NIfTI collections
+#### Convert Bruker ParaVision raw directories to BIDS-compliant NIfTI collections:
 ```
 SAMRI bru2bids -o . -f '{"acquisition":["EPI"]}' -s '{"acquisition":["TurboRARE"]}' samri_bindata
 ```
 
-#### Run a full preprocessing pipeline including template registration on the BIDS input
+#### Run a full preprocessing pipeline (including template registration) on the BIDS input:
 ```
 SAMRI full-prep -o preprocessing --registration-mask mouse-brain-atlases/dsurqec_200micron_mask.nii --functional-registration-method composite --negative-contrast-agent bids mouse-brain-atlases/dsurqec_200micron.nii
 ```
@@ -36,7 +36,7 @@ SAMRI full-prep -o preprocessing --registration-mask mouse-brain-atlases/dsurqec
 
 Depending on your preferred package manager you may choose one of the following methods:
 
-#### Portage (e.g. on Gentoo Linux)
+#### Portage (e.g. on Gentoo Linux):
 SAMRI is available via Portage (the package manager of Gentoo Linux, derivative distributions, and installable on [any other Linux distribution](https://wiki.gentoo.org/wiki/Project:Prefix), or BSD) via the [Chymeric Overlay](https://github.com/TheChymera/overlay).
 Upon enabling the overlay, the package can be emerged:
 
@@ -52,7 +52,7 @@ cd SAMRI/.gentoo
 ./install.sh
 ```
 
-#### Python Package Manager (Users)
+#### Python Package Manager (Users):
 Python's `setuptools` allows you to install Python packages independently of your distribution (or operating system, even).
 This approach cannot manage any of our numerous non-Python dependencies (by design) and at the moment will not even manage Python dependencies;
 as such, given any other alternative, **we do not recommend this approach**:
@@ -68,7 +68,7 @@ If you are getting a `Permission denied (publickey)` error upon trying to clone,
 * [Add an SSH key](https://help.github.com/articles/adding-a-new-ssh-key-to-your-github-account/) to your GitHub account.
 * Pull via the HTTPS link `git clone https://github.com/IBT-FMI/SAMRI.git`.
 
-#### Python Package Manager (Developers)
+#### Python Package Manager (Developers):
 Python's `setuptools` allows you to install Python packages independently of your distribution (or operating system, even);
 it also allows you to install a "live" version of the package - dynamically linking back to the source code.
 This permits you to test code (with real module functionality) as you develop it.

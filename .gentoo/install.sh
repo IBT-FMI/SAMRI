@@ -14,3 +14,4 @@ echo "Installing ebuild $EBUILD"
 
 localexec ebuild "$EBUILD" manifest
 localexec emerge "$@" "$EBUILD" --autounmask-continue
+FEATURES="test" localexec emerge "$@" "$EBUILD" --autounmask-continue --onlydeps

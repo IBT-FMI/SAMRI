@@ -10,4 +10,4 @@ script:
   # This should work as is, but for some reason pulls in a lot of deps
   # (and consequently applies the "test" flag to all of them
   #- docker exec samri sh -c 'FEATURES="test" /home/samri/.gentoo/install.sh'
-  - docker exec samri sh -c 'FEATURES="test" /home/samri/.gentoo/install.sh -O'
+  - docker exec samri sh -c 'FEATURES="test" /home/samri/.gentoo/install.sh'

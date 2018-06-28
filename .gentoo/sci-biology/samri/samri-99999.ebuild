@@ -12,7 +12,7 @@ HOMEPAGE="https://github.com/IBT-FMI/SAMRI"
 
 LICENSE="GPL-3"
 SLOT="0"
-IUSE="atlases labbookdb test"
+IUSE="+atlases labbookdb test"
 KEYWORDS=""
 
 # Numpy dependency to circumvent scikits_learn dependency bug:

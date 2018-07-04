@@ -20,15 +20,15 @@ def cbv_composite(data_path,workflow_name,
 		functional_blur_xy=.4,
 		functional_registration_method="composite",
 		keep_work=True,
-		template="~/ni_data/templates/DSURQEc_200micron_average.nii",
-		registration_mask="~/ni_data/templates/DSURQEc_200micron_mask.nii.gz",
+		template="/usr/share/mouse-brain-atlases/dsurqec_200micron.nii",
+		registration_mask="/usr/share/mouse-brain-atlases/dsurqec_200micron_mask.nii",
 		actual_size=True,
 		)
 	glm.l1(path.join(data_path,preprocessing_dir,workflow_name),
 		workflow_name=workflow_name,
 		# include={"subjects":["5689","5690","5691"]},
 		habituation="confound",
-		mask="~/ni_data/templates/DSURQEc_200micron_mask.nii.gz",
+		mask="/usr/share/mouse-brain-atlases/dsurqec_200micron_mask.nii",
 		keep_work=True,
 		)
 	glm.l2_common_effect(path.join(data_path,l1_dir,workflow_name),
@@ -36,14 +36,14 @@ def cbv_composite(data_path,workflow_name,
 		exclude={"scans":["EPI_BOLD_"],"subjects":["4001","4002","4003","4004","4006","4008","4009","5674","5703","5704","5706","4005","5687"]},
 		groupby="session",
 		keep_work=True,
-		mask="~/ni_data/templates/DSURQEc_200micron_mask.nii.gz",
+		mask="/usr/share/mouse-brain-atlases/dsurqec_200micron_mask.nii",
 		)
 	glm.l2_common_effect(path.join(data_path,l1_dir,workflow_name),
 		workflow_name="composite_sessions_responders",
 		exclude={"scans":["EPI_BOLD_"],"subjects":["4001","4002","4003","4004","4006","4008","4009","5674","5703","5704","5706"]},
 		groupby="session",
 		keep_work=True,
-		mask="~/ni_data/templates/DSURQEc_200micron_mask.nii.gz",
+		mask="/usr/share/mouse-brain-atlases/dsurqec_200micron_mask.nii",
 		)
 
 def dr_only():
@@ -94,7 +94,7 @@ def run_level1_glm():
 	glm.l1(preprocessing_dir='~/bandpass_ni_data/rsfM/preprocessing/composite',
 		workflow_name='as_composite',
 		habituation='confound',
-		mask="~/ni_data/templates/DSURQEc_200micron_mask.nii.gz",
+		mask="/usr/share/mouse-brain-atlases/dsurqec_200micron_mask.nii",
 		keep_work=True)
 
 if __name__ == '__main__':

@@ -233,7 +233,7 @@ def get_signal(substitutions_a, substitutions_b,
 	varcopemerge = fsl.Merge(dimension='t')
 
 def seed_based_connectivity(ts, seed_mask,
-	brain_mask="~/ni_data/templates/DSURQEc_200micron_mask.nii.gz",
+	brain_mask="/usr/share/mouse-brain-atlases/dsurqec_200micron_mask.nii",
 	smoothing_fwhm=.3,
 	detrend=True,
 	standardize=True,

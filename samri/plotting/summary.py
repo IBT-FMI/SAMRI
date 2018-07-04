@@ -40,7 +40,7 @@ def plot_roi_per_session(df,
 	roi_bottom=0.74,
 	roi_width=0.3,
 	roi_height=0.2,
-	roi_anat="~/ni_data/templates/DSURQEc_40micron_masked.nii.gz",
+	roi_anat="/usr/share/mouse-brain-atlases/dsurqec_40micron_masked.nii",
 	roi_threshold=None,
 	cut_coords=None,
 	samri_style=True,
@@ -422,7 +422,7 @@ def p_filtered_ts(substitutions,
 	design_file_template="~/ni_data/ofM.dr/l1/{l1_workdir}/_subject_session_scan_{subject}.{session}.{scan}/modelgen/run0.mat",
 	event_file_template="~/ni_data/ofM.dr/preprocessing/{preprocessing_dir}/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_task-{scan}_events.tsv",
 	p_level=0.1,
-	brain_mask="~/ni_data/templates/DSURQEc_200micron_average.niis"
+	brain_mask="/usr/share/mouse-brain-atlases/dsurqec_200micron.niis"
 	):
 
 	timecourses = []

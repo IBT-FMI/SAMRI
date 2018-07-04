@@ -8,7 +8,7 @@ from os import path
 def plot_t_value_hist(
 	img_path='~/ni_data/ofM.dr/l1/as_composite/sub-5703/ses-ofM/sub-5703_ses-ofM_task-EPI_CBV_chr_longSOA_tstat.nii.gz',
 	roi_path='~/ni_data/templates/roi/DSURQEc_ctx.nii.gz',
-	mask_path='~/ni_data/templates/DSURQEc_200micron_mask.nii.gz',
+	mask_path='/usr/share/mouse-brain-atlases/dsurqec_200micron_mask.nii',
 	save_as='~/qc_tvalues.pdf',
 	):
 	"""Make t-value histogram plot"""

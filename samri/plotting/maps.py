@@ -358,7 +358,7 @@ def stat(stat_maps,
 
 def atlas_label(atlas,
 	alpha=0.7,
-	anat="~/ni_data/templates/DSURQEc_40micron_masked.nii.gz",
+	anat="/usr/share/mouse-brain-atlases/dsurqec_40micron_masked.nii",
 	ax=None,
 	color="#E69F00",
 	fig=None,

@@ -6,7 +6,7 @@ from samri.plotting import maps
 
 def multipage_plot(results, subjects,
 	page_rows=4,
-	template='~/ni_data/templates/DSURQEc_40micron_masked.nii.gz',
+	template='/usr/share/mouse-brain-atlases/dsurqec_40micron_masked.nii',
 	base_cut_coords=[None],
 	save_as="",
 	overlays=[],

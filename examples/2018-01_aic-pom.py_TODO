@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 from samri.plotting.maps import contour_slices
 from samri.utilities import bids_substitution_iterator
 
-file_template = '~/ni_data/templates/DSURQEc_200micron_masked.nii.gz'
+file_template = '/usr/share/mouse-brain-atlases/dsurqec_200micron_masked.nii'
 
 cmap = plt.get_cmap('tab20').colors
 contour_slices('~/ni_data/ofM.dr/preprocessing/composite/sub-5704/ses-ofM_pF/anat/sub-5704_ses-ofM_pF_TurboRARE.nii.gz',
@@ -25,7 +25,7 @@ substitutions = bids_substitution_iterator(['ofM','ofM_aF','ofM_cF1','ofM_cF2','
 	)
 
 cmap = plt.get_cmap('tab20').colors
-contour_slices('~/ni_data/templates/DSURQEc_40micron_average.nii',
+contour_slices('/usr/share/mouse-brain-atlases/dsurqec_40micron.nii',
 	alpha=[0.6],
 	colors=cmap[::2],
 	figure_title='Multi-Session Fit and Coherence Control',

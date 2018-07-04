@@ -37,7 +37,7 @@ def dr_full():
 		out_dir='~/ni_data/ofM.dr/l1',
 		workflow_name='generic',
 		habituation="confound",
-		mask="~/ni_data/templates/DSURQEc_200micron_mask.nii.gz",
+		mask="/usr/share/mouse-brain-atlases/dsurqec_200micron_mask.nii",
 		# We need the workdir to extract the betas
 		keep_work=True,
 		)
@@ -49,7 +49,7 @@ def dr_full():
 		)
 	iter_significant_signal('~/ni_data/ofM.dr/l1/generic/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_task-{task}_acq-{{acquisition}}_cbv_pfstat.nii.gz',
 		substitutions=substitutions,
-		mask_path='~/ni_data/templates/DSURQEc_200micron_mask.nii.gz',
+		mask_path='/usr/share/mouse-brain-atlases/dsurqec_200micron_mask.nii',
 		save_as='~/ni_data/ofM.dr/l1/generic/total_significance.csv'
 		)
 
@@ -61,7 +61,7 @@ def dr_full():
 			},
 		groupby="session",
 		keep_work=True,
-		mask="~/ni_data/templates/DSURQEc_200micron_mask.nii.gz",
+		mask="/usr/share/mouse-brain-atlases/dsurqec_200micron_mask.nii",
 		)
 def dr_cont():
 	from labbookdb.report.development import animal_multiselect
@@ -86,7 +86,7 @@ def dr_cont():
 	print(substitutions)
 	iter_significant_signal('~/ni_data/ofM.dr/l1/generic/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_task-{task}_acq-{{acquisition}}_cbv_pfstat.nii.gz',
 		substitutions=substitutions,
-		mask_path='~/ni_data/templates/DSURQEc_200micron_mask.nii.gz',
+		mask_path='/usr/share/mouse-brain-atlases/dsurqec_200micron_mask.nii',
 		save_as='~/ni_data/ofM.dr/l1/generic/total_significance.csv'
 		)
 
@@ -98,7 +98,7 @@ def dr_cont():
 			},
 		groupby="session",
 		keep_work=True,
-		mask="~/ni_data/templates/DSURQEc_200micron_mask.nii.gz",
+		mask="/usr/share/mouse-brain-atlases/dsurqec_200micron_mask.nii",
 		)
 
 def more():
@@ -133,7 +133,7 @@ def more():
 		out_dir='~/ni_data/ofM.dr/l1',
 		workflow_name='generic',
 		habituation="confound",
-		mask="~/ni_data/templates/DSURQEc_200micron_mask.nii.gz",
+		mask="/usr/share/mouse-brain-atlases/dsurqec_200micron_mask.nii",
 		keep_work=True,
 		)
 
@@ -254,7 +254,7 @@ def test_reg_qc(
 			)
 
 	df = iter_measure_sim(path_template, substitutions,
-		"~/ni_data/templates/DSURQEc_200micron_average.nii",
+		"/usr/share/mouse-brain-atlases/dsurqec_200micron.nii",
 		metric="CC",
 		radius_or_number_of_bins=radius,
 		sampling_strategy="Regular",
@@ -264,7 +264,7 @@ def test_reg_qc(
 
 def reg_cc(
         path = "~/ni_data/ofM.dr/preprocessing/composite",
-        template = "~/ni_data/templates/DSURQEc_200micron_average.nii",
+        template = "/usr/share/mouse-brain-atlases/dsurqec_200micron.nii",
         radius=5,
         autofind=False,
         plot=False,
@@ -294,7 +294,7 @@ def reg_cc(
 
         for metric in metrics:
                 df = iter_measure_sim(path_template, substitutions,
-                        "~/ni_data/templates/DSURQEc_200micron_average.nii",
+                        "/usr/share/mouse-brain-atlases/dsurqec_200micron.nii",
                         metric=metric,
                         radius_or_number_of_bins=radius,
                         sampling_strategy="Regular",
@@ -320,7 +320,7 @@ def test_autofind():
 	path_template, substitutions = bids_autofind("~/ni_data/ofM.dr/preprocessing/composite","func")
 
 	df = iter_measure_sim(path_template, substitutions,
-		"~/ni_data/templates/DSURQEc_200micron_average.nii",
+		"/usr/share/mouse-brain-atlases/dsurqec_200micron.nii",
 		metric="CC",
 		radius_or_number_of_bins=10,
 		sampling_strategy="Regular",

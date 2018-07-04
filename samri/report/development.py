@@ -103,8 +103,8 @@ def label_activity(label):
 	from samri.fetch.local import roi_from_atlaslabel
 	from os.path import basename, splitext
 
-	mapping='~/ni_data/templates/roi/DSURQE_mapping.csv'
-	atlas='~/ni_data/templates/roi/DSURQEc_200micron_labels.nii'
+	mapping='/usr/share/mouse-brain-atlases/dsurqec_mapping.csv'
+	atlas='/usr/share/mouse-brain-atlases/dsurqec_40micron_labels.nii'
 	my_roi = roi_from_atlaslabel(atlas,
 		mapping=mapping,
 		label_names=[label],
@@ -229,8 +229,8 @@ def label_connectivity(workflow_name='DSURQEc_drp', labels=['cortex']):
 	from samri.utilities import bids_substitution_iterator
 	from samri.fetch.local import roi_from_atlaslabel
 
-	mapping='~/ni_data/templates/roi/DSURQE_mapping.csv'
-	atlas='~/ni_data/templates/roi/DSURQEc_200micron_labels.nii'
+	mapping='/usr/share/mouse-brain-atlases/dsurqec_mapping.csv'
+	atlas='/usr/share/mouse-brain-atlases/dsurqec_40micron_labels.nii'
 	my_roi = roi_from_atlaslabel(atlas,
 		mapping=mapping,
 		label_names=labels,
@@ -286,7 +286,7 @@ def total_significance():
 		)
 	iter_significant_signal('~/ni_data/ofM.dr/bids/l1/generic/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_acq-{acquisition}_task-{task}_cbv_pfstat.nii.gz',
 		substitutions=substitutions,
-		mask_path='~/ni_data/templates/DSURQEc_200micron_mask.nii.gz',
+		mask_path='/usr/share/mouse-brain-atlases/dsurqec_200micron_mask.nii',
 		save_as='~/ni_data/ofM.dr/bids/l1/generic/total_significance.csv'
 		)
 
@@ -296,7 +296,7 @@ def test_signal():
 	substitution={"subject":5686,"session":"ofM","task":'CogB'}
 	mean, median = significant_signal('~/ni_data/ofM.dr/bids/l1/generic/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_acq-EPI_task-{task}_cbv_pfstat.nii.gz',
 		substitution=substitution,
-		mask_path='~/ni_data/templates/DSURQEc_200micron_mask.nii.gz',
+		mask_path='/usr/share/mouse-brain-atlases/dsurqec_200micron_mask.nii',
 		)
 	print(mean,median)
 

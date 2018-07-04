@@ -120,8 +120,8 @@ def atlasassignment(data_path='~/ni_data/ofM.dr/bids/l2/anova/anova_zfstat.nii.g
 	):
 	from copy import deepcopy
 
-	atlas_filename = '~/ni_data/templates/roi/DSURQEc_200micron_labels.nii'
-	mapping = '~/ni_data/templates/roi/DSURQE_mapping.csv'
+	atlas_filename = '/usr/share/mouse-brain-atlases/dsurqec_40micron_labels.nii'
+	mapping = '/usr/share/mouse-brain-atlases/dsurqec_mapping.csv'
 	atlas_filename = path.abspath(path.expanduser(atlas_filename))
 	mapping = path.abspath(path.expanduser(mapping))
 	data_path = path.abspath(path.expanduser(data_path))
@@ -208,8 +208,8 @@ def activity(roi,
 	from samri.fetch.local import roi_from_atlaslabel
 	from os.path import basename, splitext
 
-	#mapping='~/ni_data/templates/roi/DSURQE_mapping.csv'
-	#atlas='~/ni_data/templates/roi/DSURQEc_200micron_labels.nii'
+	#mapping='/usr/share/mouse-brain-atlases/dsurqec_mapping.csv'
+	#atlas='/usr/share/mouse-brain-atlases/dsurqec_40micron_labels.nii'
 	if mapping and atlas:
 		mapping = path.abspath(path.expanduser(mapping))
 		atlas = path.abspath(path.expanduser(atlas))

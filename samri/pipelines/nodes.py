@@ -138,7 +138,7 @@ def structural_registration(template, num_threads=4):
 	return registration, s_warp, f_warp
 
 def DSURQEc_structural_registration(template,
-	mask="~/ni_data/templates/DSURQEc_200micron_mask.nii.gz",
+	mask="/usr/share/mouse-brain-atlases/dsurqec_200micron_mask.nii",
 	num_threads=4,
 	phase_dictionary=PHASES,
 	s_phases=["s_rigid","affine","syn"],
@@ -265,7 +265,7 @@ def composite_registration(template, num_threads=4):
 	return f_registration, f_warp
 
 def functional_registration(template,
-	mask="~/ni_data/templates/DSURQEc_200micron_mask.nii.gz",
+	mask="/usr/share/mouse-brain-atlases/dsurqec_200micron_mask.nii",
 	num_threads=4,
 	phase_dictionary=PHASES,
 	f_phases=["s_rigid","affine","syn"],

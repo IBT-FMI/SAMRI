@@ -626,7 +626,7 @@ def l2_anova(l1_dir,
 	tr=1,
 	nprocs=6,
 	workflow_name="generic",
-	mask="~/ni_data/templates/DSURQEc_200micron_mask.nii.gz",
+	mask="/usr/share/mouse-brain-atlases/dsurqec_200micron_mask.nii",
 	exclude={},
 	include={},
 	match_regex='.+/sub-(?P<sub>[a-zA-Z0-9]+)/ses-(?P<ses>[a-zA-Z0-9]+)/.*?_acq-(?P<acq>[a-zA-Z0-9]+)_task-(?P<task>[a-zA-Z0-9]+)_(?P<mod>[a-zA-Z0-9]+)_(?P<stat>(cope|varcb)+)\.(?:nii|nii\.gz)'

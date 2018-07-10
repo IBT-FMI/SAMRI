@@ -30,7 +30,7 @@ N_PROCS=max(N_PROCS-4, 2)
 @argh.arg('-m','--measurements', nargs='*', type=str)
 def bru2bids(measurements_base,
 	measurements=[],
-	actual_size=True,
+	inflated_size=False,
 	dataset_name=False,
 	debug=False,
 	exclude={},
@@ -50,9 +50,9 @@ def bru2bids(measurements_base,
 
 	measurements_base : str
 		Path of the top level directory containing all the Bruker scan directories to be converted and reformatted.
-	actual_size : bool, optional
-		Whether to conserve the voxel size reported by the scanner when converting the data to NIfTI.
-		Setting this to `False` multiplies the voxel edge lengths by 10 (i.e. the volume by 1000); this is occasionally done in hackish small animal pipelines, which use routines designed exclusively for human data.
+	inflated_size : bool, optional
+		Whether to inflate the voxel size reported by the scanner when converting the data to NIfTI.
+		Setting this to `True` multiplies the voxel edge lengths by 10 (i.e. the volume by 1000); this is occasionally done in some small animal pipelines, which use routines designed exclusively for human data.
 		Unless you are looking to reproduce such a workflow, this should be set to `True`.
 	dataset_name : string, optional
 		A dataset name that will be written into the BIDS metadata file.
@@ -125,7 +125,7 @@ def bru2bids(measurements_base,
 	get_f_scan.iterables = ("scan_type", functional_scan_types)
 
 	f_bru2nii = pe.Node(interface=bru2nii.Bru2(), name="f_bru2nii")
-	f_bru2nii.inputs.actual_size=actual_size
+	f_bru2nii.inputs.actual_size = not inflated_size
 
 	f_filename = pe.Node(name='f_filename', interface=util.Function(function=bids_naming,input_names=inspect.getargspec(bids_naming)[0], output_names=['filename']))
 	f_filename.inputs.metadata = data_selection
@@ -219,7 +219,7 @@ def bru2bids(measurements_base,
 
 			s_bru2nii = pe.Node(interface=bru2nii.Bru2(), name="s_bru2nii")
 			s_bru2nii.inputs.force_conversion=True
-			s_bru2nii.inputs.actual_size=actual_size
+			s_bru2nii.inputs.actual_size = not inflated_size
 
 			s_filename = pe.Node(name='s_filename', interface=util.Function(function=bids_naming,input_names=inspect.getargspec(bids_naming)[0], output_names=['filename']))
 			s_filename.inputs.metadata = data_selection

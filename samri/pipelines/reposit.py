@@ -99,7 +99,7 @@ def bru2bids(measurements_base,
 			exclude=exclude,
 			measurements=measurements,
 			)
-		structural_scan_types = s_data_selection['scan_type'].unique()
+		structural_scan_types = list(s_data_selection['scan_type'].unique())
 		data_selection = pd.concat([data_selection,s_data_selection])
 	if functional_match:
 		f_data_selection = get_data_selection(measurements_base,
@@ -107,7 +107,7 @@ def bru2bids(measurements_base,
 			exclude=exclude,
 			measurements=measurements,
 			)
-		functional_scan_types = f_data_selection['scan_type'].unique()
+		functional_scan_types = list(f_data_selection['scan_type'].unique())
 		data_selection = pd.concat([data_selection,f_data_selection])
 
 	# we start to define nipype workflow elements (nodes, connections, meta)

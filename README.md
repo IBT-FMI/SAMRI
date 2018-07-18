@@ -23,8 +23,15 @@ unzip samri_bindata
 ```
 
 #### Convert Bruker ParaVision raw directories to BIDS-compliant NIfTI collections:
+All listed examples beyond this one necessitate a BIDS-compliant NIfTI directory tree, as produced via the following command:
 ```
 SAMRI bru2bids -o . -f '{"acquisition":["EPI"]}' -s '{"acquisition":["TurboRARE"]}' samri_bindata
+```
+
+#### Run a spatio-temporal signal decomposition (ICA via FSL):
+This executes minimal preprocessing and [FSL's MELODIC](https://fsl.fmrib.ox.ac.uk/fsl/fslwiki/MELODIC), and is very useful for fast, qualitative diagnosis of functional measurement quality and/or stimulation efficacy.
+```
+SAMRI diagnose bids
 ```
 
 #### Run a full preprocessing pipeline (including template registration) on the BIDS input:

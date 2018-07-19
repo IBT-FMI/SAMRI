@@ -126,8 +126,8 @@ For manual dependency management and overview you may use the following list:
 * [nilearn](https://nilearn.github.io/)
 
 Needed if no other data is available for testing and development:
-* Mouse Brain Atlases: [download link](http://chymera.eu/pkgdata/mouse-brain-atlases-0.1.20180717.zip)
-* SAMRI example binary data: [download link](http://chymera.eu/pkgdata/samri_bindata-0.1.2.zip)
+* Mouse Brain Atlases: [download link](http://chymera.eu/distfiles/mouse-brain-atlases-0.1.20180717.tar.xz)
+* SAMRI example binary data: [download link](http://chymera.eu/distfiles/samri_bindata-0.1.2.tar.xz)
 
 Needed only in conjunction with LabbookDB metadata management:
 * [SQLAlchemy](http://www.sqlalchemy.org/library.html)

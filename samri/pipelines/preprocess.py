@@ -78,8 +78,8 @@ def legacy(bids_base, template,
 		This is commonly used for iron nano-particle Cerebral Blood Volume (CBV) measurements.
 	n_procs : int, optional
 		Number of processors to maximally use for the workflow; if unspecified a best guess will be estimate based on hardware (but not on current load).
-	out_dir : str, optional
-		Output directory --- inside which a directory named `workflow_name`(as well as associated directories) will be created.
+	out_base : str, optional
+		Output base directory --- inside which a directory named `workflow_name` (as well as associated directories) will be created.
 	realign : {"space","time","spacetime",""}, optional
 		Parameter that dictates slictiming correction and realignment of slices. "time" (FSL.SliceTimer) is default, since it works safely. Use others only with caution!
 	registration_mask : str, optional
@@ -103,10 +103,11 @@ def legacy(bids_base, template,
 		Top level name for the output directory.
 	'''
 
-	if not out_dir:
-		out_dir = path.join(bids_base,'preprocessing')
+	if not out_base:
+		out_base = path.join(bids_base,'preprocessing')
 	else:
-		out_dir = path.abspath(path.expanduser(out_dir))
+		out_base = path.abspath(path.expanduser(out_base))
+	out_dir = path.join(out_base,workflow_name)
 
 	if template:
 		if template == "mouse":
@@ -174,7 +175,7 @@ def legacy(bids_base, template,
 	f_deleteorient.inputs.main_option = 'deleteorient'
 
 	datasink = pe.Node(nio.DataSink(), name='datasink')
-	datasink.inputs.base_directory = path.join(out_dir,workflow_name)
+	datasink.inputs.base_directory = out_dir
 	datasink.inputs.parameterization = False
 	if not (strict or verbose):
 		datasink.inputs.ignore_exception = True
@@ -382,7 +383,7 @@ def legacy(bids_base, template,
 	#this gives the name of the workdir, the output name is passed to the datasink
 	workflow = pe.Workflow(name=workdir_name)
 	workflow.connect(workflow_connections)
-	workflow.base_dir = path.join(out_dir)
+	workflow.base_dir = out_base
 	workflow.config = workflow_config
 	workflow.write_graph(dotfilename=path.join(workflow.base_dir,workdir_name,"graph.dot"), graph2use="hierarchical", format="png")
 
@@ -413,7 +414,7 @@ def generic(bids_base, template,
 	keep_work=False,
 	negative_contrast_agent=False,
 	n_procs=N_PROCS,
-	out_dir=None,
+	out_base=None,
 	realign="time",
 	registration_mask="",
 	sessions=[],
@@ -457,8 +458,8 @@ def generic(bids_base, template,
 		This is commonly used for iron nano-particle Cerebral Blood Volume (CBV) measurements.
 	n_procs : int, optional
 		Number of processors to maximally use for the workflow; if unspecified a best guess will be estimate based on hardware (but not on current load).
-	out_dir : str, optional
-		Output directory --- inside which a directory named `workflow_name`(as well as associated directories) will be created.
+	out_base : str, optional
+		Output base directory --- inside which a directory named `workflow_name`(as well as associated directories) will be created.
 	realign : {"space","time","spacetime",""}, optional
 		Parameter that dictates slictiming correction and realignment of slices. "time" (FSL.SliceTimer) is default, since it works safely. Use others only with caution!
 	registration_mask : str, optional
@@ -482,10 +483,11 @@ def generic(bids_base, template,
 		Top level name for the output directory.
 	'''
 
-	if not out_dir:
-		out_dir = path.join(bids_base,'preprocessing')
+	if not out_base:
+		out_base = path.join(bids_base,'preprocessing')
 	else:
-		out_dir = path.abspath(path.expanduser(out_dir))
+		out_base = path.abspath(path.expanduser(out_base))
+	out_dir = path.join(out_base,workflow_name)
 
 	if template:
 		if template == "mouse":
@@ -536,7 +538,7 @@ def generic(bids_base, template,
 	events_file = pe.Node(name='events_file', interface=util.Function(function=write_bids_events_file,input_names=inspect.getargspec(write_bids_events_file)[0], output_names=['out_file']))
 
 	datasink = pe.Node(nio.DataSink(), name='datasink')
-	datasink.inputs.base_directory = path.join(out_dir,workflow_name)
+	datasink.inputs.base_directory = out_dir
 	datasink.inputs.parameterization = False
 	if not (strict or verbose):
 		datasink.inputs.ignore_exception = True
@@ -790,7 +792,7 @@ def generic(bids_base, template,
 			])
 
 
-	workflow_config = {'execution': {'crashdump_dir': path.join(out_dir,'crashdump'),}}
+	workflow_config = {'execution': {'crashdump_dir': path.join(out_base,'crashdump'),}}
 	if debug:
 		workflow_config['logging'] = {
 			'workflow_level':'DEBUG',
@@ -804,7 +806,7 @@ def generic(bids_base, template,
 	#this gives the name of the workdir, the output name is passed to the datasink
 	workflow = pe.Workflow(name=workdir_name)
 	workflow.connect(workflow_connections)
-	workflow.base_dir = path.join(out_dir)
+	workflow.base_dir = out_base
 	workflow.config = workflow_config
 	workflow.write_graph(dotfilename=path.join(workflow.base_dir,workdir_name,"graph.dot"), graph2use="hierarchical", format="png")
 

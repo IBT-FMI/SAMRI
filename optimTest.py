@@ -108,15 +108,19 @@ def objective(args):
     out_dir = "preprocessing_optim"
     generic(bids_base,
 	"mouse",
-	functional_match={'task':['JogB','CoglB','CogB2m'],},
-	structural_match={'acquisition':['TurboRARE', 'TurboRARElowcov'],},
-	subjects = ['4012'],
+        functional_match={'acquisition':['EPIlowcov'],},
+        structural_match={'acquisition':['TurboRARElowcov'],},
+        subjects = ['4012'],
 	actual_size=True,
+	negative_contrast_agent=True,
+	keep_work=True,
 	functional_registration_method="composite",
 	params = {'smoothing_sigmas': [float(args['sigma1']), float(args['sigma2']), ]},
 	out_dir = "preprocessing_optim",
         )
        # somehow grab results
+
+    print('------------Done--------------------------')
 
     reg_cc(path=bids_base + "preprocessing_ours/generic/", save = "./f_reg_quality_online", template=template, autofind=True)
 

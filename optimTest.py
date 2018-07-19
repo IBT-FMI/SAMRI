@@ -102,13 +102,11 @@ def objective(args):
     bruker(bids_base,
 	"mouse",
 	functional_match={'task':['JogB','CoglB','CogB2m'],},
-	structural_match={'acquisition':['TurboRARE', 'TurboRARElowcov']},
-	subjects = ['5667'],
-	sessions = ['ofMr1'],
+	structural_match={'acquisition':['TurboRARE', 'TurboRARElowcov'],},
+	subjects = ['4012'],
 	actual_size=True,
 	functional_registration_method="composite",
 	params = {'smoothing_sigmas': [float(args['sigma1']), float(args['sigma2']), ]},
-	bandpass = False,
 	)
        # somehow grab results
 
@@ -150,7 +148,7 @@ global results_dir
 global preprocess_path
 
 
-bids_base = '/media/nexus/storage/ni_data/ofmTest/'
+bids_base = '/media/nexus/storage2/ni_data/christian_bids_data/bids/'
 results = bids_base + 'preprocessing/generic/'
 preprocess_path = bids_base + 'preprocessing/'
 template = '/home/nexus/.samri_files/templates/mouse/DSURQE/DSURQEc_200micron_average.nii'

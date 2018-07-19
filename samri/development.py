@@ -294,7 +294,7 @@ def reg_cc(
 
         for metric in metrics:
                 df = iter_measure_sim(path_template, substitutions,
-                        "/usr/share/mouse-brain-atlases/dsurqec_200micron.nii",
+                        template,
                         metric=metric,
                         radius_or_number_of_bins=radius,
                         sampling_strategy="Regular",

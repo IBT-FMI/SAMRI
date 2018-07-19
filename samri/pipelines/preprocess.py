@@ -31,7 +31,7 @@ def divideby_10(x):
 	"""This is a wrapper function needed in order for nipype workflow connections to accept inline division."""
 	return x/10.
 
-def legacy_bruker(bids_base, template,
+def legacy(bids_base, template,
 	autorotate=False,
 	debug=False,
 	functional_blur_xy=False,
@@ -48,7 +48,7 @@ def legacy_bruker(bids_base, template,
 	subjects=[],
 	tr=1,
 	verbose=False,
-	workflow_name='generic',
+	workflow_name='legacy',
 	):
 	'''
 	Legacy realignment and registration workflow representative of the tweaks and workarounds commonly used in the pre-SAMRI period.
@@ -403,8 +403,7 @@ def legacy_bruker(bids_base, template,
 			else:
 				raise OSError(str(e))
 
-
-def full_prep(bids_base, template,
+def generic(bids_base, template,
 	actual_size=True,
 	autorotate=False,
 	debug=False,

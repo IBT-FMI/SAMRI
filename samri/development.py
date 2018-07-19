@@ -265,7 +265,7 @@ def test_reg_qc(
 def reg_cc(
         path = "~/ni_data/ofM.dr/preprocessing/composite",
         template = "/usr/share/mouse-brain-atlases/dsurqec_200micron.nii",
-        radius=5,
+        radius=8,
         autofind=False,
         plot=False,
         save = "f_reg_quality",

@@ -31,7 +31,7 @@ def divideby_10(x):
 	"""This is a wrapper function needed in order for nipype workflow connections to accept inline division."""
 	return x/10.
 
-def legacy_bruker(bids_base, template,
+def legacy(bids_base, template,
 	autorotate=False,
 	debug=False,
 	functional_blur_xy=False,
@@ -39,7 +39,7 @@ def legacy_bruker(bids_base, template,
 	keep_work=False,
 	negative_contrast_agent=False,
 	n_procs=N_PROCS,
-	out_base=None,
+	out_dir=None,
 	realign="time",
 	registration_mask=False,
 	sessions=[],
@@ -48,7 +48,7 @@ def legacy_bruker(bids_base, template,
 	subjects=[],
 	tr=1,
 	verbose=False,
-	workflow_name='generic',
+	workflow_name='legacy',
 	):
 	'''
 	Legacy realignment and registration workflow representative of the tweaks and workarounds commonly used in the pre-SAMRI period.
@@ -403,8 +403,7 @@ def legacy_bruker(bids_base, template,
 			else:
 				raise OSError(str(e))
 
-
-def full_prep(bids_base, template,
+def generic(bids_base, template,
 	actual_size=True,
 	autorotate=False,
 	debug=False,
@@ -424,6 +423,7 @@ def full_prep(bids_base, template,
 	tr=1,
 	verbose=False,
 	workflow_name='generic',
+	params = {},
 	):
 	'''
 	Generic preprocessing and registration workflow for small animal data in BIDS format.
@@ -592,7 +592,12 @@ def full_prep(bids_base, template,
 		get_s_scan.inputs.bids_base = bids_base
 
 		if actual_size:
-			s_register, s_warp, _, _ = DSURQEc_structural_registration(template, registration_mask)
+			if params:
+				s_register, s_warp, _, _ = DSURQEc_structural_registration(template, parameters = params)
+				#s_register, s_warp, _, _ = DSURQEc_structural_registration(template, registration_mask, parameters = params)
+
+			else:
+				s_register, s_warp, _, _ = DSURQEc_structural_registration(template, registration_mask)
 			#TODO: incl. in func registration
 			if autorotate:
 				workflow_connections.extend([
@@ -682,7 +687,13 @@ def full_prep(bids_base, template,
 	elif functional_registration_method == "composite":
 		if not structural_scan_types.any():
 			raise ValueError('The option `registration="composite"` requires there to be a structural scan type.')
-		_, _, f_register, f_warp = DSURQEc_structural_registration(template, registration_mask)
+
+		if params:
+			_, _, f_register, f_warp  = DSURQEc_structural_registration(template, parameters = params)
+			#_, _, f_register, f_warp  = DSURQEc_structural_registration(template, registration_mask, parameters = params)
+
+		else:
+			_, _, f_register, f_warp  = DSURQEc_structural_registration(template, registration_mask)
 
 		temporal_mean = pe.Node(interface=fsl.MeanImage(), name="temporal_mean")
 

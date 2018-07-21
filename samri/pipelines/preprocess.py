@@ -103,43 +103,17 @@ def legacy(bids_base, template,
 		Top level name for the output directory.
 	'''
 
-	if not out_base:
-		out_base = path.join(bids_base,'preprocessing')
-	else:
-		out_base = path.abspath(path.expanduser(out_base))
-	out_dir = path.join(out_base,workflow_name)
-
-	if template:
-		if template == "mouse":
-			from samri.fetch.templates import fetch_mouse_DSURQE
-			template = fetch_mouse_DSURQE()['template']
-			registration_mask = fetch_mouse_DSURQE()['mask']
-		elif template == "rat":
-			from samri.fetch.templates import fetch_rat_waxholm
-			template = fetch_rat_waxholm()['template']
-			registration_mask = fetch_rat_waxholm()['mask']
-		else:
-			template = path.abspath(path.expanduser(template))
-	else:
-		raise ValueError("No species or template specified")
-		return -1
-
-	bids_base = path.abspath(path.expanduser(bids_base))
-
-	data_selection = bids_data_selection(bids_base, structural_match, functional_match, subjects, sessions)
-
-	# we start to define nipype workflow elements (nodes, connections, meta)
-	subjects_sessions = data_selection[["subject","session"]].drop_duplicates().values.tolist()
-	_func_ind = data_selection[data_selection["modality"] == "func"]
-	func_ind = _func_ind.index.tolist()
-
-	_struct_ind = data_selection[data_selection["modality"] == "anat"]
-	struct_ind = _struct_ind.index.tolist()
-	sel = data_selection.index.tolist()
-
-	if True:
-		print(data_selection)
-		print(subjects_sessions)
+	bids_base, out_dir, template, registration_mask, data_selection, functional_scan_types, structural_scan_types, subjects_sessions, func_ind, struct_ind = common_select(
+			bids_base,
+			out_base,
+			workflow_name,
+			template,
+			registration_mask,
+			functional_match,
+			structural_match,
+			subjects,
+			sessions,
+			)
 
 	get_f_scan = pe.Node(name='get_f_scan', interface=util.Function(function=get_bids_scan,input_names=inspect.getargspec(get_bids_scan)[0], output_names=['scan_path','scan_type','task', 'nii_path', 'nii_name', 'file_name', 'events_name', 'subject_session']))
 	get_f_scan.inputs.ignore_exception = True
@@ -484,48 +458,17 @@ def generic(bids_base, template,
 		Top level name for the output directory.
 	'''
 
-	if not out_base:
-		out_base = path.join(bids_base,'preprocessing')
-	else:
-		out_base = path.abspath(path.expanduser(out_base))
-	out_dir = path.join(out_base,workflow_name)
-
-	if template:
-		if template == "mouse":
-			from samri.fetch.templates import fetch_mouse_DSURQE
-			template = fetch_mouse_DSURQE()['template']
-			registration_mask = fetch_mouse_DSURQE()['mask']
-		elif template == "rat":
-			from samri.fetch.templates import fetch_rat_waxholm
-			template = fetch_rat_waxholm()['template']
-			registration_mask = fetch_rat_waxholm()['mask']
-		else:
-			pass
-	else:
-		raise ValueError("No species or template specified")
-		return -1
-
-	bids_base = path.abspath(path.expanduser(bids_base))
-
-	data_selection = bids_data_selection(bids_base, structural_match, functional_match, subjects, sessions)
-
-	# generate functional and structural scan types
-	functional_scan_types = data_selection.loc[data_selection.modality == 'func']['scan_type'].values
-	structural_scan_types = data_selection.loc[data_selection.modality == 'anat']['scan_type'].values
-
-	# we start to define nipype workflow elements (nodes, connections, meta)
-	subjects_sessions = data_selection[["subject","session"]].drop_duplicates().values.tolist()
-
-	_func_ind = data_selection[data_selection["modality"] == "func"]
-	func_ind = _func_ind.index.tolist()
-
-	_struct_ind = data_selection[data_selection["modality"] == "anat"]
-	struct_ind = _struct_ind.index.tolist()
-	sel = data_selection.index.tolist()
-
-	if True:
-		print(data_selection)
-		print(subjects_sessions)
+	bids_base, out_dir, template, registration_mask, data_selection, functional_scan_types, structural_scan_types, subjects_sessions, func_ind, struct_ind = common_select(
+			bids_base,
+			out_base,
+			workflow_name,
+			template,
+			registration_mask,
+			functional_match,
+			structural_match,
+			subjects,
+			sessions,
+			)
 
 	get_f_scan = pe.Node(name='get_f_scan', interface=util.Function(function=get_bids_scan,input_names=inspect.getargspec(get_bids_scan)[0], output_names=['scan_path','scan_type','task', 'nii_path', 'nii_name', 'file_name', 'events_name', 'subject_session']))
 	get_f_scan.inputs.ignore_exception = True
@@ -838,3 +781,48 @@ def generic(bids_base, template,
 						shutil.rmtree(file_object_path)
 			else:
 				raise OSError(str(e))
+
+def common_select(bids_base, out_base, workflow_name, template, registration_mask, functional_match, structural_match, subjects, sessions):
+	"""Common selection and variable processing function for SAMRI preprocessing workflows."""
+
+	if not out_base:
+		out_base = path.join(bids_base,'preprocessing')
+	else:
+		out_base = path.abspath(path.expanduser(out_base))
+	out_dir = path.join(out_base,workflow_name)
+
+	if template:
+		if template == "mouse":
+			template = '/usr/share/mouse-brain-atlases/dsurqec_200micron.nii'
+			registration_mask = '/usr/share/mouse-brain-atlases/dsurqec_200micron_mask.nii'
+		elif template == "rat":
+			from samri.fetch.templates import fetch_rat_waxholm
+			template = fetch_rat_waxholm()['template']
+			registration_mask = fetch_rat_waxholm()['mask']
+		else:
+			pass
+	else:
+		raise ValueError("No species or template path specified")
+		return -1
+
+	bids_base = path.abspath(path.expanduser(bids_base))
+
+	data_selection = bids_data_selection(bids_base, structural_match, functional_match, subjects, sessions)
+
+	# generate functional and structural scan types
+	functional_scan_types = data_selection.loc[data_selection.modality == 'func']['scan_type'].values
+	structural_scan_types = data_selection.loc[data_selection.modality == 'anat']['scan_type'].values
+
+	# we start to define nipype workflow elements (nodes, connections, meta)
+	subjects_sessions = data_selection[["subject","session"]].drop_duplicates().values.tolist()
+
+	_func_ind = data_selection[data_selection["modality"] == "func"]
+	func_ind = _func_ind.index.tolist()
+
+	_struct_ind = data_selection[data_selection["modality"] == "anat"]
+	struct_ind = _struct_ind.index.tolist()
+
+	if True:
+		print(data_selection)
+		print(subjects_sessions)
+	return bids_base, out_dir, template, registration_mask, data_selection, functional_scan_types, structural_scan_types, subjects_sessions, func_ind, struct_ind

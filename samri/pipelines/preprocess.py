@@ -11,7 +11,7 @@ import nipype.interfaces.utility as util
 import nipype.pipeline.engine as pe
 import pandas as pd
 from nipype.interfaces import ants, afni, bru2nii, fsl, nipy
-from nipype.interfaces.ants import legacy
+import nipype.interfaces.ants.legacy as antslegacy
 
 from samri.fetch.templates import fetch_rat_waxholm, fetch_mouse_DSURQE
 from samri.pipelines.extra_functions import get_data_selection, get_bids_scan, write_bids_metadata_file, write_bids_events_file, force_dummy_scans, BIDS_METADATA_EXTRACTION_DICTS
@@ -285,7 +285,7 @@ def legacy(bids_base, template,
 	#		(get_s_scan, s_biascorrect, [('nii_path', 'input_image')]),
 	#		])
 
-	f_antsintroduction = pe.Node(interface=legacy.antsIntroduction(), name='ants_introduction')
+	f_antsintroduction = pe.Node(interface=antslegacy.antsIntroduction(), name='ants_introduction')
 	f_antsintroduction.inputs.dimension = 3
 	f_antsintroduction.inputs.reference_image = template
 	#will need updating to `1`

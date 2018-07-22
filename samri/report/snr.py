@@ -13,9 +13,11 @@ except NameError:
 	FileNotFoundError = IOError
 
 def threshold_volume(in_file,
+	substitution,
 	masker='',
 	threshold=45,
 	threshold_is_percentile=True,
+	invert_data=False,
 	):
 	"""Return the volume which lies above a given threshold in a NIfTI (implicitly, in the volume units of the respective NIfTI).
 
@@ -39,13 +41,21 @@ def threshold_volume(in_file,
 		The volume (in volume units of the respective NIfTI) containing values above the given threshold.
 	"""
 
+	if substitution:
+		in_file = in_file.format(**substitution)
 	in_file = path.abspath(path.expanduser(in_file))
-	img = nib.load(in_file)
+	try:
+		img = nib.load(in_file)
+	except FileNotFoundError:
+		return float('NaN')
+
 	if img.header['dim'][0] > 3:
 		img = collapse(img)
 	elif img.header['dim'][0] > 4:
 		raise ValueError("Files with more than 4 dimensions are not currently supported.")
 	data = img.get_data()
+	if invert_data:
+		data = -data
 	x_len = (img.affine[0][0]**2+img.affine[0][1]**2+img.affine[0][2]**2)**(1/2.)
 	y_len = (img.affine[1][0]**2+img.affine[1][1]**2+img.affine[1][2]**2)**(1/2.)
 	z_len = (img.affine[2][0]**2+img.affine[2][1]**2+img.affine[2][2]**2)**(1/2.)

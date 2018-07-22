@@ -49,6 +49,12 @@ def pattern_fc():
 
 	subjectdf.to_csv('~/ni_data/ofM.dr/fc/{}/ctx_pattern_summary.csv'.format(workflow_name))
 
+def vol():
+	from snr import threshold_volume
+	threshold_volume('~/ni_data/ofM.dr/bids/sub-4013/ses-ofM/func/sub-4013_ses-ofM_task-JogB_acq-EPIlowcov_cbv.nii',
+		invert_data=True,
+		)
+
 def pattern_activity():
 	import pandas as pd
 	from samri.report import roi

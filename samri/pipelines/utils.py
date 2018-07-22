@@ -8,6 +8,7 @@ from copy import deepcopy
 
 def bids_data_selection(base, structural_match, functional_match, subjects, sessions,
 	verbose=False,
+	joint_conditions=True,
 	):
 	validate = BIDSValidator()
 	if verbose:
@@ -41,17 +42,27 @@ def bids_data_selection(base, structural_match, functional_match, subjects, sess
 		if functional_match:
 			_df = deepcopy(df)
 			try:
-				for match in functional_match.keys():
-					_df = filter_data(_df, match, functional_match[match])
+				if joint_conditions:
+					for match in functional_match.keys():
+						_df = _df.loc[_df[match].isin(functional_match[match])]
 					res_df = res_df.append(_df)
+				else:
+					for match in structural_match.keys():
+						_df = filter_data(_df, match, functional_match[match])
+						res_df = res_df.append(_df)
 			except:
 				pass
 		if structural_match:
 			_df = deepcopy(df)
 			try:
-				for match in structural_match.keys():
-					_df = filter_data(_df, match, structural_match[match])
+				if joint_conditions:
+					for match in structural_match.keys():
+						_df = _df.loc[_df[match].isin(structural_match[match])]
 					res_df = res_df.append(_df)
+				else:
+					for match in structural_match.keys():
+						_df = filter_data(_df, match, structural_match[match])
+						res_df = res_df.append(_df)
 			except:
 				pass
 		df = res_df

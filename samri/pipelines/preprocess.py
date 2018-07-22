@@ -103,7 +103,7 @@ def legacy(bids_base, template,
 		Top level name for the output directory.
 	'''
 
-	bids_base, out_dir, template, registration_mask, data_selection, functional_scan_types, structural_scan_types, subjects_sessions, func_ind, struct_ind = common_select(
+	bids_base, out_base, out_dir, template, registration_mask, data_selection, functional_scan_types, structural_scan_types, subjects_sessions, func_ind, struct_ind = common_select(
 			bids_base,
 			out_base,
 			workflow_name,
@@ -458,7 +458,7 @@ def generic(bids_base, template,
 		Top level name for the output directory.
 	'''
 
-	bids_base, out_dir, template, registration_mask, data_selection, functional_scan_types, structural_scan_types, subjects_sessions, func_ind, struct_ind = common_select(
+	bids_base, out_base, out_dir, template, registration_mask, data_selection, functional_scan_types, structural_scan_types, subjects_sessions, func_ind, struct_ind = common_select(
 			bids_base,
 			out_base,
 			workflow_name,
@@ -785,12 +785,6 @@ def generic(bids_base, template,
 def common_select(bids_base, out_base, workflow_name, template, registration_mask, functional_match, structural_match, subjects, sessions):
 	"""Common selection and variable processing function for SAMRI preprocessing workflows."""
 
-	if not out_base:
-		out_base = path.join(bids_base,'preprocessing')
-	else:
-		out_base = path.abspath(path.expanduser(out_base))
-	out_dir = path.join(out_base,workflow_name)
-
 	if template:
 		if template == "mouse":
 			template = '/usr/share/mouse-brain-atlases/dsurqec_200micron.nii'
@@ -806,6 +800,12 @@ def common_select(bids_base, out_base, workflow_name, template, registration_mas
 		return -1
 
 	bids_base = path.abspath(path.expanduser(bids_base))
+	if not out_base:
+		out_base = path.join(bids_base,'preprocessing')
+	else:
+		out_base = path.abspath(path.expanduser(out_base))
+	out_dir = path.join(out_base,workflow_name)
+
 
 	data_selection = bids_data_selection(bids_base, structural_match, functional_match, subjects, sessions)
 
@@ -825,4 +825,4 @@ def common_select(bids_base, out_base, workflow_name, template, registration_mas
 	if True:
 		print(data_selection)
 		print(subjects_sessions)
-	return bids_base, out_dir, template, registration_mask, data_selection, functional_scan_types, structural_scan_types, subjects_sessions, func_ind, struct_ind
+	return bids_base, out_base, out_dir, template, registration_mask, data_selection, functional_scan_types, structural_scan_types, subjects_sessions, func_ind, struct_ind

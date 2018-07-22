@@ -176,6 +176,20 @@ def irsabi():
 		out_base='~/ni_data/ofM.dr/preprocessing',
 		)
 
+def irsabi_leg():
+	from samri.pipelines.preprocess import generic, legacy
+
+	bids_base = '~/ni_data/ofM.dr/bids'
+	legacy(bids_base, "/usr/share/mouse-brain-atlases/lambmc_200micron.nii",
+		functional_match={'type':['cbv'],'acquisition':['EPIlowcov']},
+		negative_contrast_agent=True,
+		out_base='~/ni_data/ofM.dr/preprocessing',
+		)
+	legacy(bids_base, "/usr/share/mouse-brain-atlases/lambmc_200micron.nii",
+		functional_match={'type':['bold'],'acquisition':['EPIlowcov']},
+		out_base='~/ni_data/ofM.dr/preprocessing',
+		)
+
 def temporal_qc_separate():
 	import matplotlib.pyplot as plt
 	import matplotlib.ticker as plticker

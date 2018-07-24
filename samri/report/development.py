@@ -1,5 +1,10 @@
 # -*- coding: utf-8 -*-
 
+# Development work, e.g. for higher level functions.
+# These functions are not intended to work on any machine or pass the tests.
+# They are early drafts (e.g. of higher level workflows) intended to be shared among select collaborators or multiple machines of one collaborator.
+# Please don't edit functions which are not yours, and only perform imports in local scope.
+
 def pattern_fc():
 	import pandas as pd
 	from samri.plotting import summary
@@ -50,10 +55,24 @@ def pattern_fc():
 	subjectdf.to_csv('~/ni_data/ofM.dr/fc/{}/ctx_pattern_summary.csv'.format(workflow_name))
 
 def vol():
-	from snr import threshold_volume
-	threshold_volume('~/ni_data/ofM.dr/bids/sub-4013/ses-ofM/func/sub-4013_ses-ofM_task-JogB_acq-EPIlowcov_cbv.nii',
+	from snr import df_threshold_volume ,iter_threshold_volume
+	from samri.utilities import bids_autograb
+	import pandas as pd
+
+	generic_df = bids_autograb('~/ni_data/ofM.dr/preprocessing/generic')
+	generic_df = generic_df.loc[generic_df['type']!='events']
+	generic_df = generic_df.loc[~generic_df['path'].str.endswith('.json')]
+	generic_df['uID'] = generic_df['subject']+generic_df['session']+generic_df['type']
+	print('start paralell')
+	df = pd.DataFrame([])
+	volumes_generic_cbv = df_threshold_volume(generic_df.loc[generic_df['type']=='cbv'],
 		invert_data=True,
 		)
+	print(volumes_generic_cbv)
+	df = df.append(volumes_generic_cbv)
+	volumes_generic_bold = df_threshold_volume(generic_df.loc[generic_df['type']=='bold'],
+		)
+	df = df.append(volumes_generic_bold)
 
 def pattern_activity():
 	import pandas as pd

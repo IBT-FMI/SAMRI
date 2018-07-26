@@ -12,10 +12,134 @@ try:
 except NameError:
 	FileNotFoundError = IOError
 
+def df_threshold_volume(df,
+	mask_path='',
+	threshold=45,
+	threshold_is_percentile=True,
+	invert_data=False,
+	save_as='',
+	):
+	"""
+	Create a `pandas.DataFrame` (optionally savable as `.csv`), containing the means and medians of a number of p-value maps specified by a file template supporting substitution and a substitution list of dictionaries.
+	This function is an iteration wrapper of `samri.report.snr.significant_signal()` using the SAMRI file_template/substitution model.
+
+	Parameters
+	----------
+
+	file_template : str
+		A formattable string containing as format fields keys present in the dictionaries passed to the `substitutions` variable.
+	substitutions : list of dicts
+		A list of dictionaries countaining formatting strings as keys and strings as values.
+	masker : str or nilearn.NiftiMasker, optional
+		Path to a NIfTI file containing a mask (1 and 0 values) or a `nilearn.NiftiMasker` object.
+		NOT YET SUPPORTED!
+	threshold : float, optional
+		A float giving the voxel value threshold.
+	threshold_is_percentile : bool, optional
+		Whether `threshold` is to be interpreted not literally, but as a percentile of the data matrix.
+		This is useful for making sure that the volume estimation is not susceptible to the absolute value range, but only the value distribution.
+	save_as : str, optional
+		Path to which to save the Pandas DataFrame.
+
+	Returns
+	-------
+
+	pandas.DataFrame
+		Pandas DataFrame object containing a row for each analyzed file and columns named 'Mean', 'Median', and (provided the respective key is present in the `sustitutions` variable) 'subject', 'session', 'task', and 'acquisition'.
+	"""
+
+
+	in_files = df['path'].tolist()
+
+	# This is an easy jop CPU-wise
+	n_jobs = mp.cpu_count()
+	iter_data = Parallel(n_jobs=n_jobs, verbose=0, backend="threading")(map(delayed(threshold_volume),
+		in_files,
+		[mask_path]*len(in_files),
+		[threshold]*len(in_files),
+		[threshold_is_percentile]*len(in_files),
+		[invert_data]*len(in_files),
+		))
+
+	df['thresholded volume'] = iter_data
+
+	if save_as:
+		save_as = path.abspath(path.expanduser(save_as))
+		if save_as.lower().endswith('.csv'):
+			df.to_csv(save_as)
+		else:
+			raise ValueError("Please specify an output path ending in any one of "+",".join((".csv",))+".")
+	return df
+
+def iter_threshold_volume(file_template, substitutions,
+	mask_path='',
+	threshold=45,
+	threshold_is_percentile=True,
+	invert_data=False,
+	save_as='',
+	):
+	"""
+	Create a `pandas.DataFrame` (optionally savable as `.csv`), containing the means and medians of a number of p-value maps specified by a file template supporting substitution and a substitution list of dictionaries.
+	This function is an iteration wrapper of `samri.report.snr.significant_signal()` using the SAMRI file_template/substitution model.
+
+	Parameters
+	----------
+
+	file_template : str
+		A formattable string containing as format fields keys present in the dictionaries passed to the `substitutions` variable.
+	substitutions : list of dicts
+		A list of dictionaries countaining formatting strings as keys and strings as values.
+	masker : str or nilearn.NiftiMasker, optional
+		Path to a NIfTI file containing a mask (1 and 0 values) or a `nilearn.NiftiMasker` object.
+		NOT YET SUPPORTED!
+	threshold : float, optional
+		A float giving the voxel value threshold.
+	threshold_is_percentile : bool, optional
+		Whether `threshold` is to be interpreted not literally, but as a percentile of the data matrix.
+		This is useful for making sure that the volume estimation is not susceptible to the absolute value range, but only the value distribution.
+	save_as : str, optional
+		Path to which to save the Pandas DataFrame.
+
+	Returns
+	-------
+
+	pandas.DataFrame
+		Pandas DataFrame object containing a row for each analyzed file and columns named 'Mean', 'Median', and (provided the respective key is present in the `sustitutions` variable) 'subject', 'session', 'task', and 'acquisition'.
+	"""
+
+	n_jobs = mp.cpu_count()-2
+	iter_data = Parallel(n_jobs=n_jobs, verbose=0, backend="threading")(map(delayed(threshold_volume),
+		[file_template]*len(substitutions),
+		substitutions,
+		[mask_path]*len(substitutions),
+		[threshold]*len(substitutions),
+		[threshold_is_percentile]*len(substitutions),
+		[invert_data]*len(substitutions),
+		))
+
+	df_items = [
+		('Volume', [i[1] for i in iter_data]),
+		]
+	df = pd.DataFrame.from_items(df_items)
+	for field in ['subject','session','task','acquisition']:
+		try:
+			df[field] = [i[field] for i in substitutions]
+		except KeyError:
+			pass
+	if save_as:
+		save_as = path.abspath(path.expanduser(save_as))
+		if save_as.lower().endswith('.csv'):
+			df.to_csv(save_as)
+		else:
+			raise ValueError("Please specify an output path ending in any one of "+",".join((".csv",))+".")
+	return df
+
 def threshold_volume(in_file,
+	substitution,
 	masker='',
 	threshold=45,
 	threshold_is_percentile=True,
+	invert_data=False,
 	):
 	"""Return the volume which lies above a given threshold in a NIfTI (implicitly, in the volume units of the respective NIfTI).
 
@@ -39,13 +163,21 @@ def threshold_volume(in_file,
 		The volume (in volume units of the respective NIfTI) containing values above the given threshold.
 	"""
 
+	if substitution:
+		in_file = in_file.format(**substitution)
 	in_file = path.abspath(path.expanduser(in_file))
-	img = nib.load(in_file)
+	try:
+		img = nib.load(in_file)
+	except FileNotFoundError:
+		return float('NaN')
+
 	if img.header['dim'][0] > 3:
 		img = collapse(img)
 	elif img.header['dim'][0] > 4:
 		raise ValueError("Files with more than 4 dimensions are not currently supported.")
 	data = img.get_data()
+	if invert_data:
+		data = -data
 	x_len = (img.affine[0][0]**2+img.affine[0][1]**2+img.affine[0][2]**2)**(1/2.)
 	y_len = (img.affine[1][0]**2+img.affine[1][1]**2+img.affine[1][2]**2)**(1/2.)
 	z_len = (img.affine[2][0]**2+img.affine[2][1]**2+img.affine[2][2]**2)**(1/2.)

@@ -6,6 +6,7 @@ import multiprocessing as mp
 from os import path
 from joblib import Parallel, delayed
 from samri.utilities import collapse
+from copy import deepcopy
 
 try:
 	FileNotFoundError
@@ -48,11 +49,13 @@ def df_threshold_volume(df,
 		Pandas DataFrame object containing a row for each analyzed file and columns named 'Mean', 'Median', and (provided the respective key is present in the `sustitutions` variable) 'subject', 'session', 'task', and 'acquisition'.
 	"""
 
+	#Do not overwrite the imput object
+	df = deepcopy(df)
 
 	in_files = df['path'].tolist()
-
-	# This is an easy jop CPU-wise
-	n_jobs = mp.cpu_count()
+	# This is an easy jop CPU-wise, but not memory-wise.
+	n_jobs = max(mp.cpu_count()/2+2,2)
+	print(in_files)
 	iter_data = Parallel(n_jobs=n_jobs, verbose=0, backend="threading")(map(delayed(threshold_volume),
 		in_files,
 		[mask_path]*len(in_files),
@@ -61,6 +64,10 @@ def df_threshold_volume(df,
 		[invert_data]*len(in_files),
 		))
 
+	print(iter_data)
+	print(len(in_files))
+	print(len(iter_data))
+	print(df.shape)
 	df['thresholded volume'] = iter_data
 
 	if save_as:
@@ -139,7 +146,6 @@ def threshold_volume(in_file,
 	masker='',
 	threshold=45,
 	threshold_is_percentile=True,
-	invert_data=False,
 	):
 	"""Return the volume which lies above a given threshold in a NIfTI (implicitly, in the volume units of the respective NIfTI).
 
@@ -176,8 +182,6 @@ def threshold_volume(in_file,
 	elif img.header['dim'][0] > 4:
 		raise ValueError("Files with more than 4 dimensions are not currently supported.")
 	data = img.get_data()
-	if invert_data:
-		data = -data
 	x_len = (img.affine[0][0]**2+img.affine[0][1]**2+img.affine[0][2]**2)**(1/2.)
 	y_len = (img.affine[1][0]**2+img.affine[1][1]**2+img.affine[1][2]**2)**(1/2.)
 	z_len = (img.affine[2][0]**2+img.affine[2][1]**2+img.affine[2][2]**2)**(1/2.)
@@ -186,6 +190,10 @@ def threshold_volume(in_file,
 		threshold = np.percentile(data,threshold)
 	threshold_voxels = (data > threshold).sum()
 	threshold_volume = voxel_volume * threshold_voxels
+	print('threshold:',threshold)
+	print('threshold_volume:',threshold_volume)
+	print('min(data):',min(data))
+	print('max(data):',max(data))
 
 	return threshold_volume
 

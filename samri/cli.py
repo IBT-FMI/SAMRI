@@ -8,8 +8,9 @@ from samri.pipelines.glm import l1
 
 def main():
 	# Adapting function names to 1-level hierarchy
-	full.__name__ = 'full-prep'
-	argh.dispatch_commands([diagnose, bru2bids, l1, full])
+	generic.__name__ = 'generic-prep'
+	legacy.__name__ = 'legacy-prep'
+	argh.dispatch_commands([diagnose, bru2bids, l1, generic, legacy])
 
 if __name__ == '__main__':
 	main()

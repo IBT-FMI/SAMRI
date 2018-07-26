@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 ROOT="$(realpath "$(dirname "$0")")"
 

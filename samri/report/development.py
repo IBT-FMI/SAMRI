@@ -62,17 +62,18 @@ def vol():
 	generic_df = bids_autograb('~/ni_data/ofM.dr/preprocessing/generic')
 	generic_df = generic_df.loc[generic_df['type']!='events']
 	generic_df = generic_df.loc[~generic_df['path'].str.endswith('.json')]
-	generic_df['uID'] = generic_df['subject']+generic_df['session']+generic_df['type']
+	generic_df['uID'] = generic_df['subject']+'_'+generic_df['session']+'_'+generic_df['type']
 	print('start paralell')
 	df = pd.DataFrame([])
-	volumes_generic_cbv = df_threshold_volume(generic_df.loc[generic_df['type']=='cbv'],
-		invert_data=True,
-		)
-	print(volumes_generic_cbv)
-	df = df.append(volumes_generic_cbv)
-	volumes_generic_bold = df_threshold_volume(generic_df.loc[generic_df['type']=='bold'],
-		)
-	df = df.append(volumes_generic_bold)
+	df_ = generic_df.loc[generic_df['type']=='cbv']
+	df_ = df_threshold_volume(df_,)
+	print(df_)
+	df = df.append(df_)
+	df_ = generic_df.loc[generic_df['type']=='bold']
+	df_ = df_threshold_volume(df_)
+	df = df.append(df_)
+	df['Pipeline'] = 'Generic'
+	print(df)
 
 def pattern_activity():
 	import pandas as pd

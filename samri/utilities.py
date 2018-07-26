@@ -10,11 +10,11 @@ from bids.grabbids import BIDSValidator
 N_PROCS=max(multiprocessing.cpu_count()-2,2)
 
 def bids_autograb(bids_dir):
+	bids_dir = path.abspath(path.expanduser(bids_dir))
 	validate = BIDSValidator()
 	layout = BIDSLayout(bids_dir)
 	df = layout.as_data_frame()
-	print(df)
-
+	return df
 
 def bids_autofind(bids_dir,
 	modality='',

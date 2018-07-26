@@ -165,10 +165,7 @@ def DSURQEc_structural_registration(template,
 	s_registration.inputs.sampling_percentage = [i["sampling_percentage"] for i in s_parameters]
 	s_registration.inputs.convergence_threshold = [i["convergence_threshold"] for i in s_parameters]
 	s_registration.inputs.convergence_window_size = [i["convergence_window_size"] for i in s_parameters]
-	
-	s_registration.inputs.smoothing_sigmas = [parameters["smoothing_sigmas"]]
-	
-	
+	s_registration.inputs.smoothing_sigmas = [i["smoothing_sigmas"] for i in s_parameters]
 	s_registration.inputs.sigma_units = [i["sigma_units"] for i in s_parameters]
 	s_registration.inputs.shrink_factors = [i["shrink_factors"] for i in s_parameters]
 	s_registration.inputs.use_estimate_learning_rate_once = [i["use_estimate_learning_rate_once"] for i in s_parameters]

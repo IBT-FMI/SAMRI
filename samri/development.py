@@ -161,7 +161,6 @@ def irsabi():
 		structural_match={'acquisition':['TurboRARElowcov'],},
 		actual_size=True,
 		functional_registration_method="composite",
-		negative_contrast_agent=True,
 		out_base='~/ni_data/ofM.dr/preprocessing',
 		keep_work=True,
 		)
@@ -175,7 +174,6 @@ def irsabi():
 		)
 	legacy(bids_base, "/usr/share/mouse-brain-atlases/lambmc_200micron.nii",
 		functional_match={'type':['cbv'],'acquisition':['EPIlowcov']},
-		negative_contrast_agent=True,
 		out_base='~/ni_data/ofM.dr/preprocessing',
 		)
 	legacy(bids_base, "/usr/share/mouse-brain-atlases/lambmc_200micron.nii",

@@ -201,11 +201,19 @@ def threshold_volume(in_file,
 	y_len = (img.affine[1][0]**2+img.affine[1][1]**2+img.affine[1][2]**2)**(1/2.)
 	z_len = (img.affine[2][0]**2+img.affine[2][1]**2+img.affine[2][2]**2)**(1/2.)
 	voxel_volume = x_len*y_len*z_len
-	if threshold_is_percentile:
-		print('threshold_percentile:',threshold)
-		threshold = np.percentile(data,threshold)
-	print('threshold:',threshold)
-	threshold_voxels = (data > threshold).sum()
+
+	if inverted_data and not threshold_is_percentile:
+		threshold_voxels = (data < threshold).sum()
+		print('threshold:',threshold)
+	else:
+		if inverted_data:
+			threshold = 100-threshold
+		print('threshold:',threshold)
+		if threshold_is_percentile:
+			threshold = np.percentile(data,threshold)
+			print('threshold_percentile:',threshold)
+		threshold_voxels = (data > threshold).sum()
+
 	print('threshold_voxels:',threshold_voxels)
 	threshold_volume = voxel_volume * threshold_voxels
 	print('threshold_volume:',threshold_volume)

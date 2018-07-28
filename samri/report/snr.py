@@ -15,9 +15,9 @@ except NameError:
 
 def df_threshold_volume(df,
 	masker='',
-	threshold=45,
+	threshold=60,
 	threshold_is_percentile=True,
-	invert_data=False,
+	inverted_data=False,
 	save_as='',
 	):
 	"""
@@ -65,13 +65,15 @@ def df_threshold_volume(df,
 		inverted_data_mask = [all(i) for i in mask]
 	elif inverted_data:
 		inverted_data_mask = [True]*iter_length
+	else:
+		inverted_data_mask = [False]*iter_length
 	# This is an easy jop CPU-wise, but not memory-wise.
-	n_jobs = max(mp.cpu_count()/2+2,2)
+	n_jobs = max(mp.cpu_count()/2+4,2)
 	print(in_files)
 	iter_data = Parallel(n_jobs=n_jobs, verbose=0, backend="threading")(map(delayed(threshold_volume),
 		in_files,
-		[None]*iter_lenght,
-		[mask_path]*iter_length,
+		[None]*iter_length,
+		[masker]*iter_length,
 		[threshold]*iter_length,
 		[threshold_is_percentile]*iter_length,
 		inverted_data_mask,
@@ -92,7 +94,7 @@ def df_threshold_volume(df,
 
 def iter_threshold_volume(file_template, substitutions,
 	mask_path='',
-	threshold=45,
+	threshold=60,
 	threshold_is_percentile=True,
 	invert_data=False,
 	save_as='',
@@ -192,10 +194,10 @@ def threshold_volume(in_file,
 	except FileNotFoundError:
 		return float('NaN')
 
-	if img.header['dim'][0] > 3:
-		img = collapse(img)
-	elif img.header['dim'][0] > 4:
+	if img.header['dim'][0] > 4:
 		raise ValueError("Files with more than 4 dimensions are not currently supported.")
+	elif img.header['dim'][0] > 3:
+		img = collapse(img)
 	data = img.get_data()
 	x_len = (img.affine[0][0]**2+img.affine[0][1]**2+img.affine[0][2]**2)**(1/2.)
 	y_len = (img.affine[1][0]**2+img.affine[1][1]**2+img.affine[1][2]**2)**(1/2.)

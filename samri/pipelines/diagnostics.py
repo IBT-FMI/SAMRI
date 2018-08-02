@@ -121,7 +121,7 @@ def diagnose(bids_base,
 	bids_container.inputs.selection_df = data_selection
 
 	datasink = pe.Node(nio.DataSink(), name='datasink')
-	datasink.inputs.base_directory = path.abspath(path.join(bids_base,'..','diagnostic'))
+	datasink.inputs.base_directory = path.abspath(path.join(bids_base,'..',workflow_name))
 	datasink.inputs.parameterization = False
 
 	melodic = pe.Node(interface=fsl.model.MELODIC(), name="melodic")
@@ -188,7 +188,7 @@ def diagnose(bids_base,
 			(dummy_scans, melodic, [('out_file', 'in_files')]),
 			])
 
-	crashdump_dir = path.abspath(path.join(bids_base,'..','diagnostic_crashdump'))
+	crashdump_dir = path.abspath(path.join(bids_base,'..',workflow_name+'_crashdump'))
 	workflow_config = {'execution': {'crashdump_dir': crashdump_dir}}
 	if debug:
 		workflow_config['logging'] = {
@@ -199,7 +199,7 @@ def diagnose(bids_base,
 			'log_to_file':'true',
 			}
 
-	workdir_name = 'diagnostic_work'
+	workdir_name = workflow_name+'_work'
 	workflow = pe.Workflow(name=workdir_name)
 	workflow.connect(workflow_connections)
 	workflow.base_dir = path.abspath(path.join(bids_base,'..'))

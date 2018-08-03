@@ -59,20 +59,32 @@ def vol():
 	from samri.utilities import bids_autograb
 	import pandas as pd
 
+	base_df = bids_autograb('~/ni_data/ofM.dr/bids')
+	base_df = base_df.loc[~base_df['path'].str.endswith('.json')]
+	base_df = base_df.loc[base_df['type'].isin(['bold','cbv'])]
+	base_df['uID'] = base_df['subject']+'_'+base_df['session']+'_'+base_df['type']
+
 	generic_df = bids_autograb('~/ni_data/ofM.dr/preprocessing/generic')
-	generic_df = generic_df.loc[generic_df['type']!='events']
 	generic_df = generic_df.loc[~generic_df['path'].str.endswith('.json')]
+	generic_df = generic_df.loc[generic_df['type'].isin(['bold','cbv'])]
 	generic_df['uID'] = generic_df['subject']+'_'+generic_df['session']+'_'+generic_df['type']
-	print('start paralell')
+
+	uids = generic_df['uID'].unique()
+	base_df = base_df.loc[base_df['uID'].isin(uids)]
+
+	base_df['Processing'] = 'Generic'
 	df = pd.DataFrame([])
-	df_ = generic_df.loc[generic_df['type']=='cbv']
-	df_ = df_threshold_volume(df_,)
-	print(df_)
+	df_ = df_threshold_volume(base_df,
+		threshold=0.0,
+		threshold_is_percentile=False,
+		)
 	df = df.append(df_)
-	df_ = generic_df.loc[generic_df['type']=='bold']
-	df_ = df_threshold_volume(df_)
+	generic_df['Processing'] = 'Generic'
+	df_ = df_threshold_volume(generic_df, inverted_data={'type':'cbv'},
+		threshold=0.0,
+		threshold_is_percentile=False,
+		)
 	df = df.append(df_)
-	df['Pipeline'] = 'Generic'
 	print(df)
 
 def pattern_activity():

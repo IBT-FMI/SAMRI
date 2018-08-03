@@ -5,6 +5,10 @@
 # They are early drafts (e.g. of higher level workflows) intended to be shared among select collaborators or multiple machines of one collaborator.
 # Please don't edit functions which are not yours, and only perform imports in local scope.
 
+def collapse():
+	from samri.pipelines import manipulations
+	manipulations.collapse_nifti('~/ni_data/ofM.dr/preprocessing/generic', '~/ni_data/ofM.dr/preprocessing/generic_collapsed')
+
 def dbu(
 	data_path="~/ni_data/DBu/",
 	workflow_name="functional_registration",

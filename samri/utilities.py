@@ -141,6 +141,18 @@ def bids_substitution_iterator(sessions, subjects,
 			substitutions.append(substitution)
 	return substitutions
 
+def collapse_by_path(in_path, out_path):
+	"""Wrapper for `samri.utilities.collapse`, supporting an input path and saving object to an output path."""
+	in_path = os.path.abspath(os.path.expanduser(in_path))
+	out_path = os.path.abspath(os.path.expanduser(out_path))
+	img = nib.load(in_path)
+	img = collapse(img)
+	out_dir = os.path.dirname(out_path)
+	if not os.path.exists(out_dir):
+		os.makedirs(out_dir)
+	nib.save(img, out_path)
+	return out_path
+
 def collapse(img):
 	ndim = 0
 	data = img.get_data()

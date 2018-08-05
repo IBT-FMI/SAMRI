@@ -92,7 +92,7 @@ def bids_substitution_iterator(sessions, subjects,
 		A list of session identifiers to include in the iterator.
 	subjects : list
 		A list of subject identifiers to include in the iterator.
-	tasks : list, optional
+	TASKS : list, optional
 		A list of scan types to include in the iterator.
 	data_dir : str, optional
 		Path to the data root (this is where SAMRI creates e.g. `preprocessing`, `l1`, or `l2` directories.
@@ -156,7 +156,7 @@ def iter_collapse_by_path(in_files, out_files,
 
 def collapse_by_path(in_path, out_path):
 	"""Wrapper for `samri.utilities.collapse`, supporting an input path and saving object to an output path."""
-	out_path = out_path+in_path
+	out_path = in_path
 	print("AA1")
 	#print(in_path)
 	#in_path = os.path.abspath(os.path.expanduser(in_path))

@@ -147,14 +147,12 @@ def iter_collapse_by_path(in_files, out_files,
 	n_jobs=None,
 	):
 	"""Patalellized iteration of `samri.utilities.collapse_by_path`."""
-	print("dd")
 	if not n_jobs:
 		n_jobs = max(int(round(mp.cpu_count()/1.3)),2)
 	out_files = Parallel(n_jobs=n_jobs, verbose=0, backend="threading")(map(delayed(collapse_by_path),
 		in_files,
 		out_files,
 		))
-	#print(out_files)
 	return out_files
 
 def collapse_by_path(in_path, out_path):
@@ -164,9 +162,6 @@ def collapse_by_path(in_path, out_path):
 	img = nib.load(in_path)
 	img = collapse(img)
 	out_dir = os.path.dirname(out_path)
-	print('------')
-	print(out_path)
-	print(out_dir)
 	if not os.path.exists(out_dir):
 		#race-condition safe:
 		try:

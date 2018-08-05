@@ -16,10 +16,10 @@ This section includes lines to fetch such data (starting with `wget` and `unzip`
 If dependencies were managed via Portage (e.g. on Gentoo Linux) mouse brain atlases may already be present under `/usr/share/mouse-brain-atlases` and test data under `/usr/share/samri_bindata`.
 
 ```
-wget http://chymera.eu/pkgdata/mouse-brain-atlases-0.1.20180623.zip
-unzip mouse-brain-atlases
-wget http://chymera.eu/pkgdata/samri_bindata-0.1.1.zip
-unzip samri_bindata
+wget http://chymera.eu/distfiles/mouse-brain-atlases-0.2.20180719.tar.xz
+tar xf mouse-brain-atlases-0.2.20180719.tar.xz
+wget http://chymera.eu/distfiles/samri_bindata-0.1.2.tar.xz
+tar xf samri_bindata-0.1.2.tar.xz
 ```
 
 #### Convert Bruker ParaVision raw directories to BIDS-compliant NIfTI collections:

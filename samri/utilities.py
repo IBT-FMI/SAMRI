@@ -3,6 +3,7 @@ import nibabel as nib
 import nipype.interfaces.io as nio
 import numpy as np
 from itertools import product
+from joblib import Parallel, delayed
 from os import path
 from bids.grabbids import BIDSLayout
 from bids.grabbids import BIDSValidator
@@ -141,19 +142,42 @@ def bids_substitution_iterator(sessions, subjects,
 			substitutions.append(substitution)
 	return substitutions
 
+def iter_collapse_by_path(in_files, out_files,
+	n_jobs=N_PROCS,
+	):
+	"""Patalellized iteration of `samri.utilities.collapse_by_path`."""
+	print("dd")
+	out_files = Parallel(n_jobs=n_jobs, verbose=0, backend="threading")(map(delayed(collapse_by_path),
+		in_files,
+		out_files,
+		))
+	print(out_files)
+	return out_files
+
 def collapse_by_path(in_path, out_path):
 	"""Wrapper for `samri.utilities.collapse`, supporting an input path and saving object to an output path."""
-	in_path = os.path.abspath(os.path.expanduser(in_path))
-	out_path = os.path.abspath(os.path.expanduser(out_path))
-	img = nib.load(in_path)
-	img = collapse(img)
-	out_dir = os.path.dirname(out_path)
-	if not os.path.exists(out_dir):
-		os.makedirs(out_dir)
-	nib.save(img, out_path)
+	out_path = out_path+in_path
+	print("AA1")
+	#print(in_path)
+	#in_path = os.path.abspath(os.path.expanduser(in_path))
+	#print("AA2")
+	#out_path = os.path.abspath(os.path.expanduser(out_path))
+	#print("AA3")
+	#img = nib.load(in_path)
+	#print("AA4")
+	#img = collapse(img)
+	#print("AA5")
+	#out_dir = os.path.dirname(out_path)
+	#print("AA6")
+	#if not os.path.exists(out_dir):
+	#	os.makedirs(out_dir)
+	#print("AA7")
+	#nib.save(img, out_path)
+	#print("AA8")
 	return out_path
 
 def collapse(img):
+	print("BB")
 	ndim = 0
 	data = img.get_data()
 	for i in range(len(img.header['dim'])-1):

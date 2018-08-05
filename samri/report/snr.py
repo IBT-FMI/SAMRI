@@ -217,6 +217,7 @@ def threshold_volume(in_file,
 		threshold_voxels = (data > threshold).sum()
 
 	print('threshold_voxels:',threshold_voxels)
+	print('voxel_volume':voxel_volume,x_len,y_len,z_len)
 	threshold_volume = voxel_volume * threshold_voxels
 	print('threshold_volume:',threshold_volume)
 	print('in_file:',in_file)

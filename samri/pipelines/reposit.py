@@ -33,6 +33,7 @@ def bru2bids(measurements_base,
 	inflated_size=False,
 	dataset_name=False,
 	debug=False,
+	diffusion_match={},
 	exclude={},
 	functional_match={},
 	keep_crashdump=False,
@@ -60,12 +61,15 @@ def bru2bids(measurements_base,
 	debug : bool, optional
 		Whether to enable debug support.
 		This prints the data selection before passing it to the nipype workflow management system, and turns on debug support in nipype (leading to more verbose logging).
+	diffusion_match : dict, optional
+		A dictionary with any combination of "session", "subject", "task", and "acquisition" as keys and corresponding lists of identifiers as values.
+		Only diffusion scans matching all identifiers will be included - i.e. this is a whitelist.
 	exclude : dict, optional
 		A dictionary with any combination of "session", "subject", "task" , and "acquisition" as keys and corresponding identifiers as values.
 		Only scans not matching any of the listed criteria will be included in the workfolow - i.e. this is a blacklist (for functional and structural scans).
 	functional_match : dict, optional
 		A dictionary with any combination of "session", "subject", "task", and "acquisition" as keys and corresponding lists of identifiers as values.
-		Functional scans matching all identifiers will be included - i.e. this is a whitelist.
+		Only Functional scans matching all identifiers will be included - i.e. this is a whitelist.
 	keep_work : bool, optional
 		Whether to keep the work directory (containing all the intermediary workflow steps, as managed by nipypye).
 		This is useful for debugging and quality control.
@@ -80,7 +84,7 @@ def bru2bids(measurements_base,
 		If not present the BIDS records will be created in the `measurements_base` directory.
 	structural_match : dict, optional
 		A dictionary with any combination of "session", "subject", "task", and "acquisition" as keys and corresponding lists of identifiers as values.
-		Functional scans matching all identifiers will be included - i.e. this is a whitelist.
+		Only structural scans matching all identifiers will be included - i.e. this is a whitelist.
 	"""
 
 	measurements_base = path.abspath(path.expanduser(measurements_base))

@@ -96,7 +96,7 @@ def bru2bids(measurements_base,
 	out_dir = path.join(out_base,'bids')
 
 	# define measurement directories to be processed, and populate the list either with the given include_measurements, or with an intelligent selection
-	functional_scan_types = structural_scan_types = []
+	functional_scan_types = diffusion_scan_types = structural_scan_types = []
 	data_selection = pd.DataFrame([])
 	if structural_match:
 		s_data_selection = get_data_selection(measurements_base,

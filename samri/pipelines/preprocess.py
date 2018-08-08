@@ -43,11 +43,9 @@ def legacy(bids_base, template,
 	realign="time",
 	registration_mask=False,
 	sessions=[],
-	strict=False,
 	structural_match={},
 	subjects=[],
 	tr=1,
-	verbose=False,
 	workflow_name='legacy',
 	):
 	'''
@@ -87,8 +85,6 @@ def legacy(bids_base, template,
 		This mask will constrain the area for similarity metric evaluation, but the data will not be cropped.
 	sessions : list, optional
 		A whitelist of sessions to include in the workflow, if the list is empty there is no whitelist and all sessions will be considered.
-	strict : bool, str
-		Whether to fail on individual iteration failures.
 	structural_match : dict, optional
 		Dictionary specifying a whitelist to use for structural data inclusion into the workflow; if dictionary is empty no whitelist is present and all data will be considered.
 		The dictionary should have keys which are 'acquisition', or 'modality', and values which are lists of acceptable strings for the respective BIDS field.
@@ -97,8 +93,6 @@ def legacy(bids_base, template,
 	tr : float, optional
 		Repetition time, explicitly.
 		WARNING! This is a parameter waiting for deprecation.
-	verbose : bool, str
-		Whether to provide large amounts of command line output.
 	workflow_name : str, optional
 		Top level name for the output directory.
 	'''
@@ -151,8 +145,6 @@ def legacy(bids_base, template,
 	datasink = pe.Node(nio.DataSink(), name='datasink')
 	datasink.inputs.base_directory = out_dir
 	datasink.inputs.parameterization = False
-	if not (strict or verbose):
-		datasink.inputs.ignore_exception = True
 
 	workflow_connections = [
 		(get_f_scan, dummy_scans, [('nii_path', 'in_file')]),
@@ -392,11 +384,9 @@ def generic(bids_base, template,
 	realign="time",
 	registration_mask="",
 	sessions=[],
-	strict=False,
 	structural_match={},
 	subjects=[],
 	tr=1,
-	verbose=False,
 	workflow_name='generic',
 	params = {},
 	):
@@ -442,8 +432,6 @@ def generic(bids_base, template,
 		This mask will constrain the area for similarity metric evaluation, but the data will not be cropped.
 	sessions : list, optional
 		A whitelist of sessions to include in the workflow, if the list is empty there is no whitelist and all sessions will be considered.
-	strict : bool, str
-		Whether to fail on individual iteration failures.
 	structural_match : dict, optional
 		Dictionary specifying a whitelist to use for structural data inclusion into the workflow; if dictionary is empty no whitelist is present and all data will be considered.
 		The dictionary should have keys which are 'acquisition', or 'modality', and values which are lists of acceptable strings for the respective BIDS field.
@@ -452,8 +440,6 @@ def generic(bids_base, template,
 	tr : float, optional
 		Repetition time, explicitly.
 		WARNING! This is a parameter waiting for deprecation.
-	verbose : bool, str
-		Whether to provide large amounts of command line output.
 	workflow_name : str, optional
 		Top level name for the output directory.
 	'''
@@ -484,8 +470,6 @@ def generic(bids_base, template,
 	datasink = pe.Node(nio.DataSink(), name='datasink')
 	datasink.inputs.base_directory = out_dir
 	datasink.inputs.parameterization = False
-	if not (strict or verbose):
-		datasink.inputs.ignore_exception = True
 
 	workflow_connections = [
 		(get_f_scan, dummy_scans, [('nii_path', 'in_file')]),

@@ -104,6 +104,11 @@ def objective(args):
     # for phase in phases:
         # Phases['f_rigid'] = ... args['f_rigid']
 
+    print('jijijijo')
+    print(type(args['sigma1']))
+    testo = np.array(args['sigma1']).astype('int')
+    print(testo)
+    print(type(testo))
 
     out_dir = "preprocessing_optim"
     generic(bids_base,
@@ -115,14 +120,17 @@ def objective(args):
 	negative_contrast_agent=True,
 	keep_work=True,
 	functional_registration_method="composite",
-	params = {'smoothing_sigmas': [float(args['sigma1']), float(args['sigma2']), ]},
-	out_dir = "preprocessing_optim",
+	#params = {'smoothing_sigmas': [float(args['sigma1']), float(args['sigma2']), float(args['sigma3']), ]},
+        params = {'smoothing_sigmas': [np.asarray(args['sigma1']),
+            np.asarray(args['sigma2']),np.asarray(args['sigma3']),
+            ]},
+	out_dir = preprocess_path,
         )
        # somehow grab results
 
     print('------------Done--------------------------')
 
-    reg_cc(path=bids_base + "preprocessing_ours/generic/", save = "./f_reg_quality_online", template=template, autofind=True)
+    reg_cc(results, save = "./f_reg_quality_online", template=template, autofind=True)
 
     metrics_onl, means_onl, stds_onl = evaluateMetrics(fname="./f_reg_quality_online", metrics=['CC'])
 
@@ -154,15 +162,15 @@ def objective(args):
 # TODO: extend
 
 space = {
-        'sigma1' : hp.choice('sigma1',[8,4,2,1]),
-        'sigma2' : hp.choice('sigma2',[4,2,1,0]),
+        'sigma1' : hp.choice('sigma1',[[8.0,4.0],[4.0,2.0],[2.0,1.0],[1.0,0.0]]),
+        'sigma2' : hp.choice('sigma2',[[4.0,3.0],[3.0,2.0],[2.0,1.0],[1.0,0.0]]),
+        'sigma3' : hp.choice('sigma3',[[4.0,3.0],[3.0,2.0],[2.0,1.0],[1.0,0.0]]),
         }
 
 global bids_base
 global template
 global results_dir
 global preprocess_path
-
 
 bids_base = '/media/nexus/storage2/ni_data/christian_bids_data/bids/'
 results = bids_base + 'preprocessing/generic/'

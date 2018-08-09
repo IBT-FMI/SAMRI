@@ -137,7 +137,7 @@ def structural_registration(template, num_threads=4):
 
 	return registration, s_warp, f_warp
 
-def DSURQEc_structural_registration(template,
+def DSURQEc_structural_registration_optim(template,
 	mask="/usr/share/mouse-brain-atlases/dsurqec_200micron_mask.nii",
 	num_threads=4,
 	phase_dictionary=PHASES,
@@ -165,10 +165,22 @@ def DSURQEc_structural_registration(template,
 	s_registration.inputs.sampling_percentage = [i["sampling_percentage"] for i in s_parameters]
 	s_registration.inputs.convergence_threshold = [i["convergence_threshold"] for i in s_parameters]
 	s_registration.inputs.convergence_window_size = [i["convergence_window_size"] for i in s_parameters]
-	
-	s_registration.inputs.smoothing_sigmas = [parameters["smoothing_sigmas"]]
-	
-	
+
+	print([parameters["smoothing_sigmas"]])
+	print([i["smoothing_sigmas"] for i in s_parameters])
+	import time
+	time.sleep(10)
+
+       	s_registration.inputs.smoothing_sigmas = [i["smoothing_sigmas"] for i in s_parameters]
+
+	import numpy as np
+
+	s_registration.inputs.smoothing_sigmas = np.asarray(parameters["smoothing_sigmas"]).tolist()
+
+	print(np.asarray(parameters["smoothing_sigmas"]))
+	import time
+	time.sleep(10)
+
 	s_registration.inputs.sigma_units = [i["sigma_units"] for i in s_parameters]
 	s_registration.inputs.shrink_factors = [i["shrink_factors"] for i in s_parameters]
 	s_registration.inputs.use_estimate_learning_rate_once = [i["use_estimate_learning_rate_once"] for i in s_parameters]
@@ -230,6 +242,100 @@ def DSURQEc_structural_registration(template,
 	s_warp.num_threads = num_threads
 
 	return s_registration, s_warp, f_registration, f_warp
+
+def DSURQEc_structural_registration(template,
+        mask="/usr/share/mouse-brain-atlases/dsurqec_200micron_mask.nii",
+        num_threads=4,
+        phase_dictionary=PHASES,
+        s_phases=["s_rigid","affine","syn"],
+        f_phases=["f_rigid",],
+        ):
+
+        s_parameters = [phase_dictionary[selection] for selection in s_phases]
+
+        s_registration = pe.Node(ants.Registration(), name="s_register")
+        s_registration.inputs.fixed_image = path.abspath(path.expanduser(template))
+        s_registration.inputs.output_transform_prefix = "output_"
+        s_registration.inputs.transforms = [i["transforms"] for i in s_parameters] ##
+        s_registration.inputs.transform_parameters = [i["transform_parameters"] for i in s_parameters] ##
+        s_registration.inputs.number_of_iterations = [i["number_of_iterations"] for i in s_parameters] #
+        s_registration.inputs.dimension = 3
+        s_registration.inputs.write_composite_transform = True
+        s_registration.inputs.collapse_output_transforms = True
+        s_registration.inputs.initial_moving_transform_com = True
+        s_registration.inputs.metric = [i["metric"] for i in s_parameters]
+        s_registration.inputs.metric_weight = [i["metric_weight"] for i in s_parameters]
+        s_registration.inputs.radius_or_number_of_bins = [i["radius_or_number_of_bins"] for i in s_parameters]
+        s_registration.inputs.sampling_strategy = [i["sampling_strategy"] for i in s_parameters]
+        s_registration.inputs.sampling_percentage = [i["sampling_percentage"] for i in s_parameters]
+        s_registration.inputs.convergence_threshold = [i["convergence_threshold"] for i in s_parameters]
+        s_registration.inputs.convergence_window_size = [i["convergence_window_size"] for i in s_parameters]
+       	s_registration.inputs.smoothing_sigmas = [i["smoothing_sigmas"] for i in s_parameters]
+	s_registration.inputs.sigma_units = [i["sigma_units"] for i in s_parameters]
+        s_registration.inputs.shrink_factors = [i["shrink_factors"] for i in s_parameters]
+        s_registration.inputs.use_estimate_learning_rate_once = [i["use_estimate_learning_rate_once"] for i in s_parameters]
+        s_registration.inputs.use_histogram_matching = [i["use_histogram_matching"] for i in s_parameters]
+        s_registration.inputs.winsorize_lower_quantile = 0.05
+        s_registration.inputs.winsorize_upper_quantile = 0.95
+        s_registration.inputs.args = '--float'
+        if mask:
+                s_registration.inputs.fixed_image_masks = [path.abspath(path.expanduser(mask))]
+        s_registration.inputs.num_threads = num_threads
+
+        f_parameters = [phase_dictionary[selection] for selection in f_phases]
+
+	print([i["smoothing_sigmas"] for i in s_parameters])
+	import time
+	time.sleep(10)
+
+	f_registration = pe.Node(ants.Registration(), name="f_register")
+        f_registration.inputs.fixed_image = path.abspath(path.expanduser(template))
+        f_registration.inputs.output_transform_prefix = "output_"
+        f_registration.inputs.transforms = [i["transforms"] for i in f_parameters] ##
+        f_registration.inputs.transform_parameters = [i["transform_parameters"] for i in f_parameters] ##
+        f_registration.inputs.number_of_iterations = [i["number_of_iterations"] for i in f_parameters] #
+        f_registration.inputs.dimension = 3
+        f_registration.inputs.write_composite_transform = True
+        f_registration.inputs.collapse_output_transforms = True
+        f_registration.inputs.initial_moving_transform_com = True
+        f_registration.inputs.metric = [i["metric"] for i in f_parameters]
+        f_registration.inputs.metric_weight = [i["metric_weight"] for i in f_parameters]
+        f_registration.inputs.radius_or_number_of_bins = [i["radius_or_number_of_bins"] for i in f_parameters]
+        f_registration.inputs.sampling_strategy = [i["sampling_strategy"] for i in f_parameters]
+        f_registration.inputs.sampling_percentage = [i["sampling_percentage"] for i in f_parameters]
+        f_registration.inputs.convergence_threshold = [i["convergence_threshold"] for i in f_parameters]
+        f_registration.inputs.convergence_window_size = [i["convergence_window_size"] for i in f_parameters]
+        f_registration.inputs.smoothing_sigmas = [i["smoothing_sigmas"] for i in f_parameters]
+        f_registration.inputs.sigma_units = [i["sigma_units"] for i in f_parameters]
+        f_registration.inputs.shrink_factors = [i["shrink_factors"] for i in f_parameters]
+        f_registration.inputs.use_estimate_learning_rate_once = [i["use_estimate_learning_rate_once"] for i in f_parameters]
+        f_registration.inputs.use_histogram_matching = [i["use_histogram_matching"] for i in f_parameters]
+        f_registration.inputs.winsorize_lower_quantile = 0.05
+        f_registration.inputs.winsorize_upper_quantile = 0.95
+        f_registration.inputs.args = '--float'
+        if mask:
+                f_registration.inputs.fixed_image_masks = [path.abspath(path.expanduser(mask))]
+        f_registration.inputs.num_threads = num_threads
+
+
+        f_warp = pe.Node(ants.ApplyTransforms(), name="f_warp")
+        f_warp.inputs.reference_image = path.abspath(path.expanduser(template))
+        f_warp.inputs.input_image_type = 3
+        f_warp.inputs.interpolation = 'Linear'
+        f_warp.inputs.invert_transform_flags = [False, False]
+        f_warp.inputs.terminal_output = 'file'
+        f_warp.num_threads = num_threads
+        f_warp.interface.estimated_memory_gb = 12
+
+        s_warp = pe.Node(ants.ApplyTransforms(), name="s_warp")
+        s_warp.inputs.reference_image = path.abspath(path.expanduser(template))
+        s_warp.inputs.input_image_type = 3
+        s_warp.inputs.interpolation = 'Linear'
+        s_warp.inputs.invert_transform_flags = [False]
+        s_warp.inputs.terminal_output = 'file'
+        s_warp.num_threads = num_threads
+
+        return s_registration, s_warp, f_registration, f_warp
 
 def composite_registration(template, num_threads=4):
 	f_registration = pe.Node(ants.Registration(), name="f_register")

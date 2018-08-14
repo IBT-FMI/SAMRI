@@ -217,7 +217,7 @@ def DSURQEc_structural_registration(template,
 	#DEPRECATED in =nipype-1.1.0
 	#f_warp.inputs.terminal_output = 'file'
 	f_warp.num_threads = num_threads
-	f_warp.interface.estimated_memory_gb = 12
+	f_warp.interface.mem_gb = 12
 
 	s_warp = pe.Node(ants.ApplyTransforms(), name="s_warp")
 	s_warp.inputs.reference_image = path.abspath(path.expanduser(template))

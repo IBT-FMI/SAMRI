@@ -151,52 +151,6 @@ def dr_cont():
 		mask="/usr/share/mouse-brain-atlases/dsurqec_200micron_mask.nii",
 		)
 
-def irsabi():
-	from samri.pipelines.preprocess import generic, legacy
-
-	bids_base = '~/ni_data/ofM.dr/bids'
-	generic(bids_base, "/usr/share/mouse-brain-atlases/dsurqec_200micron.nii",
-		registration_mask="/usr/share/mouse-brain-atlases/dsurqec_200micron_mask.nii",
-		functional_match={'type':['cbv'],},
-		structural_match={'acquisition':['TurboRARElowcov'],},
-		actual_size=True,
-		negative_contrast_agent=True,
-		functional_registration_method="composite",
-		out_base='~/ni_data/ofM.dr/preprocessing',
-		keep_work=True,
-		)
-	generic(bids_base, "/usr/share/mouse-brain-atlases/dsurqec_200micron.nii",
-		registration_mask="/usr/share/mouse-brain-atlases/dsurqec_200micron_mask.nii",
-		functional_match={'type':['bold'],},
-		structural_match={'acquisition':['TurboRARElowcov'],},
-		actual_size=True,
-		functional_registration_method="composite",
-		out_base='~/ni_data/ofM.dr/preprocessing',
-		)
-	legacy(bids_base, "/usr/share/mouse-brain-atlases/lambmc_200micron.nii",
-		functional_match={'type':['cbv'],'acquisition':['EPIlowcov']},
-		negative_contrast_agent=True,
-		out_base='~/ni_data/ofM.dr/preprocessing',
-		)
-	legacy(bids_base, "/usr/share/mouse-brain-atlases/lambmc_200micron.nii",
-		functional_match={'type':['bold'],'acquisition':['EPIlowcov']},
-		out_base='~/ni_data/ofM.dr/preprocessing',
-		)
-
-def irsabi_leg():
-	from samri.pipelines.preprocess import generic, legacy
-
-	bids_base = '~/ni_data/ofM.dr/bids'
-	legacy(bids_base, "/usr/share/mouse-brain-atlases/lambmc_200micron.nii",
-		functional_match={'type':['cbv'],'acquisition':['EPIlowcov']},
-		negative_contrast_agent=True,
-		out_base='~/ni_data/ofM.dr/preprocessing',
-		)
-	legacy(bids_base, "/usr/share/mouse-brain-atlases/lambmc_200micron.nii",
-		functional_match={'type':['bold'],'acquisition':['EPIlowcov']},
-		out_base='~/ni_data/ofM.dr/preprocessing',
-		)
-
 def temporal_qc_separate():
 	import matplotlib.pyplot as plt
 	import matplotlib.ticker as plticker
@@ -362,11 +316,6 @@ def reg_cc(
 			save_as= save + "_" + metric +  ".csv",
                         )
 
-
-def metadata():
-	from samri.pipelines.extra_functions import get_data_selection
-	info = get_data_selection('~/ni_data/test')
-	print(info)
 
 def test_autofind():
 	"""We may be able to turn this into a CI function, if we put together a data fetching script for dummy (empty) BIDS-formatted data.

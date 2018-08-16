@@ -148,7 +148,7 @@ def iter_collapse_by_path(in_files, out_files,
 	):
 	"""Patalellized iteration of `samri.utilities.collapse_by_path`."""
 	if not n_jobs:
-		n_jobs = max(int(round(mp.cpu_count()/1.3)),2)
+		n_jobs = max(int(round(mp.cpu_count()/1.2)),2)
 	out_files = Parallel(n_jobs=n_jobs, verbose=0, backend="threading")(map(delayed(collapse_by_path),
 		in_files,
 		out_files,

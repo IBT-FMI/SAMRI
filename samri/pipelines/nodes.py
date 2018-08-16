@@ -162,24 +162,16 @@ def DSURQEc_structural_registration_optim(template,
 	s_registration.inputs.metric_weight = [i["metric_weight"] for i in s_parameters]
 	s_registration.inputs.radius_or_number_of_bins = [i["radius_or_number_of_bins"] for i in s_parameters]
 	s_registration.inputs.sampling_strategy = [i["sampling_strategy"] for i in s_parameters]
-	s_registration.inputs.sampling_percentage = [i["sampling_percentage"] for i in s_parameters]
+	#s_registration.inputs.sampling_percentage = [i["sampling_percentage"] for i in s_parameters]
 	s_registration.inputs.convergence_threshold = [i["convergence_threshold"] for i in s_parameters]
 	s_registration.inputs.convergence_window_size = [i["convergence_window_size"] for i in s_parameters]
 
-	print([parameters["smoothing_sigmas"]])
-	print([i["smoothing_sigmas"] for i in s_parameters])
-	import time
-	time.sleep(10)
-
-       	s_registration.inputs.smoothing_sigmas = [i["smoothing_sigmas"] for i in s_parameters]
-
 	import numpy as np
 
-	s_registration.inputs.smoothing_sigmas = np.asarray(parameters["smoothing_sigmas"]).tolist()
+	print(parameters)
 
-	print(np.asarray(parameters["smoothing_sigmas"]))
-	import time
-	time.sleep(10)
+	s_registration.inputs.smoothing_sigmas = np.asarray(parameters["smoothing_sigmas"]).tolist()
+	s_registration.inputs.sampling_percentage = np.asarray(parameters["sampling_percentage"]).tolist()
 
 	s_registration.inputs.sigma_units = [i["sigma_units"] for i in s_parameters]
 	s_registration.inputs.shrink_factors = [i["shrink_factors"] for i in s_parameters]

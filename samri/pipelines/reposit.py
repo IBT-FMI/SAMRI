@@ -42,6 +42,7 @@ def bru2bids(measurements_base,
 	n_procs=N_PROCS,
 	out_base=None,
 	structural_match={},
+	workflow_name='bids',
 	):
 	"""
 	Convert and reorganize Bruker "raw" directories (2dseq and ParaVision-formatted metadata files) into a BIDS-organized file hierarchy containing NIfTI files and associated metadata.
@@ -86,6 +87,8 @@ def bru2bids(measurements_base,
 	structural_match : dict, optional
 		A dictionary with any combination of "session", "subject", "task", and "acquisition" as keys and corresponding lists of identifiers as values.
 		Only structural scans matching all identifiers will be included - i.e. this is a whitelist.
+	workflow_name : str, optional
+		Top level name for the output directory.
 	"""
 
 	measurements_base = path.abspath(path.expanduser(measurements_base))
@@ -93,7 +96,7 @@ def bru2bids(measurements_base,
 		out_base = path.abspath(path.expanduser(out_base))
 	else:
 		out_base = measurements_base
-	out_dir = path.join(out_base,'bids')
+	out_dir = path.join(out_base,workflow_name)
 
 	# define measurement directories to be processed, and populate the list either with the given include_measurements, or with an intelligent selection
 	functional_scan_types = diffusion_scan_types = structural_scan_types = []
@@ -196,7 +199,7 @@ def bru2bids(measurements_base,
 			(events_file, datasink, [('out_file', 'func.@events')]),
 			(f_metadata_file, datasink, [('out_file', 'func.@metadata')]),
 			]
-		crashdump_dir = path.join(out_base,'bids_crashdump')
+		crashdump_dir = path.join(out_base,workflow_name+'_crashdump')
 		workflow_config = {'execution': {'crashdump_dir': crashdump_dir}}
 		if debug:
 			workflow_config['logging'] = {
@@ -207,7 +210,7 @@ def bru2bids(measurements_base,
 				'log_to_file':'true',
 				}
 
-		workdir_name = 'bids_work'
+		workdir_name = workflow_name+'_work'
 		workflow = pe.Workflow(name=workdir_name)
 		workflow.connect(workflow_connections)
 		workflow.base_dir = path.join(out_base)
@@ -266,7 +269,7 @@ def bru2bids(measurements_base,
 			(d_bru2nii, datasink, [('nii_file', 'dwi')]),
 			(d_metadata_file, datasink, [('out_file', 'dwi.@metadata')]),
 			]
-		crashdump_dir = path.join(out_base,'bids_crashdump')
+		crashdump_dir = path.join(out_base,workflow_name+'_crashdump')
 		workflow_config = {'execution': {'crashdump_dir': crashdump_dir}}
 		if debug:
 			workflow_config['logging'] = {
@@ -277,7 +280,7 @@ def bru2bids(measurements_base,
 				'log_to_file':'true',
 				}
 
-		workdir_name = 'bids_work'
+		workdir_name = workflow_name+'_work'
 		workflow = pe.Workflow(name=workdir_name)
 		workflow.connect(workflow_connections)
 		workflow.base_dir = path.join(out_base)
@@ -336,7 +339,7 @@ def bru2bids(measurements_base,
 			(s_bru2nii, datasink, [('nii_file', 'anat')]),
 			(s_metadata_file, datasink, [('out_file', 'anat.@metadata')]),
 			]
-		crashdump_dir = path.join(out_base,'bids_crashdump')
+		crashdump_dir = path.join(out_base,workflow_name+'_crashdump')
 		workflow_config = {'execution': {'crashdump_dir': crashdump_dir}}
 		if debug:
 			workflow_config['logging'] = {
@@ -347,7 +350,7 @@ def bru2bids(measurements_base,
 				'log_to_file':'true',
 				}
 
-		workdir_name = 'bids_work'
+		workdir_name = workflow_name+'_work'
 		workflow = pe.Workflow(name=workdir_name)
 		workflow.connect(workflow_connections)
 		workflow.base_dir = path.join(out_base)

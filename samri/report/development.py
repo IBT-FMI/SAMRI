@@ -54,39 +54,6 @@ def pattern_fc():
 
 	subjectdf.to_csv('~/ni_data/ofM.dr/fc/{}/ctx_pattern_summary.csv'.format(workflow_name))
 
-def vol():
-	from snr import df_threshold_volume ,iter_threshold_volume
-	from samri.utilities import bids_autograb
-	import pandas as pd
-
-	base_df = bids_autograb('~/ni_data/ofM.dr/bids')
-	base_df = base_df.loc[~base_df['path'].str.endswith('.json')]
-	base_df = base_df.loc[base_df['type'].isin(['bold','cbv'])]
-	base_df['uID'] = base_df['subject']+'_'+base_df['session']+'_'+base_df['type']
-
-	generic_df = bids_autograb('~/ni_data/ofM.dr/preprocessing/generic')
-	generic_df = generic_df.loc[~generic_df['path'].str.endswith('.json')]
-	generic_df = generic_df.loc[generic_df['type'].isin(['bold','cbv'])]
-	generic_df['uID'] = generic_df['subject']+'_'+generic_df['session']+'_'+generic_df['type']
-
-	uids = generic_df['uID'].unique()
-	base_df = base_df.loc[base_df['uID'].isin(uids)]
-
-	base_df['Processing'] = 'Generic'
-	df = pd.DataFrame([])
-	df_ = df_threshold_volume(base_df,
-		threshold=0.0,
-		threshold_is_percentile=False,
-		)
-	df = df.append(df_)
-	generic_df['Processing'] = 'Generic'
-	df_ = df_threshold_volume(generic_df, inverted_data={'type':'cbv'},
-		threshold=0.0,
-		threshold_is_percentile=False,
-		)
-	df = df.append(df_)
-	print(df)
-
 def pattern_activity():
 	import pandas as pd
 	from samri.report import roi

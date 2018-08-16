@@ -118,7 +118,7 @@ def objective(args):
   #          np.asarray(args['sigma2']),np.asarray(args['sigma3']),
    #         ]},
         params = args,
-	out_dir = preprocess_path,
+	out_base = preprocess_path,
         )
        # somehow grab results
 

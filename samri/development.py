@@ -1,3 +1,53 @@
+# -*- coding: utf-8 -*-
+
+# Development work, e.g. for higher level functions.
+# These functions are not intended to work on any machine or pass the tests.
+# They are early drafts (e.g. of higher level workflows) intended to be shared among select collaborators or multiple machines of one collaborator.
+# Please don't edit functions which are not yours, and only perform imports in local scope.
+
+def vta_full(
+	workflow_name='generic',
+	):
+	from labbookdb.report.development import animal_multiselect
+	from samri.pipelines import glm
+	from samri.pipelines.preprocess import full_prep
+	from samri.report.snr import iter_significant_signal
+	from samri.utilities import bids_autofind
+
+	# Assuming data cobnverted to BIDS
+	bids_base = '~/ni_data/ofM.vta/bids'
+
+	#full_prep(bids_base, "/usr/share/mouse-brain-atlases/dsurqec_200micron.nii",
+	#	registration_mask="/usr/share/mouse-brain-atlases/dsurqec_200micron_mask.nii",
+	#	functional_match={'type':['cbv',],},
+	#	structural_match={'acquisition':['TurboRARE']},
+	#	actual_size=True,
+	#	functional_registration_method='composite',
+	#	negative_contrast_agent=True,
+	#	out_dir='~/ni_data/ofM.vta/preprocessing',
+	#	workflow_name=workflow_name,
+	#	)
+	#glm.l1('~/ni_data/ofM.vta/preprocessing/generic',
+	#	out_dir='~/ni_data/ofM.vta/l1',
+	#	workflow_name=workflow_name,
+	#	habituation="confound",
+	#	mask="/usr/share/mouse-brain-atlases/dsurqec_200micron_mask.nii",
+	#	# We need the workdir to extract the betas
+	#	keep_work=True,
+	#	)
+
+	# Determining Responders by Significance
+	path_template, substitutions = bids_autofind('~/ni_data/ofM.vta/l1/generic/',
+		path_template="{bids_dir}/sub-{{subject}}/ses-{{session}}/sub-{{subject}}_ses-{{session}}_task-{{task}}_acq-{{acquisition}}_cbv_pfstat.nii.gz",
+		match_regex='.+/sub-(?P<sub>.+)/ses-(?P<ses>.+)/.*?_task-(?P<task>.+).*?_acq-(?P<acquisition>.+)_cbv_pfstat\.nii.gz',
+		)
+	print(substitutions)
+	iter_significant_signal(path_template,
+		substitutions=substitutions,
+		mask_path='/usr/share/mouse-brain-atlases/dsurqec_200micron_mask.nii',
+		save_as='~/ni_data/ofM.dr/vta/generic/total_significance.csv'
+		)
+
 def dr_full():
 	from labbookdb.report.development import animal_multiselect
 	from samri.pipelines import glm
@@ -99,42 +149,6 @@ def dr_cont():
 		groupby="session",
 		keep_work=True,
 		mask="/usr/share/mouse-brain-atlases/dsurqec_200micron_mask.nii",
-		)
-
-def more():
-	from labbookdb.report.development import animal_multiselect
-	from samri.pipelines import glm
-	from samri.pipelines.preprocess import bruker
-	from samri.report.snr import iter_significant_signal
-	from samri.utilities import bids_autofind
-
-	bids_base = '~/ni_data/ofM.dr/bids'
-	bruker(bids_base, "~/ni_data/templates/dsurqec_200micron.nii",
-		registration_mask="~/ni_data/templates/dsurqec_200micron_mask.nii",
-		functional_match={'type':['cbv',],},
-		structural_match={'acquisition':['TurboRARE','TurboRARElowcov'],},
-		subjects=['4001','4005','4006','4007','4008','4009','4011','4012','4013'], # Known Resoponders
-		actual_size=True,
-		functional_registration_method="composite",
-		negative_contrast_agent=True,
-		out_dir='~/ni_data/ofM.dr/preprocessing',
-		)
-	bruker(bids_base, "~/ni_data/templates/dsurqec_200micron.nii",
-		registration_mask="~/ni_data/templates/dsurqec_200micron_mask.nii",
-		functional_match={'type':['bold',],},
-		structural_match={'acquisition':['TurboRARE','TurboRARElowcov'],},
-		subjects=['4001','4005','4006','4007','4008','4009','4011','4012','4013'], # Known Resoponders
-		actual_size=True,
-		functional_registration_method="composite",
-		negative_contrast_agent=False,
-		out_dir='~/ni_data/ofM.dr/preprocessing',
-		)
-	glm.l1('~/ni_data/ofM.dr/preprocessing/generic',
-		out_dir='~/ni_data/ofM.dr/l1',
-		workflow_name='generic',
-		habituation="confound",
-		mask="/usr/share/mouse-brain-atlases/dsurqec_200micron_mask.nii",
-		keep_work=True,
 		)
 
 def temporal_qc_separate():
@@ -302,11 +316,6 @@ def reg_cc(
 			save_as= save + "_" + metric +  ".csv",
                         )
 
-
-def metadata():
-	from samri.pipelines.extra_functions import get_data_selection
-	info = get_data_selection('~/ni_data/test')
-	print(info)
 
 def test_autofind():
 	"""We may be able to turn this into a CI function, if we put together a data fetching script for dummy (empty) BIDS-formatted data.

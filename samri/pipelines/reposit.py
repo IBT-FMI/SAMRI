@@ -25,6 +25,7 @@ except NameError:
 
 N_PROCS=max(N_PROCS-4, 2)
 
+@argh.arg('-d','--diffusion-match', type=json.loads)
 @argh.arg('-f','--functional-match', type=json.loads)
 @argh.arg('-s','--structural-match', type=json.loads)
 @argh.arg('-m','--measurements', nargs='*', type=str)
@@ -33,6 +34,7 @@ def bru2bids(measurements_base,
 	inflated_size=False,
 	dataset_name=False,
 	debug=False,
+	diffusion_match={},
 	exclude={},
 	functional_match={},
 	keep_crashdump=False,
@@ -60,12 +62,15 @@ def bru2bids(measurements_base,
 	debug : bool, optional
 		Whether to enable debug support.
 		This prints the data selection before passing it to the nipype workflow management system, and turns on debug support in nipype (leading to more verbose logging).
+	diffusion_match : dict, optional
+		A dictionary with any combination of "session", "subject", "task", and "acquisition" as keys and corresponding lists of identifiers as values.
+		Only diffusion scans matching all identifiers will be included - i.e. this is a whitelist.
 	exclude : dict, optional
 		A dictionary with any combination of "session", "subject", "task" , and "acquisition" as keys and corresponding identifiers as values.
 		Only scans not matching any of the listed criteria will be included in the workfolow - i.e. this is a blacklist (for functional and structural scans).
 	functional_match : dict, optional
 		A dictionary with any combination of "session", "subject", "task", and "acquisition" as keys and corresponding lists of identifiers as values.
-		Functional scans matching all identifiers will be included - i.e. this is a whitelist.
+		Only Functional scans matching all identifiers will be included - i.e. this is a whitelist.
 	keep_work : bool, optional
 		Whether to keep the work directory (containing all the intermediary workflow steps, as managed by nipypye).
 		This is useful for debugging and quality control.
@@ -80,7 +85,7 @@ def bru2bids(measurements_base,
 		If not present the BIDS records will be created in the `measurements_base` directory.
 	structural_match : dict, optional
 		A dictionary with any combination of "session", "subject", "task", and "acquisition" as keys and corresponding lists of identifiers as values.
-		Functional scans matching all identifiers will be included - i.e. this is a whitelist.
+		Only structural scans matching all identifiers will be included - i.e. this is a whitelist.
 	"""
 
 	measurements_base = path.abspath(path.expanduser(measurements_base))
@@ -91,7 +96,7 @@ def bru2bids(measurements_base,
 	out_dir = path.join(out_base,'bids')
 
 	# define measurement directories to be processed, and populate the list either with the given include_measurements, or with an intelligent selection
-	functional_scan_types = structural_scan_types = []
+	functional_scan_types = diffusion_scan_types = structural_scan_types = []
 	data_selection = pd.DataFrame([])
 	if structural_match:
 		s_data_selection = get_data_selection(measurements_base,
@@ -109,6 +114,14 @@ def bru2bids(measurements_base,
 			)
 		functional_scan_types = list(f_data_selection['scan_type'].unique())
 		data_selection = pd.concat([data_selection,f_data_selection])
+	if diffusion_match:
+		d_data_selection = get_data_selection(measurements_base,
+			match=diffusion_match,
+			exclude=exclude,
+			measurements=measurements,
+			)
+		diffusion_scan_types = list(d_data_selection['scan_type'].unique())
+		data_selection = pd.concat([data_selection,d_data_selection])
 
 	# we start to define nipype workflow elements (nodes, connections, meta)
 	subjects_sessions = data_selection[["subject","session"]].drop_duplicates().values.tolist()
@@ -200,6 +213,76 @@ def bru2bids(measurements_base,
 		workflow.base_dir = path.join(out_base)
 		workflow.config = workflow_config
 		workflow.write_graph(dotfilename=path.join(workflow.base_dir,workdir_name,"graph_structural.dot"), graph2use="hierarchical", format="png")
+
+		#Execute the workflow
+		if not keep_work or not keep_crashdump:
+			try:
+				workflow.run(plugin="MultiProc", plugin_args={'n_procs' : n_procs})
+			except RuntimeError:
+				pass
+		else:
+			workflow.run(plugin="MultiProc", plugin_args={'n_procs' : n_procs})
+		if not keep_work:
+			shutil.rmtree(path.join(workflow.base_dir,workdir_name))
+		if not keep_crashdump:
+			try:
+				shutil.rmtree(crashdump_dir)
+			except (FileNotFoundError, OSError):
+				pass
+
+	if diffusion_scan_types:
+		get_d_scan = pe.Node(name='get_d_scan', interface=util.Function(function=get_scan, input_names=inspect.getargspec(get_scan)[0], output_names=['scan_path','scan_type','task']))
+		get_d_scan.inputs.ignore_exception = True
+		get_d_scan.inputs.data_selection = data_selection
+		get_d_scan.inputs.measurements_base = measurements_base
+		get_d_scan.iterables = ("scan_type", diffusion_scan_types)
+
+		d_bru2nii = pe.Node(interface=bru2nii.Bru2(), name="d_bru2nii")
+		d_bru2nii.inputs.force_conversion=True
+		d_bru2nii.inputs.actual_size = not inflated_size
+
+		d_filename = pe.Node(name='d_filename', interface=util.Function(function=bids_naming,input_names=inspect.getargspec(bids_naming)[0], output_names=['filename']))
+		d_filename.inputs.metadata = data_selection
+		d_filename.inputs.extension=''
+
+		d_metadata_filename = pe.Node(name='d_metadata_filename', interface=util.Function(function=bids_naming,input_names=inspect.getargspec(bids_naming)[0], output_names=['filename']))
+		d_metadata_filename.inputs.extension = ".json"
+		d_metadata_filename.inputs.metadata = data_selection
+
+		d_metadata_file = pe.Node(name='d_metadata_file', interface=util.Function(function=write_bids_metadata_file,input_names=inspect.getargspec(write_bids_metadata_file)[0], output_names=['out_file']))
+		d_metadata_file.inputs.extraction_dicts = BIDS_METADATA_EXTRACTION_DICTS
+
+		workflow_connections = [
+			(infosource, datasink, [(('subject_session',ss_to_path), 'container')]),
+			(infosource, get_d_scan, [('subject_session', 'selector')]),
+			(infosource, d_filename, [('subject_session', 'subject_session')]),
+			(infosource, d_metadata_filename, [('subject_session', 'subject_session')]),
+			(get_d_scan, d_bru2nii, [('scan_path','input_dir')]),
+			(get_d_scan, d_filename, [('scan_type', 'scan_type')]),
+			(get_d_scan, d_metadata_filename, [('scan_type', 'scan_type')]),
+			(get_d_scan, d_metadata_file, [('scan_path', 'scan_dir')]),
+			(d_filename, d_bru2nii, [('filename','output_filename')]),
+			(d_metadata_filename, d_metadata_file, [('filename', 'out_file')]),
+			(d_bru2nii, datasink, [('nii_file', 'dwi')]),
+			(d_metadata_file, datasink, [('out_file', 'dwi.@metadata')]),
+			]
+		crashdump_dir = path.join(out_base,'bids_crashdump')
+		workflow_config = {'execution': {'crashdump_dir': crashdump_dir}}
+		if debug:
+			workflow_config['logging'] = {
+				'workflow_level':'DEBUG',
+				'utils_level':'DEBUG',
+				'interface_level':'DEBUG',
+				'filemanip_level':'DEBUG',
+				'log_to_file':'true',
+				}
+
+		workdir_name = 'bids_work'
+		workflow = pe.Workflow(name=workdir_name)
+		workflow.connect(workflow_connections)
+		workflow.base_dir = path.join(out_base)
+		workflow.config = workflow_config
+		workflow.write_graph(dotfilename=path.join(workflow.base_dir,workdir_name,"graph_diffusion.dot"), graph2use="hierarchical", format="png")
 
 		#Execute the workflow
 		if not keep_work or not keep_crashdump:

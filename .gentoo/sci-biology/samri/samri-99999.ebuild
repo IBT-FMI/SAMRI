@@ -3,7 +3,7 @@
 
 EAPI=6
 
-PYTHON_COMPAT=( python{2_7,3_4,3_5} )
+PYTHON_COMPAT=( python{2_7,3_4,3_5,3_6} )
 
 inherit distutils-r1
 
@@ -33,7 +33,7 @@ RDEPEND="
 	labbookdb? ( sci-libs/labbookdb[${PYTHON_USEDEP}] )
 	sci-libs/nibabel[${PYTHON_USEDEP}]
 	>=sci-libs/nipy-0.4.1[${PYTHON_USEDEP}]
-	>=sci-libs/nipype-0.14.0_pre20170830[${PYTHON_USEDEP}]
+	>=sci-libs/nipype-1.0.0[${PYTHON_USEDEP}]
 	sci-libs/pybids[${PYTHON_USEDEP}]
 	sci-libs/scipy[${PYTHON_USEDEP}]
 	sci-biology/ants

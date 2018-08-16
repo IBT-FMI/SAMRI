@@ -1,20 +1,22 @@
-import multiprocessing
+import multiprocessing as mp
 import nibabel as nib
 import nipype.interfaces.io as nio
 import numpy as np
+import os
 from itertools import product
+from joblib import Parallel, delayed
 from os import path
 from bids.grabbids import BIDSLayout
 from bids.grabbids import BIDSValidator
 
-N_PROCS=max(multiprocessing.cpu_count()-2,2)
+N_PROCS=max(mp.cpu_count()-2,2)
 
 def bids_autograb(bids_dir):
+	bids_dir = path.abspath(path.expanduser(bids_dir))
 	validate = BIDSValidator()
 	layout = BIDSLayout(bids_dir)
 	df = layout.as_data_frame()
-	print(df)
-
+	return df
 
 def bids_autofind(bids_dir,
 	modality='',
@@ -91,7 +93,7 @@ def bids_substitution_iterator(sessions, subjects,
 		A list of session identifiers to include in the iterator.
 	subjects : list
 		A list of subject identifiers to include in the iterator.
-	tasks : list, optional
+	TASKS : list, optional
 		A list of scan types to include in the iterator.
 	data_dir : str, optional
 		Path to the data root (this is where SAMRI creates e.g. `preprocessing`, `l1`, or `l2` directories.
@@ -140,6 +142,34 @@ def bids_substitution_iterator(sessions, subjects,
 		else:
 			substitutions.append(substitution)
 	return substitutions
+
+def iter_collapse_by_path(in_files, out_files,
+	n_jobs=None,
+	):
+	"""Patalellized iteration of `samri.utilities.collapse_by_path`."""
+	if not n_jobs:
+		n_jobs = max(int(round(mp.cpu_count()/1.3)),2)
+	out_files = Parallel(n_jobs=n_jobs, verbose=0, backend="threading")(map(delayed(collapse_by_path),
+		in_files,
+		out_files,
+		))
+	return out_files
+
+def collapse_by_path(in_path, out_path):
+	"""Wrapper for `samri.utilities.collapse`, supporting an input path and saving object to an output path."""
+	in_path = os.path.abspath(os.path.expanduser(in_path))
+	out_path = os.path.abspath(os.path.expanduser(out_path))
+	img = nib.load(in_path)
+	img = collapse(img)
+	out_dir = os.path.dirname(out_path)
+	if not os.path.exists(out_dir):
+		#race-condition safe:
+		try:
+			os.makedirs(out_dir)
+		except OSError:
+			pass
+	nib.save(img, out_path)
+	return out_path
 
 def collapse(img):
 	ndim = 0

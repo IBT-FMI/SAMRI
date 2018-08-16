@@ -3,11 +3,12 @@ before_install:
   - docker pull ibtfmi/samri
   - docker create --name "samri" --rm -ti -v "${PWD}":/home/samri ibtfmi/samri
   - docker start samri
-  # This installs the newest versions of the dependencies:
-  #- docker exec samri emaint sync -a
-  #- docker exec samri /home/samri/.gentoo/install.sh -o
+  - docker exec samri emaint sync -a
+  # Re/Install newest dependencies:
+  - docker exec samri sh -c '/home/samri/.gentoo/install.sh -o --autounmask-continue'
+install:
+  # Re/Install the package without tests, this is not separately needed as it is included in the script below:
+  #- docker exec samri sh -c 'FEATURES="-test" /home/samri/.gentoo/install.sh --autounmask-continue'
 script:
-  # This should work as is, but for some reason pulls in a lot of deps
-  # (and consequently applies the "test" flag to all of them
-  #- docker exec samri sh -c 'FEATURES="test" /home/samri/.gentoo/install.sh'
-  - docker exec samri sh -c 'FEATURES="test" /home/samri/.gentoo/install.sh'
+  # Install and run tests (this is performed separately from dependency installation so as to not propagate the test FEATURE to the entire graph):
+  - docker exec samri sh -c 'FEATURES="test" /home/samri/.gentoo/install.sh --autounmask-continue'

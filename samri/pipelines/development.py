@@ -1,6 +1,9 @@
-from os import path
-import pandas as pd
-from samri.utilities import bids_substitution_iterator
+# -*- coding: utf-8 -*-
+
+# Development work, e.g. for higher level functions.
+# These functions are not intended to work on any machine or pass the tests.
+# They are early drafts (e.g. of higher level workflows) intended to be shared among select collaborators or multiple machines of one collaborator.
+# Please don't edit functions which are not yours, and only perform imports in local scope.
 
 def dbu(
 	data_path="~/ni_data/DBu/",

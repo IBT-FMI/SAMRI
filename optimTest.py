@@ -16,7 +16,7 @@ from hyperopt import fmin, tpe
 from bids.grabbids import BIDSLayout
 from bids.grabbids import BIDSValidator
 
-from hyperopt import fmin, tpe, hp
+from hyperopt import fmin, tpe, hp, STATUS_OK, Trials
 
 from samri.pipelines.registration import measure_sim_bids
 from samri.examples.registration_qc import evaluateMetrics
@@ -95,22 +95,15 @@ PHASES = {
         }
 
 
+import time
+
 def objective(args):
-#    #parameters = {"smoothing_sigeas": np.asarray(args
-    _pa = {'smoothing_sigmas': [args['sigma1'], args['sigma2']]}
-    print(_pa['smoothing_sigmas'])
 
     # overwrite phases with params
     # for phase in phases:
         # Phases['f_rigid'] = ... args['f_rigid']
 
-    print('jijijijo')
-    print(type(args['sigma1']))
-    testo = np.array(args['sigma1']).astype('int')
-    print(testo)
-    print(type(testo))
 
-    out_dir = "preprocessing_optim"
     generic(bids_base,
 	"mouse",
         functional_match={'acquisition':['EPIlowcov'],},
@@ -121,9 +114,10 @@ def objective(args):
 	keep_work=True,
 	functional_registration_method="composite",
 	#params = {'smoothing_sigmas': [float(args['sigma1']), float(args['sigma2']), float(args['sigma3']), ]},
-        params = {'smoothing_sigmas': [np.asarray(args['sigma1']),
-            np.asarray(args['sigma2']),np.asarray(args['sigma3']),
-            ]},
+ #       params = {'smoothing_sigmas': [np.asarray(args['sigma1']),
+  #          np.asarray(args['sigma2']),np.asarray(args['sigma3']),
+   #         ]},
+        params = args,
 	out_dir = preprocess_path,
         )
        # somehow grab results
@@ -155,16 +149,16 @@ def objective(args):
 #    print(_pa['smoothing_sigmas'])
 #    similarity = _pa['smoothing_sigmas'][0] + _pa['smoothing_sigmas'][1]
 
-    return means_onl[0]
+    return {'loss' : means_onl[0], 'status': STATUS_OK, 'eval_time': time.time(), }
 
 # parameterspace
 # only one for proof of principle now
 # TODO: extend
 
 space = {
-        'sigma1' : hp.choice('sigma1',[[8.0,4.0],[4.0,2.0],[2.0,1.0],[1.0,0.0]]),
-        'sigma2' : hp.choice('sigma2',[[4.0,3.0],[3.0,2.0],[2.0,1.0],[1.0,0.0]]),
-        'sigma3' : hp.choice('sigma3',[[4.0,3.0],[3.0,2.0],[2.0,1.0],[1.0,0.0]]),
+        'smoothing_sigmas' : hp.choice('smoothing_sigmas',[[[8.0,4.0],[4.0,2.0],[2.0,1.0],[1.0,0.0]], [[4.0,3.0],[3.0,2.0],[2.0,1.0],[1.0,0.0]], [[4.0,3.0],[3.0,2.0],[2.0,1.0],[1.0,0.0]]]),
+        'sampling_percentage' : hp.choice('sampling_percentage', [ [0.1, 0.2, 0.3], [0.2,0.3,0.4] ]),
+        "radius_or_number_of_bins" : hp.choice("radius_or_number_of_bins", [64,32,16,8,4]),
         }
 
 global bids_base
@@ -173,8 +167,10 @@ global results_dir
 global preprocess_path
 
 bids_base = '/media/nexus/storage2/ni_data/christian_bids_data/bids/'
-results = bids_base + 'preprocessing/generic/'
-preprocess_path = bids_base + 'preprocessing/'
+#results = bids_base + 'preprocessing/generic/'
+#preprocess_path = bids_base + 'preprocessing/'
+results = './' + 'preprocessing/generic/'
+preprocess_path = './' + 'preprocessing/'
 template = '/home/nexus/.samri_files/templates/mouse/DSURQE/DSURQEc_200micron_average.nii'
 #bids_base = '~/ni_data/oFM'
 
@@ -182,9 +178,13 @@ template = '/home/nexus/.samri_files/templates/mouse/DSURQE/DSURQEc_200micron_av
 
 # do the preprocessing with params
 if __name__ == "__main__":
-    best = fmin(objective, space, algo=tpe.suggest, max_evals=2)
+
+    trials = Trials()
+    best = fmin(objective, space, algo=tpe.suggest, max_evals=2, trials=trials)
     # measure similarity
 
     print(best)
+
+    print(trials)
 
     # result for optimizer

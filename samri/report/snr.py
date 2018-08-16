@@ -155,10 +155,10 @@ def iter_threshold_volume(file_template, substitutions,
 	return df
 
 def threshold_volume(in_file,
-	substitution,
+	substitution={},
 	masker='',
 	threshold=45,
-	threshold_is_percentile=True,
+	threshold_is_percentile=False,
 	inverted_data=False,
 	):
 	"""Return the volume which lies above a given threshold in a NIfTI (implicitly, in the volume units of the respective NIfTI).

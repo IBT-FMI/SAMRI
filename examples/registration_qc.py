@@ -6,7 +6,7 @@ from samri.plotting.aggregate import registration_qc
 from samri.typesetting import inline_anova
 from samri.development import reg_cc
 from samri.pipelines.reposit import bru2bids
-from samri.pipelines.preprocess import full_prep, legacy_bruker
+from samri.pipelines.preprocess import generic, legacy
 from math import sqrt
 import matplotlib.pyplot as plt
 import numpy as np
@@ -68,15 +68,7 @@ def evaluateMetrics(fname = "./f_reg_quality",
 		metrics = ['CC', 'MI', 'GC'],
 		):
 
-
-#       import matplotlib
-#       matplotlib.use('agg')
-#
-#       path = "/media/nexus/storage2/ni_data/christian_bids_data/newly_processed/preprocessing/generic/"
-#       template = "/home/nexus/.samri_files/templates/mouse/DSURQE/DSURQEc_200micron_average.nii"
-#       reg_cc(path=path, template=template)
-
-        means = []
+	means = []
         stds = []
 
         for metric in metrics:
@@ -91,46 +83,59 @@ def evaluateMetrics(fname = "./f_reg_quality",
         return metrics, means, stds
 
 
+def preprocessData(bids_base, template, out_dir):
 
-def compareOursWithLegacy():
+	#generic(bids_base,
+	 #      	"mouse",
+	  #     # comma is important since otherwise tuple instead of dict
+	   #    	functional_match={'acquisition':['EPIlowcov'],},
+	     #  	structural_match={'acquisition':['TurboRARElowcov'],},
+	    #   	actual_size=True,
+	      # 	functional_registration_method="composite",
+	       #	negative_contrast_agent=True,
+	       	#keep_work=True,
+	       	#out_dir=out_dir[0]
+		#)
 
-	# preprocess the data
-	# ------------------
-	bids_base = '/media/nexus/storage2/ni_data/christian_bids_data/bids/'
-	template = "/home/nexus/.samri_files/templates/mouse/DSURQE/DSURQEc_200micron_average.nii"
-
-	full_prep(bids_base,
-	       	"mouse",
-	       # comma is important since otherwise tuple instead of dict
-	       	functional_match={'acquisition':['EPIlowcov'],},
-	       	structural_match={'acquisition':['TurboRARElowcov'],},
-	       	actual_size=True,
-	       	functional_registration_method="composite",
-	       	negative_contrast_agent=True,
-	       	keep_work=True,
-	       	out_dir="preprocessing_ours"
-		)
-
-	legacy_bruker(bids_base,
+	legacy(bids_base,
 	       "mouse",
 	       # comma is important since otherwise tuple instead of dict
 	       functional_match={'acquisition':['EPIlowcov'],},
 	       structural_match={'acquisition':['TurboRARElowcov'],},
 	       negative_contrast_agent=True,
 	       keep_work=True,
-	       out_dir="preprocessing_legacy"
+	       out_dir=out_dir[1]
 	       )
 
-	reg_cc(path=bids_base + "preprocessing_ours/generic/", save = "./f_reg_quality_ours", template=template, autofind=True)
-	reg_cc(path=bids_base + "preprocessing_legacy/generic/", save = "./f_reg_quality_legacy", template=template, autofind=True)
 
-	metrics_ours, means_ours, stds_ours = evaluateMetrics(fname="./f_reg_quality_ours", metrics=['CC', 'GC'])
-	metrics_legacy, means_legacy, stds_legacy = evaluateMetrics(fname="./f_reg_quality_legacy")
+def compareOursWithLegacy(out_dirs, template, results_path = "./"):
+
+
+	reg_cc(path =	out_dirs[0] + "/generic/", save = results_path + "f_reg_quality_ours", template=template, autofind=True)
+	reg_cc(path =	out_dirs[1] + "/generic/", save = results_path + "f_reg_quality_legacy", template=template, autofind=True)
+
+	metrics_ours, means_ours, stds_ours		= evaluateMetrics(fname=results_path + "f_reg_quality_ours", metrics=['CC', 'GC'])
+	metrics_legacy, means_legacy, stds_legacy	= evaluateMetrics(fname=results_path + "f_reg_quality_legacy", metric = ['CC', 'GC'])
+
+	return metrics_ours, means_ours, stds_ours, metrics_legacy, means_legacy, stds_legacy
+
+def main():
+	bids_base = '/media/nexus/storage2/ni_data/christian_bids_data/bids/'
+	template = "/home/nexus/.samri_files/templates/mouse/DSURQE/DSURQEc_200micron_average.nii"
+	out_dirs = [bids_base+'preprocessing/ours', bids_base+'preprocessing/legacy']
+
+	preprocessData(bids_base, template, out_dirs)
+	metrics_ours, means_ours, stds_ours, metrics_legacy, means_legacy, stds_legacy = compareOursWithLegacy(out_dirs, template)
+
 
 	plotting = pd.DataFrame(np.vstack((stds_ours, stds_legacy)), columns = ['ours', 'legacy'])
-	plotting = plotting.set_index(np.asarray(metrics).transpose())
-	ax = plotting.plot(kind='bar', use_index=True, rot=90)
-	ax.set_xlabel('Metric')
-	ax.set_ylabel('Variance')
-	fig = ax.get_figure()
-	fig.savefig('VarianceOverMetric.png')
+        plotting = plotting.set_index(np.asarray(metrics).transpose())
+        ax = plotting.plot(kind='bar', use_index=True, rot=90)
+        ax.set_xlabel('Metric')
+        ax.set_ylabel('Variance')
+        fig = ax.get_figure()
+        fig.savefig('VarianceOverMetric.png')
+
+
+if __name__ == "__main__":
+	main()

@@ -50,7 +50,7 @@ def df_threshold_volume(df,
 		Pandas DataFrame object containing a row for each analyzed file and columns named 'Mean', 'Median', and (provided the respective key is present in the `sustitutions` variable) 'subject', 'session', 'task', and 'acquisition'.
 	"""
 
-	#Do not overwrite the imput object
+	#Do not overwrite the input object
 	df = deepcopy(df)
 
 	in_files = df['path'].tolist()

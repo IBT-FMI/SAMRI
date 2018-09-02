@@ -14,11 +14,13 @@ except NameError:
 	FileNotFoundError = IOError
 
 def df_threshold_volume(df,
+	inverted_data=False,
 	masker='',
+	n_jobs=None,
+	n_jobs_percentage=0.75,
+	save_as='',
 	threshold=60,
 	threshold_is_percentile=True,
-	inverted_data=False,
-	save_as='',
 	):
 	"""
 	Create a `pandas.DataFrame` (optionally savable as `.csv`), containing the means and medians of a number of p-value maps specified by a file template supporting substitution and a substitution list of dictionaries.
@@ -29,19 +31,19 @@ def df_threshold_volume(df,
 
 	df : pandas.DataFrame
 		A BIDS-Information Pandas DataFrame which includes columns named 'path' and named according to all the keys (if any) in the dictionary passed to `inverted_data`.
+	inverted_data : bool or dict, optional
+		Whether (bool) or when (dict) to the input data is inverted.
+		If `True`, the data is always inverted, if a dict is given, only DataFrame rows containing all the respective values on all the columns given by the keys are inverted.
 	masker : str or nilearn.NiftiMasker, optional
 		Path to a NIfTI file containing a mask (1 and 0 values) or a `nilearn.NiftiMasker` object.
 		NOT YET SUPPORTED!
+	save_as : str, optional
+		Path to which to save the Pandas DataFrame.
 	threshold : float, optional
 		A float giving the voxel value threshold.
 	threshold_is_percentile : bool, optional
 		Whether `threshold` is to be interpreted not literally, but as a percentile of the data matrix.
 		This is useful for making sure that the volume estimation is not susceptible to the absolute value range, but only the value distribution.
-	inverted_data : bool or dict, optional
-		Whether (bool) or when (dict) to the input data is inverted.
-		If `True`, the data is always inverted, if a dict is given, only DataFrame rows containing all the respective values on all the columns given by the keys are inverted.
-	save_as : str, optional
-		Path to which to save the Pandas DataFrame.
 
 	Returns
 	-------
@@ -68,7 +70,8 @@ def df_threshold_volume(df,
 	else:
 		inverted_data_mask = [False]*iter_length
 	# This is an easy jop CPU-wise, but not memory-wise.
-	n_jobs = max(mp.cpu_count()/2+4,2)
+	if not n_jobs:
+		n_jobs = max(int(round(mp.cpu_count()*n_jobs_percentage)),2)
 	print(in_files)
 	iter_data = Parallel(n_jobs=n_jobs, verbose=0, backend="threading")(map(delayed(threshold_volume),
 		in_files,

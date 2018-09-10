@@ -18,5 +18,5 @@ def collapse_nifti(in_dir, out_dir,
 	out_files = [re.sub(r'^' + re.escape(in_dir), '', i) for i in in_files]
 	out_files = [os.path.join(out_dir,i[1:]) for i in out_files]
 	out_files = iter_collapse_by_path(in_files, out_files,
-		**kwargs,
+		**kwargs
 		)

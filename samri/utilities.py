@@ -145,10 +145,11 @@ def bids_substitution_iterator(sessions, subjects,
 
 def iter_collapse_by_path(in_files, out_files,
 	n_jobs=None,
+	n_jobs_percentage=0.75,
 	):
 	"""Patalellized iteration of `samri.utilities.collapse_by_path`."""
 	if not n_jobs:
-		n_jobs = max(int(round(mp.cpu_count()/1.2)),2)
+		n_jobs = max(int(round(mp.cpu_count()*n_jobs_percentage)),2)
 	out_files = Parallel(n_jobs=n_jobs, verbose=0, backend="threading")(map(delayed(collapse_by_path),
 		in_files,
 		out_files,

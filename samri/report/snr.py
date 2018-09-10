@@ -19,6 +19,8 @@ def df_threshold_volume(df,
 	threshold_is_percentile=False,
 	inverted_data=False,
 	save_as='',
+	n_jobs=False,
+	n_jobs_percentage=0.8,
 	):
 	"""
 	Create a `pandas.DataFrame` (optionally savable as `.csv`), containing the means and medians of a number of p-value maps specified by a file template supporting substitution and a substitution list of dictionaries.
@@ -207,21 +209,14 @@ def threshold_volume(in_file,
 
 	if inverted_data and not threshold_is_percentile:
 		threshold_voxels = (data < threshold).sum()
-		print('threshold:',threshold)
 	else:
 		if inverted_data:
 			threshold = 100-threshold
-		print('threshold:',threshold)
 		if threshold_is_percentile:
 			threshold = np.percentile(data,threshold)
-			print('threshold_percentile:',threshold)
 		threshold_voxels = (data > threshold).sum()
 
-	print('threshold_voxels:',threshold_voxels)
-	print('voxel_volume:',voxel_volume,x_len,y_len,z_len)
 	threshold_volume = voxel_volume * threshold_voxels
-	print('threshold_volume:',threshold_volume)
-	print('in_file:',in_file)
 
 	return threshold_volume
 

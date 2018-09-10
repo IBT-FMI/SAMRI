@@ -16,7 +16,7 @@ except NameError:
 def df_threshold_volume(df,
 	masker='',
 	threshold=60,
-	threshold_is_percentile=True,
+	threshold_is_percentile=False,
 	inverted_data=False,
 	save_as='',
 	):
@@ -56,6 +56,11 @@ def df_threshold_volume(df,
 	in_files = df['path'].tolist()
 	iter_length = len(in_files)
 
+	if isinstance(threshold, str):
+		thresholds = df[threshold].tolist()
+	else:
+		thresholds = [threshold]*iter_length
+
 	if isinstance(inverted_data,dict):
 		mask = []
 		for key in inverted_data:
@@ -74,7 +79,7 @@ def df_threshold_volume(df,
 		in_files,
 		[None]*iter_length,
 		[masker]*iter_length,
-		[threshold]*iter_length,
+		thresholds,
 		[threshold_is_percentile]*iter_length,
 		inverted_data_mask,
 		))

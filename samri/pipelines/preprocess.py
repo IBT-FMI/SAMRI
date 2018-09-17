@@ -714,7 +714,10 @@ def common_select(bids_base, out_base, workflow_name, template, registration_mas
 			template = fetch_rat_waxholm()['template']
 			registration_mask = fetch_rat_waxholm()['mask']
 		else:
-			pass
+			if template:
+				template = path.abspath(path.expanduser(template))
+			if registration_mask:
+				registration_mask = path.abspath(path.expanduser(registration_mask))
 	else:
 		raise ValueError("No species or template path specified")
 		return -1

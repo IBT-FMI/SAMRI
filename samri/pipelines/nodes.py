@@ -3,77 +3,7 @@ from os import path
 import nipype.pipeline.engine as pe				# pypeline engine
 import nipype.interfaces.ants as ants
 from nipype.interfaces import fsl
-
-PHASES = {
-	"f_rigid":{
-		"transforms":"Rigid",
-		"transform_parameters":(0.1,),
-		"number_of_iterations":[40,20,10],
-		"metric":"GC",
-		"metric_weight":1,
-		"radius_or_number_of_bins":32,
-		"sampling_strategy":"Regular",
-		"sampling_percentage":0.2,
-		"convergence_threshold":1.e-2,
-		"convergence_window_size":8,
-		"smoothing_sigmas":[2,1,0],
-		"sigma_units":"vox",
-		"shrink_factors":[4,2,1],
-		"use_estimate_learning_rate_once":False,
-		"use_histogram_matching":False,
-		},
-	"s_rigid":{
-		"transforms":"Rigid",
-		"transform_parameters":(0.1,),
-		"number_of_iterations":[6000,3000],
-		"metric":"GC",
-		"metric_weight":1,
-		"radius_or_number_of_bins":64,
-		"sampling_strategy":"Regular",
-		"sampling_percentage":0.2,
-		"convergence_threshold":1.e-16,
-		"convergence_window_size":30,
-		"smoothing_sigmas":[1,0],
-		"sigma_units":"vox",
-		"shrink_factors":[2,1],
-		"use_estimate_learning_rate_once":False,
-		"use_histogram_matching":True,
-		},
-	"affine":{
-		"transforms":"Affine",
-		"transform_parameters":(0.1,),
-		"number_of_iterations":[500,250],
-		"metric":"MI",
-		"metric_weight":1,
-		"radius_or_number_of_bins":8,
-		"sampling_strategy":None,
-		"sampling_percentage":0.3,
-		"convergence_threshold":1.e-32,
-		"convergence_window_size":30,
-		"smoothing_sigmas":[1,0],
-		"sigma_units":"vox",
-		"shrink_factors":[1,1],
-		"use_estimate_learning_rate_once":False,
-		"use_histogram_matching":True,
-		},
-	"syn":{
-		"transforms":"SyN",
-		"transform_parameters":(0.1, 2.0, 0.2),
-		"number_of_iterations":[500,250],
-		"metric":"MI",
-		"metric_weight":1,
-		"radius_or_number_of_bins":16,
-		"sampling_strategy":None,
-		"sampling_percentage":0.3,
-		"convergence_threshold":1.e-32,
-		"convergence_window_size":30,
-		"smoothing_sigmas":[1,0],
-		"sigma_units":"vox",
-		"shrink_factors":[1,1],
-		"use_estimate_learning_rate_once":False,
-		"use_histogram_matching":True,
-		},
-	}
+from samri.pipelines.utils import GENERIC_PHASES
 
 def autorotate(template):
 	flt = fsl.FLIRT(bins=640, cost_func='mutualinfo')
@@ -140,10 +70,10 @@ def structural_registration(template, num_threads=4):
 def DSURQEc_structural_registration(template,
 	mask="/usr/share/mouse-brain-atlases/dsurqec_200micron_mask.nii",
 	num_threads=4,
-	phase_dictionary=PHASES,
+	phase_dictionary=GENERIC_PHASES,
 	s_phases=["s_rigid","affine","syn"],
 	f_phases=["f_rigid",],
-	parameters = None,
+	parameters=None,
 	):
 
 	s_parameters = [phase_dictionary[selection] for selection in s_phases]
@@ -270,7 +200,7 @@ def composite_registration(template, num_threads=4):
 def functional_registration(template,
 	mask="/usr/share/mouse-brain-atlases/dsurqec_200micron_mask.nii",
 	num_threads=4,
-	phase_dictionary=PHASES,
+	phase_dictionary=GENERIC_PHASES,
 	f_phases=["s_rigid","affine","syn"],
 	):
 

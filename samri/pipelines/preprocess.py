@@ -192,65 +192,6 @@ def legacy(bids_base, template,
 			(f_swapdim, realigner, [('out_file', 'in_file')]),
 			])
 
-	#if structural_scan_types.any():
-	#	get_s_scan = pe.Node(name='get_s_scan', interface=util.Function(function=get_bids_scan, input_names=inspect.getargspec(get_bids_scan)[0], output_names=['scan_path','scan_type','task', 'nii_path', 'nii_name', 'file_name', 'events_name', 'subject_session']))
-	#	get_s_scan.inputs.ignore_exception = True
-	#	get_s_scan.inputs.data_selection = data_selection
-	#	get_s_scan.inputs.bids_base = bids_base
-
-	#	s_cutoff = pe.Node(interface=fsl.ImageMaths(), name="s_cutoff")
-	#	s_cutoff.inputs.op_string = "-thrP 20 -uthrp 98"
-
-	#	s_resize = pe.Node(interface=VoxelResize(), name="s_resize")
-
-	#	s_BET = pe.Node(interface=fsl.BET(), name="s_BET")
-	#	s_BET.inputs.mask = True
-	#	s_BET.inputs.frac = 0.3
-	#	s_BET.inputs.robust = True
-
-	#	ants_introduction = pe.Node(interface=legacy.antsIntroduction(), name='ants_introduction')
-	#	ants_introduction.inputs.dimension = 3
-	#	ants_introduction.inputs.reference_image = template
-	#	#will need updating to `1`
-	#	ants_introduction.inputs.bias_field_correction = True
-	#	ants_introduction.inputs.transformation_model = 'GR'
-	#	ants_introduction.inputs.max_iterations = [8,15,8]
-
-	#	s_mask = pe.Node(interface=fsl.ApplyMask(), name="s_mask")
-	#	s_register, s_warp, f_warp = structural_registration(template)
-
-	#	workflow_connections.extend([
-	#		(get_s_scan, s_reg_biascorrect, [('nii_path', 'input_image')]),
-	#		(s_reg_biascorrect, s_cutoff, [('output_image', 'in_file')]),
-	#		(s_cutoff, s_BET, [('out_file', 'in_file')]),
-	#		(s_biascorrect, s_mask, [('output_image', 'in_file')]),
-	#		(s_BET, s_mask, [('mask_file', 'mask_file')]),
-	#		])
-
-	#	#TODO: incl. in func registration
-	#	if autorotate:
-	#		workflow_connections.extend([
-	#			(s_mask, s_rotated, [('out_file', 'out_file')]),
-	#			(s_rotated, s_register, [('out_file', 'moving_image')]),
-	#			])
-	#	else:
-	#		workflow_connections.extend([
-	#			(s_mask, s_register, [('out_file', 'moving_image')]),
-	#			(s_register, s_warp, [('composite_transform', 'transforms')]),
-	#			(get_s_scan, s_warp, [('nii_path', 'input_image')]),
-	#			(s_warp, datasink, [('output_image', 'anat')]),
-	#			])
-
-
-	#	if autorotate:
-	#		s_rotated = autorotate(template)
-
-	#	workflow_connections.extend([
-	#		(get_f_scan, get_s_scan, [('subject_session', 'selector')]),
-	#		(get_s_scan, s_warp, [('nii_name','output_image')]),
-	#		(get_s_scan, s_biascorrect, [('nii_path', 'input_image')]),
-	#		])
-
 	f_antsintroduction = pe.Node(interface=antslegacy.antsIntroduction(), name='ants_introduction')
 	f_antsintroduction.inputs.dimension = 3
 	f_antsintroduction.inputs.reference_image = template

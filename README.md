@@ -36,7 +36,7 @@ SAMRI diagnose bids
 
 #### Run a full preprocessing pipeline (including template registration) on the BIDS input:
 ```
-SAMRI full-prep -o preprocessing --registration-mask mouse-brain-atlases/dsurqec_200micron_mask.nii --functional-registration-method composite --negative-contrast-agent bids mouse-brain-atlases/dsurqec_200micron.nii
+SAMRI generic-prep -o preprocessing --registration-mask mouse-brain-atlases/dsurqec_200micron_mask.nii --functional-registration-method composite --negative-contrast-agent bids mouse-brain-atlases/dsurqec_200micron.nii
 ```
 
 ## Installation

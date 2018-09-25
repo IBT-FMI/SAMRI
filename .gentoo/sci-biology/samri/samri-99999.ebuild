@@ -45,6 +45,12 @@ src_unpack() {
 	cp -r -L "$DOTGENTOO_PACKAGE_ROOT" "$S"
 }
 
+python_prepare_all() {
+	find . -type f -exec \
+		sed -i "s:/usr/share/mouse-brain-atlases/:${EPREFIX}/usr/share/mouse-brain-atlases/:g" {} +
+	distutils-r1_python_prepare_all
+}
+
 python_test() {
 	distutils_install_for_testing
 	export MPLBACKEND="agg"

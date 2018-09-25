@@ -172,7 +172,20 @@ def collapse_by_path(in_path, out_path):
 	nib.save(img, out_path)
 	return out_path
 
-def collapse(img):
+def collapse(img,
+	min_dim=3,
+	):
+	"""
+	Collapse a nibabel image allong its last axis
+
+	Parameters
+	----------
+	img : nibabel.nifti1.Nifti1Image
+		Nibabel image to be collapsed.
+	min_dim : int
+		Bimensionality beyond which not to collapse.
+	"""
+
 	ndim = 0
 	data = img.get_data()
 	for i in range(len(img.header['dim'])-1):
@@ -180,6 +193,8 @@ def collapse(img):
 		if current_dim == 1:
 			break
 		ndim += 1
+	if ndim <= min_dim:
+		return img
 	img.header['dim'][0] = ndim
 	img.header['pixdim'][ndim+1:] = 0
 	data = np.mean(data,axis=(ndim-1))

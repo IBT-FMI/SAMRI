@@ -27,7 +27,7 @@ GENERIC_PHASES = {
 	"s_rigid":{
 		"transforms":"Rigid",
 		"transform_parameters":(0.1,),
-		"number_of_iterations":[6000,3000],
+		"number_of_iterations":[2000,3000],
 		"metric":"GC",
 		"metric_weight":1,
 		"radius_or_number_of_bins":64,
@@ -47,7 +47,7 @@ GENERIC_PHASES = {
 		"number_of_iterations":[500,250],
 		"metric":"MI",
 		"metric_weight":1,
-		"radius_or_number_of_bins":8,
+		"radius_or_number_of_bins":16,
 		"sampling_strategy":None,
 		"sampling_percentage":0.3,
 		"convergence_threshold":1.e-32,

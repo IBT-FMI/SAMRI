@@ -77,16 +77,16 @@ def _draw_colorbar(stat_map_img, axes,
 	return cbar_ax, p_ax
 
 def scaled_plot(stat_map, template, fig, ax,
-		overlay=None,
-		title=None,
-		threshold=None,
-		cut=None,
-		draw_cross=True,
-		annotate=True,
-		interpolation="none",
-		dim=1,
-		scale=1.,
-		):
+	overlay=None,
+	title=None,
+	threshold=None,
+	cut=None,
+	draw_cross=True,
+	annotate=True,
+	interpolation="none",
+	dim=1,
+	scale=1.,
+	):
 	"""A wrapper for nilearn's plot_stat_map which allows scaling of crosshairs, titles and annotations.
 
 	Parameters

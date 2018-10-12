@@ -85,7 +85,7 @@ def df_threshold_volume(df,
 		[threshold_is_percentile]*iter_length,
 		inverted_data_mask,
 		))
-	df['thresholded volume'] = iter_data
+	df['Thresholded Volume'] = iter_data
 
 	if save_as:
 		save_as = path.abspath(path.expanduser(save_as))

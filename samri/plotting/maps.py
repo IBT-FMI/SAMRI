@@ -76,17 +76,22 @@ def _draw_colorbar(stat_map_img, axes,
 
 	return cbar_ax, p_ax
 
-def scaled_plot(stat_map, template, fig, ax,
-		overlay=None,
-		title=None,
-		threshold=None,
-		cut=None,
-		draw_cross=True,
-		annotate=True,
-		interpolation="none",
-		dim=1,
-		scale=1.,
-		):
+def scaled_plot(template,
+	fig=None,
+	ax=None,
+	black_bg=False,
+	stat_map=None,
+	overlay=None,
+	title=None,
+	threshold=None,
+	cut=None,
+	draw_cross=True,
+	annotate=True,
+	interpolation="none",
+	dim=1,
+	scale=1.,
+	cmap=MYMAP,
+	):
 	"""A wrapper for nilearn's plot_stat_map which allows scaling of crosshairs, titles and annotations.
 
 	Parameters
@@ -110,32 +115,43 @@ def scaled_plot(stat_map, template, fig, ax,
 	"""
 	# Make sure that if the variables are paths, they are absolute
 	try:
-		stat_map = path.abspath(path.expanduser(stat_map))
-	except AttributeError:
-		pass
-	try:
 		template = path.abspath(path.expanduser(template))
 	except AttributeError:
 		pass
-	try:
-		overlay = path.abspath(path.expanduser(overlay))
-	except AttributeError:
-		pass
-	display = nilearn.plotting.plot_stat_map(stat_map,
-		bg_img=template,
-		threshold=threshold,
-		figure=fig,
-		axes=ax,
-		cmap=MYMAP,
-		cut_coords=cut,
-		interpolation=interpolation,
-		dim=dim,
-		title=None,
-		annotate=False,
-		draw_cross=False,
-		black_bg=False,
-		colorbar=False,
-		)
+	if not stat_map:
+		display = nilearn.plotting.plot_img(template,
+			threshold=threshold,
+			figure=fig,
+			axes=ax,
+			cmap=cmap,
+			cut_coords=cut,
+			interpolation=interpolation,
+			title=None,
+			annotate=False,
+			draw_cross=False,
+			black_bg=black_bg,
+			colorbar=False,
+			)
+	else:
+		try:
+			stat_map = path.abspath(path.expanduser(stat_map))
+		except AttributeError:
+			pass
+		display = nilearn.plotting.plot_stat_map(stat_map,
+			bg_img=template,
+			threshold=threshold,
+			figure=fig,
+			axes=ax,
+			cmap=cmap,
+			cut_coords=cut,
+			interpolation=interpolation,
+			dim=dim,
+			title=None,
+			annotate=False,
+			draw_cross=False,
+			black_bg=black_bg,
+			colorbar=False,
+			)
 	if draw_cross:
 		display.draw_cross(linewidth=scale*1.6, alpha=0.3)
 	if annotate:
@@ -143,6 +159,10 @@ def scaled_plot(stat_map, template, fig, ax,
 	if title:
 		display.title(title, size=2+scale*26)
 	if overlay:
+		try:
+			overlay = path.abspath(path.expanduser(overlay))
+		except AttributeError:
+			pass
 		try:
 			display.add_contours(overlay, threshold=.5)
 		except ValueError:

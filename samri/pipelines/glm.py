@@ -4,6 +4,7 @@ import inspect
 import pandas as pd
 import re
 import shutil
+import multiprocessing as mp
 import nipype.interfaces.io as nio
 import nipype.interfaces.utility as util
 import nipype.pipeline.engine as pe
@@ -31,10 +32,10 @@ def l1(preprocessing_dir,
 	out_dir="",
 	mask="",
 	match_regex='sub-(?P<sub>[a-zA-Z0-9]+)/ses-(?P<ses>[a-zA-Z0-9]+)/func/.*?_task-(?P<task>[a-zA-Z0-9]+)_acq-(?P<acq>[a-zA-Z0-9]+)_(?P<mod>[a-zA-Z0-9]+)\.(?:tsv|nii|nii\.gz)',
-	nprocs=N_PROCS,
 	tr=1,
 	workflow_name="generic",
 	modality="cbv",
+	n_jobs_percentage=1,
 	):
 	"""Calculate subject level GLM statistic scores.
 
@@ -64,9 +65,8 @@ def l1(preprocessing_dir,
 		This has to point to an existing NIfTI file containing zero and one values only.
 	match_regex : str, optional
 		Regex matching pattern by which to select input files. Has to contain groups named "sub", "ses", "acq", "task", and "mod".
-	n_procs : int, optional
-		Maximum number of processes which to simultaneously spawn for the workflow.
-		If not explicitly defined, this is automatically calculated from the number of available cores and under the assumption that the workflow will be the main process running for the duration that it is running.
+	n_jobs_percentage : float, optional
+		Percentage of the cores present on the machine which to maximally use for deploying jobs in parallel.
 	tr : int, optional
 		Repetition time, in seconds.
 	workflow_name : str, optional
@@ -75,7 +75,7 @@ def l1(preprocessing_dir,
 
 	preprocessing_dir = path.abspath(path.expanduser(preprocessing_dir))
 	if not out_dir:
-		out_dir = path.join(bids_base,'l1')
+		out_dir = path.join(preprocessing_dir,'..','..','l1')
 	else:
 		out_dir = path.abspath(path.expanduser(out_dir))
 
@@ -94,6 +94,7 @@ def l1(preprocessing_dir,
 		for key in include:
 			data_selection = data_selection[data_selection[key].isin(include[key])]
 	bids_dictionary = data_selection[data_selection['modality']==modality].drop_duplicates().T.to_dict().values()
+	bids_dictionary = list(bids_dictionary)
 
 	infosource = pe.Node(interface=util.IdentityInterface(fields=['bids_dictionary']), name="infosource")
 	infosource.iterables = [('bids_dictionary', bids_dictionary)]
@@ -130,7 +131,7 @@ def l1(preprocessing_dir,
 		raise ValueError('The value you have provided for the `habituation` parameter, namely "{}", is invalid. Please choose one of: {"confound","in_main_contrast","separate_contrast"}'.format(habituation))
 
 	modelgen = pe.Node(interface=fsl.FEATModel(), name='modelgen')
-	modelgen.inputs.ignore_exception = True
+	#modelgen.inputs.ignore_exception = True
 
 	glm = pe.Node(interface=fsl.GLM(), name='glm', iterfield='design')
 	glm.inputs.out_cope = "cope.nii.gz"
@@ -142,7 +143,7 @@ def l1(preprocessing_dir,
 	if mask:
 		glm.inputs.mask = path.abspath(path.expanduser(mask))
 	glm.interface.mem_gb = 6
-	glm.inputs.ignore_exception = True
+	#glm.inputs.ignore_exception = True
 
 	cope_filename = pe.Node(name='cope_filename', interface=util.Function(function=bids_dict_to_source,input_names=inspect.getargspec(bids_dict_to_source)[0], output_names=['filename']))
 	cope_filename.inputs.source_format = "sub-{subject}_ses-{session}_task-{task}_acq-{acquisition}_{modality}_cope.nii.gz"
@@ -194,7 +195,7 @@ def l1(preprocessing_dir,
 	if highpass_sigma or lowpass_sigma:
 		bandpass = pe.Node(interface=fsl.maths.TemporalFilter(), name="bandpass")
 		bandpass.inputs.highpass_sigma = highpass_sigma
-		bandpass.interface.mem_gb = 6
+		bandpass.interface.mem_gb = 10
 		if lowpass_sigma:
 			bandpass.inputs.lowpass_sigma = lowpass_sigma
 		else:
@@ -218,7 +219,8 @@ def l1(preprocessing_dir,
 	workflow.config = {"execution": {"crashdump_dir": path.join(out_dir,"crashdump")}}
 	workflow.write_graph(dotfilename=path.join(workflow.base_dir,workdir_name,"graph.dot"), graph2use="hierarchical", format="png")
 
-	workflow.run(plugin="MultiProc",  plugin_args={'n_procs' : nprocs})
+	n_jobs = max(int(round(mp.cpu_count()*n_jobs_percentage)),2)
+	workflow.run(plugin="MultiProc",  plugin_args={'n_procs' : n_jobs})
 	if not keep_work:
 		shutil.rmtree(path.join(out_dir,workdir_name))
 

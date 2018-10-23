@@ -14,10 +14,10 @@ from nipype.interfaces import ants, afni, bru2nii, fsl, nipy
 import nipype.interfaces.ants.legacy as antslegacy
 
 from samri.fetch.templates import fetch_rat_waxholm
-from samri.pipelines.extra_functions import get_data_selection, get_bids_scan, write_bids_events_file, force_dummy_scans, BIDS_METADATA_EXTRACTION_DICTS
+from samri.pipelines.extra_functions import get_bids_scan, write_bids_events_file, force_dummy_scans, BIDS_METADATA_EXTRACTION_DICTS
 from samri.pipelines.extra_interfaces import VoxelResize, FSLOrient
 from samri.pipelines.nodes import *
-from samri.pipelines.utils import bids_naming, bids_data_selection, filter_data, fslmaths_invert_values, ss_to_path, sss_filename, GENERIC_PHASES
+from samri.pipelines.utils import bids_data_selection, fslmaths_invert_values, ss_to_path, GENERIC_PHASES
 from samri.utilities import N_PROCS
 
 DUMMY_SCANS=10

@@ -138,9 +138,9 @@ def bids_data_selection(base, structural_match, functional_match, subjects, sess
 				pass
 		df = res_df
 
-	if(subjects):
+	if subjects:
 		df = filter_data(df, 'subject', subjects)
-	if(sessions):
+	if sessions:
 		df = filter_data(df, 'session', sessions)
 	return df
 

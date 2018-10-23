@@ -384,7 +384,7 @@ def get_bids_scan(bids_base, data_selection,
 
 	filtered_data = []
 
-	if(selector):
+	if selector:
 		subject = selector[0]
 		session = selector[1]
 		filtered_data = data_selection[(data_selection["session"] == session)&(data_selection["subject"] == subject)]
@@ -392,7 +392,7 @@ def get_bids_scan(bids_base, data_selection,
 	else:
 		filtered_data = data_selection[data_selection.index==ind_type]
 
-	if(filtered_data.empty):
+	if filtered_data.empty:
 		raise Exception("SAMRIError: Does not exist" + str(selector[0]) + str(selector[1]) + str(ind_type))
 	else:
 		acq = filtered_data['acq'].item()

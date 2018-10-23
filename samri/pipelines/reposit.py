@@ -32,6 +32,7 @@ N_PROCS=max(N_PROCS-4, 2)
 def bru2bids(measurements_base,
 	measurements=[],
 	inflated_size=False,
+	bids_extra=['acq','run'],
 	dataset_name=False,
 	debug=False,
 	diffusion_match={},
@@ -53,6 +54,9 @@ def bru2bids(measurements_base,
 
 	measurements_base : str
 		Path of the top level directory containing all the Bruker scan directories to be converted and reformatted.
+	bids_extra : list, optional
+		List of strings denoting optional BIDS fields to include in the resulting file names.
+		Accepted items are 'acq' and 'run'.
 	inflated_size : bool, optional
 		Whether to inflate the voxel size reported by the scanner when converting the data to NIfTI.
 		Setting this to `True` multiplies the voxel edge lengths by 10 (i.e. the volume by 1000); this is occasionally done in some small animal pipelines, which use routines designed exclusively for human data.
@@ -155,10 +159,12 @@ def bru2bids(measurements_base,
 		f_bru2nii.inputs.actual_size = not inflated_size
 
 		f_filename = pe.Node(name='f_filename', interface=util.Function(function=bids_naming,input_names=inspect.getargspec(bids_naming)[0], output_names=['filename']))
+		f_filename.inputs.extra = bids_extra
 		f_filename.inputs.metadata = data_selection
 		f_filename.inputs.extension=''
 
 		f_metadata_filename = pe.Node(name='f_metadata_filename', interface=util.Function(function=bids_naming,input_names=inspect.getargspec(bids_naming)[0], output_names=['filename']))
+		f_metadata_filename.inputs.extra = bids_extra
 		f_metadata_filename.inputs.extension = ".json"
 		f_metadata_filename.inputs.metadata = data_selection
 
@@ -166,6 +172,7 @@ def bru2bids(measurements_base,
 		f_metadata_file.inputs.extraction_dicts = BIDS_METADATA_EXTRACTION_DICTS
 
 		events_filename = pe.Node(name='bids_stim_filename', interface=util.Function(function=bids_naming,input_names=inspect.getargspec(bids_naming)[0], output_names=['filename']))
+		events_filename.inputs.extra = bids_extra
 		events_filename.inputs.suffix = "events"
 		events_filename.inputs.extension = ".tsv"
 		events_filename.inputs.metadata = data_selection

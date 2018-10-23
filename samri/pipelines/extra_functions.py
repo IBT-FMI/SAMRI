@@ -499,6 +499,7 @@ def get_data_selection(workflow_base,
 	exclude={},
 	measurements=[],
 	exclude_measurements=[],
+	count_runs=False,
 	):
 	"""
 	Return a `pandas.DaaFrame` object of the Bruker measurement directories located under a given base directory, and their respective scans, subjects, and tasks.
@@ -535,6 +536,7 @@ def get_data_selection(workflow_base,
 	#populate a list of lists with acceptable subject names, sessions, and sub_dir's
 	for sub_dir in measurement_path_list:
 		if sub_dir not in exclude_measurements:
+			run_counter = 0
 			selected_measurement = {}
 			try:
 				state_file = open(os.path.join(workflow_base,sub_dir,"subject"), "r")
@@ -565,6 +567,8 @@ def get_data_selection(workflow_base,
 										scan_type = m.groupdict()['scan_type']
 										for key in match:
 											if match_exclude_bids(key, match[key], measurement_copy, scan_type, number):
+												measurement_copy['run'] = run_counter
+												run_counter += 1
 												selected_measurements.append(measurement_copy)
 												scan_dir_resolved = True
 												break
@@ -586,6 +590,8 @@ def get_data_selection(workflow_base,
 												scan_type = m.groupdict()['scan_type']
 												for key in match:
 													if match_exclude_bids(key, match[key], measurement_copy, scan_type, number):
+														measurement_copy['run'] = run_counter
+														run_counter += 1
 														selected_measurements.append(measurement_copy)
 														scan_subdir_resolved = True
 														break
@@ -596,10 +602,8 @@ def get_data_selection(workflow_base,
 						break #prevent loop from going on forever
 			except IOError:
 				pass
-
 	data_selection = pd.DataFrame(selected_measurements)
 	return data_selection
-
 
 def select_from_datafind_df(df,
 	bids_dictionary=False,

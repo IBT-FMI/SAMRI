@@ -195,7 +195,7 @@ def l1(preprocessing_dir,
 	if highpass_sigma or lowpass_sigma:
 		bandpass = pe.Node(interface=fsl.maths.TemporalFilter(), name="bandpass")
 		bandpass.inputs.highpass_sigma = highpass_sigma
-		bandpass.interface.mem_gb = 10
+		bandpass.interface.mem_gb = 16
 		if lowpass_sigma:
 			bandpass.inputs.lowpass_sigma = lowpass_sigma
 		else:

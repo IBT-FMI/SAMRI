@@ -339,6 +339,11 @@ def bids_naming(subject_session, scan_type, metadata,
 		if not acq.isnull().all():
 			acq = acq.item()
 			filename += '_acq-{}'.format(acq)
+	if 'run' in extra:
+		acq = selection['run']
+		if not acq.isnull().all():
+			acq = acq.item()
+			filename += '_run-{}'.format(acq)
 	if not suffix:
 		try:
 			modality = selection['modality']

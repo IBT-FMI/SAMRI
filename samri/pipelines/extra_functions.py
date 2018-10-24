@@ -75,8 +75,10 @@ def force_dummy_scans(in_file,
 
 	out_file = path.abspath(path.expanduser(out_file))
 	in_file = path.abspath(path.expanduser(in_file))
-	in_file_base = path.splitext(in_file)[0]
-	metadata_file = in_file_base+'.json'
+	in_file_dir = path.dirname(in_file)
+	in_file_name = path.basename(in_file)
+	in_file_noext = in_file_name.split('.', 1)[0]
+	metadata_file = path.join(in_file_dir, in_file_noext+'.json')
 
 	metadata = json.load(open(metadata_file))
 
@@ -249,10 +251,16 @@ def write_bids_events_file(scan_dir,
 	if not prefer_labbookdb:
 		try:
 			scan_dir_contents = os.listdir(scan_dir)
-			sequence_files = [i for i in scan_dir_contents if ("sequence" in i and "tsv" in i) or ('events' and 'tsv' in i)]
-			sequence_file = os.path.join(scan_dir, sequence_files[0])
+			sequence_files = [i for i in scan_dir_contents if ("sequence" in i and "tsv" in i)]
+			if sequence_files:
+				sequence_file = os.path.join(scan_dir, sequence_files[0])
+			else:
+				timecourse_dir = os.path.dirname(timecourse_file)
+				timecourse_name = os.path.basename(timecourse_file)
+				stripped_name = timecourse_name.split('.', 1)[0].rsplit('_', 1)[0]
+				sequence_file = os.path.join(timecourse_dir,stripped_name+'_events.tsv')
 			mydf = pd.read_csv(sequence_file, sep="\s", engine='python')
-		except IndexError:
+		except:
 			if os.path.isfile(db_path):
 				from labbookdb.report.tracking import bids_eventsfile
 				mydf = bids_eventsfile(db_path, task)
@@ -267,9 +275,15 @@ def write_bids_events_file(scan_dir,
 				return '/dev/null'
 		except ImportError:
 			scan_dir_contents = os.listdir(scan_dir)
-			sequence_files = [i for i in scan_dir_contents if "sequence" in i and "tsv" in i]
-			sequence_file = os.path.join(scan_dir, sequence_files[0])
-			mydf = pd.read_csv(sequence_file, sep="\s")
+			sequence_files = [i for i in scan_dir_contents if ("sequence" in i and "tsv" in i)]
+			if sequence_files:
+				sequence_file = os.path.join(scan_dir, sequence_files[0])
+			else:
+				timecourse_dir = os.path.dirname(timecourse_file)
+				timecourse_name = os.path.basename(timecourse_file)
+				stripped_name = timecourse_name.split('.', 1)[0].rsplit('_', 1)[0]
+				sequence_file = os.path.join(timecourse_dir,stripped_name+'_events.tsv')
+			mydf = pd.read_csv(sequence_file, sep="\s", engine='python')
 
 	timecourse_file = os.path.abspath(os.path.expanduser(timecourse_file))
 	timecourse = nib.load(timecourse_file)
@@ -354,7 +368,8 @@ def getSesAndData(grouped_df=None,
 	subject_session, data_selection = grouped_df
 	return subject_session, data_selection
 
-def get_bids_scan(bids_base, data_selection,
+def get_bids_scan(data_selection,
+	bids_base="",
 	ind_type = "",
 	selector=None,
 	subject=None,
@@ -370,8 +385,6 @@ def get_bids_scan(bids_base, data_selection,
 		Path to the bids base path.
 	data_selection : pandas.DataFrame
 		A `pandas.DataFrame` object as produced by `samri.preprocessing.extra_functions.get_data_selection()`.
-	scan_type : str
-		The type of scan for which to determine the directory.
 	selector : iterable, optional
 		The first method of selecting the subject and scan, this value should be a length-2 list or tuple containing the subject and sthe session to be selected.
 	subject : string, optional
@@ -381,6 +394,7 @@ def get_bids_scan(bids_base, data_selection,
 	"""
 	import os #for some reason the import outside the function fails
 	import pandas as pd
+	from samri.pipelines.utils import bids_naming
 
 	filtered_data = []
 
@@ -395,30 +409,42 @@ def get_bids_scan(bids_base, data_selection,
 	if filtered_data.empty:
 		raise Exception("SAMRIError: Does not exist" + str(selector[0]) + str(selector[1]) + str(ind_type))
 	else:
-		acq = filtered_data['acq'].item()
-		typ = filtered_data['type'].item()
+		filtered_data = filtered_data.rename(columns={'modality': 'type', 'type': 'modality'})
 		subject = filtered_data['subject'].item()
 		session = filtered_data['session'].item()
-		modality = filtered_data['modality'].item()
-		scan_type = filtered_data['scan_type'].item()
-		subject_session = [subject, session]
-
-		scan_path = os.path.join(bids_base, 'sub-' + subject + '/', 'ses-' + session + '/', modality )
-
-
-		file_name = ''
-		events_name = ''
-		if(modality == 'func'):
+		typ = filtered_data['type'].item()
+		try:
 			task = filtered_data['task'].item()
-			file_name = 'sub-' + subject + '_' + 'ses-' + session + '_' + 'task-' + task + '_' + 'acq-' + acq + '_' + typ
-			events_name = 'sub-' + subject + '_' + 'ses-' + session + '_' + 'task-' + task + '_' + 'acq-' + acq + '_' + 'events.tsv'
+		except:
+			pass
+		subject_session = [subject, session]
+		#scan_path = os.path.join(bids_base, 'sub-' + subject + '/', 'ses-' + session + '/', typ )
+
+		try:
+			nii_path = filtered_data['path'].item()
+		except KeyError:
+			nii_path = filtered_data['measurement'].item()
+			nii_path += '/'+filtered_data['scan'].item()
+			nii_name = bids_naming(subject_session, False, filtered_data,
+					extra=['acq','run'],
+					extension='',
+					)
+			scan_path = nii_path
 		else:
-			file_name = 'sub-' + subject + '_' + 'ses-' + session + '_' + 'acq-' + acq + '_' + typ
+			scan_path = os.path.dirname(nii_path)
+			nii_name = os.path.basename(nii_path)
 
-		nii_name = file_name + '.nii.gz'
-		nii_path = scan_path + '/' + file_name + '.nii'
+		eventfile_name = bids_naming(subject_session, False, filtered_data,
+				extra=['acq','run'],
+				extension='.tsv',
+				suffix='events'
+				)
+		metadata_filename = bids_naming(subject_session, False, filtered_data,
+				extra=['acq','run'],
+				extension='.json',
+				)
 
-		return scan_path, modality, task, nii_path, nii_name, file_name, events_name, subject_session
+		return scan_path, typ, task, nii_path, nii_name, eventfile_name, subject_session, metadata_filename
 
 BIDS_KEY_DICTIONARY = {
 	'acquisition':['acquisition','ACQUISITION','acq','ACQ'],

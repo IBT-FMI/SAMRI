@@ -323,7 +323,10 @@ def bids_naming(subject_session, scan_type, metadata,
 	subject, session = subject_session
 	filename = 'sub-{}'.format(subject)
 	filename += '_ses-{}'.format(session)
-	selection =  metadata[(metadata['subject']==subject)&(metadata['session']==session)&(metadata['scan_type']==scan_type)]
+	selection =  metadata.loc[(metadata['subject']==subject)&(metadata['session']==session)]
+	if scan_type:
+		selection = selection.loc[selection['scan_type']==scan_type]
+
 	if selection.empty:
 		return
 	try:

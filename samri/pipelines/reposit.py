@@ -1,5 +1,5 @@
 from os import path, remove
-from samri.pipelines.extra_functions import get_data_selection, get_scan, write_bids_metadata_file, write_bids_events_file, BIDS_METADATA_EXTRACTION_DICTS
+from samri.pipelines.extra_functions import get_data_selection, get_scan, get_bids_scan, write_bids_metadata_file, write_bids_events_file, BIDS_METADATA_EXTRACTION_DICTS
 
 import argh
 import re
@@ -112,6 +112,7 @@ def bru2bids(measurements_base,
 			measurements=measurements,
 			)
 		structural_scan_types = list(s_data_selection['scan_type'].unique())
+		struct_ind = s_data_selection.index.tolist()
 		data_selection = pd.concat([data_selection,s_data_selection])
 	if functional_match:
 		f_data_selection = get_data_selection(measurements_base,
@@ -120,6 +121,7 @@ def bru2bids(measurements_base,
 			measurements=measurements,
 			)
 		functional_scan_types = list(f_data_selection['scan_type'].unique())
+		func_ind = f_data_selection.index.tolist()
 		data_selection = pd.concat([data_selection,f_data_selection])
 	if diffusion_match:
 		d_data_selection = get_data_selection(measurements_base,
@@ -149,57 +151,37 @@ def bru2bids(measurements_base,
 		]
 
 	if functional_scan_types:
-		get_f_scan = pe.Node(name='get_f_scan', interface=util.Function(function=get_scan,input_names=inspect.getargspec(get_scan)[0], output_names=['scan_path','scan_type','task']))
+		get_f_scan = pe.Node(name='get_f_scan', interface=util.Function(function=get_bids_scan,input_names=inspect.getargspec(get_bids_scan)[0], output_names=[
+			'scan_path', 'typ', 'task', 'nii_path', 'nii_name', 'eventfile_name', 'subject_session', 'metadata_filename'
+			]))
 		get_f_scan.inputs.ignore_exception = True
-		get_f_scan.inputs.data_selection = data_selection
-		get_f_scan.inputs.measurements_base = measurements_base
-		get_f_scan.iterables = ("scan_type", functional_scan_types)
+		get_f_scan.inputs.data_selection = f_data_selection
+		get_f_scan.inputs.bids_base = measurements_base
+		get_f_scan.iterables = ("ind_type", func_ind)
 
 		f_bru2nii = pe.Node(interface=bru2nii.Bru2(), name="f_bru2nii")
 		f_bru2nii.inputs.actual_size = not inflated_size
 
-		f_filename = pe.Node(name='f_filename', interface=util.Function(function=bids_naming,input_names=inspect.getargspec(bids_naming)[0], output_names=['filename']))
-		f_filename.inputs.extra = bids_extra
-		f_filename.inputs.metadata = data_selection
-		f_filename.inputs.extension=''
-
-		f_metadata_filename = pe.Node(name='f_metadata_filename', interface=util.Function(function=bids_naming,input_names=inspect.getargspec(bids_naming)[0], output_names=['filename']))
-		f_metadata_filename.inputs.extra = bids_extra
-		f_metadata_filename.inputs.extension = ".json"
-		f_metadata_filename.inputs.metadata = data_selection
-
 		f_metadata_file = pe.Node(name='metadata_file', interface=util.Function(function=write_bids_metadata_file,input_names=inspect.getargspec(write_bids_metadata_file)[0], output_names=['out_file']))
 		f_metadata_file.inputs.extraction_dicts = BIDS_METADATA_EXTRACTION_DICTS
-
-		events_filename = pe.Node(name='bids_stim_filename', interface=util.Function(function=bids_naming,input_names=inspect.getargspec(bids_naming)[0], output_names=['filename']))
-		events_filename.inputs.extra = bids_extra
-		events_filename.inputs.suffix = "events"
-		events_filename.inputs.extension = ".tsv"
-		events_filename.inputs.metadata = data_selection
-		events_filename.ignore_exception = True
 
 		events_file = pe.Node(name='events_file', interface=util.Function(function=write_bids_events_file,input_names=inspect.getargspec(write_bids_events_file)[0], output_names=['out_file']))
 		events_file.ignore_exception = True
 
 		workflow_connections = [
-			(infosource, datasink, [(('subject_session',ss_to_path), 'container')]),
-			(infosource, get_f_scan, [('subject_session', 'selector')]),
-			(infosource, f_metadata_filename, [('subject_session', 'subject_session')]),
-			(infosource, f_filename, [('subject_session', 'subject_session')]),
-			(infosource, events_filename, [('subject_session', 'subject_session')]),
-			(get_f_scan, f_metadata_filename, [('scan_type', 'scan_type')]),
-			(get_f_scan, f_filename, [('scan_type', 'scan_type')]),
+			(get_f_scan, datasink, [(('subject_session',ss_to_path), 'container')]),
 			(get_f_scan, f_bru2nii, [('scan_path', 'input_dir')]),
-			(get_f_scan, f_metadata_file, [('scan_path', 'scan_dir')]),
-			(get_f_scan, f_metadata_file, [('task', 'task_name')]),
-			(f_metadata_filename, f_metadata_file, [('filename', 'out_file')]),
-			(f_filename, f_bru2nii, [('filename', 'output_filename')]),
-			(events_filename, events_file, [('filename', 'out_file')]),
+			(get_f_scan, f_bru2nii, [('nii_name', 'output_filename')]),
 			(f_metadata_file, events_file, [('out_file', 'metadata_file')]),
 			(f_bru2nii, events_file, [('nii_file', 'timecourse_file')]),
-			(get_f_scan, events_filename, [('scan_type', 'scan_type')]),
 			(f_bru2nii, datasink, [('nii_file', 'func')]),
+			(get_f_scan, f_metadata_file, [
+				('metadata_filename', 'out_file'),
+				('task', 'task'),
+				('scan_path', 'scan_dir')
+				]),
 			(get_f_scan, events_file, [
+				('eventfile_name', 'out_file'),
 				('task', 'task'),
 				('scan_path', 'scan_dir')
 				]),

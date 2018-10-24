@@ -109,7 +109,7 @@ def legacy(bids_base, template,
 			sessions,
 			)
 
-	get_f_scan = pe.Node(name='get_f_scan', interface=util.Function(function=get_bids_scan,input_names=inspect.getargspec(get_bids_scan)[0], output_names=['scan_path','scan_type','task', 'nii_path', 'nii_name', 'file_name', 'events_name', 'subject_session']))
+	get_f_scan = pe.Node(name='get_f_scan', interface=util.Function(function=get_bids_scan,input_names=inspect.getargspec(get_bids_scan)[0], output_names=['scan_path', 'scan_type', 'task', 'nii_path', 'nii_name', 'events_name', 'subject_session']))
 	get_f_scan.inputs.ignore_exception = True
 	get_f_scan.inputs.data_selection = data_selection
 	get_f_scan.inputs.bids_base = bids_base
@@ -148,7 +148,6 @@ def legacy(bids_base, template,
 
 	workflow_connections = [
 		(get_f_scan, dummy_scans, [('nii_path', 'in_file')]),
-		(get_f_scan, dummy_scans, [('scan_path', 'scan_dir')]),
 		(dummy_scans, events_file, [('deleted_scans', 'forced_dummy_scans')]),
 		(dummy_scans, f_resize, [('out_file', 'in_file')]),
 		(get_f_scan, events_file, [
@@ -398,7 +397,7 @@ def generic(bids_base, template,
 			sessions,
 			)
 
-	get_f_scan = pe.Node(name='get_f_scan', interface=util.Function(function=get_bids_scan,input_names=inspect.getargspec(get_bids_scan)[0], output_names=['scan_path','scan_type','task', 'nii_path', 'nii_name', 'file_name', 'events_name', 'subject_session']))
+	get_f_scan = pe.Node(name='get_f_scan', interface=util.Function(function=get_bids_scan,input_names=inspect.getargspec(get_bids_scan)[0], output_names=['scan_path','scan_type','task', 'nii_path', 'nii_name', 'events_name', 'subject_session']))
 	get_f_scan.inputs.ignore_exception = True
 	get_f_scan.inputs.data_selection = data_selection
 	get_f_scan.inputs.bids_base = bids_base
@@ -415,7 +414,6 @@ def generic(bids_base, template,
 
 	workflow_connections = [
 		(get_f_scan, dummy_scans, [('nii_path', 'in_file')]),
-		(get_f_scan, dummy_scans, [('scan_path', 'scan_dir')]),
 		(dummy_scans, events_file, [('deleted_scans', 'forced_dummy_scans')]),
 		(get_f_scan, events_file, [
 			('nii_path', 'timecourse_file'),
@@ -457,7 +455,7 @@ def generic(bids_base, template,
 		s_biascorrect, f_biascorrect = inflated_size_nodes()
 
 	if structural_scan_types.any():
-		get_s_scan = pe.Node(name='get_s_scan', interface=util.Function(function=get_bids_scan, input_names=inspect.getargspec(get_bids_scan)[0], output_names=['scan_path','scan_type','task', 'nii_path', 'nii_name', 'file_name', 'events_name', 'subject_session']))
+		get_s_scan = pe.Node(name='get_s_scan', interface=util.Function(function=get_bids_scan, input_names=inspect.getargspec(get_bids_scan)[0], output_names=['scan_path','scan_type','task', 'nii_path', 'nii_name', 'events_name', 'subject_session']))
 		get_s_scan.inputs.ignore_exception = True
 		get_s_scan.inputs.data_selection = data_selection
 		get_s_scan.inputs.bids_base = bids_base

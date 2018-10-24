@@ -554,10 +554,9 @@ def get_data_selection(workflow_base,
 
 	workflow_base = os.path.abspath(os.path.expanduser(workflow_base))
 
-	if measurements:
-		measurement_path_list = [os.path.join(workflow_base,i) for i in measurements]
-	else:
-		measurement_path_list = os.listdir(workflow_base)
+	if not measurements:
+		measurements = os.listdir(workflow_base)
+	measurement_path_list = [os.path.join(workflow_base,i) for i in measurements]
 
 	selected_measurements=[]
 	#populate a list of lists with acceptable subject names, sessions, and sub_dir's

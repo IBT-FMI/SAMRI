@@ -109,7 +109,7 @@ def legacy(bids_base, template,
 			sessions,
 			)
 
-	get_f_scan = pe.Node(name='get_f_scan', interface=util.Function(function=get_bids_scan,input_names=inspect.getargspec(get_bids_scan)[0], output_names=['scan_path', 'scan_type', 'task', 'nii_path', 'nii_name', 'events_name', 'subject_session']))
+	get_f_scan = pe.Node(name='get_f_scan', interface=util.Function(function=get_bids_scan,input_names=inspect.getargspec(get_bids_scan)[0], output_names=['scan_path', 'scan_type', 'task', 'nii_path', 'nii_name', 'events_name', 'subject_session','metadata_filename']))
 	get_f_scan.inputs.ignore_exception = True
 	get_f_scan.inputs.data_selection = data_selection
 	get_f_scan.inputs.bids_base = bids_base
@@ -397,7 +397,7 @@ def generic(bids_base, template,
 			sessions,
 			)
 
-	get_f_scan = pe.Node(name='get_f_scan', interface=util.Function(function=get_bids_scan,input_names=inspect.getargspec(get_bids_scan)[0], output_names=['scan_path','scan_type','task', 'nii_path', 'nii_name', 'events_name', 'subject_session']))
+	get_f_scan = pe.Node(name='get_f_scan', interface=util.Function(function=get_bids_scan,input_names=inspect.getargspec(get_bids_scan)[0], output_names=['scan_path','scan_type','task', 'nii_path', 'nii_name', 'events_name', 'subject_session', 'metadata_filename']))
 	get_f_scan.inputs.ignore_exception = True
 	get_f_scan.inputs.data_selection = data_selection
 	get_f_scan.inputs.bids_base = bids_base
@@ -455,7 +455,7 @@ def generic(bids_base, template,
 		s_biascorrect, f_biascorrect = inflated_size_nodes()
 
 	if structural_scan_types.any():
-		get_s_scan = pe.Node(name='get_s_scan', interface=util.Function(function=get_bids_scan, input_names=inspect.getargspec(get_bids_scan)[0], output_names=['scan_path','scan_type','task', 'nii_path', 'nii_name', 'events_name', 'subject_session']))
+		get_s_scan = pe.Node(name='get_s_scan', interface=util.Function(function=get_bids_scan, input_names=inspect.getargspec(get_bids_scan)[0], output_names=['scan_path','scan_type','task', 'nii_path', 'nii_name', 'events_name', 'subject_session', 'metadata_filename']))
 		get_s_scan.inputs.ignore_exception = True
 		get_s_scan.inputs.data_selection = data_selection
 		get_s_scan.inputs.bids_base = bids_base
@@ -729,6 +729,7 @@ def common_select(bids_base, out_base, workflow_name, template, registration_mas
 
 
 	data_selection = bids_data_selection(bids_base, structural_match, functional_match, subjects, sessions)
+	filtered_data = filtered_data.rename(columns={'modality': 'type', 'type': 'modality'})
 
 	# generate functional and structural scan types
 	functional_scan_types = data_selection.loc[data_selection.modality == 'func']['scan_type'].values
@@ -737,10 +738,10 @@ def common_select(bids_base, out_base, workflow_name, template, registration_mas
 	# we start to define nipype workflow elements (nodes, connections, meta)
 	subjects_sessions = data_selection[["subject","session"]].drop_duplicates().values.tolist()
 
-	_func_ind = data_selection[data_selection["modality"] == "func"]
+	_func_ind = data_selection[data_selection["type"] == "func"]
 	func_ind = _func_ind.index.tolist()
 
-	_struct_ind = data_selection[data_selection["modality"] == "anat"]
+	_struct_ind = data_selection[data_selection["type"] == "anat"]
 	struct_ind = _struct_ind.index.tolist()
 
 	if True:

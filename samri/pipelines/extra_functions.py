@@ -374,7 +374,6 @@ def get_bids_scan(data_selection,
 	selector=None,
 	subject=None,
 	session=None,
-	task=False,
 	extra=['acq','run'],
 	):
 
@@ -410,14 +409,16 @@ def get_bids_scan(data_selection,
 	if filtered_data.empty:
 		raise Exception("SAMRIError: Does not exist" + str(selector[0]) + str(selector[1]) + str(ind_type))
 	else:
-		filtered_data = filtered_data.rename(columns={'modality': 'type', 'type': 'modality'})
 		subject = filtered_data['subject'].item()
 		session = filtered_data['session'].item()
-		typ = filtered_data['type'].item()
+		try:
+			typ = filtered_data['type'].item()
+		except:
+			typ = ""
 		try:
 			task = filtered_data['task'].item()
 		except:
-			pass
+			task = ""
 		subject_session = [subject, session]
 		#scan_path = os.path.join(bids_base, 'sub-' + subject + '/', 'ses-' + session + '/', typ )
 

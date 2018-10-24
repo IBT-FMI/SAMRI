@@ -455,9 +455,13 @@ def generic(bids_base, template,
 		s_biascorrect, f_biascorrect = inflated_size_nodes()
 
 	if structural_scan_types.any():
+		s_data_selection = deepcopy(data_selection)
+		for match in structural_match.keys():
+			s_data_selection = s_data_selection.loc[s_data_selection[match].isin(structural_match[match])]
+
 		get_s_scan = pe.Node(name='get_s_scan', interface=util.Function(function=get_bids_scan, input_names=inspect.getargspec(get_bids_scan)[0], output_names=['scan_path','scan_type','task', 'nii_path', 'nii_name', 'events_name', 'subject_session', 'metadata_filename']))
 		get_s_scan.inputs.ignore_exception = True
-		get_s_scan.inputs.data_selection = data_selection
+		get_s_scan.inputs.data_selection = s_data_selection
 		get_s_scan.inputs.bids_base = bids_base
 
 		if actual_size:
@@ -729,11 +733,11 @@ def common_select(bids_base, out_base, workflow_name, template, registration_mas
 
 
 	data_selection = bids_data_selection(bids_base, structural_match, functional_match, subjects, sessions)
-	filtered_data = filtered_data.rename(columns={'modality': 'type', 'type': 'modality'})
+	data_selection = data_selection.rename(columns={'modality': 'type', 'type': 'modality'})
 
 	# generate functional and structural scan types
-	functional_scan_types = data_selection.loc[data_selection.modality == 'func']['scan_type'].values
-	structural_scan_types = data_selection.loc[data_selection.modality == 'anat']['scan_type'].values
+	functional_scan_types = data_selection.loc[data_selection.type == 'func']['scan_type'].values
+	structural_scan_types = data_selection.loc[data_selection.type == 'anat']['scan_type'].values
 
 	# we start to define nipype workflow elements (nodes, connections, meta)
 	subjects_sessions = data_selection[["subject","session"]].drop_duplicates().values.tolist()

@@ -370,7 +370,7 @@ def getSesAndData(grouped_df=None,
 
 def get_bids_scan(data_selection,
 	bids_base="",
-	ind_type = "",
+	ind_type="",
 	selector=None,
 	subject=None,
 	session=None,
@@ -402,12 +402,11 @@ def get_bids_scan(data_selection,
 		subject = selector[0]
 		session = selector[1]
 		filtered_data = data_selection[(data_selection["session"] == session)&(data_selection["subject"] == subject)]
-		filtered_data = filtered_data[filtered_data["modality"] == "anat"]
 	else:
 		filtered_data = data_selection[data_selection.index==ind_type]
 
 	if filtered_data.empty:
-		raise Exception("SAMRIError: Does not exist" + str(selector[0]) + str(selector[1]) + str(ind_type))
+		raise Exception("SAMRIError: Does not exist: " + str(selector[0]) + str(selector[1]) + str(ind_type))
 	else:
 		subject = filtered_data['subject'].item()
 		session = filtered_data['session'].item()

@@ -375,6 +375,7 @@ def get_bids_scan(data_selection,
 	subject=None,
 	session=None,
 	task=False,
+	extra=['acq','run'],
 	):
 
 	"""Description...
@@ -426,7 +427,7 @@ def get_bids_scan(data_selection,
 			nii_path = filtered_data['measurement'].item()
 			nii_path += '/'+filtered_data['scan'].item()
 			nii_name = bids_naming(subject_session, False, filtered_data,
-					extra=['acq','run'],
+					extra=extra,
 					extension='',
 					)
 			scan_path = nii_path
@@ -435,12 +436,12 @@ def get_bids_scan(data_selection,
 			nii_name = os.path.basename(nii_path)
 
 		eventfile_name = bids_naming(subject_session, False, filtered_data,
-				extra=['acq','run'],
+				extra=extra,
 				extension='.tsv',
 				suffix='events'
 				)
 		metadata_filename = bids_naming(subject_session, False, filtered_data,
-				extra=['acq','run'],
+				extra=extra,
 				extension='.json',
 				)
 

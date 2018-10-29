@@ -154,7 +154,7 @@ def bru2bids(measurements_base,
 
 	if functional_scan_types:
 		get_f_scan = pe.Node(name='get_f_scan', interface=util.Function(function=get_bids_scan,input_names=inspect.getargspec(get_bids_scan)[0], output_names=[
-			'scan_path', 'typ', 'task', 'nii_path', 'nii_name', 'eventfile_name', 'subject_session', 'metadata_filename'
+			'scan_path', 'typ', 'task', 'nii_path', 'nii_name', 'eventfile_name', 'subject_session', 'metadata_filename', 'dict_slice',
 			]))
 		get_f_scan.inputs.ignore_exception = True
 		get_f_scan.inputs.data_selection = f_data_selection
@@ -227,7 +227,7 @@ def bru2bids(measurements_base,
 
 	if diffusion_scan_types:
 		get_d_scan = pe.Node(name='get_d_scan', interface=util.Function(function=get_bids_scan,input_names=inspect.getargspec(get_bids_scan)[0], output_names=[
-			'scan_path', 'typ', 'task', 'nii_path', 'nii_name', 'eventfile_name', 'subject_session', 'metadata_filename'
+			'scan_path', 'typ', 'task', 'nii_path', 'nii_name', 'eventfile_name', 'subject_session', 'metadata_filename', 'dict_slice',
 			]))
 		get_d_scan.inputs.ignore_exception = True
 		get_d_scan.inputs.data_selection = d_data_selection
@@ -327,7 +327,7 @@ def bru2bids(measurements_base,
 
 	if structural_scan_types:
 		get_s_scan = pe.Node(name='get_s_scan', interface=util.Function(function=get_bids_scan,input_names=inspect.getargspec(get_bids_scan)[0], output_names=[
-			'scan_path', 'typ', 'task', 'nii_path', 'nii_name', 'eventfile_name', 'subject_session', 'metadata_filename'
+			'scan_path', 'typ', 'task', 'nii_path', 'nii_name', 'eventfile_name', 'subject_session', 'metadata_filename', 'dict_slice',
 			]))
 		get_s_scan.inputs.ignore_exception = True
 		get_s_scan.inputs.data_selection = s_data_selection

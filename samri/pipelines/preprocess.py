@@ -71,9 +71,6 @@ def legacy(bids_base, template,
 		The dictionary should have keys which are 'acquisition', 'task', or 'modality', and values which are lists of acceptable strings for the respective BIDS field.
 	keep_work : bool, str
 		Whether to keep the work directory after workflow conclusion (this directory contains all the intermediary processing commands, inputs, and outputs --- it is invaluable for debugging but many times larger in size than the actual output).
-	negative_contrast_agent : bool, optional
-		Whether the scan was acquired witn a negative contrast agent given the imaging modality; if true the values will be inverted with respect to zero.
-		This is commonly used for iron nano-particle Cerebral Blood Volume (CBV) measurements.
 	n_procs : int, optional
 		Number of processors to maximally use for the workflow; if unspecified a best guess will be estimate based on hardware (but not on current load).
 	out_base : str, optional
@@ -109,7 +106,7 @@ def legacy(bids_base, template,
 			sessions,
 			)
 
-	get_f_scan = pe.Node(name='get_f_scan', interface=util.Function(function=get_bids_scan,input_names=inspect.getargspec(get_bids_scan)[0], output_names=['scan_path', 'scan_type', 'task', 'nii_path', 'nii_name', 'events_name', 'subject_session','metadata_filename']))
+	get_f_scan = pe.Node(name='get_f_scan', interface=util.Function(function=get_bids_scan,input_names=inspect.getargspec(get_bids_scan)[0], output_names=['scan_path', 'scan_type', 'task', 'nii_path', 'nii_name', 'events_name', 'subject_session','metadata_filename','dict_slice']))
 	get_f_scan.inputs.ignore_exception = True
 	get_f_scan.inputs.data_selection = data_selection
 	get_f_scan.inputs.bids_base = bids_base
@@ -236,33 +233,14 @@ def legacy(bids_base, template,
 			(f_swapdim, f_warp, [('out_file', 'input_image')]),
 			])
 
-	invert = pe.Node(interface=fsl.ImageMaths(), name="invert")
-
 	blur = pe.Node(interface=afni.preprocess.BlurToFWHM(), name="blur")
 	blur.inputs.fwhmxy = functional_blur_xy
 
-	if functional_blur_xy and negative_contrast_agent:
-		workflow_connections.extend([
-			(f_copysform2qform, blur, [('out_file', 'in_file')]),
-			(blur, invert, [(('out_file', fslmaths_invert_values), 'op_string')]),
-			(blur, invert, [('out_file', 'in_file')]),
-			(get_f_scan, invert, [('nii_name','output_image')]),
-			(invert, datasink, [('out_file', 'func')]),
-			])
-
-	elif functional_blur_xy:
+	if functional_blur_xy:
 		workflow_connections.extend([
 			(get_f_scan, blur, [('nii_name','output_image')]),
 			(f_copysform2qform, blur, [('out_file', 'in_file')]),
 			(blur, datasink, [('out_file', 'func')]),
-			])
-
-	elif negative_contrast_agent:
-		workflow_connections.extend([
-			(get_f_scan, invert, [('nii_name','out_file')]),
-			(f_copysform2qform, invert, [(('out_file', fslmaths_invert_values), 'op_string')]),
-			(f_copysform2qform, invert, [('out_file', 'in_file')]),
-			(invert, datasink, [('out_file', 'func')]),
 			])
 	else:
 
@@ -359,9 +337,6 @@ def generic(bids_base, template,
 		Values mean the following: 'composite' that it will be registered to the structural scan which will in turn be registered to the template, 'functional' that it will be registered directly, 'structural' that it will be registered exactly as the structural scan.
 	keep_work : bool, str
 		Whether to keep the work directory after workflow conclusion (this directory contains all the intermediary processing commands, inputs, and outputs --- it is invaluable for debugging but many times larger in size than the actual output).
-	negative_contrast_agent : bool, optional
-		Whether the scan was acquired witn a negative contrast agent given the imaging modality; if true the values will be inverted with respect to zero.
-		This is commonly used for iron nano-particle Cerebral Blood Volume (CBV) measurements.
 	n_procs : int, optional
 		Number of processors to maximally use for the workflow; if unspecified a best guess will be estimate based on hardware (but not on current load).
 	out_base : str, optional
@@ -397,7 +372,7 @@ def generic(bids_base, template,
 			sessions,
 			)
 
-	get_f_scan = pe.Node(name='get_f_scan', interface=util.Function(function=get_bids_scan,input_names=inspect.getargspec(get_bids_scan)[0], output_names=['scan_path','scan_type','task', 'nii_path', 'nii_name', 'events_name', 'subject_session', 'metadata_filename']))
+	get_f_scan = pe.Node(name='get_f_scan', interface=util.Function(function=get_bids_scan,input_names=inspect.getargspec(get_bids_scan)[0], output_names=['scan_path','scan_type','task', 'nii_path', 'nii_name', 'events_name', 'subject_session', 'metadata_filename', 'dict_slice']))
 	get_f_scan.inputs.ignore_exception = True
 	get_f_scan.inputs.data_selection = data_selection
 	get_f_scan.inputs.bids_base = bids_base
@@ -459,7 +434,7 @@ def generic(bids_base, template,
 		for match in structural_match.keys():
 			s_data_selection = s_data_selection.loc[s_data_selection[match].isin(structural_match[match])]
 
-		get_s_scan = pe.Node(name='get_s_scan', interface=util.Function(function=get_bids_scan, input_names=inspect.getargspec(get_bids_scan)[0], output_names=['scan_path','scan_type','task', 'nii_path', 'nii_name', 'events_name', 'subject_session', 'metadata_filename']))
+		get_s_scan = pe.Node(name='get_s_scan', interface=util.Function(function=get_bids_scan, input_names=inspect.getargspec(get_bids_scan)[0], output_names=['scan_path','scan_type','task', 'nii_path', 'nii_name', 'events_name', 'subject_session', 'metadata_filename', 'dict_slice']))
 		get_s_scan.inputs.ignore_exception = True
 		get_s_scan.inputs.data_selection = s_data_selection
 		get_s_scan.inputs.bids_base = bids_base
@@ -636,31 +611,14 @@ def generic(bids_base, template,
 				])
 
 
-	invert = pe.Node(interface=fsl.ImageMaths(), name="invert")
 	blur = pe.Node(interface=afni.preprocess.BlurToFWHM(), name="blur")
 	blur.inputs.fwhmxy = functional_blur_xy
-	if functional_blur_xy and negative_contrast_agent:
-		workflow_connections.extend([
-			(f_warp, blur, [('output_image', 'in_file')]),
-			(blur, invert, [(('out_file', fslmaths_invert_values), 'op_string')]),
-			(blur, invert, [('out_file', 'in_file')]),
-			(get_f_scan, invert, [('nii_name','output_image')]),
-			(invert, datasink, [('out_file', 'func')]),
-			])
 
-	elif functional_blur_xy:
+	if functional_blur_xy:
 		workflow_connections.extend([
 			(get_f_scan, blur, [('nii_name','output_image')]),
 			(f_warp, blur, [('output_image', 'in_file')]),
 			(blur, datasink, [('out_file', 'func')]),
-			])
-
-	elif negative_contrast_agent:
-		workflow_connections.extend([
-			(get_f_scan, invert, [('nii_name','out_file')]),
-			(f_warp, invert, [(('output_image', fslmaths_invert_values), 'op_string')]),
-			(f_warp, invert, [('output_image', 'in_file')]),
-			(invert, datasink, [('out_file', 'func')]),
 			])
 	else:
 		workflow_connections.extend([

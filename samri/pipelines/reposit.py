@@ -13,9 +13,10 @@ import nipype.interfaces.io as nio
 import nipype.interfaces.utility as util		# utility
 import nipype.pipeline.engine as pe				# pypeline engine
 import pandas as pd
-from nipype.interfaces import bru2nii
+#from nipype.interfaces.bru2nii import Bru2
 
 from samri.pipelines.utils import bids_naming, ss_to_path
+from samri.pipelines.extra_interfaces import Bru2
 from samri.utilities import N_PROCS
 
 try:
@@ -160,8 +161,9 @@ def bru2bids(measurements_base,
 		get_f_scan.inputs.bids_base = measurements_base
 		get_f_scan.iterables = ("ind_type", func_ind)
 
-		f_bru2nii = pe.Node(interface=bru2nii.Bru2(), name="f_bru2nii")
+		f_bru2nii = pe.Node(interface=Bru2(), name="f_bru2nii")
 		f_bru2nii.inputs.actual_size = not inflated_size
+		f_bru2nii.inputs.compress = True
 
 		f_metadata_file = pe.Node(name='metadata_file', interface=util.Function(function=write_bids_metadata_file,input_names=inspect.getargspec(write_bids_metadata_file)[0], output_names=['out_file']))
 		f_metadata_file.inputs.extraction_dicts = BIDS_METADATA_EXTRACTION_DICTS
@@ -233,9 +235,10 @@ def bru2bids(measurements_base,
 		get_d_scan.inputs.bids_base = measurements_base
 		get_d_scan.iterables = ("ind_type", dwi_ind)
 
-		d_bru2nii = pe.Node(interface=bru2nii.Bru2(), name="d_bru2nii")
+		d_bru2nii = pe.Node(interface=Bru2(), name="d_bru2nii")
 		d_bru2nii.inputs.force_conversion=True
 		d_bru2nii.inputs.actual_size = not inflated_size
+		d_bru2nii.inputs.compress = True
 
 		d_metadata_file = pe.Node(name='metadata_file', interface=util.Function(function=write_bids_metadata_file,input_names=inspect.getargspec(write_bids_metadata_file)[0], output_names=['out_file']))
 		d_metadata_file.inputs.extraction_dicts = BIDS_METADATA_EXTRACTION_DICTS
@@ -332,9 +335,10 @@ def bru2bids(measurements_base,
 		get_s_scan.inputs.bids_base = measurements_base
 		get_s_scan.iterables = ("ind_type", struct_ind)
 
-		s_bru2nii = pe.Node(interface=bru2nii.Bru2(), name="s_bru2nii")
+		s_bru2nii = pe.Node(interface=Bru2(), name="s_bru2nii")
 		s_bru2nii.inputs.force_conversion=True
 		s_bru2nii.inputs.actual_size = not inflated_size
+		s_bru2nii.inputs.compress = True
 
 		s_metadata_file = pe.Node(name='metadata_file', interface=util.Function(function=write_bids_metadata_file,input_names=inspect.getargspec(write_bids_metadata_file)[0], output_names=['out_file']))
 		s_metadata_file.inputs.extraction_dicts = BIDS_METADATA_EXTRACTION_DICTS

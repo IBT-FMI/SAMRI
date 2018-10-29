@@ -691,7 +691,6 @@ def common_select(bids_base, out_base, workflow_name, template, registration_mas
 
 
 	data_selection = bids_data_selection(bids_base, structural_match, functional_match, subjects, sessions)
-	data_selection = data_selection.rename(columns={'modality': 'type', 'type': 'modality'})
 
 	# generate functional and structural scan types
 	functional_scan_types = data_selection.loc[data_selection.type == 'func']['scan_type'].values

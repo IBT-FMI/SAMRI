@@ -15,7 +15,7 @@ from nipype.interfaces.fsl.model import Level1Design
 #from nipype.algorithms.modelgen import SpecifyModel
 
 from samri.pipelines.extra_interfaces import SpecifyModel
-from samri.pipelines.extra_functions import select_from_datafind_df
+from samri.pipelines.extra_functions import select_from_datafind_df, corresponding_eventfile, get_bids_scan
 from samri.pipelines.utils import bids_dict_to_source, ss_to_path, iterfield_selector, datasource_exclude, bids_dict_to_dir
 from samri.utilities import N_PROCS
 
@@ -23,19 +23,22 @@ N_PROCS=max(N_PROCS-2, 1)
 
 def l1(preprocessing_dir,
 	bf_path = '~/ni_data/irfs/chr_beta1.txt',
+	debug=False,
 	exclude={},
 	habituation='confound',
 	highpass_sigma=225,
 	lowpass_sigma=False,
 	include={},
 	keep_work=False,
-	out_dir="",
+	out_base="",
 	mask="",
-	match_regex='sub-(?P<sub>[a-zA-Z0-9]+)/ses-(?P<ses>[a-zA-Z0-9]+)/func/.*?_task-(?P<task>[a-zA-Z0-9]+)_acq-(?P<acq>[a-zA-Z0-9]+)_(?P<mod>[a-zA-Z0-9]+)\.(?:tsv|nii|nii\.gz)',
+	match={},
+	match_regex='sub-(?P<sub>[a-zA-Z0-9]+)/ses-(?P<ses>[a-zA-Z0-9]+)/func/.*?_task-(?P<task>[a-zA-Z0-9]+)_acq-(?P<acq>[a-zA-Z0-9]+)_run-(?P<run>[0-9]+)_(?P<mod>[a-zA-Z0-9]+)\.(?:tsv|nii|nii\.gz)',
 	tr=1,
 	workflow_name="generic",
 	modality="cbv",
 	n_jobs_percentage=1,
+	invert=False,
 	):
 	"""Calculate subject level GLM statistic scores.
 
@@ -47,6 +50,9 @@ def l1(preprocessing_dir,
 	exclude : dict
 		A dictionary with any combination of "sessions", "subjects", "tasks" as keys and corresponding identifiers as values.
 		If this is specified matching entries will be excluded in the analysis.
+	debug : bool, optional
+		Whether to enable nipype debug mode.
+		This increases logging.
 	habituation : {"", "confound", "separate_contrast", "in_main_contrast"}, optional
 		How the habituation regressor should be handled.
 		Anything which evaluates as False (though we recommend "") means no habituation regressor will be introduced.
@@ -55,15 +61,18 @@ def l1(preprocessing_dir,
 	include : dict
 		A dictionary with any combination of "sessions", "subjects", "tasks" as keys and corresponding identifiers as values.
 		If this is specified only matching entries will be included in the analysis.
+	invert : bool
+		If true the values will be inverted with respect to zero.
+		This is commonly used for iron nano-particle Cerebral Blood Volume (CBV) measurements.
 	keep_work : bool, optional
 		Whether to keep the work directory (containing all the intermediary workflow steps, as managed by nipypye).
 		This is useful for debugging and quality control.
-	out_dir : str, optional
+	out_base : str, optional
 		Path to the directory inside which both the working directory and the output directory will be created.
 	mask : str, optional
 		Path to the brain mask which shall be used to define the brain volume in the analysis.
 		This has to point to an existing NIfTI file containing zero and one values only.
-	match_regex : str, optional
+	match : str, optional
 		Regex matching pattern by which to select input files. Has to contain groups named "sub", "ses", "acq", "task", and "mod".
 	n_jobs_percentage : float, optional
 		Percentage of the cores present on the machine which to maximally use for deploying jobs in parallel.
@@ -73,39 +82,24 @@ def l1(preprocessing_dir,
 		Name of the workflow; this will also be the name of the final output directory produced under `out_dir`.
 	"""
 
+	from samri.pipelines.utils import bids_data_selection
+
 	preprocessing_dir = path.abspath(path.expanduser(preprocessing_dir))
-	if not out_dir:
-		out_dir = path.join(preprocessing_dir,'..','..','l1')
-	else:
-		out_dir = path.abspath(path.expanduser(out_dir))
+	out_base = path.abspath(path.expanduser(out_base))
 
-	datafind = nio.DataFinder()
-	datafind.inputs.root_paths = preprocessing_dir
-	datafind.inputs.match_regex = match_regex
-	datafind_res = datafind.run()
-	out_paths = [path.abspath(path.expanduser(i)) for i in datafind_res.outputs.out_paths]
-	data_selection = zip(*[datafind_res.outputs.sub, datafind_res.outputs.ses, datafind_res.outputs.acq, datafind_res.outputs.task, datafind_res.outputs.mod, out_paths])
-	data_selection = [list(i) for i in data_selection]
-	data_selection = pd.DataFrame(data_selection,columns=('subject','session','acquisition','task','modality','path'))
-	if exclude:
-		for key in exclude:
-			data_selection = data_selection[~data_selection[key].isin(exclude[key])]
-	if include:
-		for key in include:
-			data_selection = data_selection[data_selection[key].isin(include[key])]
-	bids_dictionary = data_selection[data_selection['modality']==modality].drop_duplicates().T.to_dict().values()
-	bids_dictionary = list(bids_dictionary)
+	data_selection = bids_data_selection(preprocessing_dir, structural_match=False, functional_match=match, subjects=False, sessions=False)
+	ind = data_selection.index.tolist()
 
-	infosource = pe.Node(interface=util.IdentityInterface(fields=['bids_dictionary']), name="infosource")
-	infosource.iterables = [('bids_dictionary', bids_dictionary)]
+	get_scan = pe.Node(name='get_scan', interface=util.Function(function=get_bids_scan,input_names=inspect.getargspec(get_bids_scan)[0], output_names=['scan_path','scan_type','task', 'nii_path', 'nii_name', 'events_name', 'subject_session', 'metadata_filename', 'dict_slice']))
+	get_scan.inputs.ignore_exception = True
+	get_scan.inputs.data_selection = data_selection
+	get_scan.inputs.bids_base = preprocessing_dir
+	get_scan.iterables = ("ind_type", ind)
 
-	datafile_source = pe.Node(name='datafile_source', interface=util.Function(function=select_from_datafind_df, input_names=inspect.getargspec(select_from_datafind_df)[0], output_names=['out_file']))
-	datafile_source.inputs.bids_dictionary_override = {'modality':modality}
-	datafile_source.inputs.df = data_selection
+	eventfile = pe.Node(name='eventfile', interface=util.Function(function=corresponding_eventfile,input_names=inspect.getargspec(corresponding_eventfile)[0], output_names=['eventfile']))
 
-	eventfile_source = pe.Node(name='eventfile_source', interface=util.Function(function=select_from_datafind_df, input_names=inspect.getargspec(select_from_datafind_df)[0], output_names=['out_file']))
-	eventfile_source.inputs.bids_dictionary_override = {'modality':'events'}
-	eventfile_source.inputs.df = data_selection
+	if invert:
+		invert = pe.Node(interface=fsl.ImageMaths(), name="invert")
 
 	specify_model = pe.Node(interface=SpecifyModel(), name="specify_model")
 	specify_model.inputs.input_units = 'secs'
@@ -145,39 +139,40 @@ def l1(preprocessing_dir,
 	glm.interface.mem_gb = 6
 	#glm.inputs.ignore_exception = True
 
+	out_file_name_base = 'sub-{{subject}}_ses-{{session}}_task-{{task}}_acq-{{acquisition}}_run-{{run}}_{{modality}}_{}.nii.gz'
+
 	cope_filename = pe.Node(name='cope_filename', interface=util.Function(function=bids_dict_to_source,input_names=inspect.getargspec(bids_dict_to_source)[0], output_names=['filename']))
-	cope_filename.inputs.source_format = "sub-{subject}_ses-{session}_task-{task}_acq-{acquisition}_{modality}_cope.nii.gz"
+	cope_filename.inputs.source_format = out_file_name_base.format('cope')
 	varcb_filename = pe.Node(name='varcb_filename', interface=util.Function(function=bids_dict_to_source,input_names=inspect.getargspec(bids_dict_to_source)[0], output_names=['filename']))
-	varcb_filename.inputs.source_format = "sub-{subject}_ses-{session}_task-{task}_acq-{acquisition}_{modality}_varcb.nii.gz"
+	varcb_filename.inputs.source_format = out_file_name_base.format('varcb')
 	tstat_filename = pe.Node(name='tstat_filename', interface=util.Function(function=bids_dict_to_source,input_names=inspect.getargspec(bids_dict_to_source)[0], output_names=['filename']))
-	tstat_filename.inputs.source_format = "sub-{subject}_ses-{session}_task-{task}_acq-{acquisition}_{modality}_tstat.nii.gz"
+	tstat_filename.inputs.source_format = out_file_name_base.format('tstat')
 	zstat_filename = pe.Node(name='zstat_filename', interface=util.Function(function=bids_dict_to_source,input_names=inspect.getargspec(bids_dict_to_source)[0], output_names=['filename']))
-	zstat_filename.inputs.source_format = "sub-{subject}_ses-{session}_task-{task}_acq-{acquisition}_{modality}_zstat.nii.gz"
+	zstat_filename.inputs.source_format = out_file_name_base.format('zstat')
 	pstat_filename = pe.Node(name='pstat_filename', interface=util.Function(function=bids_dict_to_source,input_names=inspect.getargspec(bids_dict_to_source)[0], output_names=['filename']))
-	pstat_filename.inputs.source_format = "sub-{subject}_ses-{session}_task-{task}_acq-{acquisition}_{modality}_pstat.nii.gz"
+	pstat_filename.inputs.source_format = out_file_name_base.format('pstat')
 	pfstat_filename = pe.Node(name='pfstat_filename', interface=util.Function(function=bids_dict_to_source,input_names=inspect.getargspec(bids_dict_to_source)[0], output_names=['filename']))
-	pfstat_filename.inputs.source_format = "sub-{subject}_ses-{session}_task-{task}_acq-{acquisition}_{modality}_pfstat.nii.gz"
+	pfstat_filename.inputs.source_format = out_file_name_base.format('pfstat')
 
 	datasink = pe.Node(nio.DataSink(), name='datasink')
-	datasink.inputs.base_directory = path.join(out_dir,workflow_name)
+	datasink.inputs.base_directory = path.join(out_base,workflow_name)
 	datasink.inputs.parameterization = False
 
 	workflow_connections = [
-		(infosource, datafile_source, [('bids_dictionary', 'bids_dictionary')]),
-		(infosource, eventfile_source, [('bids_dictionary', 'bids_dictionary')]),
-		(eventfile_source, specify_model, [('out_file', 'event_files')]),
+		(get_scan, eventfile, [('nii_path', 'timecourse_file')]),
+		(eventfile, specify_model, [('eventfile', 'event_files')]),
 		(specify_model, level1design, [('session_info', 'session_info')]),
 		(level1design, modelgen, [('ev_files', 'ev_files')]),
 		(level1design, modelgen, [('fsf_files', 'fsf_file')]),
 		(modelgen, glm, [('design_file', 'design')]),
 		(modelgen, glm, [('con_file', 'contrasts')]),
-		(infosource, datasink, [(('bids_dictionary',bids_dict_to_dir), 'container')]),
-		(infosource, cope_filename, [('bids_dictionary', 'bids_dictionary')]),
-		(infosource, varcb_filename, [('bids_dictionary', 'bids_dictionary')]),
-		(infosource, tstat_filename, [('bids_dictionary', 'bids_dictionary')]),
-		(infosource, zstat_filename, [('bids_dictionary', 'bids_dictionary')]),
-		(infosource, pstat_filename, [('bids_dictionary', 'bids_dictionary')]),
-		(infosource, pfstat_filename, [('bids_dictionary', 'bids_dictionary')]),
+		(get_scan, datasink, [(('dict_slice',bids_dict_to_dir), 'container')]),
+		(get_scan, cope_filename, [('dict_slice', 'bids_dictionary')]),
+		(get_scan, varcb_filename, [('dict_slice', 'bids_dictionary')]),
+		(get_scan, tstat_filename, [('dict_slice', 'bids_dictionary')]),
+		(get_scan, zstat_filename, [('dict_slice', 'bids_dictionary')]),
+		(get_scan, pstat_filename, [('dict_slice', 'bids_dictionary')]),
+		(get_scan, pfstat_filename, [('dict_slice', 'bids_dictionary')]),
 		(cope_filename, glm, [('filename', 'out_cope')]),
 		(varcb_filename, glm, [('filename', 'out_varcb_name')]),
 		(tstat_filename, glm, [('filename', 'out_t_name')]),
@@ -200,27 +195,52 @@ def l1(preprocessing_dir,
 			bandpass.inputs.lowpass_sigma = lowpass_sigma
 		else:
 			bandpass.inputs.lowpass_sigma = tr
-		workflow_connections.extend([
-			(datafile_source, bandpass, [('out_file', 'in_file')]),
-			(bandpass, specify_model, [('out_file', 'functional_runs')]),
-			(bandpass, glm, [('out_file', 'in_file')]),
-			])
+		if invert:
+			workflow_connections.extend([
+				(get_scan, invert, [('nii_path', 'in_file')]),
+				(invert, bandpass, [('out_file', 'in_file')]),
+				(invert, specify_model, [('out_file', 'functional_runs')]),
+				(invert, glm, [('out_file', 'in_file')]),
+				])
+		else:
+			workflow_connections.extend([
+				(get_scan, bandpass, [('nii_path', 'in_file')]),
+				(bandpass, specify_model, [('out_file', 'functional_runs')]),
+				(bandpass, glm, [('out_file', 'in_file')]),
+				])
 	else:
-		workflow_connections.extend([
-			(datafile_source, specify_model, [('out_file', 'functional_runs')]),
-			(datafile_source, glm, [('out_file', 'in_file')]),
-			])
+		if invert:
+			workflow_connections.extend([
+				(get_scan, invert, [('nii_path', 'in_file')]),
+				(invert, specify_model, [('out_file', 'functional_runs')]),
+				(invert, glm, [('out_file', 'in_file')]),
+				])
+		else:
+			workflow_connections.extend([
+				(get_scan, specify_model, [('nii_path', 'functional_runs')]),
+				(git_scan, glm, [('nii_path', 'in_file')]),
+				])
 
+
+	workflow_config = {'execution': {'crashdump_dir': path.join(out_base,'crashdump'),}}
+	if debug:
+		workflow_config['logging'] = {
+			'workflow_level':'DEBUG',
+			'utils_level':'DEBUG',
+			'interface_level':'DEBUG',
+			'filemanip_level':'DEBUG',
+			'log_to_file':'true',
+			}
 
 	workdir_name = workflow_name+"_work"
 	workflow = pe.Workflow(name=workdir_name)
 	workflow.connect(workflow_connections)
-	workflow.base_dir = out_dir
-	workflow.config = {"execution": {"crashdump_dir": path.join(out_dir,"crashdump")}}
+	workflow.base_dir = out_base
+	workflow.config = workflow_config
 	workflow.write_graph(dotfilename=path.join(workflow.base_dir,workdir_name,"graph.dot"), graph2use="hierarchical", format="png")
 
 	n_jobs = max(int(round(mp.cpu_count()*n_jobs_percentage)),2)
-	workflow.run(plugin="MultiProc",  plugin_args={'n_procs' : n_jobs})
+	workflow.run(plugin="MultiProc", plugin_args={'n_procs' : n_jobs})
 	if not keep_work:
 		shutil.rmtree(path.join(out_dir,workdir_name))
 
@@ -415,7 +435,7 @@ def seed_fc(preprocessing_dir,
 	workflow.config = {"execution": {"crashdump_dir": path.join(out_dir,"crashdump")}}
 	workflow.write_graph(dotfilename=path.join(workflow.base_dir,workdir_name,"graph.dot"), graph2use="hierarchical", format="png")
 
-	workflow.run(plugin="MultiProc",  plugin_args={'n_procs' : nprocs})
+	workflow.run(plugin="MultiProc", plugin_args={'n_procs' : nprocs})
 	if not keep_work:
 		shutil.rmtree(path.join(out_dir,workdir_name))
 
@@ -424,7 +444,7 @@ def getlen(a):
 def add_suffix(name, suffix):
 	"""A function that adds suffix to a variable.
 
-	Returns converted to string-type  input variable 'name', and string-type converted variable
+	Returns converted to string-type input variable 'name', and string-type converted variable
 	'suffix' added at the end of 'name'.
 	If variable 'name' is type list, all the elements are being converted to strings and
 	they are being joined.
@@ -600,14 +620,14 @@ def l2_common_effect(l1_dir,
 
 	if not loud:
 		try:
-			workflow.run(plugin="MultiProc",  plugin_args={'n_procs' : nprocs})
+			workflow.run(plugin="MultiProc", plugin_args={'n_procs' : nprocs})
 		except RuntimeError:
 			print("WARNING: Some expected tasks have not been found (or another RuntimeError has occured).")
 		for f in listdir(getcwd()):
 			if re.search("crash.*?-varcopemerge|-copemerge.*", f):
 				remove(path.join(getcwd(), f))
 	else:
-		workflow.run(plugin="MultiProc",  plugin_args={'n_procs' : nprocs})
+		workflow.run(plugin="MultiProc", plugin_args={'n_procs' : nprocs})
 
 
 	if not keep_work:
@@ -741,14 +761,14 @@ def l2_anova(l1_dir,
 
 	if not loud:
 		try:
-			workflow.run(plugin="MultiProc",  plugin_args={'n_procs' : nprocs})
+			workflow.run(plugin="MultiProc", plugin_args={'n_procs' : nprocs})
 		except RuntimeError:
 			print("WARNING: Some expected tasks have not been found (or another RuntimeError has occured).")
 		for f in listdir(getcwd()):
 			if re.search("crash.*?-varcopemerge|-copemerge.*", f):
 				remove(path.join(getcwd(), f))
 	else:
-		workflow.run(plugin="MultiProc",  plugin_args={'n_procs' : nprocs})
+		workflow.run(plugin="MultiProc", plugin_args={'n_procs' : nprocs})
 
 
 	if not keep_work:

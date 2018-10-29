@@ -311,6 +311,18 @@ def write_bids_events_file(scan_dir,
 
 	return out_file
 
+def corresponding_eventfile(timecourse_file):
+	"""Based on a BIDS timecourse path, get the corresponding BIDS eventfile."""
+
+	from os import path
+
+	timecourse_dir = path.dirname(timecourse_file)
+	timecourse_name = path.basename(timecourse_file)
+	stripped_name = timecourse_name.split('.', 1)[0].rsplit('_', 1)[0]
+	eventfile = path.join(timecourse_dir,stripped_name+'_events.tsv')
+
+	return eventfile
+
 def get_scan(measurements_base, data_selection,
 	scan_type="",
 	selector=None,
@@ -445,7 +457,9 @@ def get_bids_scan(data_selection,
 				extension='.json',
 				)
 
-		return scan_path, typ, task, nii_path, nii_name, eventfile_name, subject_session, metadata_filename
+		dict_slice = filtered_data.to_dict('records')[0]
+
+		return scan_path, typ, task, nii_path, nii_name, eventfile_name, subject_session, metadata_filename, dict_slice
 
 BIDS_KEY_DICTIONARY = {
 	'acquisition':['acquisition','ACQUISITION','acq','ACQ'],
@@ -638,7 +652,6 @@ def select_from_datafind_df(df,
 	failsafe=False,
 	list_output=False,
 	):
-
 
 	if bids_dictionary_override:
 		override = [i for i in bids_dictionary_override.keys()]

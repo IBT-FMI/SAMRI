@@ -142,6 +142,9 @@ def bids_data_selection(base, structural_match, functional_match, subjects, sess
 		df = filter_data(df, 'subject', subjects)
 	if sessions:
 		df = filter_data(df, 'session', sessions)
+
+	df = df.rename(columns={'modality': 'type', 'type': 'modality'})
+
 	return df
 
 def filter_data(df, col_name, entries):
@@ -391,3 +394,24 @@ def sss_filename(subject_session, scan, scan_prefix="task", suffix="", extension
 		scan = "".join([scan,suffix,extension])
 	subject_session.append(scan)
 	return "_".join(subject_session)
+
+def select_template(template, registration_mask):
+	"""Select the template and mask to be used, this supports special string values which select default SAMRI settings"""
+	if template:
+		if template == "mouse":
+			template = '/usr/share/mouse-brain-atlases/dsurqec_200micron.nii'
+			registration_mask = '/usr/share/mouse-brain-atlases/dsurqec_200micron_mask.nii'
+		elif template == "rat":
+			from samri.fetch.templates import fetch_rat_waxholm
+			template = fetch_rat_waxholm()['template']
+			registration_mask = fetch_rat_waxholm()['mask']
+		else:
+			if template:
+				template = path.abspath(path.expanduser(template))
+			if registration_mask:
+				registration_mask = path.abspath(path.expanduser(registration_mask))
+	else:
+		raise ValueError("No species or template path specified")
+		return -1
+
+	return template, registration_mask

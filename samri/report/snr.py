@@ -270,6 +270,58 @@ def significant_signal(data_path,
 
 	return mean, median
 
+def df_significant_signal(df,
+	mask_path='',
+	save_as='',
+	n_jobs=False,
+	n_jobs_percentage=0.8,
+	):
+	"""
+	Create a `pandas.DataFrame` (optionally savable as `.csv`), containing the means and medians of a number of p-value maps specified by a file template supporting substitution and a substitution list of dictionaries.
+	This function is an iteration wrapper of `samri.report.snr.significant_signal()` using the SAMRI file_template/substitution model.
+
+	Parameters
+	----------
+
+	df : pandas.DataFrame
+		A BIDS-Information Pandas DataFrame which includes columns named 'path' and named according to all the keys (if any) in the dictionary passed to `inverted_data`.
+	mask_path : str, optional
+		Path to a mask in the same coordinate space as the p-value maps.
+	save_as : str, optional
+		Path to which to save the Pandas DataFrame.
+
+	Returns
+	-------
+
+	pandas.DataFrame
+		Pandas DataFrame object containing a row for each analyzed file and columns named 'Mean', 'Median', and (provided the respective key is present in the `sustitutions` variable) 'subject', 'session', 'task', and 'acquisition'.
+	"""
+
+	#Do not overwrite the input object
+	df = deepcopy(df)
+
+	in_files = df['path'].tolist()
+	iter_length = len(in_files)
+
+	# This is an easy jop CPU-wise, but not memory-wise.
+	if not n_jobs:
+		n_jobs = max(int(round(mp.cpu_count()*n_jobs_percentage)),2)
+	iter_data = Parallel(n_jobs=n_jobs, verbose=0, backend="threading")(map(delayed(significant_signal),
+		in_files,
+		[None]*iter_length,
+		[mask_path]*iter_length,
+		))
+	df['Mean Significance'] = [i[0] for i in iter_data]
+	df['Median Significance'] = [i[1] for i in iter_data]
+
+	if save_as:
+		save_as = path.abspath(path.expanduser(save_as))
+		if save_as.lower().endswith('.csv'):
+			df.to_csv(save_as)
+		else:
+			raise ValueError("Please specify an output path ending in any one of "+",".join((".csv",))+".")
+	return df
+
 def iter_significant_signal(file_template, substitutions,
 	mask_path='',
 	save_as='',

@@ -23,8 +23,8 @@ def df_threshold_volume(df,
 	n_jobs_percentage=0.8,
 	):
 	"""
-	Create a `pandas.DataFrame` (optionally savable as `.csv`), containing the means and medians of a number of p-value maps specified by a file template supporting substitution and a substitution list of dictionaries.
-	This function is an iteration wrapper of `samri.report.snr.significant_signal()` using the SAMRI file_template/substitution model.
+	Return a `pandas.DataFrame` (optionally savable as `.csv`), containing the total volume of brain space exceeding a value.
+	This function is an iteration wrapper of `samri.report.snr.threshold_volume()` using the SAMRI file_template/substitution model.
 
 	Parameters
 	----------
@@ -103,8 +103,8 @@ def iter_threshold_volume(file_template, substitutions,
 	save_as='',
 	):
 	"""
-	Create a `pandas.DataFrame` (optionally savable as `.csv`), containing the means and medians of a number of p-value maps specified by a file template supporting substitution and a substitution list of dictionaries.
-	This function is an iteration wrapper of `samri.report.snr.significant_signal()` using the SAMRI file_template/substitution model.
+	Return a `pandas.DataFrame` (optionally savable as `.csv`), containing the total volume of brain space exceeding a value.
+	This function is an iteration wrapper of `samri.report.snr.threshold_volume()` using the SAMRI file_template/substitution model.
 
 	Parameters
 	----------

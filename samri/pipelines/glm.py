@@ -242,7 +242,7 @@ def l1(preprocessing_dir,
 	n_jobs = max(int(round(mp.cpu_count()*n_jobs_percentage)),2)
 	workflow.run(plugin="MultiProc", plugin_args={'n_procs' : n_jobs})
 	if not keep_work:
-		shutil.rmtree(path.join(out_dir,workdir_name))
+		shutil.rmtree(path.join(out_base,workdir_name))
 
 def seed_fc(preprocessing_dir,
 	exclude={},

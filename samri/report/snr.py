@@ -24,7 +24,7 @@ def df_threshold_volume(df,
 	):
 	"""
 	Return a `pandas.DataFrame` (optionally savable as `.csv`), containing the total volume of brain space exceeding a value.
-	This function is an iteration wrapper of `samri.report.snr.threshold_volume()` using the SAMRI file_template/substitution model.
+	This function is a Pandas Dataframe based iteration wrapper of `samri.report.snr.threshold_volume()` using the SAMRI file_template/substitution model.
 
 	Parameters
 	----------
@@ -278,7 +278,7 @@ def df_significant_signal(df,
 	):
 	"""
 	Create a `pandas.DataFrame` (optionally savable as `.csv`), containing the means and medians of a number of p-value maps specified by a file template supporting substitution and a substitution list of dictionaries.
-	This function is an iteration wrapper of `samri.report.snr.significant_signal()` using the SAMRI file_template/substitution model.
+	This function is a Pandas DataFrame based iteration wrapper of `samri.report.snr.significant_signal()` using the SAMRI file_template/substitution model.
 
 	Parameters
 	----------

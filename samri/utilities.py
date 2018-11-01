@@ -17,6 +17,9 @@ def bids_autograb(bids_dir):
 	validate = BIDSValidator()
 	layout = BIDSLayout(bids_dir)
 	df = layout.as_data_frame()
+
+	# Unclear in current BIDS specification, we refer to BOLD/CBV as modalities and func/anat as types
+	df = df.rename(columns={'modality': 'type', 'type': 'modality'})
 	return df
 
 def bids_autofind_df(bids_dir,

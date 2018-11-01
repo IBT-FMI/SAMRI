@@ -143,6 +143,7 @@ def bids_data_selection(base, structural_match, functional_match, subjects, sess
 	if sessions:
 		df = filter_data(df, 'session', sessions)
 
+	# Unclear in current BIDS specification, we refer to BOLD/CBV as modalities and func/anat as types
 	df = df.rename(columns={'modality': 'type', 'type': 'modality'})
 
 	return df

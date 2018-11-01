@@ -3,6 +3,7 @@ import nibabel as nib
 import nipype.interfaces.io as nio
 import numpy as np
 import os
+import pandas as pd
 from itertools import product
 from joblib import Parallel, delayed
 from os import path
@@ -18,9 +19,37 @@ def bids_autograb(bids_dir):
 	df = layout.as_data_frame()
 	return df
 
+def bids_autofind_df(bids_dir,
+	**kwargs
+	):
+	"""Automatically generate a BIDS-like Pandas Dataframe index based on the more flexible `samri.utilities.bids_autofind` function.
+
+	Parameters
+	----------
+	bids_dir : str
+		Path to BIDS-formatted directory
+	type : {"func", "anat"}
+		Which type to source data for (currently only supports "func", and "anat" - ideally we could extend this to include "dwi").
+
+	Returns
+	-------
+	path_template : str
+		String which can be formatted with any of the dictionaries in `substitutions`
+	substitutions : list of dicti
+		A substitution iterator usable as a standard SAMRI function input, which (together with `path_template`) unambiguoulsy identifies input files for analysis.
+	"""
+
+	path_template, substitutions = bids_autofind(bids_dir, **kwargs)
+
+	for i in substitutions:
+		i['path'] = path_template.format(**i)
+	df = pd.DataFrame.from_records(substitutions)
+
+	return df
+
 def bids_autofind(bids_dir,
-	modality='',
-	path_template="{bids_dir}/sub-{{subject}}/ses-{{session}}/{modality}/sub-{{subject}}_ses-{{session}}_task-{{task}}_acq-{{acquisition}}.nii.gz",
+	typ='',
+	path_template="sub-{{subject}}/ses-{{session}}/{typ}/sub-{{subject}}_ses-{{session}}_task-{{task}}_acq-{{acquisition}}.nii.gz",
 	match_regex='',
 	):
 	"""Automatically generate a BIDS path template and a substitution iterator (list of dicts, as produced by `samri.utilities.bids_substitution_iterator`, and used as a standard input SAMRI function input) from a BIDS-respecting directory.
@@ -29,8 +58,8 @@ def bids_autofind(bids_dir,
 	----------
 	bids_dir : str
 		Path to BIDS-formatted directory
-	modality : {"func", "anat"}
-		Which modality to source data for (currently only supports "func", and "anat" - ideally we could extend this to include "dwi").
+	type : {"func", "anat"}
+		Which type to source data for (currently only supports "func", and "anat" - ideally we could extend this to include "dwi").
 
 	Returns
 	-------
@@ -44,14 +73,16 @@ def bids_autofind(bids_dir,
 
 	if match_regex:
 		pass
-	elif modality in ("func","dwi"):
-	       match_regex = '.+/sub-(?P<sub>.+)/ses-(?P<ses>.+)/'+modality+'/.*?_task-(?P<task>.+).*?_acq-(?P<acquisition>.+)\.nii.gz'
-	elif modality == "":
+	elif typ in ("func","dwi"):
+	       match_regex = '.+/sub-(?P<sub>.+)/ses-(?P<ses>.+)/'+typ+'/.*?_task-(?P<task>.+).*?_acq-(?P<acquisition>.+)\.nii.gz'
+	elif typ == "":
 	       match_regex = '.+/sub-(?P<sub>.+)/ses-(?P<ses>.+)/.*?_task-(?P<task>.+).*?_acq-(?P<acquisition>.+).*?\.nii.gz'
-	elif modality == "anat":
+	elif typ == "anat":
 	       match_regex = '.+/sub-(?P<sub>.+)/ses-(?P<ses>.+)/anat/.*?_(?P<task>.+).*?_acq-(?P<acquisition>.+)\.nii.gz'
 
-	path_template = path_template.format(bids_dir=bids_dir, modality=modality)
+	if path_template[:1] != '/' and 'bids_dir' not in path_template:
+		path_template = '{bids_dir}/'+path_template
+	path_template = path_template.format(bids_dir=bids_dir, typ=typ)
 
 	datafind = nio.DataFinder()
 	datafind.inputs.root_paths = bids_dir
@@ -65,6 +96,8 @@ def bids_autofind(bids_dir,
 		substitution["subject"] = datafind_res.outputs.sub[ix]
 		substitution["session"] = datafind_res.outputs.ses[ix]
 		substitution["task"] = datafind_res.outputs.task[ix]
+		substitution["run"] = datafind_res.outputs.run[ix]
+		substitution["modality"] = datafind_res.outputs.modality[ix]
 		if path_template.format(**substitution) != i:
 			print("Original DataFinder path: "+i)
 			print("Reconstructed path:       "+path_template.format(**substitution))

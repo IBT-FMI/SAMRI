@@ -139,20 +139,24 @@ def l1(preprocessing_dir,
 	glm.interface.mem_gb = 6
 	#glm.inputs.ignore_exception = True
 
-	out_file_name_base = 'sub-{{subject}}_ses-{{session}}_task-{{task}}_acq-{{acquisition}}_run-{{run}}_{{modality}}_{}.nii.gz'
+	out_file_name_base = 'sub-{{subject}}_ses-{{session}}_task-{{task}}_acq-{{acquisition}}_run-{{run}}_{{modality}}_{}.{}'
 
 	cope_filename = pe.Node(name='cope_filename', interface=util.Function(function=bids_dict_to_source,input_names=inspect.getargspec(bids_dict_to_source)[0], output_names=['filename']))
-	cope_filename.inputs.source_format = out_file_name_base.format('cope')
+	cope_filename.inputs.source_format = out_file_name_base.format('cope','nii.gz')
 	varcb_filename = pe.Node(name='varcb_filename', interface=util.Function(function=bids_dict_to_source,input_names=inspect.getargspec(bids_dict_to_source)[0], output_names=['filename']))
-	varcb_filename.inputs.source_format = out_file_name_base.format('varcb')
+	varcb_filename.inputs.source_format = out_file_name_base.format('varcb','nii.gz')
 	tstat_filename = pe.Node(name='tstat_filename', interface=util.Function(function=bids_dict_to_source,input_names=inspect.getargspec(bids_dict_to_source)[0], output_names=['filename']))
-	tstat_filename.inputs.source_format = out_file_name_base.format('tstat')
+	tstat_filename.inputs.source_format = out_file_name_base.format('tstat','nii.gz')
 	zstat_filename = pe.Node(name='zstat_filename', interface=util.Function(function=bids_dict_to_source,input_names=inspect.getargspec(bids_dict_to_source)[0], output_names=['filename']))
-	zstat_filename.inputs.source_format = out_file_name_base.format('zstat')
+	zstat_filename.inputs.source_format = out_file_name_base.format('zstat','nii.gz')
 	pstat_filename = pe.Node(name='pstat_filename', interface=util.Function(function=bids_dict_to_source,input_names=inspect.getargspec(bids_dict_to_source)[0], output_names=['filename']))
-	pstat_filename.inputs.source_format = out_file_name_base.format('pstat')
+	pstat_filename.inputs.source_format = out_file_name_base.format('pstat','nii.gz')
 	pfstat_filename = pe.Node(name='pfstat_filename', interface=util.Function(function=bids_dict_to_source,input_names=inspect.getargspec(bids_dict_to_source)[0], output_names=['filename']))
-	pfstat_filename.inputs.source_format = out_file_name_base.format('pfstat')
+	pfstat_filename.inputs.source_format = out_file_name_base.format('pfstat','nii.gz')
+	design_filename = pe.Node(name='design', interface=util.Function(function=bids_dict_to_source,input_names=inspect.getargspec(bids_dict_to_source)[0], output_names=['filename']))
+	design_filename.inputs.source_format = out_file_name_base.format('design','dat')
+
+	design_rename = pe.Node(interface=util.Rename(), name='design_rename')
 
 	datasink = pe.Node(nio.DataSink(), name='datasink')
 	datasink.inputs.base_directory = path.join(out_base,workflow_name)
@@ -173,18 +177,22 @@ def l1(preprocessing_dir,
 		(get_scan, zstat_filename, [('dict_slice', 'bids_dictionary')]),
 		(get_scan, pstat_filename, [('dict_slice', 'bids_dictionary')]),
 		(get_scan, pfstat_filename, [('dict_slice', 'bids_dictionary')]),
+		(get_scan, design_filename, [('dict_slice', 'bids_dictionary')]),
 		(cope_filename, glm, [('filename', 'out_cope')]),
 		(varcb_filename, glm, [('filename', 'out_varcb_name')]),
 		(tstat_filename, glm, [('filename', 'out_t_name')]),
 		(zstat_filename, glm, [('filename', 'out_z_name')]),
 		(pstat_filename, glm, [('filename', 'out_p_name')]),
 		(pfstat_filename, glm, [('filename', 'out_pf_name')]),
+		(modelgen, design_rename, [('design_file', 'in_file')]),
+		(design_filename, design_rename, [('filename', 'format_string')]),
 		(glm, datasink, [('out_pf', '@pfstat')]),
 		(glm, datasink, [('out_p', '@pstat')]),
 		(glm, datasink, [('out_z', '@zstat')]),
 		(glm, datasink, [('out_t', '@tstat')]),
 		(glm, datasink, [('out_cope', '@cope')]),
 		(glm, datasink, [('out_varcb', '@varcb')]),
+		(design_rename, datasink, [('out_file', '@design')]),
 		]
 
 	if highpass_sigma or lowpass_sigma:

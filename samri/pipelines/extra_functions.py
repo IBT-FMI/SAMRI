@@ -374,12 +374,6 @@ def get_scan(measurements_base, data_selection,
 
 	return scan_path, scan_type, task
 
-def getSesAndData(grouped_df=None,
-	):
-
-	subject_session, data_selection = grouped_df
-	return subject_session, data_selection
-
 def get_bids_scan(data_selection,
 	bids_base="",
 	ind_type="",

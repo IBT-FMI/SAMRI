@@ -5,9 +5,11 @@ import nipype.interfaces.ants as ants
 from nipype.interfaces import fsl
 from samri.pipelines.utils import GENERIC_PHASES
 
-def autorotate(template):
+def autorotate(template,
+	in_file='structural.nii',
+	):
 	flt = fsl.FLIRT(bins=640, cost_func='mutualinfo')
-	flt.inputs.in_file = 'structural.nii'
+	flt.inputs.in_file = in_file
 	flt.inputs.reference = template
 	flt.inputs.output_type = "NIFTI_GZ"
 	flt.inputs.dof = 6
@@ -16,8 +18,8 @@ def autorotate(template):
 	flt.input.searchr_z = [-180,180]
 	flt.input.force_scaling = True
 	flt.cmdline
-	rotated = flt.run()
-	return rotated
+	flt_res = flt.run()
+	return flt_res
 
 def structural_registration(template, num_threads=4):
 	registration = pe.Node(ants.Registration(), name="s_register")

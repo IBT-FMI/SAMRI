@@ -1,4 +1,4 @@
-import nibabel
+import nibabel as nib
 import nipype.interfaces.io as nio
 import numpy as np
 import pandas as pd

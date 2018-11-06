@@ -100,6 +100,7 @@ def l1(preprocessing_dir,
 
 	if invert:
 		invert = pe.Node(interface=fsl.ImageMaths(), name="invert")
+		invert.inputs.op_string = '-mul -1'
 
 	specify_model = pe.Node(interface=SpecifyModel(), name="specify_model")
 	specify_model.inputs.input_units = 'secs'

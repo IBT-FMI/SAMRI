@@ -43,13 +43,14 @@ def transform_feature(feature, source_reference, target_reference,
 	if target_mask:
 		target_mask = os.path.abspath(os.path.expanduser(target_mask))
 
+	# This is unreliable and should be replaced with antsAI once an interface is available in nipype.
 	init = ants.AffineInitializer()
 	init.inputs.fixed_image = target_reference
 	init.inputs.moving_image = source_reference
 	init.inputs.out_file = 'initialization.h5'
-	init.inputs.principal_axes = True
-	init.inputs.local_search = 1
-	init.inputs.search_factor = 10.0
+	init.inputs.local_search = 50
+	init.inputs.principal_axes = False
+	init.inputs.search_factor = 180
 	init_res = init.run()
 
 	init_warp = ants.ApplyTransforms()
@@ -74,7 +75,7 @@ def transform_feature(feature, source_reference, target_reference,
 	registration.inputs.dimension = 3
 	registration.inputs.write_composite_transform = True
 	registration.inputs.collapse_output_transforms = True
-	registration.inputs.initial_moving_transform_com = True
+	registration.inputs.initial_moving_transform_com = 1
 	registration.inputs.metric = [i["metric"] for i in s_parameters]
 	registration.inputs.metric_weight = [i["metric_weight"] for i in s_parameters]
 	registration.inputs.radius_or_number_of_bins = [i["radius_or_number_of_bins"] for i in s_parameters]

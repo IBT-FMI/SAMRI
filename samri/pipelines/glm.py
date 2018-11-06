@@ -226,7 +226,7 @@ def l1(preprocessing_dir,
 		else:
 			workflow_connections.extend([
 				(get_scan, specify_model, [('nii_path', 'functional_runs')]),
-				(git_scan, glm, [('nii_path', 'in_file')]),
+				(get_scan, glm, [('nii_path', 'in_file')]),
 				])
 
 

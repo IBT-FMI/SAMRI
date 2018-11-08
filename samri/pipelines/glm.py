@@ -208,9 +208,9 @@ def l1(preprocessing_dir,
 			workflow_connections.extend([
 				(get_scan, invert, [('nii_path', 'in_file')]),
 				(invert, bandpass, [('out_file', 'in_file')]),
-				(invert, specify_model, [('out_file', 'functional_runs')]),
-				(invert, glm, [('out_file', 'in_file')]),
-				(invert, datasink, [('out_file', '@ts_file')]),
+				(bandpass, specify_model, [('out_file', 'functional_runs')]),
+				(bandpass, glm, [('out_file', 'in_file')]),
+				(bandpass, datasink, [('out_file', '@ts_file')]),
 				])
 		else:
 			workflow_connections.extend([

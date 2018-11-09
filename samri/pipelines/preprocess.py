@@ -440,7 +440,8 @@ def generic(bids_base, template,
 		get_s_scan.inputs.bids_base = bids_base
 
 		if actual_size:
-			s_register, s_warp, _, _ = DSURQEc_structural_registration(template, registration_mask,
+			s_register, s_warp, _, _ = DSURQEc_structural_registration(template,
+				structural_mask=registration_mask,
 				parameters=params,
 				phase_dictionary=phase_dictionary,
 				)
@@ -533,7 +534,8 @@ def generic(bids_base, template,
 	elif functional_registration_method == "composite":
 		if not structural_scan_types.any():
 			raise ValueError('The option `registration="composite"` requires there to be a structural scan type.')
-		_, _, f_register, f_warp = DSURQEc_structural_registration(template, registration_mask,
+		_, _, f_register, f_warp = DSURQEc_structural_registration(template,
+			structural_mask=registration_mask,
 			parameters=params,
 			phase_dictionary=phase_dictionary,
 			)

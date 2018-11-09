@@ -62,11 +62,12 @@ def plot_stim_design(file_path,stim):
 	plt.tick_params(axis='x', which='both', bottom='off', top='off', left='off', right='off')
 	plt.tick_params(axis='y', which='both', bottom='off', top='off', left='off', right='off')
 
-def roi_based(substitutions,
-	beta_file_template=None,
-	events_file_template=None,
-	ts_file_template=None,
-	design_file_template=None,
+def roi_based(
+	beta_filename=None,
+	events_filename=None,
+	ts_filename=None,
+	design_filename=None,
+	substitutions={},
 	plot_design_regressors=[0,1,2],
 	roi=None,
 	melodic_hit=None,
@@ -75,7 +76,25 @@ def roi_based(substitutions,
 	color="r",
 	scale_design=1,
 	):
-	"""Plot timecourses and design for measurements. should be deprecated in favour of multi"""
+	"""Plot timecourses and design for measurements. should be deprecated in favour of multi.
+
+	Parameteres
+	-----------
+
+	beta_filename : str, optional
+		Path to beta (a.k.a. COPE) file, which represents the loading of the design matrix to voxelwise timecourses.
+	events_filename : str, optional
+		Path to events file, which conforms to the BIDS specification and contains a tab-separated table of stimulation events.
+	ts_filename : str, optional
+		Path to NIfTI timeseries (4D file) which contains the voxelwise timecourses, as they have been passed on to the GLM.
+		It is very important that this is the exact same file which is forwarded to the GLM, as a timecourse file e.g. not subjected to a bandpass filter will not visually match the beta loading obtained by fitting a GLM to the same timecourse file after it was subjected to a bandpass filter.
+	design_filename : str, optional
+		Path to a mat file containing an ascii matrix for design, as outputted by FSL's `feat_model`.
+	substitutions : dict, optional
+		Dictionary which, if provided will be applied to formattable Python strings passed to the `beta_filename`, `events_filename`, `ts_filename`, and `design_filename` parameters (e.g. "part_of_path-{replace_this}-other_part_of_path") in order to replace occurrences of each key with its respective value pair.
+	roi : str, optional
+		Path to a NIfTI mask file which determines based on what region to extract summaries from the voxelwise inputs.
+	"""
 
 	fig, ax = plt.subplots(figsize=(6,4) , facecolor='#eeeeee', tight_layout=True)
 
@@ -84,8 +103,8 @@ def roi_based(substitutions,
 			roi = path.abspath(path.expanduser(roi))
 			roi = nib.load(roi)
 		masker = NiftiMasker(mask_img=roi)
-		if ts_file_template:
-			ts_file = path.expanduser(ts_file_template.format(**substitutions))
+		if ts_filename:
+			ts_file = path.expanduser(ts_filename.format(**substitutions))
 			final_time_series = masker.fit_transform(ts_file).T
 			final_time_series = np.mean(final_time_series, axis=0)
 			if flip:
@@ -95,11 +114,11 @@ def roi_based(substitutions,
 				ax.plot(final_time_series)
 				ax.set_xlim([0,len(final_time_series)])
 
-	if design_file_template:
-		design_file = path.expanduser(design_file_template.format(**substitutions))
+	if design_filename:
+		design_file = path.expanduser(design_filename.format(**substitutions))
 		design_df = pd.read_csv(design_file, skiprows=5, sep="\t", header=None, index_col=False)
-		if beta_file_template and roi:
-			beta_file = path.expanduser(beta_file_template.format(**substitutions))
+		if beta_filename and roi:
+			beta_file = path.expanduser(beta_filename.format(**substitutions))
 			roi_betas = masker.fit_transform(beta_file).T
 			design_df = design_df*np.mean(roi_betas)
 		for i in plot_design_regressors:
@@ -113,8 +132,8 @@ def roi_based(substitutions,
 		else:
 			ax.set_xlim([0,len(regressor)])
 
-	if events_file_template:
-		events_file = path.expanduser(events_file_template.format(**substitutions))
+	if events_filename:
+		events_file = path.expanduser(events_filename.format(**substitutions))
 		events_df = pd.read_csv(events_file, sep="\t")
 		for d, o in zip(events_df["duration"], events_df["onset"]):
 			d = round(d)
@@ -129,7 +148,9 @@ def roi_based(substitutions,
 			else:
 				ax.set_xlim([0,design_len])
 
+	# Very deprecated, we keep this around since it is not yet clear whether we will remove or reimplement this feature.
 	if melodic_hit:
+		pass
 		melodic_file = "~/ni_data/ofM.dr/20151208_182500_4007_1_4/melo10/report/t4.txt"
 		melodic = np.loadtxt(melodic_file)
 		if flip:

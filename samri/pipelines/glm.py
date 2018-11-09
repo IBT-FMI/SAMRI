@@ -100,6 +100,7 @@ def l1(preprocessing_dir,
 
 	if invert:
 		invert = pe.Node(interface=fsl.ImageMaths(), name="invert")
+		invert.inputs.op_string = '-mul -1'
 
 	specify_model = pe.Node(interface=SpecifyModel(), name="specify_model")
 	specify_model.inputs.input_units = 'secs'
@@ -207,14 +208,16 @@ def l1(preprocessing_dir,
 			workflow_connections.extend([
 				(get_scan, invert, [('nii_path', 'in_file')]),
 				(invert, bandpass, [('out_file', 'in_file')]),
-				(invert, specify_model, [('out_file', 'functional_runs')]),
-				(invert, glm, [('out_file', 'in_file')]),
+				(bandpass, specify_model, [('out_file', 'functional_runs')]),
+				(bandpass, glm, [('out_file', 'in_file')]),
+				(bandpass, datasink, [('out_file', '@ts_file')]),
 				])
 		else:
 			workflow_connections.extend([
 				(get_scan, bandpass, [('nii_path', 'in_file')]),
 				(bandpass, specify_model, [('out_file', 'functional_runs')]),
 				(bandpass, glm, [('out_file', 'in_file')]),
+				(bandpass, datasink, [('out_file', '@ts_file')]),
 				])
 	else:
 		if invert:
@@ -222,11 +225,13 @@ def l1(preprocessing_dir,
 				(get_scan, invert, [('nii_path', 'in_file')]),
 				(invert, specify_model, [('out_file', 'functional_runs')]),
 				(invert, glm, [('out_file', 'in_file')]),
+				(invert, datasink, [('out_file', '@ts_file')]),
 				])
 		else:
 			workflow_connections.extend([
 				(get_scan, specify_model, [('nii_path', 'functional_runs')]),
-				(git_scan, glm, [('nii_path', 'in_file')]),
+				(get_scan, glm, [('nii_path', 'in_file')]),
+				(get_scan, datasink, [('nii_path', '@ts_file')]),
 				])
 
 

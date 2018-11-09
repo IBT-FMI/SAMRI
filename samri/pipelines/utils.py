@@ -15,7 +15,7 @@ GENERIC_PHASES = {
                 "metric_weight":1,
                 "radius_or_number_of_bins":32,
                 "sampling_strategy":"Regular",
-                "sampling_percentage":0.33,
+                "sampling_percentage":0.5,
                 "convergence_threshold":1.e-8,
                 "convergence_window_size":10,
                 "smoothing_sigmas":[0],

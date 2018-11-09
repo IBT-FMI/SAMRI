@@ -54,7 +54,7 @@ def structural_registration(template, num_threads=4):
 	f_warp = pe.Node(ants.ApplyTransforms(), name="f_warp")
 	f_warp.inputs.reference_image = path.abspath(path.expanduser(template))
 	f_warp.inputs.input_image_type = 3
-	f_warp.inputs.interpolation = 'Linear'
+	f_warp.inputs.interpolation = 'NearestNeighbor'
 	f_warp.inputs.invert_transform_flags = [False]
 	f_warp.inputs.terminal_output = 'file'
 	f_warp.num_threads = num_threads
@@ -62,7 +62,7 @@ def structural_registration(template, num_threads=4):
 	s_warp = pe.Node(ants.ApplyTransforms(), name="s_warp")
 	s_warp.inputs.reference_image = path.abspath(path.expanduser(template))
 	s_warp.inputs.input_image_type = 3
-	s_warp.inputs.interpolation = 'Linear'
+	s_warp.inputs.interpolation = 'NearestNeighbor'
 	s_warp.inputs.invert_transform_flags = [False]
 	s_warp.inputs.terminal_output = 'file'
 	s_warp.num_threads = num_threads
@@ -70,7 +70,8 @@ def structural_registration(template, num_threads=4):
 	return registration, s_warp, f_warp
 
 def DSURQEc_structural_registration(template,
-	mask="/usr/share/mouse-brain-atlases/dsurqec_200micron_mask.nii",
+	structural_mask="/usr/share/mouse-brain-atlases/dsurqec_200micron_mask.nii",
+	functional_mask='',
 	num_threads=4,
 	phase_dictionary=GENERIC_PHASES,
 	s_phases=["s_rigid","affine","syn"],
@@ -105,8 +106,8 @@ def DSURQEc_structural_registration(template,
 	s_registration.inputs.winsorize_lower_quantile = 0.05
 	s_registration.inputs.winsorize_upper_quantile = 0.95
 	s_registration.inputs.args = '--float'
-	if mask:
-		s_registration.inputs.fixed_image_masks = [path.abspath(path.expanduser(mask))]
+	if structural_mask:
+		s_registration.inputs.fixed_image_masks = [path.abspath(path.expanduser(structural_mask))]
 	s_registration.inputs.num_threads = num_threads
 
 	f_parameters = [phase_dictionary[selection] for selection in f_phases]
@@ -136,15 +137,18 @@ def DSURQEc_structural_registration(template,
 	f_registration.inputs.winsorize_lower_quantile = 0.05
 	f_registration.inputs.winsorize_upper_quantile = 0.95
 	f_registration.inputs.args = '--float'
-	if mask:
-		f_registration.inputs.fixed_image_masks = [path.abspath(path.expanduser(mask))]
+	if functional_mask:
+		f_registration.inputs.fixed_image_masks = [path.abspath(path.expanduser(functional_mask))]
 	f_registration.inputs.num_threads = num_threads
 
 
+	#f_warp = pe.Node(ants.WarpTimeSeriesImageMultiTransform(), name='f_warp')
+	#f_warp.inputs.reference_image = template
+	#f_warp.inputs.dimension = 4
 	f_warp = pe.Node(ants.ApplyTransforms(), name="f_warp")
 	f_warp.inputs.reference_image = path.abspath(path.expanduser(template))
 	f_warp.inputs.input_image_type = 3
-	f_warp.inputs.interpolation = 'Linear'
+	f_warp.inputs.interpolation = 'NearestNeighbor'
 	f_warp.inputs.invert_transform_flags = [False, False]
 	#DEPRECATED in =nipype-1.1.0
 	#f_warp.inputs.terminal_output = 'file'
@@ -153,8 +157,8 @@ def DSURQEc_structural_registration(template,
 
 	s_warp = pe.Node(ants.ApplyTransforms(), name="s_warp")
 	s_warp.inputs.reference_image = path.abspath(path.expanduser(template))
-	s_warp.inputs.input_image_type = 3
-	s_warp.inputs.interpolation = 'Linear'
+	s_warp.inputs.input_image_type = 0
+	s_warp.inputs.interpolation = 'NearestNeighbor'
 	s_warp.inputs.invert_transform_flags = [False]
 	#DEPRECATED in =nipype-1.1.0
 	#s_warp.inputs.terminal_output = 'file'
@@ -192,7 +196,7 @@ def composite_registration(template, num_threads=4):
 	f_warp = pe.Node(ants.ApplyTransforms(), name="f_warp")
 	f_warp.inputs.reference_image = path.abspath(path.expanduser(template))
 	f_warp.inputs.input_image_type = 3
-	f_warp.inputs.interpolation = 'Linear'
+	f_warp.inputs.interpolation = 'NearestNeighbor'
 	f_warp.inputs.invert_transform_flags = [False, False]
 	f_warp.inputs.terminal_output = 'file'
 	f_warp.num_threads = num_threads
@@ -242,7 +246,7 @@ def functional_registration(template,
 	warp = pe.Node(ants.ApplyTransforms(), name="f_warp")
 	warp.inputs.reference_image = template
 	warp.inputs.input_image_type = 3
-	warp.inputs.interpolation = 'Linear'
+	warp.inputs.interpolation = 'NearestNeighbor'
 	warp.inputs.invert_transform_flags = [False]
 	warp.inputs.terminal_output = 'file'
 	warp.num_threads = 4

@@ -68,6 +68,7 @@ def roi_based(
 	ts_filename=None,
 	design_filename=None,
 	substitutions={},
+	ax=None,
 	color="r",
 	flip=False,
 	design_len=None,
@@ -96,9 +97,12 @@ def roi_based(
 		Whether to flip the plot by 90 degrees (plotting in “portrait” rather than “landscape” mode, as it were).
 	roi : str, optional
 		Path to a NIfTI mask file which determines based on what region to extract summaries from the voxelwise inputs.
+	save_as : str, optional
+		Path to save the plot under.
 	"""
 
-	fig, ax = plt.subplots(figsize=(6,4), facecolor='#eeeeee', tight_layout=True)
+	if not ax:
+		_, ax = plt.subplots(facecolor='#eeeeee', tight_layout=True)
 
 	if roi:
 		if isinstance(roi, str):
@@ -167,6 +171,9 @@ def roi_based(
 	else:
 		ax.set_xlabel('Time [TR]')
 
+	if save_as:
+		save_as = path.abspath(path.expanduser(save_as))
+		plt.savefig(save_as)
 	return ax
 
 def multi(timecourses,

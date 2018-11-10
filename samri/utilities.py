@@ -111,6 +111,7 @@ def bids_autofind(bids_dir,
 
 def bids_substitution_iterator(sessions, subjects,
 	tasks=[''],
+	runs=[''],
 	data_dir='',
 	preprocessing_dir='',
 	acquisitions=[''],
@@ -149,23 +150,14 @@ def bids_substitution_iterator(sessions, subjects,
 	Returns
 	-------
 	list of dictionaries
-		With the keys being `"data_dir"`, `"l1_dir"`, `"l1_workdir"`, `"preprocessing_dir"`, `"preprocessing_workdir"`, `"scan"`, `"session"`, and `"subject"`.
+		With the keys being `"data_dir"`, `"subject"`, `"session"`, `"task"`!!!.
 	"""
-	if not l1_dir:
-		l1_dir = preprocessing_dir
-	if not l1_workdir:
-		l1_workdir = l1_dir+"_work"
-	if not preprocessing_workdir:
-		preprocessing_workdir = preprocessing_dir+"_work"
 	substitutions=[]
-	for subject, session, task, acquisition, modality in product(subjects, sessions, tasks, acquisitions, modalities):
+	for subject, session, task, run, acquisition, modality in product(subjects, sessions, tasks, runs, acquisitions, modalities):
 		substitution={}
 		substitution["data_dir"] = data_dir
-		substitution["l1_dir"] = l1_dir
-		substitution["l1_workdir"] = l1_workdir
-		substitution["preprocessing_dir"] = preprocessing_dir
-		substitution["preprocessing_workdir"] = preprocessing_workdir
 		substitution["task"] = task
+		substitution["run"] = run
 		substitution["session"] = session
 		substitution["subject"] = subject
 		substitution["acquisition"] = acquisition
@@ -173,6 +165,7 @@ def bids_substitution_iterator(sessions, subjects,
 		if validate_for_template:
 			check_file = validate_for_template.format(**substitution)
 			check_file = path.abspath(path.expanduser(check_file))
+			print(check_file)
 			if path.isfile(check_file):
 				substitutions.append(substitution)
 		else:

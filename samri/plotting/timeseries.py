@@ -68,12 +68,12 @@ def roi_based(
 	ts_filename=None,
 	design_filename=None,
 	substitutions={},
-	plot_design_regressors=[0,1,2],
-	roi=None,
-	melodic_hit=None,
+	color="r",
 	flip=False,
 	design_len=None,
-	color="r",
+	melodic_hit=None,
+	plot_design_regressors=[0,1,2],
+	roi=None,
 	scale_design=1,
 	):
 	"""Plot timecourses and design for measurements. should be deprecated in favour of multi.
@@ -92,11 +92,13 @@ def roi_based(
 		Path to a mat file containing an ascii matrix for design, as outputted by FSL's `feat_model`.
 	substitutions : dict, optional
 		Dictionary which, if provided will be applied to formattable Python strings passed to the `beta_filename`, `events_filename`, `ts_filename`, and `design_filename` parameters (e.g. "part_of_path-{replace_this}-other_part_of_path") in order to replace occurrences of each key with its respective value pair.
+	flip : bool, optional
+		Whether to flip the plot by 90 degrees (plotting in “portrait” rather than “landscape” mode, as it were).
 	roi : str, optional
 		Path to a NIfTI mask file which determines based on what region to extract summaries from the voxelwise inputs.
 	"""
 
-	fig, ax = plt.subplots(figsize=(6,4) , facecolor='#eeeeee', tight_layout=True)
+	fig, ax = plt.subplots(figsize=(6,4), facecolor='#eeeeee', tight_layout=True)
 
 	if roi:
 		if isinstance(roi, str):

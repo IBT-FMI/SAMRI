@@ -384,6 +384,8 @@ def ts_overviews(substitutions, roi,
 	beta_file_template="~/ni_data/ofM.dr/l1/{l1_dir}/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_task-{scan}_cope.nii.gz",
 	design_file_template="~/ni_data/ofM.dr/l1/{l1_workdir}/_subject_session_scan_{subject}.{session}.{scan}/modelgen/run0.mat",
 	event_file_template="~/ni_data/ofM.dr/preprocessing/{preprocessing_dir}/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_task-{scan}_events.tsv",
+	n_jobs=False,
+	n_jobs_percentage=0.6,
 	):
 
 	timecourses = []
@@ -395,7 +397,8 @@ def ts_overviews(substitutions, roi,
 	except AttributeError:
 		pass
 
-	n_jobs = mp.cpu_count()-2
+	if not n_jobs:
+		n_jobs = max(int(round(mp.cpu_count()*n_jobs_percentage)),2)
 	substitutions_data = Parallel(n_jobs=n_jobs, verbose=0, backend="threading")(map(delayed(roi_masking),
 		substitutions,
 		[ts_file_template]*len(substitutions),

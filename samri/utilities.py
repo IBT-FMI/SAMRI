@@ -165,7 +165,6 @@ def bids_substitution_iterator(sessions, subjects,
 		if validate_for_template:
 			check_file = validate_for_template.format(**substitution)
 			check_file = path.abspath(path.expanduser(check_file))
-			print(check_file)
 			if path.isfile(check_file):
 				substitutions.append(substitution)
 		else:

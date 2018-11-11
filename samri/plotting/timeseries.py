@@ -75,6 +75,7 @@ def roi_based(
 	melodic_hit=None,
 	plot_design_regressors=[0,1,2],
 	roi=None,
+	save_as='',
 	scale_design=1,
 	):
 	"""Plot timecourses and design for measurements. should be deprecated in favour of multi.

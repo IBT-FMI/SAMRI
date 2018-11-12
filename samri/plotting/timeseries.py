@@ -185,7 +185,7 @@ def multi(timecourses,
 	quantitative=True,
 	save_as="",
 	samri_style=True,
-	ax_size=[10,7],
+	ax_size=[28,4],
 	unit_ticking=False,
 	x_label="TR [1s]"
 	):
@@ -200,9 +200,11 @@ def multi(timecourses,
 		or a list of dictionaries, every one of which has strings as keys and lists of floats as values (in which case each dictionary contains one or multiple timeseries to be plotted on the same axis - and labelled according to the respective keys);
 		or a list of `pandas.DataFrame` objects (in which case each DataFrame is plotted on a new axis);
 		or a `pandas.DataFrame` object (in which case the object is broken apart into a list of DataFrames by the values in the column specified by a string `subplot_titles` value - and the `subplot_tiles` value will be set to the values in the selected column).
-	subplot_titles : list or str
+	subplot_titles : list or str, optional
 		The titles to assign to the individual plots.
 		For compactness, this title is actually assigned to the y-label field, and can be placed left or right of the plot (corresponding to `False` or `True` values of the `quantitative` attribute, respectively)
+	ax_size : list, optional
+		A list of two floats or integers, giving the width and height of the constituent axes of the figures.
 	"""
 
 	if isinstance(timecourses, pd.DataFrame):
@@ -228,7 +230,7 @@ def multi(timecourses,
 		ncols = 2
 		max_rowspan = int(np.ceil((len(timecourses) / float(ncols))))
 		min_rowspan = int(np.floor((len(timecourses) / float(ncols))))
-		fig, axes = plt.subplots(figsize=(ax_size[0]*max_rowspan*min_rowspan*0.5,ax_size[1]*ncols), facecolor='#eeeeee', nrows=max_rowspan*min_rowspan, ncols=ncols)
+		fig, axes = plt.subplots(figsize=(ax_size[0]*ncols,ax_size[1]*max_rowspan), nrows=max_rowspan*min_rowspan, ncols=ncols)
 		xlabel_positive = [(i*max_rowspan)-1 for i in range(1,ncols)]
 		xlabel_positive.append(len(timecourses)-1)
 		max_ylim = [0,0]
@@ -248,6 +250,9 @@ def multi(timecourses,
 			except:
 				pass
 			else:
+				if isinstance(events_df,str):
+					events_file = path.expanduser(events_df)
+					events_df = pd.read_csv(events_file, sep="\t")
 				for d, o in zip(events_df["duration"], events_df["onset"]):
 					d = round(d)
 					o = round(o)

@@ -445,7 +445,7 @@ def contour_slices(bg_image, file_template,
 	scale=0.4,
 	slice_spacing=0.5,
 	substitutions=[{},],
-	samri_style=True,
+	samri_style='light',
 	title_color='#BBBBBB',
 	):
 	"""
@@ -509,9 +509,16 @@ def contour_slices(bg_image, file_template,
 	if len(substitutions) == 0:
 		print('ERROR: You have specified a substitution dictionary of length 0. There needs to be at least one set of substitutions. If your string contains no formatting fields, please pass a list containing an empty dictionary to the `sbstitution parameter` (this is also its default value).')
 
-	if samri_style:
-		plotting_module_path = path.dirname(path.realpath(__file__))
+	plotting_module_path = path.dirname(path.realpath(__file__))
+	if samri_style=='light':
+		black_bg=False,
+		anatomical_cmap = 'binary'
 		style_path = path.join(plotting_module_path,'contour_slices.conf')
+		plt.style.use([style_path])
+	elif samri_style=='dark':
+		black_bg=True,
+		anatomical_cmap = 'binary_r'
+		style_path = path.join(plotting_module_path,'contour_slices_dark.conf')
 		plt.style.use([style_path])
 
 	bg_image = path.abspath(path.expanduser(bg_image))
@@ -620,20 +627,18 @@ def contour_slices(bg_image, file_template,
 					display_mode='y',
 					cut_coords=[cut_coords[ix]],
 					annotate=False,
+					black_bg=black_bg,
 					dim=dimming,
+					cmap=anatomical_cmap,
 					)
 			except IndexError:
 				ax_i.axis('off')
 			else:
-				save_as = save_as.format(**substitutions[0])
-				save_as = path.abspath(path.expanduser(save_as))
-				plt.savefig(save_as,
-					facecolor=fig.get_facecolor(),
-					)
 				for img_ix, img in enumerate(imgs):
 					color = colors[img_ix]
 					display.add_contours(img,
 							alpha=alpha[img_ix],
+							black_bg=black_bg,
 							colors=[color],
 							levels=levels[img_ix],
 							linewidths=(linewidths[img_ix],),
@@ -650,6 +655,7 @@ def contour_slices(bg_image, file_template,
 		display = nilearn.plotting.plot_anat(bg_img,
 			display_mode='y',
 			cut_coords=cut_coords,
+			black_bg=black_bg,
 			)
 		for ix, img in enumerate(imgs):
 			color = colors[ix]
@@ -662,5 +668,5 @@ def contour_slices(bg_image, file_template,
 		save_as = save_as.format(**substitutions[0])
 		save_as = path.abspath(path.expanduser(save_as))
 		plt.savefig(save_as,
-			facecolor=fig.get_facecolor(),
+			#facecolor=fig.get_facecolor(),
 			)

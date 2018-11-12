@@ -407,16 +407,16 @@ def ts_overviews(substitutions, roi,
 		[event_file_template]*len(substitutions),
 		[roi]*len(substitutions),
 		))
-	timecourses, designs, stat_maps, event_dfs, subplot_titles = zip(*substitutions_data)
+	timecourses, designs, roi_maps, event_dfs, subplot_titles = zip(*substitutions_data)
 
 	#The following is safe because either all are None at a given position, or none of them is None
 	timecourses = [x for x in timecourses if x is not None]
 	designs = [x for x in designs if x is not None]
-	stat_maps = [x for x in stat_maps if x is not None]
+	roi_maps = [x for x in roi_maps if x is not None]
 	events_dfs = [x for x in event_dfs if x is not None]
 	subplot_titles = [x for x in subplot_titles if x is not None]
 
-	return timecourses, designs, stat_maps, events_dfs, subplot_titles
+	return timecourses, designs, roi_maps, events_dfs, subplot_titles
 
 def p_filtered_ts(substitutions,
 	ts_file_template="~/ni_data/ofM.dr/preprocessing/{preprocessing_dir}/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_task-{scan}.nii.gz",

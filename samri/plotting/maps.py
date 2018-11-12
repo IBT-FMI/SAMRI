@@ -431,7 +431,7 @@ def atlas_label(atlas,
 	return display
 
 def contour_slices(bg_image, file_template,
-	autoinvert=True,
+	invert=False,
 	alpha=[0.9],
 	colors=['r','g','b'],
 	dimming=0.,
@@ -460,9 +460,8 @@ def contour_slices(bg_image, file_template,
 	file_template : str
 		String template giving the path to the overlay stack.
 		To create multiple overlays, this template will iteratively be substituted with each of the substitution dictionaries in the `substitutions` parameter.
-	autoinvert : boolean, optional
-		Whether to automatically invert data matrix values if all are detected to be less or equal to 0.
-		This is particularly useful when dealing with e.g. negative contrast agent CBV scans.
+	invert : boolean, optional
+		Whether to automatically invert data matrix values (useful if the image consists of negative values, e.g. when dealing with negative contrast agent CBV scans).
 	alpha : list, optional
 		List of floats, specifying with how much alpha to draw each contour.
 	colors : list, optional
@@ -541,10 +540,10 @@ def contour_slices(bg_image, file_template,
 		data = img.get_data()
 		if img.header['dim'][0] > 3:
 			img = collapse(img)
-		if autoinvert and (data <= 0.9).all():
+		if invert:
 			data = -data
 			img = nib.nifti1.Nifti1Image(data, img.affine, img.header)
-		#we should only be looking at the percentile of the active slice
+		#we should only be looking at the percentile of the entire data matrix, rather than just the active slice
 		for level_percentile in levels_percentile:
 			level = np.percentile(data,level_percentile)
 			levels.append(level)

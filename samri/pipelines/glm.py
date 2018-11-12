@@ -155,7 +155,7 @@ def l1(preprocessing_dir,
 	pfstat_filename = pe.Node(name='pfstat_filename', interface=util.Function(function=bids_dict_to_source,input_names=inspect.getargspec(bids_dict_to_source)[0], output_names=['filename']))
 	pfstat_filename.inputs.source_format = out_file_name_base.format('pfstat','nii.gz')
 	design_filename = pe.Node(name='design', interface=util.Function(function=bids_dict_to_source,input_names=inspect.getargspec(bids_dict_to_source)[0], output_names=['filename']))
-	design_filename.inputs.source_format = out_file_name_base.format('design','dat')
+	design_filename.inputs.source_format = out_file_name_base.format('design','mat')
 
 	design_rename = pe.Node(interface=util.Rename(), name='design_rename')
 

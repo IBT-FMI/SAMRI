@@ -522,6 +522,9 @@ def contour_slices(bg_image, file_template,
 		anatomical_cmap = 'binary_r'
 		style_path = path.join(plotting_module_path,'contour_slices_dark.conf')
 		plt.style.use([style_path])
+	else:
+		anatomical_cmap = 'binary'
+		black_bg=False
 
 	bg_image = path.abspath(path.expanduser(bg_image))
 	bg_img = nib.load(bg_image)

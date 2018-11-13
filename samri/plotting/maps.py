@@ -445,7 +445,7 @@ def contour_slices(bg_image, file_template,
 	scale=0.4,
 	slice_spacing=0.5,
 	substitutions=[{},],
-	samri_style='light',
+	style='light',
 	title_color='#BBBBBB',
 	):
 	"""
@@ -496,7 +496,7 @@ def contour_slices(bg_image, file_template,
 	substitutions : list of dicts, optional
 		A list of dictionaries, with keys including all substitution keys found in the `file_template` parameter, and values giving desired substitution values which point the `file_template` string templated to existing filed which are to be included in the overlay stack.
 		Such a dictionary is best obtained via `samri.utilities.bids_substitution_iterator()`.
-	samri_style : {'light', 'dark', ''}, optional
+	style : {'light', 'dark', ''}, optional
 		Default SAMRI styling which to apply, set to an empty string to apply no styling and leave it to the environment matplotlibrc.
 	title_color : string, optional
 		String specifying the desired color for the title.
@@ -512,12 +512,12 @@ def contour_slices(bg_image, file_template,
 		print('ERROR: You have specified a substitution dictionary of length 0. There needs to be at least one set of substitutions. If your string contains no formatting fields, please pass a list containing an empty dictionary to the `sbstitution parameter` (this is also its default value).')
 
 	plotting_module_path = path.dirname(path.realpath(__file__))
-	if samri_style=='light':
+	if style=='light':
 		black_bg=False
 		anatomical_cmap = 'binary'
 		style_path = path.join(plotting_module_path,'contour_slices.conf')
 		plt.style.use([style_path])
-	elif samri_style=='dark':
+	elif style=='dark':
 		black_bg=True
 		anatomical_cmap = 'binary_r'
 		style_path = path.join(plotting_module_path,'contour_slices_dark.conf')
@@ -575,10 +575,13 @@ def contour_slices(bg_image, file_template,
 				else:
 					break
 			break
-		img_min_slice = slice_row[3] + subthreshold_start_slices*slice_row[1]
-		img_max_slice = slice_row[3] + (data.shape[1]-subthreshold_end_slices)*slice_row[1]
+		slice_thickness = (slice_row[0]**2+slice_row[1]**2+slice_row[2]**2)**(1/2)
+		best_guess_negative = abs(min(slice_row[0:3])) > abs(max(slice_row[0:3]))
+		slices_number = data.shape[list(slice_row).index(max(slice_row))]
+		img_min_slice = slice_row[3] + subthreshold_start_slices*slice_thickness
+		img_max_slice = slice_row[3] + (slices_number-subthreshold_end_slices)*slice_thickness
 		bounds.extend([img_min_slice,img_max_slice])
-		if slice_row[1] < 0:
+		if best_guess_negative:
 			slice_order_is_reversed += 1
 		else:
 			slice_order_is_reversed -= 1
@@ -586,7 +589,6 @@ def contour_slices(bg_image, file_template,
 
 	if len(alpha) == 1:
 		alpha = alpha * len(imgs)
-
 	min_slice = min(bounds)
 	max_slice = max(bounds)
 	cut_coords = np.arange(min_slice, max_slice, slice_spacing)

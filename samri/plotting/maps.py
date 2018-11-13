@@ -496,6 +496,8 @@ def contour_slices(bg_image, file_template,
 	substitutions : list of dicts, optional
 		A list of dictionaried, with keys including all substitution keys found in the `file_template` parameter, and values giving desired substitution values which point the `file_template` string templated to existing filed which are to be included in the overlay stack.
 		Such a dictionary is best obtained via `samri.utilities.bids_substitution_iterator()`.
+	samri_style : {'light', 'dark', ''}, optional
+		Default SAMRI styling which to apply, set to an empty string to apply no styling and leave it to the environment matplotlibrc.
 	title_color : string, optional
 		String specifying the desired color for the title.
 		This needs to be specified in-function, because the matplotlibrc styling standard does not provide for title color specification [matplotlibrc_title]

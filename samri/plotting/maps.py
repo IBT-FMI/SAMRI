@@ -606,7 +606,7 @@ def contour_slices(bg_image, file_template,
 			nrows, ncols = ratio
 		except ValueError:
 			if ratio == "portrait":
-				ncols = np.floor(cut_coord_length**(scale))
+				ncols = np.floor(cut_coord_length**scale)
 				nrows = np.ceil(cut_coord_length/float(ncols))
 			elif ratio == "landscape":
 				nrows = np.floor(cut_coord_length**(scale))

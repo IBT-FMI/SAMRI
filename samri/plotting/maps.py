@@ -489,12 +489,12 @@ def contour_slices(bg_image, file_template,
 		Path under which to save the output figure.
 		The string may contain formatting fields from the first dictionary in the `substitutions` variable.
 	scale : float, optional
-		The expected ratio of the slice height dividrd by the sum of the slice height and width.
+		The expected ratio of the slice height divided by the sum of the slice height and width.
 		This somewhat complex metric controls the row and column distribution of slices in the 'landscape' and 'portrait' plotting shapes.
 	slice_spacing : float
 		Slice spacing in mm.
 	substitutions : list of dicts, optional
-		A list of dictionaried, with keys including all substitution keys found in the `file_template` parameter, and values giving desired substitution values which point the `file_template` string templated to existing filed which are to be included in the overlay stack.
+		A list of dictionaries, with keys including all substitution keys found in the `file_template` parameter, and values giving desired substitution values which point the `file_template` string templated to existing filed which are to be included in the overlay stack.
 		Such a dictionary is best obtained via `samri.utilities.bids_substitution_iterator()`.
 	samri_style : {'light', 'dark', ''}, optional
 		Default SAMRI styling which to apply, set to an empty string to apply no styling and leave it to the environment matplotlibrc.

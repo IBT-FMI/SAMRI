@@ -511,12 +511,12 @@ def contour_slices(bg_image, file_template,
 
 	plotting_module_path = path.dirname(path.realpath(__file__))
 	if samri_style=='light':
-		black_bg=False,
+		black_bg=False
 		anatomical_cmap = 'binary'
 		style_path = path.join(plotting_module_path,'contour_slices.conf')
 		plt.style.use([style_path])
 	elif samri_style=='dark':
-		black_bg=True,
+		black_bg=True
 		anatomical_cmap = 'binary_r'
 		style_path = path.join(plotting_module_path,'contour_slices_dark.conf')
 		plt.style.use([style_path])
@@ -638,7 +638,6 @@ def contour_slices(bg_image, file_template,
 					color = colors[img_ix]
 					display.add_contours(img,
 							alpha=alpha[img_ix],
-							black_bg=black_bg,
 							colors=[color],
 							levels=levels[img_ix],
 							linewidths=(linewidths[img_ix],),

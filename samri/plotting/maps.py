@@ -431,6 +431,7 @@ def atlas_label(atlas,
 	return display
 
 def contour_slices(bg_image, file_template,
+	auto_figsize=False,
 	invert=False,
 	alpha=[0.9],
 	colors=['r','g','b'],
@@ -460,6 +461,8 @@ def contour_slices(bg_image, file_template,
 	file_template : str
 		String template giving the path to the overlay stack.
 		To create multiple overlays, this template will iteratively be substituted with each of the substitution dictionaries in the `substitutions` parameter.
+	auto_figsize : boolean, optional
+		Whether to automatically determine the size of the figure.
 	invert : boolean, optional
 		Whether to automatically invert data matrix values (useful if the image consists of negative values, e.g. when dealing with negative contrast agent CBV scans).
 	alpha : list, optional
@@ -620,12 +623,17 @@ def contour_slices(bg_image, file_template,
 		if legend_template and cut_coord_length == ncols*(nrows-1)+1:
 			rcParams['figure.subplot.bottom'] = np.max([rcParams['figure.subplot.bottom']-0.05,0.])
 
-		figsize = np.array(rcParams['figure.figsize'])
-		figsize_scales = figsize/np.array([float(ncols),float(nrows)])
-		figsize_scale = figsize_scales.min()
-		fig, ax = plt.subplots(figsize=(ncols*figsize_scale,nrows*figsize_scale),
-				nrows=int(nrows), ncols=int(ncols),
-				)
+		if auto_figsize:
+			figsize = np.array(rcParams['figure.figsize'])
+			figsize_scales = figsize/np.array([float(ncols),float(nrows)])
+			figsize_scale = figsize_scales.min()
+			fig, ax = plt.subplots(figsize=(ncols*figsize_scale,nrows*figsize_scale),
+					nrows=int(nrows), ncols=int(ncols),
+					)
+		else:
+			fig, ax = plt.subplots(
+					nrows=int(nrows), ncols=int(ncols),
+					)
 		flat_axes = list(ax.flatten())
 		for ix, ax_i in enumerate(flat_axes):
 			try:

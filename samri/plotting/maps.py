@@ -91,6 +91,7 @@ def scaled_plot(template,
 	dim=1,
 	scale=1.,
 	cmap=MYMAP,
+	anat_cmap='binary',
 	):
 	"""A wrapper for nilearn's plot_stat_map which allows scaling of crosshairs, titles and annotations.
 
@@ -118,39 +119,27 @@ def scaled_plot(template,
 		template = path.abspath(path.expanduser(template))
 	except AttributeError:
 		pass
-	if not stat_map:
-		display = nilearn.plotting.plot_img(template,
+	display = nilearn.plotting.plot_img(template,
+		threshold=threshold,
+		figure=fig,
+		axes=ax,
+		cmap=anat_cmap,
+		cut_coords=cut,
+		interpolation=interpolation,
+		title=None,
+		annotate=False,
+		draw_cross=False,
+		black_bg=black_bg,
+		colorbar=False,
+		)
+	try:
+		stat_map = path.abspath(path.expanduser(stat_map))
+	except (AttributeError, TypeError):
+		pass
+	if stat_map:
+		display.add_overlay(stat_map,
 			threshold=threshold,
-			figure=fig,
-			axes=ax,
 			cmap=cmap,
-			cut_coords=cut,
-			interpolation=interpolation,
-			title=None,
-			annotate=False,
-			draw_cross=False,
-			black_bg=black_bg,
-			colorbar=False,
-			)
-	else:
-		try:
-			stat_map = path.abspath(path.expanduser(stat_map))
-		except AttributeError:
-			pass
-		display = nilearn.plotting.plot_stat_map(stat_map,
-			bg_img=template,
-			threshold=threshold,
-			figure=fig,
-			axes=ax,
-			cmap=cmap,
-			cut_coords=cut,
-			interpolation=interpolation,
-			dim=dim,
-			title=None,
-			annotate=False,
-			draw_cross=False,
-			black_bg=black_bg,
-			colorbar=False,
 			)
 	if draw_cross:
 		display.draw_cross(linewidth=scale*1.6, alpha=0.3)
@@ -189,6 +178,7 @@ def stat(stat_maps,
 	shape="portrait",
 	draw_colorbar=True,
 	ax=None,
+	anat_cmap='binary',
 	):
 
 	"""Plot a list of statistical maps.
@@ -260,7 +250,8 @@ def stat(stat_maps,
 			my_overlay = overlays[0]
 		else:
 			my_overlay = None
-		display = scaled_plot(stat_maps[0], template, fig, ax,
+		display = scaled_plot(template, fig, ax,
+			stat_map=stat_maps[0],
 			overlay=my_overlay,
 			title=title,
 			threshold=threshold,
@@ -270,6 +261,8 @@ def stat(stat_maps,
 			draw_cross=draw_cross,
 			annotate=annotate,
 			scale=scale,
+			black_bg=black_bg,
+			anat_cmap=anat_cmap,
 			)
 	else:
 		try:
@@ -349,8 +342,9 @@ def stat(stat_maps,
 						fraction=fraction,
 						anchor=(2,0.5),
 						)
-				display = scaled_plot(stat_maps[ix], template, fig, ax,
-					overlay = overlays[ix],
+				display = scaled_plot(template, fig, ax,
+					stat_map=stat_maps[ix],
+					overlay=overlays[ix],
 					title=title,
 					threshold=threshold,
 					cut=cut_coords[ix],
@@ -359,6 +353,8 @@ def stat(stat_maps,
 					draw_cross=draw_cross,
 					annotate=annotate,
 					scale=scale,
+					black_bg=black_bg,
+					anat_cmap=anat_cmap,
 					)
 			except (AttributeError, IndexError, TypeError):
 				ax.axis('off')

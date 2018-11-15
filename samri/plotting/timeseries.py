@@ -69,7 +69,8 @@ def roi_based(
 	design_filename=None,
 	substitutions={},
 	ax=None,
-	color="r",
+	design_color="c",
+	ts_color="r",
 	flip=False,
 	design_len=None,
 	melodic_hit=None,
@@ -77,6 +78,7 @@ def roi_based(
 	roi=None,
 	save_as='',
 	scale_design=1,
+	ylabel='Arbitrary Units',
 	):
 	"""Plot timecourses and design for measurements. should be deprecated in favour of multi.
 
@@ -100,6 +102,8 @@ def roi_based(
 		Path to a NIfTI mask file which determines based on what region to extract summaries from the voxelwise inputs.
 	save_as : str, optional
 		Path to save the plot under.
+	ylabel : str, optional
+		Text to place on the y label.
 	"""
 
 	if not ax:
@@ -115,10 +119,24 @@ def roi_based(
 			final_time_series = masker.fit_transform(ts_file).T
 			final_time_series = np.mean(final_time_series, axis=0)
 			if flip:
-				ax.plot(final_time_series, np.arange(len(final_time_series)))
+				ax.plot(final_time_series, np.arange(len(final_time_series)), color=ts_color)
 				ax.set_ylim([0,len(final_time_series)])
 			else:
-				ax.plot(final_time_series)
+				ax.plot(final_time_series, color=ts_color)
+				ax.set_xlim([0,len(final_time_series)])
+	else:
+		if ts_filename:
+			ts_file = path.expanduser(ts_filename.format(**substitutions))
+			img = nib.load(ts_file)
+			final_time_series = img.get_data()
+			final_time_series = np.mean(final_time_series, axis=0)
+			final_time_series = np.mean(final_time_series, axis=0)
+			final_time_series = np.mean(final_time_series, axis=0)
+			if flip:
+				ax.plot(final_time_series, np.arange(len(final_time_series)), color=ts_color)
+				ax.set_ylim([0,len(final_time_series)])
+			else:
+				ax.plot(final_time_series, color=ts_color)
 				ax.set_xlim([0,len(final_time_series)])
 
 	if design_filename:
@@ -131,9 +149,9 @@ def roi_based(
 		for i in plot_design_regressors:
 			regressor = design_df[[i]].values.flatten()
 			if flip:
-				ax.plot(regressor.T*scale_design, np.arange(len(regressor)), lw=rcParams['lines.linewidth']*2, color=color)
+				ax.plot(regressor.T*scale_design, np.arange(len(regressor)), lw=rcParams['lines.linewidth']*2, color=design_color)
 			else:
-				ax.plot(regressor*scale_design, lw=rcParams['lines.linewidth']*2, color=color)
+				ax.plot(regressor*scale_design, lw=rcParams['lines.linewidth']*2, color=design_color)
 		if flip:
 			ax.set_ylim([0,len(regressor)])
 		else:
@@ -170,6 +188,7 @@ def roi_based(
 		ax.locator_params(nbins=5, axis='x')
 		ax.set_ylabel('Time [TR]', rotation=270, fontsize="smaller", va="center")
 	else:
+		ax.set_ylabel(ylabel)
 		ax.set_xlabel('Time [TR]')
 
 	if save_as:

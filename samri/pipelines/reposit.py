@@ -102,6 +102,8 @@ def bru2bids(measurements_base,
 	else:
 		out_base = measurements_base
 	out_dir = path.join(out_base,workflow_name)
+	if not os.path.exists(out_dir):
+		os.makedirs(out_dir)
 
 	# define measurement directories to be processed, and populate the list either with the given include_measurements, or with an intelligent selection
 	functional_scan_types = diffusion_scan_types = structural_scan_types = []
@@ -153,6 +155,7 @@ def bru2bids(measurements_base,
 		]
 
 	if functional_scan_types:
+		f_data_selection.to_csv(path.join(out_dir,'f_data_selection.csv'))
 		get_f_scan = pe.Node(name='get_f_scan', interface=util.Function(function=get_bids_scan,input_names=inspect.getargspec(get_bids_scan)[0], output_names=[
 			'scan_path', 'typ', 'task', 'nii_path', 'nii_name', 'eventfile_name', 'subject_session', 'metadata_filename', 'dict_slice',
 			]))
@@ -326,6 +329,7 @@ def bru2bids(measurements_base,
 				pass
 
 	if structural_scan_types:
+		s_data_selection.to_csv(path.join(out_base,workflow_name,'s_data_selection.csv'))
 		get_s_scan = pe.Node(name='get_s_scan', interface=util.Function(function=get_bids_scan,input_names=inspect.getargspec(get_bids_scan)[0], output_names=[
 			'scan_path', 'typ', 'task', 'nii_path', 'nii_name', 'eventfile_name', 'subject_session', 'metadata_filename', 'dict_slice',
 			]))
@@ -390,8 +394,6 @@ def bru2bids(measurements_base,
 				pass
 
 	# This is needed because BIDS does not yet support CBV
-	if not os.path.exists(out_dir):
-		os.makedirs(out_dir)
 	with open(path.join(out_dir,".bidsignore"), "w+") as f:
 		f.write('*_cbv.*')
 

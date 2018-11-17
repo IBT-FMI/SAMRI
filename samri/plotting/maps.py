@@ -91,6 +91,7 @@ def scaled_plot(template,
 	dim=1,
 	scale=1.,
 	cmap=MYMAP,
+	anat_cmap='binary',
 	):
 	"""A wrapper for nilearn's plot_stat_map which allows scaling of crosshairs, titles and annotations.
 
@@ -118,39 +119,27 @@ def scaled_plot(template,
 		template = path.abspath(path.expanduser(template))
 	except AttributeError:
 		pass
-	if not stat_map:
-		display = nilearn.plotting.plot_img(template,
+	display = nilearn.plotting.plot_img(template,
+		threshold=threshold,
+		figure=fig,
+		axes=ax,
+		cmap=anat_cmap,
+		cut_coords=cut,
+		interpolation=interpolation,
+		title=None,
+		annotate=False,
+		draw_cross=False,
+		black_bg=black_bg,
+		colorbar=False,
+		)
+	try:
+		stat_map = path.abspath(path.expanduser(stat_map))
+	except (AttributeError, TypeError):
+		pass
+	if stat_map:
+		display.add_overlay(stat_map,
 			threshold=threshold,
-			figure=fig,
-			axes=ax,
 			cmap=cmap,
-			cut_coords=cut,
-			interpolation=interpolation,
-			title=None,
-			annotate=False,
-			draw_cross=False,
-			black_bg=black_bg,
-			colorbar=False,
-			)
-	else:
-		try:
-			stat_map = path.abspath(path.expanduser(stat_map))
-		except AttributeError:
-			pass
-		display = nilearn.plotting.plot_stat_map(stat_map,
-			bg_img=template,
-			threshold=threshold,
-			figure=fig,
-			axes=ax,
-			cmap=cmap,
-			cut_coords=cut,
-			interpolation=interpolation,
-			dim=dim,
-			title=None,
-			annotate=False,
-			draw_cross=False,
-			black_bg=black_bg,
-			colorbar=False,
 			)
 	if draw_cross:
 		display.draw_cross(linewidth=scale*1.6, alpha=0.3)
@@ -189,6 +178,7 @@ def stat(stat_maps,
 	shape="portrait",
 	draw_colorbar=True,
 	ax=None,
+	anat_cmap='binary',
 	):
 
 	"""Plot a list of statistical maps.
@@ -260,7 +250,8 @@ def stat(stat_maps,
 			my_overlay = overlays[0]
 		else:
 			my_overlay = None
-		display = scaled_plot(stat_maps[0], template, fig, ax,
+		display = scaled_plot(template, fig, ax,
+			stat_map=stat_maps[0],
 			overlay=my_overlay,
 			title=title,
 			threshold=threshold,
@@ -270,6 +261,8 @@ def stat(stat_maps,
 			draw_cross=draw_cross,
 			annotate=annotate,
 			scale=scale,
+			black_bg=black_bg,
+			anat_cmap=anat_cmap,
 			)
 	else:
 		try:
@@ -349,8 +342,9 @@ def stat(stat_maps,
 						fraction=fraction,
 						anchor=(2,0.5),
 						)
-				display = scaled_plot(stat_maps[ix], template, fig, ax,
-					overlay = overlays[ix],
+				display = scaled_plot(template, fig, ax,
+					stat_map=stat_maps[ix],
+					overlay=overlays[ix],
 					title=title,
 					threshold=threshold,
 					cut=cut_coords[ix],
@@ -359,6 +353,8 @@ def stat(stat_maps,
 					draw_cross=draw_cross,
 					annotate=annotate,
 					scale=scale,
+					black_bg=black_bg,
+					anat_cmap=anat_cmap,
 					)
 			except (AttributeError, IndexError, TypeError):
 				ax.axis('off')
@@ -431,7 +427,8 @@ def atlas_label(atlas,
 	return display
 
 def contour_slices(bg_image, file_template,
-	autoinvert=True,
+	auto_figsize=False,
+	invert=False,
 	alpha=[0.9],
 	colors=['r','g','b'],
 	dimming=0.,
@@ -445,7 +442,7 @@ def contour_slices(bg_image, file_template,
 	scale=0.4,
 	slice_spacing=0.5,
 	substitutions=[{},],
-	samri_style=True,
+	style='light',
 	title_color='#BBBBBB',
 	):
 	"""
@@ -460,9 +457,10 @@ def contour_slices(bg_image, file_template,
 	file_template : str
 		String template giving the path to the overlay stack.
 		To create multiple overlays, this template will iteratively be substituted with each of the substitution dictionaries in the `substitutions` parameter.
-	autoinvert : boolean, optional
-		Whether to automatically invert data matrix values if all are detected to be less or equal to 0.
-		This is particularly useful when dealing with e.g. negative contrast agent CBV scans.
+	auto_figsize : boolean, optional
+		Whether to automatically determine the size of the figure.
+	invert : boolean, optional
+		Whether to automatically invert data matrix values (useful if the image consists of negative values, e.g. when dealing with negative contrast agent CBV scans).
 	alpha : list, optional
 		List of floats, specifying with how much alpha to draw each contour.
 	colors : list, optional
@@ -490,13 +488,15 @@ def contour_slices(bg_image, file_template,
 		Path under which to save the output figure.
 		The string may contain formatting fields from the first dictionary in the `substitutions` variable.
 	scale : float, optional
-		The expected ratio of the slice height dividrd by the sum of the slice height and width.
+		The expected ratio of the slice height divided by the sum of the slice height and width.
 		This somewhat complex metric controls the row and column distribution of slices in the 'landscape' and 'portrait' plotting shapes.
 	slice_spacing : float
 		Slice spacing in mm.
 	substitutions : list of dicts, optional
-		A list of dictionaried, with keys including all substitution keys found in the `file_template` parameter, and values giving desired substitution values which point the `file_template` string templated to existing filed which are to be included in the overlay stack.
+		A list of dictionaries, with keys including all substitution keys found in the `file_template` parameter, and values giving desired substitution values which point the `file_template` string templated to existing filed which are to be included in the overlay stack.
 		Such a dictionary is best obtained via `samri.utilities.bids_substitution_iterator()`.
+	style : {'light', 'dark', ''}, optional
+		Default SAMRI styling which to apply, set to an empty string to apply no styling and leave it to the environment matplotlibrc.
 	title_color : string, optional
 		String specifying the desired color for the title.
 		This needs to be specified in-function, because the matplotlibrc styling standard does not provide for title color specification [matplotlibrc_title]
@@ -510,10 +510,20 @@ def contour_slices(bg_image, file_template,
 	if len(substitutions) == 0:
 		print('ERROR: You have specified a substitution dictionary of length 0. There needs to be at least one set of substitutions. If your string contains no formatting fields, please pass a list containing an empty dictionary to the `sbstitution parameter` (this is also its default value).')
 
-	if samri_style:
-		plotting_module_path = path.dirname(path.realpath(__file__))
+	plotting_module_path = path.dirname(path.realpath(__file__))
+	if style=='light':
+		black_bg=False
+		anatomical_cmap = 'binary'
 		style_path = path.join(plotting_module_path,'contour_slices.conf')
 		plt.style.use([style_path])
+	elif style=='dark':
+		black_bg=True
+		anatomical_cmap = 'binary_r'
+		style_path = path.join(plotting_module_path,'contour_slices_dark.conf')
+		plt.style.use([style_path])
+	else:
+		anatomical_cmap = 'binary'
+		black_bg=False
 
 	bg_image = path.abspath(path.expanduser(bg_image))
 	bg_img = nib.load(bg_image)
@@ -541,10 +551,10 @@ def contour_slices(bg_image, file_template,
 		data = img.get_data()
 		if img.header['dim'][0] > 3:
 			img = collapse(img)
-		if autoinvert and (data <= 0.9).all():
+		if invert:
 			data = -data
 			img = nib.nifti1.Nifti1Image(data, img.affine, img.header)
-		#we should only be looking at the percentile of the active slice
+		#we should only be looking at the percentile of the entire data matrix, rather than just the active slice
 		for level_percentile in levels_percentile:
 			level = np.percentile(data,level_percentile)
 			levels.append(level)
@@ -567,10 +577,13 @@ def contour_slices(bg_image, file_template,
 				else:
 					break
 			break
-		img_min_slice = slice_row[3] + subthreshold_start_slices*slice_row[1]
-		img_max_slice = slice_row[3] + (data.shape[1]-subthreshold_end_slices)*slice_row[1]
+		slice_thickness = (slice_row[0]**2+slice_row[1]**2+slice_row[2]**2)**(1/2)
+		best_guess_negative = abs(min(slice_row[0:3])) > abs(max(slice_row[0:3]))
+		slices_number = data.shape[list(slice_row).index(max(slice_row))]
+		img_min_slice = slice_row[3] + subthreshold_start_slices*slice_thickness
+		img_max_slice = slice_row[3] + (slices_number-subthreshold_end_slices)*slice_thickness
 		bounds.extend([img_min_slice,img_max_slice])
-		if slice_row[1] < 0:
+		if best_guess_negative:
 			slice_order_is_reversed += 1
 		else:
 			slice_order_is_reversed -= 1
@@ -578,7 +591,6 @@ def contour_slices(bg_image, file_template,
 
 	if len(alpha) == 1:
 		alpha = alpha * len(imgs)
-
 	min_slice = min(bounds)
 	max_slice = max(bounds)
 	cut_coords = np.arange(min_slice, max_slice, slice_spacing)
@@ -598,7 +610,7 @@ def contour_slices(bg_image, file_template,
 			nrows, ncols = ratio
 		except ValueError:
 			if ratio == "portrait":
-				ncols = np.floor(cut_coord_length**(scale))
+				ncols = np.floor(cut_coord_length**scale)
 				nrows = np.ceil(cut_coord_length/float(ncols))
 			elif ratio == "landscape":
 				nrows = np.floor(cut_coord_length**(scale))
@@ -607,12 +619,17 @@ def contour_slices(bg_image, file_template,
 		if legend_template and cut_coord_length == ncols*(nrows-1)+1:
 			rcParams['figure.subplot.bottom'] = np.max([rcParams['figure.subplot.bottom']-0.05,0.])
 
-		figsize = np.array(rcParams['figure.figsize'])
-		figsize_scales = figsize/np.array([float(ncols),float(nrows)])
-		figsize_scale = figsize_scales.min()
-		fig, ax = plt.subplots(figsize=(ncols*figsize_scale,nrows*figsize_scale),
-				nrows=int(nrows), ncols=int(ncols),
-				)
+		if auto_figsize:
+			figsize = np.array(rcParams['figure.figsize'])
+			figsize_scales = figsize/np.array([float(ncols),float(nrows)])
+			figsize_scale = figsize_scales.min()
+			fig, ax = plt.subplots(figsize=(ncols*figsize_scale,nrows*figsize_scale),
+					nrows=int(nrows), ncols=int(ncols),
+					)
+		else:
+			fig, ax = plt.subplots(
+					nrows=int(nrows), ncols=int(ncols),
+					)
 		flat_axes = list(ax.flatten())
 		for ix, ax_i in enumerate(flat_axes):
 			try:
@@ -621,16 +638,13 @@ def contour_slices(bg_image, file_template,
 					display_mode='y',
 					cut_coords=[cut_coords[ix]],
 					annotate=False,
+					black_bg=black_bg,
 					dim=dimming,
+					cmap=anatomical_cmap,
 					)
 			except IndexError:
 				ax_i.axis('off')
 			else:
-				save_as = save_as.format(**substitutions[0])
-				save_as = path.abspath(path.expanduser(save_as))
-				plt.savefig(save_as,
-					facecolor=fig.get_facecolor(),
-					)
 				for img_ix, img in enumerate(imgs):
 					color = colors[img_ix]
 					display.add_contours(img,
@@ -651,6 +665,7 @@ def contour_slices(bg_image, file_template,
 		display = nilearn.plotting.plot_anat(bg_img,
 			display_mode='y',
 			cut_coords=cut_coords,
+			black_bg=black_bg,
 			)
 		for ix, img in enumerate(imgs):
 			color = colors[ix]
@@ -663,5 +678,5 @@ def contour_slices(bg_image, file_template,
 		save_as = save_as.format(**substitutions[0])
 		save_as = path.abspath(path.expanduser(save_as))
 		plt.savefig(save_as,
-			facecolor=fig.get_facecolor(),
+			#facecolor=fig.get_facecolor(),
 			)

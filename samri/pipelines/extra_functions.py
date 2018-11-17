@@ -505,7 +505,10 @@ def match_exclude_ss(entry, match, exclude, record, key):
 		return False
 
 def match_exclude_bids(key, values, record, scan_type, number):
-	key_alternatives = BIDS_KEY_DICTIONARY[key]
+	try:
+		key_alternatives = BIDS_KEY_DICTIONARY[key]
+	except KeyError:
+		key_alternatives = [key,]
 	for alternative in key_alternatives:
 		if alternative in scan_type:
 			for value in values:

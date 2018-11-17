@@ -8,6 +8,7 @@ import multiprocessing as mp
 import nipype.interfaces.io as nio
 import nipype.interfaces.utility as util
 import nipype.pipeline.engine as pe
+import os
 from copy import deepcopy
 from itertools import product
 from nipype.interfaces import fsl
@@ -89,6 +90,11 @@ def l1(preprocessing_dir,
 
 	data_selection = bids_data_selection(preprocessing_dir, structural_match=False, functional_match=match, subjects=False, sessions=False)
 	ind = data_selection.index.tolist()
+
+	out_dir = path.join(out_base,workflow_name)
+	if not os.path.exists(out_dir):
+		os.makedirs(out_dir)
+	data_selection.to_csv(path.join(out_dir,'data_selection.csv'))
 
 	get_scan = pe.Node(name='get_scan', interface=util.Function(function=get_bids_scan,input_names=inspect.getargspec(get_bids_scan)[0], output_names=['scan_path','scan_type','task', 'nii_path', 'nii_name', 'events_name', 'subject_session', 'metadata_filename', 'dict_slice']))
 	get_scan.inputs.ignore_exception = True
@@ -327,6 +333,9 @@ def seed_fc(preprocessing_dir,
 	if include:
 		for key in include:
 			data_selection = data_selection[data_selection[key].isin(include[key])]
+	if not os.path.exists(out_dir):
+		os.makedirs(out_dir)
+	data_selection.to_csv(path.join(out_dir,'data_selection.csv'))
 	bids_dictionary = data_selection[data_selection['modality']==modality].drop_duplicates().T.to_dict().values()
 
 	infosource = pe.Node(interface=util.IdentityInterface(fields=['bids_dictionary']), name="infosource")

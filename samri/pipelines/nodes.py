@@ -148,7 +148,8 @@ def DSURQEc_structural_registration(template,
 	f_warp = pe.Node(ants.ApplyTransforms(), name="f_warp")
 	f_warp.inputs.reference_image = path.abspath(path.expanduser(template))
 	f_warp.inputs.input_image_type = 3
-	f_warp.inputs.interpolation = 'NearestNeighbor'
+	f_warp.inputs.interpolation = 'BSpline'
+	f_warp.inputs.interpolation_parameters = (5,)
 	f_warp.inputs.invert_transform_flags = [False, False]
 	#DEPRECATED in =nipype-1.1.0
 	#f_warp.inputs.terminal_output = 'file'
@@ -158,7 +159,8 @@ def DSURQEc_structural_registration(template,
 	s_warp = pe.Node(ants.ApplyTransforms(), name="s_warp")
 	s_warp.inputs.reference_image = path.abspath(path.expanduser(template))
 	s_warp.inputs.input_image_type = 0
-	s_warp.inputs.interpolation = 'NearestNeighbor'
+	s_warp.inputs.interpolation = 'BSpline'
+	s_warp.inputs.interpolation_parameters = (5,)
 	s_warp.inputs.invert_transform_flags = [False]
 	#DEPRECATED in =nipype-1.1.0
 	#s_warp.inputs.terminal_output = 'file'

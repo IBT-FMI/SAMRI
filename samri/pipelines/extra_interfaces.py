@@ -1,5 +1,6 @@
-from nipype.interfaces.base import BaseInterface, BaseInterfaceInputSpec, traits, File, TraitedSpec, Directory, CommandLineInputSpec, CommandLine, InputMultiPath, isdefined, Bunch, OutputMultiPath, load_template
+from nipype.interfaces.base import BaseInterface, BaseInterfaceInputSpec, traits, File, Str, TraitedSpec, Directory, CommandLineInputSpec, CommandLine, InputMultiPath, isdefined, Bunch, OutputMultiPath, load_template
 from nipype.interfaces.afni.base import AFNICommandOutputSpec, AFNICommandInputSpec, AFNICommand
+from nipype.interfaces.ants.base import ANTSCommand, ANTSCommandInputSpec
 from nipype.interfaces.fsl.base import FSLCommandInputSpec, FSLCommand
 from nipype.utils.filemanip import split_filename
 from itertools import product
@@ -982,3 +983,59 @@ class Bru2(CommandLine):
 				os.getcwd(),
 				os.path.basename(os.path.normpath(self.inputs.input_dir)))
 			return outfile
+
+class CompositeTransformUtilInputSpec(ANTSCommandInputSpec):
+	process = traits.Enum('assemble', 'disassemble', argstr='--%s',
+		position=1, usedefault=True,
+		desc='What to do with the transform inputs (assemble or disassemble)',
+		)
+	in_file = InputMultiPath(File(exists=True), mandatory=True, argstr='%s...',
+		position=2, desc='Input transform file(s)')
+	output_prefix = Str("transform", usedefault=True, argstr='%s',
+		position=3, desc="A prefix that is prepended to all output files")
+
+class CompositeTransformUtilOutputSpec(TraitedSpec):
+	affine_transform = File(exists=True, desc="Affine transform component",
+			mandatory=True, position=2)
+	displacement_field = File(desc="Displacement field component")
+
+class CompositeTransformUtil(ANTSCommand):
+	"""
+	ANTs utility which can combine or break apart transform files into their individual
+	constituent components.
+
+	Examples
+	--------
+
+	>>> from nipype.interfaces.ants import CompositeTransformUtil
+	>>> tran = CompositeTransformUtil()
+	>>> tran.inputs.process = 'disassemble'
+	>>> tran.inputs.in_file = 'output_Composite.h5'
+	>>> reg.cmdline
+	'CompositeTransformUtil --disassemble output_Composite.h5 transform'
+	>>> reg.run()  # doctest: +SKIP
+	"""
+
+	_cmd = 'CompositeTransformUtil'
+	input_spec = CompositeTransformUtilInputSpec
+	output_spec = CompositeTransformUtilOutputSpec
+
+	def _num_threads_update(self):
+		"""
+		CompositeTransformUtil ignores environment variables,
+		so override environment update from ANTSCommand class
+		"""
+		pass
+
+	def _format_arg(self, name, spec, value):
+		if name == 'output_prefix' and self.inputs.process == 'assemble':
+			value = ''
+		return super(CompositeTransformUtil, self)._format_arg(name, spec, value)
+
+	def _list_outputs(self):
+		outputs = self.output_spec().get()
+		outputs['affine_transform'] = os.path.abspath(
+			'00_'+self.inputs.output_prefix+'_AffineTransform.mat')
+		outputs['displacement_field'] = os.path.abspath(
+			'01_'+self.inputs.output_prefix+'_DisplacementFieldTransform.nii.gz')
+		return outputs

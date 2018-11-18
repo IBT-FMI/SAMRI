@@ -693,9 +693,10 @@ def common_select(bids_base, out_base, workflow_name, template, registration_mas
 
 
 	data_selection = bids_data_selection(bids_base, structural_match, functional_match, subjects, sessions)
-	if not os.path.exists(out_dir):
-		os.makedirs(out_dir)
-	data_selection.to_csv(path.join(out_dir,'data_selection.csv'))
+	workdir = out_dir + '_work'
+	if not os.path.exists(workdir):
+		os.makedirs(workdir)
+	data_selection.to_csv(path.join(workdir,'data_selection.csv'))
 
 	# generate functional and structural scan types
 	functional_scan_types = data_selection.loc[data_selection.type == 'func']['scan_type'].values

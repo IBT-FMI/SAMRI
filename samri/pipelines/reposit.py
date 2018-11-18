@@ -102,8 +102,8 @@ def bru2bids(measurements_base,
 	else:
 		out_base = measurements_base
 	out_dir = path.join(out_base,workflow_name)
-	if not os.path.exists(out_dir):
-		os.makedirs(out_dir)
+	workdir_name = workflow_name+'_work'
+	workdir = path.join(out_base,workdir_name)
 
 	# define measurement directories to be processed, and populate the list either with the given include_measurements, or with an intelligent selection
 	functional_scan_types = diffusion_scan_types = structural_scan_types = []
@@ -155,7 +155,9 @@ def bru2bids(measurements_base,
 		]
 
 	if functional_scan_types:
-		f_data_selection.to_csv(path.join(out_dir,'f_data_selection.csv'))
+		if not os.path.exists(workdir):
+			os.makedirs(workdir)
+		f_data_selection.to_csv(path.join(workdir,'f_data_selection.csv'))
 		get_f_scan = pe.Node(name='get_f_scan', interface=util.Function(function=get_bids_scan,input_names=inspect.getargspec(get_bids_scan)[0], output_names=[
 			'scan_path', 'typ', 'task', 'nii_path', 'nii_name', 'eventfile_name', 'subject_session', 'metadata_filename', 'dict_slice',
 			]))
@@ -205,7 +207,6 @@ def bru2bids(measurements_base,
 				'log_to_file':'true',
 				}
 
-		workdir_name = workflow_name+'_work'
 		workflow = pe.Workflow(name=workdir_name)
 		workflow.connect(workflow_connections)
 		workflow.base_dir = path.join(out_base)
@@ -229,6 +230,10 @@ def bru2bids(measurements_base,
 				pass
 
 	if diffusion_scan_types:
+		# We check for the directory, since it gets deleted after a successful execution.
+		if not os.path.exists(workdir):
+			os.makedirs(workdir)
+		d_data_selection.to_csv(path.join(workdir,'d_data_selection.csv'))
 		get_d_scan = pe.Node(name='get_d_scan', interface=util.Function(function=get_bids_scan,input_names=inspect.getargspec(get_bids_scan)[0], output_names=[
 			'scan_path', 'typ', 'task', 'nii_path', 'nii_name', 'eventfile_name', 'subject_session', 'metadata_filename', 'dict_slice',
 			]))
@@ -305,7 +310,6 @@ def bru2bids(measurements_base,
 				'log_to_file':'true',
 				}
 
-		workdir_name = workflow_name+'_work'
 		workflow = pe.Workflow(name=workdir_name)
 		workflow.connect(workflow_connections)
 		workflow.base_dir = path.join(out_base)
@@ -329,7 +333,10 @@ def bru2bids(measurements_base,
 				pass
 
 	if structural_scan_types:
-		s_data_selection.to_csv(path.join(out_base,workflow_name,'s_data_selection.csv'))
+		# We check for the directory, since it gets deleted after a successful execution.
+		if not os.path.exists(workdir):
+			os.makedirs(workdir)
+		s_data_selection.to_csv(path.join(workdir,'s_data_selection.csv'))
 		get_s_scan = pe.Node(name='get_s_scan', interface=util.Function(function=get_bids_scan,input_names=inspect.getargspec(get_bids_scan)[0], output_names=[
 			'scan_path', 'typ', 'task', 'nii_path', 'nii_name', 'eventfile_name', 'subject_session', 'metadata_filename', 'dict_slice',
 			]))
@@ -370,7 +377,6 @@ def bru2bids(measurements_base,
 				'log_to_file':'true',
 				}
 
-		workdir_name = workflow_name+'_work'
 		workflow = pe.Workflow(name=workdir_name)
 		workflow.connect(workflow_connections)
 		workflow.base_dir = path.join(out_base)

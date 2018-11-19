@@ -275,6 +275,7 @@ def df_significant_signal(df,
 	save_as='',
 	n_jobs=False,
 	n_jobs_percentage=0.8,
+	column_string='Significance'
 	):
 	"""
 	Create a `pandas.DataFrame` (optionally savable as `.csv`), containing the means and medians of a number of p-value maps specified by a file template supporting substitution and a substitution list of dictionaries.
@@ -289,6 +290,8 @@ def df_significant_signal(df,
 		Path to a mask in the same coordinate space as the p-value maps.
 	save_as : str, optional
 		Path to which to save the Pandas DataFrame.
+	column_string : str, optional
+		String to append after 'Mean' and 'Median' to construct the name of the mean and median columns.
 
 	Returns
 	-------
@@ -311,8 +314,8 @@ def df_significant_signal(df,
 		[None]*iter_length,
 		[mask_path]*iter_length,
 		))
-	df['Mean Significance'] = [i[0] for i in iter_data]
-	df['Median Significance'] = [i[1] for i in iter_data]
+	df['Mean '+column_string] = [i[0] for i in iter_data]
+	df['Median '+column_string] = [i[1] for i in iter_data]
 
 	if save_as:
 		save_as = path.abspath(path.expanduser(save_as))

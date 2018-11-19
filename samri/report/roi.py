@@ -105,10 +105,6 @@ def mean(img_path, mask_path):
 			mask=mask[0]
 		img_path = path.abspath(path.expanduser(img_path))
 		img = nib.load(img_path)
-		print(mask)
-		print(np.shape(mask))
-		print(np.shape(img))
-		print(img[mask])
 	else:
 		masker = NiftiMasker(mask_img=mask)
 		roi_df(img_path,masker)

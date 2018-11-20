@@ -92,9 +92,11 @@ def l1(preprocessing_dir,
 	ind = data_selection.index.tolist()
 
 	out_dir = path.join(out_base,workflow_name)
-	if not os.path.exists(out_dir):
-		os.makedirs(out_dir)
-	data_selection.to_csv(path.join(out_dir,'data_selection.csv'))
+	workdir_name = workflow_name+'_work'
+	workdir = path.join(out_base,workdir_name)
+	if not os.path.exists(workdir):
+		os.makedirs(workdir)
+	data_selection.to_csv(path.join(workdir,'data_selection.csv'))
 
 	get_scan = pe.Node(name='get_scan', interface=util.Function(function=get_bids_scan,input_names=inspect.getargspec(get_bids_scan)[0], output_names=['scan_path','scan_type','task', 'nii_path', 'nii_name', 'events_name', 'subject_session', 'metadata_filename', 'dict_slice']))
 	get_scan.inputs.ignore_exception = True
@@ -251,7 +253,6 @@ def l1(preprocessing_dir,
 			'log_to_file':'true',
 			}
 
-	workdir_name = workflow_name+"_work"
 	workflow = pe.Workflow(name=workdir_name)
 	workflow.connect(workflow_connections)
 	workflow.base_dir = out_base

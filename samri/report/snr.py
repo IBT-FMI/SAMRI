@@ -4,9 +4,10 @@ import pandas as pd
 import scipy.stats as sps
 import multiprocessing as mp
 from os import path
-from joblib import Parallel, delayed
-from samri.utilities import collapse
 from copy import deepcopy
+from joblib import Parallel, delayed
+from nilearn.input_data import NiftiMasker
+from samri.utilities import collapse
 
 try:
 	FileNotFoundError
@@ -250,15 +251,14 @@ def significant_signal(data_path,
 		data_path = data_path.format(**substitution)
 	data_path = path.abspath(path.expanduser(data_path))
 	try:
-		data = nib.load(data_path).get_data()
+		img = nib.load(data_path)
 	except FileNotFoundError:
 		return float('NaN'), float('NaN')
 	if mask_path:
 		mask_path = path.abspath(path.expanduser(mask_path))
-		mask = nib.load(mask_path).get_data()
-		mask = (mask < 0.5).astype(int)
-		data = np.ma.masked_array(data, mask=mask)
-		data = data[~np.isnan(data)]
+		masker = NiftiMasker(mask_img=mask_path)
+		masked_data = masker.fit_transform(img).T
+		data = masked_data[~np.isnan(masked_data)]
 	nonzero = data[np.nonzero(data)]
 	data_min = np.min(nonzero)*0.99
 	data[data == 0] = data_min

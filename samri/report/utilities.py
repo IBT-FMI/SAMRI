@@ -1,7 +1,9 @@
+import multiprocessing as mp
 import numpy as np
 import nibabel as nib
 import pandas as pd
 from copy import deepcopy
+from joblib import Parallel, delayed
 from nilearn.input_data import NiftiMasker
 from os import path
 
@@ -55,8 +57,67 @@ def roi_df(img_path, masker,
 		df = pd.DataFrame(subject_data, index=[None])
 		return df
 
+def df_roi_data(df,
+	mask_path='',
+	save_as='',
+	n_jobs=False,
+	n_jobs_percentage=0.8,
+	column_string='ROI Value',
+	):
+	"""
+	Create a `pandas.DataFrame` (optionally savable as `.csv`), containing new means and medians columns of the values located within a roi in the files specified by the path column of an input DataFrame.
+	This function is a Pandas DataFrame based iteration wrapper of `samri.report.utils.roi_data()`.
+
+	Parameters
+	----------
+
+	df : pandas.DataFrame
+		A BIDS-Information Pandas DataFrame which includes a column named 'path'.
+	mask_path : str, optional
+		Path to a mask in the same coordinate space as the p-value maps.
+	save_as : str, optional
+		Path to which to save the Pandas DataFrame.
+	column_string : str, optional
+		String to append after 'Mean' and 'Median' to construct the name of the mean and median columns.
+
+	Returns
+	-------
+
+	pandas.DataFrame
+		Pandas DataFrame object containing a row for each analyzed file and columns named 'Mean', 'Median', and (provided the respective key is present in the `sustitutions` variable) 'subject', 'session', 'task', and 'acquisition'.
+	"""
+
+	#Do not overwrite the input object
+	df = deepcopy(df)
+
+	in_files = df['path'].tolist()
+	iter_length = len(in_files)
+
+	# Convert mask path to masker
+	mask_path = path.abspath(path.expanduser(mask_path))
+	mask = NiftiMasker(mask_img=mask_path)
+
+	# This is an easy jop CPU-wise, but not memory-wise.
+	if not n_jobs:
+		n_jobs = max(int(round(mp.cpu_count()*n_jobs_percentage)),2)
+	iter_data = Parallel(n_jobs=n_jobs, verbose=0, backend="threading")(map(delayed(roi_data),
+		in_files,
+		[mask]*iter_length,
+		[None]*iter_length,
+		))
+	df['Mean '+column_string] = [i[0] for i in iter_data]
+	df['Median '+column_string] = [i[1] for i in iter_data]
+
+	if save_as:
+		save_as = path.abspath(path.expanduser(save_as))
+		if save_as.lower().endswith('.csv'):
+			df.to_csv(save_as)
+		else:
+			raise ValueError("Please specify an output path ending in any one of "+",".join((".csv",))+".")
+	return df
+
 def roi_data(img_path, masker,
-	substitution=False,
+	substitution={},
 	):
 	"""
 	Return the mean of a Region of Interest (ROI) score.
@@ -81,8 +142,9 @@ def roi_data(img_path, masker,
 		masker = path.abspath(path.expanduser(masker))
 		masker = NiftiMasker(mask_img=masker)
 		masked_data = masker.fit_transform(img).T
-	masked_mean = np.mean(masked_data, axis=0)
-	return masked_mean
+	masked_mean = np.mean(masked_data, axis=0)[0]
+	masked_median = np.median(masked_data, axis=0)[0]
+	return masked_mean, masked_median
 
 def pattern_df(img_path, pattern,
 	substitution=False,

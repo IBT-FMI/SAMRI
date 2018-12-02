@@ -233,12 +233,11 @@ def legacy(bids_base, template,
 			(f_swapdim, f_warp, [('out_file', 'input_image')]),
 			])
 
-	blur = pe.Node(interface=afni.preprocess.BlurToFWHM(), name="blur")
-	blur.inputs.fwhmxy = functional_blur_xy
-
 	if functional_blur_xy:
+		blur = pe.Node(interface=afni.preprocess.BlurToFWHM(), name="blur")
+		blur.inputs.fwhmxy = functional_blur_xy
 		workflow_connections.extend([
-			(get_f_scan, blur, [('nii_name','output_image')]),
+			(get_f_scan, blur, [('nii_name','out_file')]),
 			(f_copysform2qform, blur, [('out_file', 'in_file')]),
 			(blur, datasink, [('out_file', 'func')]),
 			])
@@ -613,12 +612,11 @@ def generic(bids_base, template,
 				])
 
 
-	blur = pe.Node(interface=afni.preprocess.BlurToFWHM(), name="blur")
-	blur.inputs.fwhmxy = functional_blur_xy
-
 	if functional_blur_xy:
+		blur = pe.Node(interface=afni.preprocess.BlurToFWHM(), name="blur")
+		blur.inputs.fwhmxy = functional_blur_xy
 		workflow_connections.extend([
-			(get_f_scan, blur, [('nii_name','output_image')]),
+			(get_f_scan, blur, [('nii_name','out_file')]),
 			(f_warp, blur, [('output_image', 'in_file')]),
 			(blur, datasink, [('out_file', 'func')]),
 			])

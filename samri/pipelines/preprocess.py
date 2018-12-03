@@ -252,7 +252,7 @@ def legacy(bids_base, template,
 			])
 
 
-	workflow_config = {'execution': {'crashdump_dir': path.join(bids_base,'preprocessing/crashdump'),}}
+	workflow_config = {'execution': {'crashdump_dir': path.join(out_base,'crashdump'),}}
 	if debug:
 		workflow_config['logging'] = {
 			'workflow_level':'DEBUG',

@@ -113,10 +113,12 @@ def roi_based(
 		if isinstance(roi, str):
 			roi = path.abspath(path.expanduser(roi))
 			roi = nib.load(roi)
-		masker = NiftiMasker(mask_img=roi)
 		if ts_filename:
 			ts_file = path.expanduser(ts_filename.format(**substitutions))
-			final_time_series = masker.fit_transform(ts_file).T
+			ts_file = nib.load(ts_file)
+			masker = NiftiMasker(mask_img=roi, target_affine=ts_file.affine)
+			final_time_series = masker.fit_transform(ts_file)
+			final_time_series = final_time_series.T
 			final_time_series = np.mean(final_time_series, axis=0)
 			if flip:
 				ax.plot(final_time_series, np.arange(len(final_time_series)), color=ts_color)
@@ -127,8 +129,8 @@ def roi_based(
 	else:
 		if ts_filename:
 			ts_file = path.expanduser(ts_filename.format(**substitutions))
-			img = nib.load(ts_file)
-			final_time_series = img.get_data()
+			ts_file = nib.load(ts_file)
+			final_time_series = ts_file.get_data()
 			final_time_series = np.mean(final_time_series, axis=0)
 			final_time_series = np.mean(final_time_series, axis=0)
 			final_time_series = np.mean(final_time_series, axis=0)

@@ -146,6 +146,8 @@ def roi_based(
 		design_df = pd.read_csv(design_file, skiprows=5, sep="\t", header=None, index_col=False)
 		if beta_filename and roi:
 			beta_file = path.expanduser(beta_filename.format(**substitutions))
+			beta_file = nib.load(beta_file)
+			masker = NiftiMasker(mask_img=roi, target_affine=beta_file.affine)
 			roi_betas = masker.fit_transform(beta_file).T
 			design_df = design_df*np.mean(roi_betas)
 		for i in plot_design_regressors:

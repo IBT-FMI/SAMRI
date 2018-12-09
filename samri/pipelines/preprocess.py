@@ -6,6 +6,7 @@ from copy import deepcopy
 from itertools import product
 from os import path
 
+import multiprocessing as mp
 import nipype.interfaces.io as nio
 import nipype.interfaces.utility as util
 import nipype.pipeline.engine as pe
@@ -38,7 +39,8 @@ def legacy(bids_base, template,
 	functional_match={},
 	keep_work=False,
 	negative_contrast_agent=False,
-	n_procs=N_PROCS,
+	n_jobs=False,
+	n_jobs_percentage=0.8,
 	out_base=None,
 	realign="time",
 	registration_mask=False,
@@ -71,8 +73,10 @@ def legacy(bids_base, template,
 		The dictionary should have keys which are 'acquisition', 'task', or 'modality', and values which are lists of acceptable strings for the respective BIDS field.
 	keep_work : bool, str
 		Whether to keep the work directory after workflow conclusion (this directory contains all the intermediary processing commands, inputs, and outputs --- it is invaluable for debugging but many times larger in size than the actual output).
-	n_procs : int, optional
-		Number of processors to maximally use for the workflow; if unspecified a best guess will be estimate based on hardware (but not on current load).
+	n_jobs : int, optional
+		Number of processors to maximally use for the workflow; if unspecified a best guess will be estimate based on `n_jobs_percentage` and hardware (but not on current load).
+	n_jobs_percentage : float, optional
+		Percentage of available processors (as in available hardware, not available free load) to maximally use for the workflow (this is overriden by `n_jobs`).
 	out_base : str, optional
 		Output base directory --- inside which a directory named `workflow_name` (as well as associated directories) will be created.
 	realign : {"space","time","spacetime",""}, optional
@@ -105,6 +109,9 @@ def legacy(bids_base, template,
 			subjects,
 			sessions,
 			)
+
+	if not n_jobs:
+		n_jobs = max(int(round(mp.cpu_count()*n_jobs_percentage)),2)
 
 	get_f_scan = pe.Node(name='get_f_scan', interface=util.Function(function=get_bids_scan,input_names=inspect.getargspec(get_bids_scan)[0], output_names=['scan_path', 'scan_type', 'task', 'nii_path', 'nii_name', 'events_name', 'subject_session','metadata_filename','dict_slice']))
 	get_f_scan.inputs.ignore_exception = True
@@ -270,7 +277,7 @@ def legacy(bids_base, template,
 	workflow.config = workflow_config
 	workflow.write_graph(dotfilename=path.join(workflow.base_dir,workdir_name,"graph.dot"), graph2use="hierarchical", format="png")
 
-	workflow.run(plugin="MultiProc", plugin_args={'n_procs' : n_procs})
+	workflow.run(plugin="MultiProc", plugin_args={'n_procs' : n_jobs})
 	if not keep_work:
 		workdir = path.join(workflow.base_dir,workdir_name)
 		try:
@@ -296,7 +303,8 @@ def generic(bids_base, template,
 	functional_registration_method="composite",
 	keep_work=False,
 	negative_contrast_agent=False,
-	n_procs=N_PROCS,
+	n_jobs=False,
+	n_jobs_percentage=0.8,
 	out_base=None,
 	realign="time",
 	registration_mask="",
@@ -336,8 +344,10 @@ def generic(bids_base, template,
 		Values mean the following: 'composite' that it will be registered to the structural scan which will in turn be registered to the template, 'functional' that it will be registered directly, 'structural' that it will be registered exactly as the structural scan.
 	keep_work : bool, str
 		Whether to keep the work directory after workflow conclusion (this directory contains all the intermediary processing commands, inputs, and outputs --- it is invaluable for debugging but many times larger in size than the actual output).
-	n_procs : int, optional
-		Number of processors to maximally use for the workflow; if unspecified a best guess will be estimate based on hardware (but not on current load).
+	n_jobs : int, optional
+		Number of processors to maximally use for the workflow; if unspecified a best guess will be estimate based on `n_jobs_percentage` and hardware (but not on current load).
+	n_jobs_percentage : float, optional
+		Percentage of available processors (as in available hardware, not available free load) to maximally use for the workflow (this is overriden by `n_jobs`).
 	out_base : str, optional
 		Output base directory --- inside which a directory named `workflow_name`(as well as associated directories) will be created.
 	realign : {"space","time","spacetime",""}, optional
@@ -370,6 +380,9 @@ def generic(bids_base, template,
 			subjects,
 			sessions,
 			)
+
+	if not n_jobs:
+		n_jobs = max(int(round(mp.cpu_count()*n_jobs_percentage)),2)
 
 	get_f_scan = pe.Node(name='get_f_scan', interface=util.Function(function=get_bids_scan,input_names=inspect.getargspec(get_bids_scan)[0], output_names=['scan_path','scan_type','task', 'nii_path', 'nii_name', 'events_name', 'subject_session', 'metadata_filename', 'dict_slice']))
 	get_f_scan.inputs.ignore_exception = True
@@ -645,7 +658,7 @@ def generic(bids_base, template,
 	workflow.config = workflow_config
 	workflow.write_graph(dotfilename=path.join(workflow.base_dir,workdir_name,"graph.dot"), graph2use="hierarchical", format="png")
 
-	workflow.run(plugin="MultiProc", plugin_args={'n_procs' : n_procs})
+	workflow.run(plugin="MultiProc", plugin_args={'n_procs' : n_jobs})
 	if not keep_work:
 		workdir = path.join(workflow.base_dir,workdir_name)
 		try:

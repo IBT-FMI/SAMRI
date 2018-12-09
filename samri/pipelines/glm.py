@@ -72,8 +72,6 @@ def l1(preprocessing_dir,
 	mask : str, optional
 		Path to the brain mask which shall be used to define the brain volume in the analysis.
 		This has to point to an existing NIfTI file containing zero and one values only.
-	match : str, optional
-		Regex matching pattern by which to select input files. Has to contain groups named "sub", "ses", "acq", "task", and "mod".
 	n_jobs_percentage : float, optional
 		Percentage of the cores present on the machine which to maximally use for deploying jobs in parallel.
 	tr : int, optional
@@ -492,32 +490,46 @@ def add_suffix(name, suffix):
 def l2_common_effect(l1_dir,
 	groupby="session",
 	keep_work=False,
-	l2_dir="",
 	loud=False,
 	tr=1,
 	nprocs=6,
-	workflow_name="generic",
 	mask="/usr/share/mouse-brain-atlases/dsurqec_200micron_mask.nii",
+	match={},
+	n_jobs_percentage=1,
+	out_base="",
 	subjects=[],
 	sessions=[],
 	tasks=[],
 	exclude={},
 	include={},
+	workflow_name="generic",
+	debug=False,
 	):
+	"""Determine the common effect in a sample of 3D feature maps.
 
-	l1_dir = path.expanduser(l1_dir)
-	if not l2_dir:
-		l2_dir = path.abspath(path.join(l1_dir,"..","..","l2"))
+	Parameters
+	----------
 
+	n_jobs_percentage : float, optional
+		Percentage of the cores present on the machine which to maximally use for deploying jobs in parallel.
+	"""
+
+	from samri.pipelines.utils import bids_data_selection
+
+	l1_dir = path.abspath(path.expanduser(l1_dir))
+	out_base = path.abspath(path.expanduser(out_base))
 	mask=path.abspath(path.expanduser(mask))
 
-	datafind = nio.DataFinder()
-	datafind.inputs.root_paths = l1_dir
-	datafind.inputs.match_regex = '.+/sub-(?P<sub>[a-zA-Z0-9]+)/ses-(?P<ses>[a-zA-Z0-9]+)/.*?_acq-(?P<acq>[a-zA-Z0-9]+)_task-(?P<task>[a-zA-Z0-9]+)_(?P<mod>[a-zA-Z0-9]+)_(?P<stat>[a-zA-Z0-9]+)\.(?:tsv|nii|nii\.gz)'
-	datafind_res = datafind.run()
-	data_selection = zip(*[datafind_res.outputs.sub, datafind_res.outputs.ses, datafind_res.outputs.acq, datafind_res.outputs.task, datafind_res.outputs.mod, datafind_res.outputs.stat, datafind_res.outputs.out_paths])
-	data_selection = [list(i) for i in data_selection]
-	data_selection = pd.DataFrame(data_selection,columns=('subject','session','acquisition','task','modality','statistic','path'))
+	data_selection = bids_data_selection(l1_dir, structural_match=False, functional_match=match, subjects=False, sessions=False)
+	ind = data_selection.index.tolist()
+
+	out_dir = path.join(out_base,workflow_name)
+	workdir_name = workflow_name+'_work'
+	workdir = path.join(out_base,workdir_name)
+	if not os.path.exists(workdir):
+		os.makedirs(workdir)
+	data_selection.to_csv(path.join(workdir,'data_selection.csv'))
+
 	data_selection = data_selection.sort_values(['session', 'subject'], ascending=[1, 1])
 	if exclude:
 		for key in exclude:
@@ -536,7 +548,7 @@ def l2_common_effect(l1_dir,
 	flameo.inputs.run_mode = "ols"
 
 	datasink = pe.Node(nio.DataSink(), name='datasink')
-	datasink.inputs.base_directory = path.join(l2_dir,workflow_name)
+	datasink.inputs.base_directory = out_dir
 	datasink.inputs.substitutions = [('_iterable_', ''),]
 
 	if groupby == "subject":
@@ -580,7 +592,9 @@ def l2_common_effect(l1_dir,
 			]
 	elif groupby == "session":
 		sessions = data_selection[['session']].drop_duplicates()
-		sessions = sessions.T.to_dict().values()
+		# TODO: could not find a better way to convert pandas df column into list of dicts
+		sessions_ = sessions.T.to_dict()
+		sessions = [sessions_[i] for i in sessions_.keys()]
 
 		infosource = pe.Node(interface=util.IdentityInterface(fields=['iterable']), name="infosource")
 		infosource.iterables = [('iterable', sessions)]
@@ -632,14 +646,23 @@ def l2_common_effect(l1_dir,
 		(flameo, datasink, [('zstats', '@zstats')]),
 		])
 
-	workdir_name = workflow_name+"_work"
+	workflow_config = {'execution': {'crashdump_dir': path.join(out_base,'crashdump'),}}
+	if debug:
+		workflow_config['logging'] = {
+			'workflow_level':'DEBUG',
+			'utils_level':'DEBUG',
+			'interface_level':'DEBUG',
+			'filemanip_level':'DEBUG',
+			'log_to_file':'true',
+			}
+
 	workflow = pe.Workflow(name=workdir_name)
 	workflow.connect(workflow_connections)
-	workflow.config = {"execution": {"crashdump_dir": path.join(l2_dir,"crashdump")}}
-	workflow.base_dir = l2_dir
+	workflow.base_dir = out_base
+	workflow.config = workflow_config
 	workflow.write_graph(dotfilename=path.join(workflow.base_dir,workdir_name,"graph.dot"), graph2use="hierarchical", format="png")
 
-
+	n_jobs = max(int(round(mp.cpu_count()*n_jobs_percentage)),2)
 	if not loud:
 		try:
 			workflow.run(plugin="MultiProc", plugin_args={'n_procs' : nprocs})
@@ -649,11 +672,9 @@ def l2_common_effect(l1_dir,
 			if re.search("crash.*?-varcopemerge|-copemerge.*", f):
 				remove(path.join(getcwd(), f))
 	else:
-		workflow.run(plugin="MultiProc", plugin_args={'n_procs' : nprocs})
-
-
+		workflow.run(plugin="MultiProc", plugin_args={'n_procs' : n_jobs})
 	if not keep_work:
-		shutil.rmtree(path.join(l2_dir,workdir_name))
+		shutil.rmtree(path.join(out_base,workdir_name))
 
 def mylen(foo):
 	return len(foo)

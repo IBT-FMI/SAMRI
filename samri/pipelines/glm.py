@@ -527,7 +527,6 @@ def l2_common_effect(l1_dir,
 		sessions=False,
 		verbose=True,
 		)
-	print(data_selection)
 	ind = data_selection.index.tolist()
 
 	out_dir = path.join(out_base,workflow_name)

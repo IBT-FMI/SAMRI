@@ -142,8 +142,11 @@ def roi_data(img_path, masker,
 		masker = path.abspath(path.expanduser(masker))
 		masker = NiftiMasker(mask_img=masker)
 		masked_data = masker.fit_transform(img).T
-	masked_mean = np.mean(masked_data, axis=0)[0]
-	masked_median = np.median(masked_data, axis=0)[0]
+	# Dunno why this was done like this
+	#masked_mean = np.mean(masked_data, axis=0)[0]
+	#masked_median = np.median(masked_data, axis=0)[0]
+	masked_mean = np.mean(masked_data)
+	masked_median = np.median(masked_data)
 	return masked_mean, masked_median
 
 def pattern_df(img_path, pattern,

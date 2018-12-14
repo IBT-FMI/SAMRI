@@ -520,7 +520,14 @@ def l2_common_effect(l1_dir,
 	out_base = path.abspath(path.expanduser(out_base))
 	mask=path.abspath(path.expanduser(mask))
 
-	data_selection = bids_data_selection(l1_dir, structural_match=False, functional_match=match, subjects=False, sessions=False)
+	data_selection = bids_data_selection(l1_dir,
+		structural_match=False,
+		functional_match=match,
+		subjects=False,
+		sessions=False,
+		verbose=True,
+		)
+	print(data_selection)
 	ind = data_selection.index.tolist()
 
 	out_dir = path.join(out_base,workflow_name)
@@ -600,12 +607,12 @@ def l2_common_effect(l1_dir,
 		infosource.iterables = [('iterable', sessions)]
 
 		copes = pe.Node(name='copes', interface=util.Function(function=select_from_datafind_df, input_names=inspect.getargspec(select_from_datafind_df)[0], output_names=['selection']))
-		copes.inputs.bids_dictionary_override = {'statistic':'cope'}
+		copes.inputs.bids_dictionary_override = {'modality':'cope'}
 		copes.inputs.df = data_selection
 		copes.inputs.list_output = True
 
 		varcopes = pe.Node(name='varcopes', interface=util.Function(function=select_from_datafind_df, input_names=inspect.getargspec(select_from_datafind_df)[0], output_names=['selection']))
-		varcopes.inputs.bids_dictionary_override = {'statistic':'varcb'}
+		varcopes.inputs.bids_dictionary_override = {'modality':'varcb'}
 		varcopes.inputs.df = data_selection
 		varcopes.inputs.list_output = True
 
@@ -720,8 +727,8 @@ def l2_anova(l1_dir,
 		for key in include:
 			data_selection = data_selection[data_selection[key].isin(include[key])]
 
-	copes = data_selection[data_selection['statistic']=='cope']['path'].tolist()
-	varcopes = data_selection[data_selection['statistic']=='varcb']['path'].tolist()
+	copes = data_selection[data_selection['modality']=='cope']['path'].tolist()
+	varcopes = data_selection[data_selection['modality']=='varcb']['path'].tolist()
 
 	copemerge = pe.Node(interface=fsl.Merge(dimension='t'),name="copemerge")
 	copemerge.inputs.in_files = copes
@@ -731,7 +738,7 @@ def l2_anova(l1_dir,
 	varcopemerge.inputs.in_files = varcopes
 	varcopemerge.inputs.merged_file = 'varcopes.nii.gz'
 
-	copeonly = data_selection[data_selection['statistic']=='cope']
+	copeonly = data_selection[data_selection['modality']=='cope']
 	regressors = {}
 	for sub in copeonly['subject'].unique():
 		#print(sub)

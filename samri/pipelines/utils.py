@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import print_function, division, unicode_literals, absolute_import
+import os
 import pandas as pd
 from bids.grabbids import BIDSLayout
 from bids.grabbids import BIDSValidator
@@ -157,9 +158,11 @@ def bids_data_selection(base, structural_match, functional_match, subjects, sess
 	#df.loc[df.modality == 'func', 'scan_type'] = 'acq-'+df['acq']+'_task-'+  df.path.str.partition('task-')[2].str.partition('.')[0]
 	#df.loc[df.modality == 'anat', 'scan_type'] = 'acq-'+df['acq']+'_' + df['type']
 	#TODO: fix task!=type
-	df.loc[df.modality == 'func', 'task'] = df.path.str.partition('task-')[2].str.partition('_')[0]
-	df.loc[df.modality == 'func', 'scan_type'] = 'task-' + df['task'] + '_acq-'+ df['acq']
-	df.loc[df.modality == 'anat', 'scan_type'] = 'acq-'+df['acq'] +'_' + df['type']
+	if 'func' in df.columns:
+		df.loc[df.modality == 'func', 'task'] = df.path.str.partition('task-')[2].str.partition('_')[0]
+		df.loc[df.modality == 'func', 'scan_type'] = 'task-' + df['task'] + '_acq-'+ df['acq']
+	if 'anat' in df.columns:
+		df.loc[df.modality == 'anat', 'scan_type'] = 'acq-'+df['acq'] +'_' + df['type']
 
 	#TODO: The following should be collapsed into one criterion category
 	if functional_match or structural_match:

@@ -3,6 +3,10 @@ import nilearn
 import numpy as np
 import pandas as pd
 from os import path
+import subprocess
+import sys
+import io
+import os
 
 #Here we import internal nilearn functions, YOLO!
 from nilearn._utils.niimg import _safe_get_data
@@ -17,11 +21,14 @@ from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 from samri.fetch.local import roi_from_atlaslabel
 from samri.plotting.utilities import QUALITATIVE_COLORSET
 from samri.utilities import collapse
+from samri.plotting.create_mesh_featuremaps import create_mesh 
 
 COLORS_PLUS = plt.cm.autumn(np.linspace(0., 1, 128))
 COLORS_MINUS = plt.cm.winter(np.linspace(0, 1, 128))
 COLORS = np.vstack((COLORS_MINUS, COLORS_PLUS[::-1]))
 MYMAP = mcolors.LinearSegmentedColormap.from_list('my_colormap', COLORS)
+MYMAP_MINUS = mcolors.LinearSegmentedColormap.from_list('my_colormap', COLORS_MINUS)
+MYMAP_PLUS = mcolors.LinearSegmentedColormap.from_list('my_colormap', COLORS_PLUS[::-1])
 
 def _draw_colorbar(stat_map_img, axes,
 	threshold=.1,
@@ -31,11 +38,23 @@ def _draw_colorbar(stat_map_img, axes,
 	aspect=40,
 	fraction=0.025,
 	anchor=(10.0,0.5),
+	cut_coords = [None],
+	pos_values = False
 	):
 	if isinstance(stat_map_img, str):
 		stat_map_img = path.abspath(path.expanduser(stat_map_img))
 		stat_map_img = nib.load(stat_map_img)
-	_,_,vmin, vmax, = _get_colorbar_and_data_ranges(_safe_get_data(stat_map_img, ensure_finite=True),None,"auto","")
+		stat_map_img_dat = _safe_get_data(stat_map_img, ensure_finite=True)
+
+	cbar_vmin,cbar_vmax,vmin, vmax = _get_colorbar_and_data_ranges(stat_map_img_dat,None,"auto","")
+	if cbar_vmin is not None or pos_values:
+		vmin = 0
+		colmap = MYMAP_PLUS
+	elif not cbar_vmax is None:
+		vmax = 0
+		colmap = MYMAP_MINUS
+	else:
+		colmap = MYMAP
 	cbar_ax, p_ax = make_axes(axes,
 		aspect=aspect,
 		fraction=fraction,
@@ -44,15 +63,15 @@ def _draw_colorbar(stat_map_img, axes,
 		# panchor=(-110.0, 0.5),
 		)
 	ticks = np.linspace(vmin, vmax, nb_ticks)
-	bounds = np.linspace(vmin, vmax, MYMAP.N)
+	bounds = np.linspace(vmin, vmax, colmap.N)
 	norm = mcolors.Normalize(vmin=vmin, vmax=vmax)
 	# some colormap hacking
-	cmaplist = [MYMAP(i) for i in range(MYMAP.N)]
-	istart = int(norm(-threshold, clip=True) * (MYMAP.N - 1))
-	istop = int(norm(threshold, clip=True) * (MYMAP.N - 1))
-	for i in range(istart, istop):
+	cmaplist = [colmap(i) for i in range(colmap.N)]
+	istart = int(norm(-threshold, clip=True) * (colmap.N - 1))
+	istop = int(norm(threshold, clip=True) * (colmap.N - 1))
+	for i in range(istart, (istop+1)):
 		cmaplist[i] = (0.5, 0.5, 0.5, 1.)  # just an average gray color
-	our_cmap = MYMAP.from_list('Custom cmap', cmaplist, MYMAP.N)
+	our_cmap = colmap.from_list('Custom cmap', cmaplist, colmap.N)
 
 	cbar = ColorbarBase(
 		cbar_ax,
@@ -74,7 +93,7 @@ def _draw_colorbar(stat_map_img, axes,
 		tick.set_color(tick_color)
 	cbar_ax.yaxis.set_tick_params(width=0)
 
-	return cbar_ax, p_ax
+	return cbar_ax, p_ax,vmin,vmax,colmap
 
 def scaled_plot(template,
 	fig=None,
@@ -92,6 +111,11 @@ def scaled_plot(template,
 	scale=1.,
 	cmap=MYMAP,
 	anat_cmap='binary',
+	display_mode='ortho',
+	pos_values=False,
+	vmin=None,
+	vmax = None,
+	stat_cmap = None,
 	):
 	"""A wrapper for nilearn's plot_stat_map which allows scaling of crosshairs, titles and annotations.
 
@@ -119,6 +143,15 @@ def scaled_plot(template,
 		template = path.abspath(path.expanduser(template))
 	except AttributeError:
 		pass
+
+	if stat_cmap:
+		cmap=stat_cmap
+
+	if stat_map and cut is None:
+		#If cut is not specified, use cut_coords as determined by nilearns plot_stat_map()
+		cut = nilearn.plotting.plot_stat_map(stat_map,template,threshold=threshold,colorbar=False).cut_coords
+		plt.close()
+
 	display = nilearn.plotting.plot_img(template,
 		threshold=threshold,
 		figure=fig,
@@ -131,6 +164,7 @@ def scaled_plot(template,
 		draw_cross=False,
 		black_bg=black_bg,
 		colorbar=False,
+		display_mode=display_mode,
 		)
 	try:
 		stat_map = path.abspath(path.expanduser(stat_map))
@@ -139,8 +173,9 @@ def scaled_plot(template,
 	if stat_map:
 		display.add_overlay(stat_map,
 			threshold=threshold,
-			cmap=cmap,
+			cmap=cmap, vmin = vmin,vmax = vmax, colorbar=False,
 			)
+
 	if draw_cross:
 		display.draw_cross(linewidth=scale*1.6, alpha=0.3)
 	if annotate:
@@ -175,10 +210,13 @@ def stat(stat_maps,
 	show_plot=True,
 	dim=0,
 	vmax=None,
+	vmin=None,
 	shape="portrait",
 	draw_colorbar=True,
 	ax=None,
 	anat_cmap='binary',
+	display_mode='ortho',
+	pos_values = False
 	):
 
 	"""Plot a list of statistical maps.
@@ -221,11 +259,16 @@ def stat(stat_maps,
 	Identical consequitive statistical maps are auto-detected and share a colorbar.
 	To avoid starting a shared colorbar at the end of a column, please ensure that the length of statistical maps to be plotted is divisible both by the group size and the number of columns.
 	"""
-
+	if isinstance(cut_coords[0],int):
+		print(cut_coords[0])
+		cut_coords=[cut_coords]
 
 	if isinstance(stat_maps, str):
 		stat_maps=[stat_maps]
 	if len(stat_maps) == 1:
+		#determine optimal cut coords for stat_map if none are given
+		if not cut_coords:
+			cut_coords = nilearn.plotting.plot_stat_map(stat_map,template,threshold=threshold,colorbar=False).cut_coords
 		if not ax:
 			fig, ax = plt.subplots(facecolor='#eeeeee')
 		else:
@@ -240,11 +283,13 @@ def stat(stat_maps,
 			title=None
 
 		if draw_colorbar:
-			cax, kw = _draw_colorbar(stat_maps[0],ax,
+			cax, kw,vmin,vmax,stat_cmap = _draw_colorbar(stat_maps[0],ax,
 				threshold=threshold,
 				aspect=30,
 				fraction=0.05,
 				anchor=(1.,0.5),
+				cut_coords = cut_coords,
+				pos_values = pos_values
 				)
 		if overlays:
 			my_overlay = overlays[0]
@@ -263,6 +308,11 @@ def stat(stat_maps,
 			scale=scale,
 			black_bg=black_bg,
 			anat_cmap=anat_cmap,
+			display_mode=display_mode,
+			pos_values=pos_values,
+			vmin=vmin,
+			vmax = vmax,
+			stat_cmap = stat_cmap,
 			)
 	else:
 		try:
@@ -355,6 +405,7 @@ def stat(stat_maps,
 					scale=scale,
 					black_bg=black_bg,
 					anat_cmap=anat_cmap,
+					display_mode=display_mode,
 					)
 			except (AttributeError, IndexError, TypeError):
 				ax.axis('off')
@@ -370,7 +421,230 @@ def stat(stat_maps,
 		if show_plot:
 			plt.show()
 
-	return display
+	#find a better way
+	return display,vmin,vmax
+
+def _create_3Dplot(stat_maps,
+		template_mesh = '/usr/share/mouse-brain-atlases/ambmc2dsurqec_15micron_cut_mesh_1_decimated.obj',
+		treshhold = 3,
+		pos_values = False,
+		vmin = None,
+		vmax = None,
+):
+
+	"""Internal function to create the 3D plot.
+
+	Parameters
+	----------
+
+	stat_maps : string or array_like
+		A path to a NIfTI file, or a nibabel object (e.g. Nifti1Image), giving the statistical map to.
+
+	template_mesh : string or array_like
+		A path to a .obj file containing the template mesh.
+
+	treshhold : int or array<int>, optional
+		threshhold used for iso-surface extraction.
+
+	vmin : int
+		min for colorbar range.
+
+	vmax : int
+		max for colorbar range.
+	"""
+
+	if isinstance(stat_maps, str):
+		stat_maps=[stat_maps]
+
+	obj_paths = []
+	for stat_map in stat_maps:
+		obj_paths.extend(create_mesh(stat_map,treshhold,one=True,pos_values=pos_values))
+
+	##Find matching color of used threshhold in colorbar, needed to detemine color for blender
+	if vmax == 0:
+		norm = mcolors.Normalize(vmin=vmin, vmax=-vmin)
+
+	if vmin == 0:
+		norm = mcolors.Normalize(vmin=-vmax, vmax=vmax)
+
+	if (vmin != 0 and vmax != 0):
+		norm = mcolors.Normalize(vmin=-vmax, vmax=vmax)
+
+	col_plus = norm(treshhold)
+	col_minus = norm(-treshhold)
+
+	col_plus = MYMAP(col_plus)
+	col_minus = MYMAP(col_minus)
+
+	col_plus = mcolors.to_hex([col_plus[0],col_plus[1],col_plus[2]])
+	col_minus = mcolors.to_hex([col_minus[0],col_minus[1],col_minus[2]])
+	script_loc = os.path.join(os.path.dirname(sys.argv[0]),'blender_visualization.py')
+	print(script_loc)
+	cli = ['blender', '-b', '-P', script_loc,'--','-t',template_mesh]
+
+	for path in obj_paths:
+		if not path is None:
+			cli.append('-s')
+			cli.append(path)
+			if "neg_mesh" in path: 
+				cli.append('-c') 
+				cli.append(col_minus)
+			if "pos_mesh" in path:
+				cli.append('-c'),
+				cli.append(col_plus)
+
+	#python script cannot be run directly, need to start blender in background via commandline, then run script.
+	subprocess.run(cli,check=True)
+
+	mesh = plt.imread("/var/tmp/3Dplot.png")
+
+	#assure best fit into existing plot, trim img data matrix
+	dims = np.shape(mesh)
+	mask = mesh == 0
+	bbox = []
+	all_axis = np.arange(mesh.ndim)
+	for kdim in all_axis:
+		nk_dim = np.delete(all_axis, kdim)
+		mask_i = mask.all(axis=tuple(nk_dim))
+		dmask_i = np.diff(mask_i)
+		idx_i = np.nonzero(dmask_i)[0]
+		if len(idx_i) != 2:
+			idx_i = [0, dims[kdim]-2]
+		bbox.append([idx_i[0]+1, idx_i[1]+1])
+	mesh_trimmed = mesh[bbox[0][0] : bbox[0][1] ,bbox[1][0]  : bbox[1][1] , :]
+
+	return mesh_trimmed
+
+
+def _plots_overlay(display,display_3Dplot):
+
+	"""Internal function which overlays the plot from stat() with the 3D plot
+
+	Parameters
+	----------
+
+	display : nilearn.plotting.display.OrthoSlicer2 object
+		figure plot as returned by stat() or nilearn.plotting.plot_img(), containing plots in 2x2 view with empty space for 3D image.
+
+	display_3Dplot : array
+		image array.
+
+	"""
+	#get matplotlib figure from Nilearn.OrthoSlicer2 object
+	fh = display.frame_axes.get_figure()    
+	fh.canvas.draw()
+
+	#Determine correct location to put the plot in relation to existing figure axes
+	box = [max(display.axes['x'].ax.get_position().x0,display.axes['y'].ax.get_position().x0,display.axes['z'].ax.get_position().x0),min(display.axes['x'].ax.get_position().y0,display.axes['y'].ax.get_position().y0,display.axes['z'].ax.get_position().y0),display.axes['x'].ax.get_position().bounds[2],display.axes['z'].ax.get_position().bounds[3]]
+
+	#add new axes
+	ax_mesh = fh.add_axes(box)
+
+	#set all backgtuond options to invisible
+	ax_mesh.get_xaxis().set_visible(False)
+	ax_mesh.get_yaxis().set_visible(False)
+	ax_mesh.patch.set_alpha(0.1)
+	ax_mesh.spines["top"].set_visible(False)
+	ax_mesh.spines["bottom"].set_visible(False)
+	ax_mesh.spines["right"].set_visible(False)
+	ax_mesh.spines["left"].set_visible(False)
+
+	plt.gca()
+	img_mesh = plt.imshow(display_3Dplot)
+	plt.show()
+	return fh
+
+def stat3D(stat_maps,
+	overlays=[],
+	figure_title="",
+	interpolation="hermite",
+	template="/usr/share/mouse-brain-atlases/ambmc2dsurqec_15micron_cut_mesh_1_decimated.obj",
+	save_as="",
+	scale=1.,
+	subplot_titles=[],
+	cut_coords=[None],
+	threshold=3,
+	black_bg=False,
+	annotate=True,
+	draw_cross=True,
+	show_plot=True,
+	dim=0,
+	vmax=None,
+	shape="portrait",
+	draw_colorbar=True,
+	ax=None,
+	pos_values = False,
+	threshold_mesh = None,
+	):
+
+	"""Same plotting options as stat(), but with an additional 3D plot and a 2x2 layout of plots.
+
+	Parameters
+	----------
+
+	stat_maps : list or numpy.array
+		A list of strings containing statistical map paths or statistical map objects to be plotted. If a `numpy.array` is provided, the shape and order is used to place the subplots.
+
+	figure_title : string, optional
+		Title for the entire figure.
+
+	interpolation : string, optional
+		Interpolation to use for plot. Possible values according to matplotlib http://matplotlib.org/examples/images_contours_and_fields/interpolation_methods.html .
+
+	template : string, optional
+		Path to template onto which to plot the statistical maps.
+
+	save_as : string, optional
+		Path under which to save the figure. If None or equivalent, the plot will be shown (via `plt.show()`).
+
+	scale : float, optional
+		Allows intelligent scaling of annotation, crosshairs, and title.
+
+	vmax : int or None, optional
+		Allows explicit specificaion of the maximum range of the color bar (the color bar will span +vmax to -vmax).
+
+	subplot_titles : list or numpy.array, optional
+		List of titles for sub plots. Must be empty list or strings list of the same length as the stats_maps list.
+
+	shape : {"portrait", "landscape"}
+		if the `stat_maps` variable does not have a shape (i.e. if it is simply a list) this variable controls the kind of shape which the function auto-determines.
+		Setting this parameter to "portrait" will force a shape with two columns, whereas setting it to "landscape" will force a shape with two rows.
+
+	pos_values : bool, optional
+		to enforce positive values only in the case that the feature maps contains values of -1 (for no data aquired).
+
+	threshhold_mesh : int, optional
+		Threshold given for iso-surface extraction of the feature map for 3D plotting. If none is given, same threshhold is used as for the 2D plots.
+
+	Notes
+	-----
+
+	Identical consequitive statistical maps are auto-detected and share a colorbar.
+	To avoid starting a shared colorbar at the end of a column, please ensure that the length of statistical maps to be plotted is divisible both by the group size and the number of columns.
+	"""
+	if isinstance(cut_coords[0],int):
+		print(cut_coords[0])
+		cut_coords=[cut_coords]
+	#plot initial figure
+	display,vmin,vmax = stat(stat_maps,display_mode='tiled',template=template,draw_colorbar=draw_colorbar,cut_coords=cut_coords,threshold=threshold,pos_values = pos_values,save_as=save_as,overlays=overlays,figure_title=figure_title,show_plot=show_plot,draw_cross=draw_cross,annotate=annotate,black_bg=black_bg,dim=dim,shape="portrait")
+
+	if threshold_mesh is None:
+		threshold_mesh = threshold
+
+	plot_3D = _create_3Dplot(stat_maps,treshhold=threshold_mesh,pos_values=pos_values,vmin=vmin,vmax=vmax)
+	fh = _plots_overlay(display,plot_3D)
+	if save_as:
+		if isinstance(save_as, str):
+			plt.savefig(path.abspath(path.expanduser(save_as)), dpi=400, bbox_inches='tight')
+		else:
+			from matplotlib.backends.backend_pdf import PdfPages
+			if isinstance(save_as, PdfPages):
+				save_as.savefig()
+	else:
+		if show_plot:
+			plt.show()
+
+	return fh
 
 def atlas_label(atlas,
 	alpha=0.7,

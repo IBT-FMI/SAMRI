@@ -555,7 +555,7 @@ def l2_common_effect(l1_dir,
 
 	datasink = pe.Node(nio.DataSink(), name='datasink')
 	datasink.inputs.base_directory = out_dir
-	datasink.inputs.substitutions = [('_iterable_', ''),]
+	datasink_substitutions = [('_iterable_', '')]
 
 	if groupby == "subject":
 		subjects = data_selection[['subject']].drop_duplicates().values.tolist()
@@ -597,6 +597,25 @@ def l2_common_effect(l1_dir,
 			(merge, varcopemerge, [(('out',add_suffix,"_varcb.nii.gz"), 'merged_file')]),
 			]
 	elif groupby == "session":
+		common_fields = ''
+		if not 'run' in match.keys():
+			common_fields += 'run-'+data_selection.run.drop_duplicates().item()
+		if not 'acq' in match.keys():
+			common_fields += 'acq-'+data_selection.acq.drop_duplicates().item()
+		user_specified = ''
+		for key in match.keys():
+			user_specified += key
+			assert len(match[key]) == 1
+			user_specified += '-'+match[key][0]
+			user_specified += '_'
+		#return
+
+		datasink_substitutions.extend([('session', 'ses-')])
+		datasink_substitutions.extend([('cope1.nii.gz', common_fields+'_'+user_specified+'cope.nii.gz')])
+		datasink_substitutions.extend([('tstat1.nii.gz', common_fields+'_'+user_specified+'tstat.nii.gz')])
+		datasink_substitutions.extend([('zstat1.nii.gz', common_fields+'_'+user_specified+'zstat.nii.gz')])
+		datasink.inputs.substitutions = datasink_substitutions
+
 		sessions = data_selection[['session']].drop_duplicates()
 		# TODO: could not find a better way to convert pandas df column into list of dicts
 		sessions_ = sessions.T.to_dict()

@@ -63,6 +63,8 @@ def df_roi_data(df,
 	n_jobs=False,
 	n_jobs_percentage=0.8,
 	column_string='ROI Value',
+	exclude_zero=False,
+	zero_threshold=0.1,
 	):
 	"""
 	Create a `pandas.DataFrame` (optionally savable as `.csv`), containing new means and medians columns of the values located within a roi in the files specified by the path column of an input DataFrame.
@@ -73,12 +75,16 @@ def df_roi_data(df,
 
 	df : pandas.DataFrame
 		A BIDS-Information Pandas DataFrame which includes a column named 'path'.
+	exclude_zero : bool, optional
+		Whether to filter out zero values.
 	mask_path : str, optional
 		Path to a mask in the same coordinate space as the p-value maps.
 	save_as : str, optional
 		Path to which to save the Pandas DataFrame.
 	column_string : str, optional
 		String to append after 'Mean' and 'Median' to construct the name of the mean and median columns.
+	zero_threshold : float, optional
+		Absolute value below which values are to be considered zero.
 
 	Returns
 	-------
@@ -104,6 +110,8 @@ def df_roi_data(df,
 		in_files,
 		[mask]*iter_length,
 		[None]*iter_length,
+		[exclude_zero]*iter_length,
+		[zero_threshold]*iter_length,
 		))
 	df['Mean '+column_string] = [i[0] for i in iter_data]
 	df['Median '+column_string] = [i[1] for i in iter_data]
@@ -118,6 +126,8 @@ def df_roi_data(df,
 
 def roi_data(img_path, masker,
 	substitution={},
+	exclude_zero=False,
+	zero_threshold=0.1,
 	):
 	"""
 	Return the mean of a Region of Interest (ROI) score.
@@ -129,22 +139,26 @@ def roi_data(img_path, masker,
 		Path to NIfTI file from which the ROI is to be extracted.
 	makser : nilearn.NiftiMasker
 		Nilearn `nifti1.Nifti1Image` object to use for masking the desired ROI.
+	exclude_zero : bool, optional
+		Whether to filter out zero values.
 	substitution : dict, optional
 		A dictionary with keys which include 'subject' and 'session'.
+	zero_threshold : float, optional
+		Absolute value below which values are to be considered zero.
 	"""
 	if substitution:
 		img_path = img_path.format(**substitution)
 	img_path = path.abspath(path.expanduser(img_path))
 	img = nib.load(img_path)
 	try:
-		masked_data = masker.fit_transform(img).T
+		masked_data = masker.fit_transform(img)
 	except:
 		masker = path.abspath(path.expanduser(masker))
 		masker = NiftiMasker(mask_img=masker)
-		masked_data = masker.fit_transform(img).T
-	# Dunno why this was done like this
-	#masked_mean = np.mean(masked_data, axis=0)[0]
-	#masked_median = np.median(masked_data, axis=0)[0]
+		masked_data = masker.fit_transform(img)
+	masked_data = masked_data.flatten()
+	if exclude_zero:
+		masked_data = masked_data[np.abs(masked_data)>=zero_threshold]
 	masked_mean = np.mean(masked_data)
 	masked_median = np.median(masked_data)
 	return masked_mean, masked_median

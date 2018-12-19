@@ -69,14 +69,13 @@ def structural_registration(template, num_threads=4):
 
 	return registration, s_warp, f_warp
 
-def DSURQEc_structural_registration(template,
+def generic_registration(template,
 	structural_mask="/usr/share/mouse-brain-atlases/dsurqec_200micron_mask.nii",
 	functional_mask='',
 	num_threads=4,
 	phase_dictionary=GENERIC_PHASES,
 	s_phases=["s_rigid","affine","syn"],
 	f_phases=["f_rigid",],
-	parameters=None,
 	):
 
 	s_parameters = [phase_dictionary[selection] for selection in s_phases]

@@ -99,10 +99,6 @@ def single_generic(in_func, in_anat, template,
 	s_biascorrect.inputs.convergence_threshold = 1e-16
 	s_biascorrect.inputs.input_image = in_anat
 	s_biascorrect.inputs.output_image = s_biascorrect_outfile
-	#print(s_biascorrect.inputs.__dir__())
-	#print(s_biascorrect.inputs.__dict__)
-	#print(s_biascorrect.inputs.__instance_traits__())
-	#print("Running structural bias field correction:\n{}".format(s_biascorrect.outputs.cmdline))
 	s_biascorrect_run = s_biascorrect.run()
 
 	#f_biascorrect = pe.Node(interface=ants.N4BiasFieldCorrection(), name="f_biascorrect")
@@ -124,7 +120,6 @@ def single_generic(in_func, in_anat, template,
 		**kwargs)
 	s_register.inputs.moving_image = s_biascorrect_run.outputs.output_image
 	s_register.inputs.output_warped_image = s_register_outfile
-	#print("Running registration:\n{}".format(s_register.cmdline))
 	s_register.run()
 
 def structural(substitutions, parameters,

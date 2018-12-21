@@ -425,7 +425,7 @@ def stat(stat_maps,
 	return display,vmin,vmax
 
 def _create_3Dplot(stat_maps,
-		template_mesh = '/usr/share/mouse-brain-atlases/ambmc2dsurqec_15micron_cut_mesh_1_decimated.obj',
+		template_mesh = '/usr/share/mouse-brain-atlases/ambmc2dsurqec_15micron_masked.obj',
 		treshhold = 3,
 		pos_values = False,
 		vmin = None,
@@ -478,7 +478,7 @@ def _create_3Dplot(stat_maps,
 
 	col_plus = mcolors.to_hex([col_plus[0],col_plus[1],col_plus[2]])
 	col_minus = mcolors.to_hex([col_minus[0],col_minus[1],col_minus[2]])
-	script_loc = os.path.join(os.path.dirname(sys.argv[0]),'blender_visualization.py')
+	script_loc = os.path.join(os.path.dirname(os.path.abspath(__file__)),'blender_visualization.py')
 	print(script_loc)
 	cli = ['blender', '-b', '-P', script_loc,'--','-t',template_mesh]
 
@@ -523,7 +523,7 @@ def _plots_overlay(display,display_3Dplot):
 	Parameters
 	----------
 
-	display : nilearn.plotting.display.OrthoSlicer2 object
+	display : nilearn.plotting.display.TiledSlicer object
 		figure plot as returned by stat() or nilearn.plotting.plot_img(), containing plots in 2x2 view with empty space for 3D image.
 
 	display_3Dplot : array
@@ -558,7 +558,7 @@ def stat3D(stat_maps,
 	overlays=[],
 	figure_title="",
 	interpolation="hermite",
-	template="/usr/share/mouse-brain-atlases/ambmc2dsurqec_15micron_cut_mesh_1_decimated.obj",
+	template="/usr/share/mouse-brain-atlases/ambmc2dsurqec_15micron_masked.obj",
 	save_as="",
 	scale=1.,
 	subplot_titles=[],

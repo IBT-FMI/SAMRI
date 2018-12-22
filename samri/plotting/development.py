@@ -208,21 +208,3 @@ def functional_connectivity(ts="~/ni_data/ofM.dr/preprocessing/as_composite/sub-
 	#correlation_matrix = fc.correlation_matrix(ts, '~/confounds.csv', labels_img, save_as = '~/correlation_matrix.csv')
 	connectivity.plot_connectivity_matrix(correlation_matrix, figsize, labels, save_as = '~/correlation_matrix.png')
 
-if __name__ == '__main__':
-	# seed_connectivity_overview()
-	# single_ts_seed_connectivity(save_as="~/sbfc.pdf")
-
-	plot_roi_per_session("composite", "~/ni_data/templates/roi/DSURQEc_dr.nii.gz", "#E69F00")
-	# p_clusters("~/ni_data/templates/ds_QBI_chr_bin.nii.gz")
-	# roi_teaching()
-	# check_responders()
-	#qc_regressor(
-	#	["ofM","ofM_aF","ofM_cF1","ofM_cF2"],
-	#	["5687","5689","5690",],
-	#	["EPI_CBV_jb_long","EPI_CBV_chr_longSOA"],
-	#	"as_composite",
-	#	"~/ni_data/templates/roi/DSURQEc_dr.nii.gz",
-	#	save_as="qc_regressor.pdf",
-	#	)
-	# qc_regressor(["ofM_cF1"],["4011"],["EPI_CBV_jb_long"],"as_composite","~/ni_data/templates/roi/DSURQEc_ctx.nii.gz")
-	plt.show()

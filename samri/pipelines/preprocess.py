@@ -452,9 +452,8 @@ def generic(bids_base, template,
 		get_s_scan.inputs.bids_base = bids_base
 
 		if actual_size:
-			s_register, s_warp, _, _ = DSURQEc_structural_registration(template,
+			s_register, s_warp, _, _ = generic_registration(template,
 				structural_mask=registration_mask,
-				parameters=params,
 				phase_dictionary=phase_dictionary,
 				)
 			#TODO: incl. in func registration
@@ -546,9 +545,8 @@ def generic(bids_base, template,
 	elif functional_registration_method == "composite":
 		if not structural_scan_types.any():
 			raise ValueError('The option `registration="composite"` requires there to be a structural scan type.')
-		_, _, f_register, f_warp = DSURQEc_structural_registration(template,
+		_, _, f_register, f_warp = generic_registration(template,
 			structural_mask=registration_mask,
-			parameters=params,
 			phase_dictionary=phase_dictionary,
 			)
 		temporal_mean = pe.Node(interface=fsl.MeanImage(), name="temporal_mean")
@@ -710,9 +708,8 @@ def common_select(bids_base, out_base, workflow_name, template, registration_mas
 	data_selection.to_csv(path.join(workdir,'data_selection.csv'))
 
 	# generate functional and structural scan types
-	functional_scan_types = data_selection.loc[data_selection.type == 'func']['scan_type'].values
-	structural_scan_types = data_selection.loc[data_selection.type == 'anat']['scan_type'].values
-
+	functional_scan_types = data_selection.loc[data_selection.type == 'func']['acq'].values
+	structural_scan_types = data_selection.loc[data_selection.type == 'anat']['acq'].values
 	# we start to define nipype workflow elements (nodes, connections, meta)
 	subjects_sessions = data_selection[["subject","session"]].drop_duplicates().values.tolist()
 

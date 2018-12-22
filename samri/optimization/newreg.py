@@ -1,15 +1,16 @@
 import nipype.interfaces.ants as ants
 import os
 from nipype.interfaces.fsl import ApplyMask, GLM, MELODIC, FAST, BET, MeanImage, FLIRT, ImageMaths, FSLCommand
-from nipype.interfaces import fsl
+from nipype.interfaces import ants, fsl
+import nipype.pipeline.engine as pe
 
 from samri.utilities import bids_substitution_iterator
+from samri.pipelines.utils import GENERIC_PHASES
 
 try:
 	FileNotFoundError
 except NameError:
 	FileNotFoundError = IOError
-
 
 PHASES = {
 	"rigid":{
@@ -64,6 +65,62 @@ PHASES = {
 		"use_histogram_matching":True,
 		},
 	}
+
+def single_generic(in_func, in_anat, template,
+	mask=False,
+	phases=GENERIC_PHASES,
+	out_base='/var/tmp/samri_optimize',
+	**kwargs):
+	in_anat=os.path.abspath(os.path.expanduser(in_anat))
+	in_func=os.path.abspath(os.path.expanduser(in_func))
+	template=os.path.abspath(os.path.expanduser(template))
+
+	from samri.pipelines.nodes import generic_registration
+
+	in_anat_name = os.path.basename(in_anat).split('.nii')[0]
+	in_func_name = os.path.basename(in_func).split('.nii')[0]
+
+	try:
+		os.makedirs(out_base)
+	except OSError:
+		pass
+	s_biascorrect_outfile = '{}/{}_biascorrected.nii.gz'.format(out_base,in_anat_name)
+	try:
+		os.remove(s_biascorrect_outfile)
+	except OSError:
+		pass
+
+	s_biascorrect = pe.Node(interface=ants.N4BiasFieldCorrection(), name="s_biascorrect")
+	s_biascorrect.inputs.dimension = 3
+	s_biascorrect.inputs.bspline_fitting_distance = 10
+	s_biascorrect.inputs.bspline_order = 4
+	s_biascorrect.inputs.shrink_factor = 2
+	s_biascorrect.inputs.n_iterations = [150,100,50,30]
+	s_biascorrect.inputs.convergence_threshold = 1e-16
+	s_biascorrect.inputs.input_image = in_anat
+	s_biascorrect.inputs.output_image = s_biascorrect_outfile
+	s_biascorrect_run = s_biascorrect.run()
+
+	#f_biascorrect = pe.Node(interface=ants.N4BiasFieldCorrection(), name="f_biascorrect")
+	#f_biascorrect.inputs.dimension = 3
+	#f_biascorrect.inputs.bspline_fitting_distance = 10
+	#f_biascorrect.inputs.bspline_order = 4
+	#f_biascorrect.inputs.shrink_factor = 2
+	#f_biascorrect.inputs.n_iterations = [150,100,50,30]
+	#f_biascorrect.inputs.convergence_threshold = 1e-11
+	#f_biascorrect.inputs.input_image = in_func
+	#f_biascorrect_run = f_biascorrect.run()
+
+	s_register_outfile = '{}/{}_warped.nii.gz'.format(out_base,in_anat_name)
+	try:
+		os.remove(s_register_outfile)
+	except OSError:
+		pass
+	s_register, s_warp, f_register, f_warp = generic_registration(template,mask,None,4,phases,
+		**kwargs)
+	s_register.inputs.moving_image = s_biascorrect_run.outputs.output_image
+	s_register.inputs.output_warped_image = s_register_outfile
+	s_register.run()
 
 def structural(substitutions, parameters,
 	reference="/usr/share/mouse-brain-atlases/dsurqec_200micron.nii",

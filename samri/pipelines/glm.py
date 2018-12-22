@@ -634,6 +634,8 @@ def l2_common_effect(l1_dir,
 		varcopes.inputs.list_output = True
 
 		workflow_connections = [
+			(infosource, copes, [('iterable', 'bids_dictionary')]),
+			(infosource, varcopes, [('iterable', 'bids_dictionary')]),
 			(infosource, copemerge, [(('iterable',dict_and_suffix,"session","_cope.nii.gz"), 'merged_file')]),
 			(infosource, varcopemerge, [(('iterable',dict_and_suffix,"session","_varcb.nii.gz"), 'merged_file')]),
 			]

@@ -639,6 +639,39 @@ def l2_common_effect(l1_dir,
 			(infosource, copemerge, [(('iterable',dict_and_suffix,"session","_cope.nii.gz"), 'merged_file')]),
 			(infosource, varcopemerge, [(('iterable',dict_and_suffix,"session","_varcb.nii.gz"), 'merged_file')]),
 			]
+	elif groupby == "none":
+		common_fields = ''
+		if not 'run' in match.keys():
+			common_fields += 'run-'+data_selection.run.drop_duplicates().item()
+		if not 'acq' in match.keys():
+			common_fields += 'acq-'+data_selection.acq.drop_duplicates().item()
+		user_specified = ''
+		for key in match.keys():
+			user_specified += key
+			assert len(match[key]) == 1
+			user_specified += '-'+match[key][0]
+			user_specified += '_'
+
+		datasink_substitutions.extend([('cope1.nii.gz', common_fields+'_'+user_specified+'cope.nii.gz')])
+		datasink_substitutions.extend([('tstat1.nii.gz', common_fields+'_'+user_specified+'tstat.nii.gz')])
+		datasink_substitutions.extend([('zstat1.nii.gz', common_fields+'_'+user_specified+'zstat.nii.gz')])
+		datasink.inputs.substitutions = datasink_substitutions
+
+		copes = pe.Node(name='copes', interface=util.Function(function=select_from_datafind_df, input_names=inspect.getargspec(select_from_datafind_df)[0], output_names=['selection']))
+		copes.inputs.bids_dictionary_override = {'modality':'cope'}
+		copes.inputs.df = data_selection
+		copes.inputs.list_output = True
+
+		varcopes = pe.Node(name='varcopes', interface=util.Function(function=select_from_datafind_df, input_names=inspect.getargspec(select_from_datafind_df)[0], output_names=['selection']))
+		varcopes.inputs.bids_dictionary_override = {'modality':'varcb'}
+		varcopes.inputs.df = data_selection
+		varcopes.inputs.list_output = True
+
+		copemerge.inputs.merged_file = 'cope.nii.gz'
+		varcopemerge.inputs.merged_file = 'varcb.nii.gz'
+
+		workflow_connections = []
+
 	elif groupby == "task":
 		infosource = pe.Node(interface=util.IdentityInterface(fields=['iterable']), name="infosource")
 		infosource.iterables = [('iterable', tasks)]

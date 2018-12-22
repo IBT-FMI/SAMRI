@@ -5,9 +5,9 @@ def test_stat3D():
 	template = "/usr/share/mouse-brain-atlases/dsurqec_40micron_masked.nii"
 
 	maps.stat3D(stat_map,
-			template = template,
-			save_as = "stat_3D.png",
-			threshold = 4,
-			threshold_mesh = 12,
-			)
+		template=template,
+		save_as="stat_3D.png",
+		threshold=4,
+		threshold_mesh=12,
+		)
 

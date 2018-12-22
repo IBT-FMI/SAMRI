@@ -608,7 +608,6 @@ def l2_common_effect(l1_dir,
 			assert len(match[key]) == 1
 			user_specified += '-'+match[key][0]
 			user_specified += '_'
-		#return
 
 		datasink_substitutions.extend([('session', 'ses-')])
 		datasink_substitutions.extend([('cope1.nii.gz', common_fields+'_'+user_specified+'cope.nii.gz')])

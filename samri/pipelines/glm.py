@@ -641,10 +641,10 @@ def l2_common_effect(l1_dir,
 			]
 	elif groupby == "none":
 		common_fields = ''
-		if not 'run' in match.keys():
-			common_fields += 'run-'+data_selection.run.drop_duplicates().item()
 		if not 'acq' in match.keys():
 			common_fields += 'acq-'+data_selection.acq.drop_duplicates().item()
+		if not 'run' in match.keys():
+			common_fields += '_run-'+data_selection.run.drop_duplicates().item()
 		user_specified = ''
 		for key in match.keys():
 			user_specified += key

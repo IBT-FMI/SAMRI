@@ -7,6 +7,7 @@ def test_stat3D():
 	maps.stat3D(stat_map,
 		template=template,
 		save_as="stat_3D.png",
+		show_plot=False,
 		threshold=4,
 		threshold_mesh=12,
 		)

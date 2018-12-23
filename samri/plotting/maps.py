@@ -551,7 +551,6 @@ def _plots_overlay(display,display_3Dplot):
 
 	plt.gca()
 	img_mesh = plt.imshow(display_3Dplot)
-	plt.show()
 	return fh
 
 def stat3D(stat_maps,
@@ -567,7 +566,7 @@ def stat3D(stat_maps,
 	black_bg=False,
 	annotate=True,
 	draw_cross=True,
-	show_plot=True,
+	show_plot=False,
 	dim=0,
 	vmax=None,
 	shape="portrait",

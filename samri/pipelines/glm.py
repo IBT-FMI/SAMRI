@@ -598,16 +598,8 @@ def l2_common_effect(l1_dir,
 			]
 	elif groupby == "session":
 		common_fields = ''
-		if not 'acq' in match.keys():
-			common_fields += 'acq-'+data_selection.acq.drop_duplicates().item()
-		if not 'run' in match.keys():
-			common_fields += '_run-'+data_selection.run.drop_duplicates().item()
-		user_specified = ''
-		for key in match.keys():
-			user_specified += key
-			assert len(match[key]) == 1
-			user_specified += '-'+match[key][0]
-			user_specified += '_'
+		common_fields += 'acq-'+data_selection.acq.drop_duplicates().item()
+		common_fields += '_run-'+data_selection.run.drop_duplicates().item()
 
 		datasink_substitutions.extend([('session', 'ses-')])
 		datasink_substitutions.extend([('cope1.nii.gz', common_fields+'_'+user_specified+'cope.nii.gz')])
@@ -641,16 +633,8 @@ def l2_common_effect(l1_dir,
 			]
 	elif groupby == "none":
 		common_fields = ''
-		if not 'acq' in match.keys():
-			common_fields += 'acq-'+data_selection.acq.drop_duplicates().item()
-		if not 'run' in match.keys():
-			common_fields += '_run-'+data_selection.run.drop_duplicates().item()
-		user_specified = ''
-		for key in match.keys():
-			user_specified += key
-			assert len(match[key]) == 1
-			user_specified += '-'+match[key][0]
-			user_specified += '_'
+		common_fields += 'acq-'+data_selection.acq.drop_duplicates().item()
+		common_fields += '_run-'+data_selection.run.drop_duplicates().item()
 
 		datasink_substitutions.extend([('cope1.nii.gz', common_fields+'_'+user_specified+'cope.nii.gz')])
 		datasink_substitutions.extend([('tstat1.nii.gz', common_fields+'_'+user_specified+'tstat.nii.gz')])

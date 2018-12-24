@@ -56,6 +56,9 @@ python_test() {
 	export MPLBACKEND="agg"
 	export PATH=${TEST_DIR}/scripts:$PATH
 	export PYTHONIOENCODING=utf-8
-	pytest -vv || die
 	./test_scripts.sh || die "Test scripts failed."
+	sed -i -e \
+		"/def test_bru2bids():/i@pytest.mark.skip('Removed in full test suite, as this is already tested in `test_scripts.sh`')" \
+		samri/pipelines/tests/test_repos.py || die
+	pytest -vv || die
 }

@@ -56,10 +56,6 @@ python_test() {
 	export MPLBACKEND="agg"
 	export PATH=${TEST_DIR}/scripts:$PATH
 	export PYTHONIOENCODING=utf-8
-	pytest || die
-	for i in examples/*.py; do
-		echo "Executing ${EPYTHON} ${i}"
-		${EPYTHON} "$i" || die "Example Python script $i failed with ${EPYTHON}"
-	done
+	pytest -vv || die
 	./test_scripts.sh || die "Test scripts failed."
 }

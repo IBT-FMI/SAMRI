@@ -598,21 +598,13 @@ def l2_common_effect(l1_dir,
 			]
 	elif groupby == "session":
 		common_fields = ''
-		if not 'run' in match.keys():
-			common_fields += 'run-'+data_selection.run.drop_duplicates().item()
-		if not 'acq' in match.keys():
-			common_fields += 'acq-'+data_selection.acq.drop_duplicates().item()
-		user_specified = ''
-		for key in match.keys():
-			user_specified += key
-			assert len(match[key]) == 1
-			user_specified += '-'+match[key][0]
-			user_specified += '_'
+		common_fields += 'acq-'+data_selection.acq.drop_duplicates().item()
+		common_fields += '_run-'+data_selection.run.drop_duplicates().item()
 
 		datasink_substitutions.extend([('session', 'ses-')])
-		datasink_substitutions.extend([('cope1.nii.gz', common_fields+'_'+user_specified+'cope.nii.gz')])
-		datasink_substitutions.extend([('tstat1.nii.gz', common_fields+'_'+user_specified+'tstat.nii.gz')])
-		datasink_substitutions.extend([('zstat1.nii.gz', common_fields+'_'+user_specified+'zstat.nii.gz')])
+		datasink_substitutions.extend([('cope1.nii.gz', common_fields+'_'+'cope.nii.gz')])
+		datasink_substitutions.extend([('tstat1.nii.gz', common_fields+'_'+'tstat.nii.gz')])
+		datasink_substitutions.extend([('zstat1.nii.gz', common_fields+'_'+'zstat.nii.gz')])
 		datasink.inputs.substitutions = datasink_substitutions
 
 		sessions = data_selection[['session']].drop_duplicates()
@@ -641,20 +633,12 @@ def l2_common_effect(l1_dir,
 			]
 	elif groupby == "none":
 		common_fields = ''
-		if not 'run' in match.keys():
-			common_fields += 'run-'+data_selection.run.drop_duplicates().item()
-		if not 'acq' in match.keys():
-			common_fields += 'acq-'+data_selection.acq.drop_duplicates().item()
-		user_specified = ''
-		for key in match.keys():
-			user_specified += key
-			assert len(match[key]) == 1
-			user_specified += '-'+match[key][0]
-			user_specified += '_'
+		common_fields += 'acq-'+data_selection.acq.drop_duplicates().item()
+		common_fields += '_run-'+data_selection.run.drop_duplicates().item()
 
-		datasink_substitutions.extend([('cope1.nii.gz', common_fields+'_'+user_specified+'cope.nii.gz')])
-		datasink_substitutions.extend([('tstat1.nii.gz', common_fields+'_'+user_specified+'tstat.nii.gz')])
-		datasink_substitutions.extend([('zstat1.nii.gz', common_fields+'_'+user_specified+'zstat.nii.gz')])
+		datasink_substitutions.extend([('cope1.nii.gz', common_fields+'_'+'cope.nii.gz')])
+		datasink_substitutions.extend([('tstat1.nii.gz', common_fields+'_'+'tstat.nii.gz')])
+		datasink_substitutions.extend([('zstat1.nii.gz', common_fields+'_'+'zstat.nii.gz')])
 		datasink.inputs.substitutions = datasink_substitutions
 
 		copes = pe.Node(name='copes', interface=util.Function(function=select_from_datafind_df, input_names=inspect.getargspec(select_from_datafind_df)[0], output_names=['selection']))

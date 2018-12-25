@@ -34,7 +34,34 @@ def transform_feature(feature, source_reference, target_reference,
 	debug=False,
 	):
 	"""
-	Transform a NIfTI brain volume from a source reference space to a target reference space.
+	Transform a NIfTI feature map from a source reference space to a target reference space.
+
+	Parameters
+	----------
+
+	feature : str
+		Path to the NIfTI file which will be transformed.
+	source_referece : str
+		NIfTI brain template on which the `feature` file is referenced.
+	target_referece : str
+		NIfTI brain template in the reference space to which the `feature` file is to be transformed.
+	target_mask : str, optional
+		NIfTI mask specifying what parts of the template in the `target_reference` file to disregard in computing the transformation from the source to the target reference space.
+	phases_dictionary : dict, optional
+		Dictionary of dictionaries, the first level keys of which include string values from the list passed to the `phases` parameter, and the second-level keys of which include:
+		'transforms','transform_parameters','number_of_iterations','metric','metric_weight','radius_or_number_of_bins','sampling_strategy','sampling_percentage','convergence_threshold','convergence_window_size', 'smoothing_sigmas','sigma_units','shrink_factors','use_estimate_learning_rate_onde','use_histogram_matching'.
+		An example can be found in the default TRANSFORM_PHASES variable found in `samri.pipelines.utils`.
+	phases : list, optional
+		A list of which phases of the `phases_dictionary` to use.
+		Values have to be included in the primary keys of `phases_dictionary`.
+	num_threads : int, optional
+		How many threads to use for the operation.
+	output_name : str, optional
+		File path under which to save the transformed feature.
+	interpolation : str, optional
+		Which interpolation method to use when transforming the feature.
+	debug : bool, optional
+		Whether to keep trace files of the registration.
 	"""
 
 	target_reference = os.path.abspath(os.path.expanduser(target_reference))

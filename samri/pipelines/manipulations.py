@@ -60,6 +60,7 @@ def transform_feature(feature, source_reference, target_reference,
 		File path under which to save the transformed feature.
 	interpolation : str, optional
 		Which interpolation method to use when transforming the feature.
+		Values will be parsed by the `nipype.interfaces.ants.ApplyTransforms()` class.
 	debug : bool, optional
 		Whether to keep trace files of the registration.
 	"""

@@ -29,7 +29,7 @@ def transform_feature(feature, source_reference, target_reference,
 	phase_dictionary=TRANSFORM_PHASES,
 	phases=['rigid','affine','syn'],
 	num_threads=4,
-	output_name='transformed_feature.nii.gz',
+	output_path='transformed_feature.nii.gz',
 	interpolation='NearestNeighbor',
 	debug=False,
 	):
@@ -56,7 +56,7 @@ def transform_feature(feature, source_reference, target_reference,
 		Values have to be included in the primary keys of `phases_dictionary`.
 	num_threads : int, optional
 		How many threads to use for the operation.
-	output_name : str, optional
+	output_path : str, optional
 		File path under which to save the transformed feature.
 	interpolation : str, optional
 		Which interpolation method to use when transforming the feature.
@@ -130,7 +130,7 @@ def transform_feature(feature, source_reference, target_reference,
 	warp.inputs.input_image_type = 3
 	warp.inputs.interpolation = interpolation
 	warp.inputs.invert_transform_flags = [False, False]
-	warp.inputs.output_image = output_name
+	warp.inputs.output_image = output_path
 	warp.inputs.input_image = feature
 	warp.inputs.transforms = [registration_res.outputs.composite_transform, init_res.outputs.out_file]
 	warp.num_threads = num_threads

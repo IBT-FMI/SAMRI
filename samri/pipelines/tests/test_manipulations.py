@@ -5,6 +5,6 @@ def test_transform_feature():
 		target_mask='',
 		phases=['rigid','affine','syn'],
 		num_threads=4,
-		output_name='transformed_feature.nii.gz',
+		output_path='transformed_feature.nii.gz',
 		interpolation='NearestNeighbor',
 		)

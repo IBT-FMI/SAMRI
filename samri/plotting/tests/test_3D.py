@@ -8,7 +8,7 @@ def test_composite_stat3D():
 		template=template,
 		save_as="stat3D.png",
 		show_plot=False,
-		threshold=4,
-		threshold_mesh=12,
+		threshold=0.5,
+		threshold_mesh = 0.5,
 		)
 

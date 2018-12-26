@@ -426,7 +426,7 @@ def stat(stat_maps,
 
 def _create_3Dplot(stat_maps,
 		template_mesh = '/usr/share/mouse-brain-atlases/ambmc2dsurqec_15micron_masked.obj',
-		treshhold = 3,
+		threshold = 3,
 		pos_values = False,
 		vmin = None,
 		vmax = None,
@@ -443,8 +443,8 @@ def _create_3Dplot(stat_maps,
 	template_mesh : string or array_like
 		A path to a .obj file containing the template mesh.
 
-	treshhold : int or array<int>, optional
-		threshhold used for iso-surface extraction.
+	threshold : int or array<int>, optional
+		threshold used for iso-surface extraction.
 
 	vmin : int
 		min for colorbar range.
@@ -458,20 +458,20 @@ def _create_3Dplot(stat_maps,
 
 	obj_paths = []
 	for stat_map in stat_maps:
-		obj_paths.extend(create_mesh(stat_map,treshhold,one=True,pos_values=pos_values))
+		obj_paths.extend(create_mesh(stat_map,threshold,one=True,pos_values=pos_values))
 
-	##Find matching color of used threshhold in colorbar, needed to detemine color for blender
+	##Find matching color of used threshold in colorbar, needed to determine color for blender
 	if vmax == 0:
-		norm = mcolors.Normalize(vmin=vmin, vmax=-vmin)
+		norm = mcolors.Normalize(vmin=vmin, vmax=-float(vmin))
 
 	if vmin == 0:
-		norm = mcolors.Normalize(vmin=-vmax, vmax=vmax)
+		norm = mcolors.Normalize(vmin=-float(vmax), vmax=vmax)
 
 	if (vmin != 0 and vmax != 0):
-		norm = mcolors.Normalize(vmin=-vmax, vmax=vmax)
+		norm = mcolors.Normalize(vmin=-float(vmax), vmax=vmax)
 
-	col_plus = norm(treshhold)
-	col_minus = norm(-treshhold)
+	col_plus = norm(threshold)
+	col_minus = norm(-threshold)
 
 	col_plus = MYMAP(col_plus)
 	col_minus = MYMAP(col_minus)
@@ -479,15 +479,14 @@ def _create_3Dplot(stat_maps,
 	col_plus = mcolors.to_hex([col_plus[0],col_plus[1],col_plus[2]])
 	col_minus = mcolors.to_hex([col_minus[0],col_minus[1],col_minus[2]])
 	script_loc = os.path.join(os.path.dirname(os.path.abspath(__file__)),'blender_visualization.py')
-	print(script_loc)
 	cli = ['blender', '-b', '-P', script_loc,'--','-t',template_mesh]
 
 	for path in obj_paths:
 		if not path is None:
 			cli.append('-s')
 			cli.append(path)
-			if "neg_mesh" in path: 
-				cli.append('-c') 
+			if "neg_mesh" in path:
+				cli.append('-c')
 				cli.append(col_minus)
 			if "pos_mesh" in path:
 				cli.append('-c'),
@@ -612,8 +611,8 @@ def stat3D(stat_maps,
 	pos_values : bool, optional
 		to enforce positive values only in the case that the feature maps contains values of -1 (for no data aquired).
 
-	threshhold_mesh : int, optional
-		Threshold given for iso-surface extraction of the feature map for 3D plotting. If none is given, same threshhold is used as for the 2D plots.
+	threshold_mesh : int, optional
+		Threshold given for iso-surface extraction of the feature map for 3D plotting. If none is given, same threshold is used as for the 2D plots.
 
 	Notes
 	-----
@@ -630,7 +629,7 @@ def stat3D(stat_maps,
 	if threshold_mesh is None:
 		threshold_mesh = threshold
 
-	plot_3D = _create_3Dplot(stat_maps,treshhold=threshold_mesh,pos_values=pos_values,vmin=vmin,vmax=vmax)
+	plot_3D = _create_3Dplot(stat_maps,threshold=threshold_mesh,pos_values=pos_values,vmin=vmin,vmax=vmax)
 	fh = _plots_overlay(display,plot_3D)
 	if save_as:
 		if isinstance(save_as, str):

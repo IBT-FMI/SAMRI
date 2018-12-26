@@ -26,26 +26,6 @@ def dbu(
 		verbose=True,
 		)
 
-def rs(
-	data_path="~/ni_data/_test/",
-	workflow_name="functional_registration",
-	preprocessing_dir="preprocessing",
-	):
-	from samri.pipelines import preprocess, glm
-	preprocessing.bruker(data_path,
-		functional_scan_types=["EPI_CBV",],
-		structural_scan_types=-1,
-		workflow_name=workflow_name,
-		lowpass_sigma=2,
-		highpass_sigma=225,
-		functional_blur_xy=.4,
-		functional_registration_method="functional",
-		keep_work=True,
-		template="/usr/share/mouse-brain-atlases/dsurqec_200micron.nii",
-		registration_mask="/usr/share/mouse-brain-atlases/dsurqec_200micron_mask.nii",
-		actual_size=True,
-		)
-
 def ss():
 	from samri.pipelines import preprocess, glm
 	preprocessing.bruker('~/ni_data/ss/',

@@ -67,20 +67,6 @@ def p_clusters(mask):
 	timeseries.multi(timecourses, designs, stat_maps, events_dfs, subplot_titles, figure="timecourses")
 	plt.show()
 
-def roi_teaching(roi_path="~/ni_data/templates/roi/f_dr_chr.nii.gz"):
-	from samri.plotting import timeseries
-
-	design_file_template="~/ni_data/ofM.dr/l1/{l1_workdir}/_subject_session_scan_{subject}.{session}.{scan}/modelgen/run0.mat"
-	substitutions = bids_substitution_iterator(
-		["ofM_cF2"],
-		[4008],
-		["EPI_CBV_jb_long"],
-		"~/ni_data/ofM.dr/"
-		"composite",
-		)
-	timeseries.roi_based(substitutions[0], design_file_template=design_file_template, flip=True, plot_design_regressors=[0])
-	plt.show()
-
 def check_responders():
 	from samri.plotting import summary
 

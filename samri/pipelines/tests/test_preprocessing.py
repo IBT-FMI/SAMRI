@@ -1,7 +1,7 @@
 from samri.pipelines.preprocess import generic, legacy
 from samri.pipelines import manipulations
 
-bids_base = '/usr/share/samri_bidsdata/bids/'
+bids_base = '/usr/share/samri_bidsdata/bids'
 
 def test_generic():
 	generic(bids_base,
@@ -10,6 +10,6 @@ def test_generic():
 		functional_match={'acquisition':['EPIlowcov'],},
 		structural_match={'acquisition':['TurboRARElowcov'],},
 		actual_size=True,
-		out_base='/tmp/samri_testing/preprocessing',
-		workflow_name='generic',
+		out_base='/tmp/samri_testing/',
+		workflow_name='preprocessed',
 		)

@@ -7,5 +7,5 @@ def test_bru2bids():
 		inflated_size=False,
 		functional_match={"acquisition":["EPI"]},
 		structural_match={"acquisition":["TurboRARE"]},
-		out_base='/tmp/samri_testing/bids',
+		out_base='/tmp/samri_testing/',
 		)

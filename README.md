@@ -133,3 +133,23 @@ Needed only in conjunction with LabbookDB metadata management:
 * [SQLAlchemy](http://www.sqlalchemy.org/library.html)
 * [LabbookDB](https://github.com/TheChymera/LabbookDB)
 
+## Contributing
+
+As this is a top-level data analysis package, tests cannot be reliably performed without example data.
+While such data is packaged and correctly depended on by SAMRI, the long duration of runnign the tests cannot be easily mitigated.
+We thus recommend running the tests locally before submitting a pull request, and pasting the log.
+Tests can be run and a log recorded via:
+
+```
+cd your/location/for/SAMRI/
+pytest -vv
+```
+
+Additionally, SAMRI offers strong separation of its modules, and often it may suffice to only run the tests in the module you have worked on, and on the high-level plotting module:
+
+```
+cd your/location/for/SAMRI/samri/plotting/
+pytest -vv
+```
+
+This can allow you to skip the very time-consuming tests of the `samri.pipelines` module.

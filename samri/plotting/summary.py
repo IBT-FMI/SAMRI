@@ -394,7 +394,7 @@ def ts_overviews(substitutions, roi,
 	designs = []
 	try:
 		roi = path.abspath(path.expanduser(roi))
-	except AttributeError:
+	except (AttributeError, TypeError):
 		pass
 
 	if not n_jobs:

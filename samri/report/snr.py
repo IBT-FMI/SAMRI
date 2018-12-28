@@ -259,8 +259,12 @@ def significant_signal(data_path,
 		masker = NiftiMasker(mask_img=mask_path)
 		masked_data = masker.fit_transform(img).T
 		data = masked_data[~np.isnan(masked_data)]
+	else:
+		data = img.get_data()
+		data = data[~np.isnan(data)]
+	# We interpret zero as the lowest p-value, and conservatively estimate it to be equal to just under half of the smallest value in the defined range
 	nonzero = data[np.nonzero(data)]
-	data_min = np.min(nonzero)*0.99
+	data_min = np.min(nonzero)*0.49
 	data[data == 0] = data_min
 	data = -np.log10(data)
 	# We use np.ma.median() because life is complicated:

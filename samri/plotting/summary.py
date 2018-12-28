@@ -360,13 +360,15 @@ def roi_masking(substitution, ts_file_template, beta_file_template, design_file_
 	design_file = path.expanduser(design_file_template.format(**substitution))
 	event_file = path.expanduser(event_file_template.format(**substitution))
 
-	masker = NiftiMasker(mask_img=roi)
+	# We specify a target affine to avoid a nilearn MemoryError bug: https://github.com/nilearn/nilearn/issues/1883
+	ts_img = nib.load(ts_file)
+	masker = NiftiMasker(mask_img=roi, target_affine=ts_img.affine)
 	if isinstance(roi, str):
 		mask_map = nib.load(roi)
 	else:
 		mask_map = roi
 	try:
-		timecourse = masker.fit_transform(ts_file).T
+		timecourse = masker.fit_transform(ts_img).T
 		betas = masker.fit_transform(beta_file).T
 		design = pd.read_csv(design_file, skiprows=5, sep="\t", header=None, index_col=False)
 		event_df = pd.read_csv(event_file, sep="\t")

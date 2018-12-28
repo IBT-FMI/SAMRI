@@ -157,6 +157,7 @@ def roi_data(img_path, masker,
 		masker = NiftiMasker(mask_img=masker)
 		masked_data = masker.fit_transform(img)
 	masked_data = masked_data.flatten()
+	masked_data = masked_data[~np.isnan(masked_data)]
 	if exclude_zero:
 		masked_data = masked_data[np.abs(masked_data)>=zero_threshold]
 	masked_mean = np.mean(masked_data)

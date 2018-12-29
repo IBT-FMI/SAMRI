@@ -70,7 +70,10 @@ def p_clusters(mask):
 def check_responders():
 	from samri.plotting import summary
 
-	summary.responders("composite_subjects")
+	summary.responders("generic",
+		save_inplace=False,
+		save_as='responders.csv',
+		)
 
 def qc_regressor(sessions, subjects, scans, workflow_name, mask,
 	data_dir="~/ni_data/ofM.dr",

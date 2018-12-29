@@ -1,5 +1,5 @@
 [science]
-location = /var/repos/science
+location = /var/lib/overlays/science
 sync-type = git
 sync-uri = https://anongit.gentoo.org/git/proj/sci.git
 priority = 7777

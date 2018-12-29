@@ -59,10 +59,6 @@ def anova_fc():
 def anova():
 	from samri.fetch.local import roi_from_atlaslabel
 	from samri.pipelines import preprocess, glm
-	#roi = roi_from_atlaslabel("/usr/share/mouse-brain-atlases/dsurqec_40micron_labels.nii",
-	#	mapping="/usr/share/mouse-brain-atlases/dsurqec_mapping.csv",
-	#	label_names=["cortex"],
-	#	save_as="/tmp/ctx.nii.gz")
 	glm.l2_anova("~/ni_data/ofM.dr/bids/l1/generic/",
 		workflow_name="anova",
 		keep_work=False,

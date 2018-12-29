@@ -17,7 +17,12 @@ KEYWORDS=""
 
 # Numpy dependency to circumvent scikits_learn dependency bug:
 # https://bugs.gentoo.org/653052
-DEPEND="test? ( sci-biology/samri_bindata )"
+DEPEND="
+	test? (
+		sci-biology/samri_bindata
+		sci-biology/samri_bidsdata
+		)
+	"
 RDEPEND="
 	dev-python/argh[${PYTHON_USEDEP}]
 	dev-python/joblib[${PYTHON_USEDEP}]
@@ -27,18 +32,18 @@ RDEPEND="
 	dev-python/seaborn[${PYTHON_USEDEP}]
 	dev-python/sqlalchemy[${PYTHON_USEDEP}]
 	dev-python/statsmodels[${PYTHON_USEDEP}]
-	>=sci-biology/fsl-5.0.9
+	sci-biology/afni
+	sci-biology/ants
 	sci-biology/bru2nii
+	>=sci-biology/fsl-5.0.9
 	atlases? ( sci-biology/mouse-brain-atlases )
+	sci-biology/nilearn[${PYTHON_USEDEP}]
 	labbookdb? ( sci-libs/labbookdb[${PYTHON_USEDEP}] )
 	sci-libs/nibabel[${PYTHON_USEDEP}]
 	>=sci-libs/nipy-0.4.1[${PYTHON_USEDEP}]
 	>=sci-libs/nipype-1.0.0[${PYTHON_USEDEP}]
 	sci-libs/pybids[${PYTHON_USEDEP}]
 	sci-libs/scipy[${PYTHON_USEDEP}]
-	sci-biology/ants
-	sci-biology/afni
-	sci-biology/nilearn[${PYTHON_USEDEP}]
 	"
 
 src_unpack() {

@@ -67,12 +67,13 @@ def reset_background(in_file,
 	"""
 
 	import nibabel as nib
+	import numpy as np
 	from scipy import stats
 
 	img = nib.load(in_file)
 	data = img.get_data()
 	number_of_slices = np.shape(data)[3]
-	if crestriction_range == 'auto':
+	if restriction_range == 'auto':
 		restriction_range = min(np.shape(data)[:3])
 	for i in range(number_of_slices):
 		if not restriction_range:
@@ -82,7 +83,7 @@ def reset_background(in_file,
 		old_bg_value = old_bg_value.mode[0]
 		data[:,:,:,i][data[:,:,:,i]==old_bg_value] = bg_value
 	img_ = nib.Nifti1Image(data, img.affine, img.header)
-	nib.save(out_file)
+	nib.save(img_,out_file)
 
 def force_dummy_scans(in_file,
 	desired_dummy_scans=10,

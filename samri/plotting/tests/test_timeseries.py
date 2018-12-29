@@ -43,6 +43,6 @@ def test_multi_roi_timeseries():
 
 	timeseries.multi(timecourses, designs, events_dfs, subplot_titles,
 	       quantitative=False,
-	       save_as='multi_roi_timeseries.pdf',
+	       save_as='_multi_roi_timeseries.pdf',
 	       )
 

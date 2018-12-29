@@ -57,5 +57,5 @@ def test_activity_timecourse_with_inlay():
 		alpha=0.8,
 		)
 
-	plt.savefig('activity_timecourse_with_inlay.png')
+	plt.savefig('_activity_timecourse_with_inlay.png')
 

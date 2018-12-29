@@ -58,4 +58,4 @@ def test_population_roi_over_time():
 	       alpha=0.8,
 	       )
 
-       plt.savefig('test_population_roi_over_time.png')
+       plt.savefig('_test_population_roi_over_time.png')

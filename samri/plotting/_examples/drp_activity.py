@@ -48,7 +48,7 @@ sns.pointplot(
        )
 
 ax2 = plt.axes(roi_coordinates)
-maps.atlas_label("~/ni_data/templates/roi/DSURQEc_drp.nii.gz",
+maps.atlas_label("/usr/share/mouse-brain-atlases/dsurqec_200micron_roi-dr.nii",
 	scale=0.3,
 	color="#E69F00",
 	ax=ax2,

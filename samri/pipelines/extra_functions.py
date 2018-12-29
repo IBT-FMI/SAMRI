@@ -57,13 +57,29 @@ MODALITY_MATCH = {
 	}
 
 def reset_background(in_file,
-	restriction_range='auto',
 	bg_value=0,
 	out_file='background_reset_complete.nii.gz',
+	restriction_range='auto',
 	):
 	"""
 	Set the background voxel value of a 4D NIfTI time series to a given value.
 	It is sometimes necessary to perform this function, as some workflows may populate the background with values which may confuse statistics further downstream.
+	Background voxels are not specifically highlighted, we define the background as the mode of any image, assuming there is decisively more background than any other one level of the contrast.
+	If your data for some reason does not satisfy this assumption, the function will not behave correctly.
+
+	Parameters
+	----------
+
+	in_file : string
+		File for which to reset background values.
+	bg_value : float, optional
+		What value to insert in voxels identified as background.
+	out_file : str, optional
+		Path where the background reset NIfTI image will be written. 
+	restriction_range : int or string, optional
+		What restricted range (if any) to use as the bounding box for the image area on which the mode is actually determined.
+		If auto, the mode is determined on a bounding box the size of the smallest spatial axis.
+		If the variable evaluates as false, no restriction will be used and the mode will be calculated given all spatial data --- which can be extremely time-consuming.
 	"""
 
 	import nibabel as nib

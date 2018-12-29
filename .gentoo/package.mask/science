@@ -13,3 +13,6 @@ sci-libs/blas-reference::gentoo
 sci-libs/cblas-reference::gentoo
 sci-libs/lapack-reference::gentoo
 sci-libs/mkl::gentoo
+
+## more recently requires (see: https://github.com/gentoo/sci/issues/878 )
+>=dev-util/cmake-3.12.0

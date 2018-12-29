@@ -56,6 +56,34 @@ MODALITY_MATCH = {
 	('MToff','MtOff'):'MToff',
 	}
 
+def reset_background(in_file,
+	restriction_range='auto',
+	bg_value=0,
+	out_file='background_reset_complete.nii.gz',
+	):
+	"""
+	Set the background voxel value of a 4D NIfTI time series to a given value.
+	It is sometimes necessary to perform this function, as some workflows may populate the background with values which may confuse statistics further downstream.
+	"""
+
+	import nibabel as nib
+	from scipy import stats
+
+	img = nib.load(in_file)
+	data = img.get_data()
+	number_of_slices = np.shape(data)[3]
+	if crestriction_range == 'auto':
+		restriction_range = min(np.shape(data)[:3])
+	for i in range(number_of_slices):
+		if not restriction_range:
+			old_bg_value = stats.mode(data[:,:,:,i])
+		else:
+			old_bg_value = stats.mode(data[:restriction_range,:restriction_range,:restriction_range,i])
+		old_bg_value = old_bg_value.mode[0]
+		data[:,:,:,i][data[:,:,:,i]==old_bg_value] = bg_value
+	img_ = nib.Nifti1Image(data, img.affine, img.header)
+	nib.save(out_file)
+
 def force_dummy_scans(in_file,
 	desired_dummy_scans=10,
 	out_file="forced_dummy_scans_file.nii.gz",

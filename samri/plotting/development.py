@@ -14,33 +14,35 @@ from samri.fetch.local import roi_from_atlaslabel
 from samri.plotting import maps
 from samri.analysis import fc
 
-def overview(workflow, identifiers,
-	cut_coords=[None, [0,-4.5,-3.3]],
-	threshold=2.5,
-	template="/usr/share/mouse-brain-atlases/dsurqec_40micron_masked.nii",
-	orientation="portrait",
-	save_as="",
-	):
-	"""Plot the statistical maps per-factor from a 2nd level GLM workflow result directory."""
-	plt.style.use('samri.conf')
 
-	stat_maps_ = ["~/ni_data/ofM.dr/l2/{0}/{1}/tstat1.nii.gz".format(workflow, i) for i in identifiers]
-	stat_maps_ = [i for i in stat_maps_ if path.isfile(i)]
-	identifiers = [[i]*len(cut_coords) for i in identifiers]
-	stat_maps = [[i]*len(cut_coords) for i in stat_maps_]
-	stat_maps = [item for sublist in stat_maps for item in sublist]
-	identifiers = [item for sublist in identifiers for item in sublist]
-	cut_coords = cut_coords*len(stat_maps_)
-	maps.stat(stat_maps,
-		template=template,
-		threshold=threshold,
-		interpolation="none",
-		figure_title=workflow,
-		subplot_titles=identifiers,
-		cut_coords=cut_coords,
-		orientation=orientation,
-		save_as=save_as,
-		)
+# Replace with something that takes arbitrary inputs and determines plot titles from the BIDS file name
+#def overview(workflow, identifiers,
+#	cut_coords=[None, [0,-4.5,-3.3]],
+#	threshold=2.5,
+#	template="/usr/share/mouse-brain-atlases/dsurqec_40micron_masked.nii",
+#	orientation="portrait",
+#	save_as="",
+#	):
+#	"""Plot the statistical maps per-factor from a 2nd level GLM workflow result directory."""
+#	plt.style.use('samri.conf')
+#
+#	stat_maps_ = ["~/ni_data/ofM.dr/l2/{0}/{1}/tstat1.nii.gz".format(workflow, i) for i in identifiers]
+#	stat_maps_ = [i for i in stat_maps_ if path.isfile(i)]
+#	identifiers = [[i]*len(cut_coords) for i in identifiers]
+#	stat_maps = [[i]*len(cut_coords) for i in stat_maps_]
+#	stat_maps = [item for sublist in stat_maps for item in sublist]
+#	identifiers = [item for sublist in identifiers for item in sublist]
+#	cut_coords = cut_coords*len(stat_maps_)
+#	maps.stat(stat_maps,
+#		template=template,
+#		threshold=threshold,
+#		interpolation="none",
+#		figure_title=workflow,
+#		subplot_titles=identifiers,
+#		cut_coords=cut_coords,
+#		orientation=orientation,
+#		save_as=save_as,
+#		)
 
 def p_clusters(mask):
 	from samri.plotting import summary, timeseries

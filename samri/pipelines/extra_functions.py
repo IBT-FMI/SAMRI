@@ -95,7 +95,7 @@ def reset_background(in_file,
 		if not restriction_range:
 			old_bg_value = stats.mode(data[:,:,:,i])
 		else:
-			old_bg_value = stats.mode(data[:restriction_range,:restriction_range,:restriction_range,i])
+			old_bg_value = stats.mode(data[:restriction_range,:restriction_range,:restriction_range,i].flatten())
 		old_bg_value = old_bg_value.mode[0]
 		data[:,:,:,i][data[:,:,:,i]==old_bg_value] = bg_value
 	img_ = nib.Nifti1Image(data, img.affine, img.header)
@@ -368,56 +368,56 @@ def corresponding_eventfile(timecourse_file):
 
 	return eventfile
 
-def get_scan(measurements_base, data_selection,
-	scan_type="",
-	selector=None,
-	subject=None,
-	session=None,
-	task=None,
-	):
-	"""Return the path to a Bruker scan selected by subject, session, and scan type, based on metadata previously extracted with `samri.preprocessing.extra_functions.get_data_selection()`.
-
-	Parameters
-	----------
-	measurements_base : str
-		Path to the measurements base path (this is simply prepended to the variable part of the path).
-	data_selection : pandas.DataFrame
-		A `pandas.DataFrame` object as produced by `samri.preprocessing.extra_functions.get_data_selection()`.
-	scan_type : str
-		The type of scan for which to determine the directory.
-	selector : iterable, optional
-		The first method of selecting the subject and scan, this value should be a length-2 list or tuple containing the subject and sthe session to be selected.
-	subject : string, optional
-		This has to be defined if `selector` is not defined. The subject for which to return a scan directory.
-	session : string, optional
-		This has to be defined if `selector` is not defined. The session for which to return a scan directory.
-	"""
-	import os #for some reason the import outside the function fails
-	import pandas as pd
-
-	if not subject:
-		subject = selector[0]
-	if not session:
-		session = selector[1]
-	filtered_data = data_selection[(data_selection["session"] == session)&(data_selection["subject"] == subject)]
-	if task:
-		filtered_data = filtered_data[filtered_data["task"] == task]
-	if scan_type:
-		filtered_data = filtered_data[filtered_data["scan_type"] == scan_type]
-	measurement_path = filtered_data["measurement"].item()
-	scan_subdir = filtered_data["scan"].item()
-	if measurement_path[0] == '/':
-		scan_path = os.path.join(measurement_path,scan_subdir)
-	else:
-		scan_path = os.path.join(measurements_base,measurement_path,scan_subdir)
-
-	if not task:
-		try:
-			task = filtered_data['task'].item()
-		except KeyError:
-			pass
-
-	return scan_path, scan_type, task
+#def get_scan(measurements_base, data_selection,
+#	scan_type="",
+#	selector=None,
+#	subject=None,
+#	session=None,
+#	task=None,
+#	):
+#	"""Return the path to a Bruker scan selected by subject, session, and scan type, based on metadata previously extracted with `samri.preprocessing.extra_functions.get_data_selection()`.
+#
+#	Parameters
+#	----------
+#	measurements_base : str
+#		Path to the measurements base path (this is simply prepended to the variable part of the path).
+#	data_selection : pandas.DataFrame
+#		A `pandas.DataFrame` object as produced by `samri.preprocessing.extra_functions.get_data_selection()`.
+#	scan_type : str
+#		The type of scan for which to determine the directory.
+#	selector : iterable, optional
+#		The first method of selecting the subject and scan, this value should be a length-2 list or tuple containing the subject and sthe session to be selected.
+#	subject : string, optional
+#		This has to be defined if `selector` is not defined. The subject for which to return a scan directory.
+#	session : string, optional
+#		This has to be defined if `selector` is not defined. The session for which to return a scan directory.
+#	"""
+#	import os #for some reason the import outside the function fails
+#	import pandas as pd
+#
+#	if not subject:
+#		subject = selector[0]
+#	if not session:
+#		session = selector[1]
+#	filtered_data = data_selection[(data_selection["session"] == session)&(data_selection["subject"] == subject)]
+#	if task:
+#		filtered_data = filtered_data[filtered_data["task"] == task]
+#	if scan_type:
+#		filtered_data = filtered_data[filtered_data["scan_type"] == scan_type]
+#	measurement_path = filtered_data["measurement"].item()
+#	scan_subdir = filtered_data["scan"].item()
+#	if measurement_path[0] == '/':
+#		scan_path = os.path.join(measurement_path,scan_subdir)
+#	else:
+#		scan_path = os.path.join(measurements_base,measurement_path,scan_subdir)
+#
+#	if not task:
+#		try:
+#			task = filtered_data['task'].item()
+#		except KeyError:
+#			pass
+#
+#	return scan_path, scan_type, task
 
 def get_bids_scan(data_selection,
 	bids_base="",

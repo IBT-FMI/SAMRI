@@ -209,19 +209,22 @@ def fc_per_session(substitutions, analytic_pattern,
 def responders(l2_dir,
 	roi="dsurqec_200micron_roi-dr",
 	data_root="~/ni_data/ofM.dr",
-	roi_root="/usr/share/mouse-brain-atlases/"
+	roi_root="/usr/share/mouse-brain-atlases",
+	save_inplace=True,
+	save_as='',
 	):
 
-	data_regex = "(?P<subject>.+)/tstat1.nii.gz"
+	data_regex = "(?P<subject>.+)/.*?_tstat\.nii\.gz"
 	data_path = "{data_root}/l2/{l2_dir}/".format(data_root=data_root, l2_dir=l2_dir)
 	data_path = path.expanduser(data_path)
-	roi_path = "{roi_root}/{roi}.nii.gz".format(roi_root=roi_root, roi=roi)
+	roi_path = "{roi_root}/{roi}.nii".format(roi_root=roi_root, roi=roi)
 	roi_path = path.expanduser(roi_path)
 
 	data_find = DataFinder()
 	data_find.inputs.root_paths = data_path
 	data_find.inputs.match_regex = path.join(data_path,data_regex)
 	found_data = data_find.run().outputs
+	print(found_data)
 
 	masker = NiftiMasker(mask_img=roi_path)
 	voxeldf = pd.DataFrame({})
@@ -237,7 +240,11 @@ def responders(l2_dir,
 			voxel_data["t"]=i
 			df_ = pd.DataFrame(voxel_data, index=[None])
 			voxeldf = pd.concat([voxeldf,df_])
-	voxeldf.to_csv('{}/ctx_responders.csv'.format(data_path))
+	if save_inplace:
+		voxeldf.to_csv('{}/ctx_responders.csv'.format(data_path))
+	else:
+		voxeldf.to_csv(path.abspath(path.expanduser(save_as)))
+
 
 def p_roi_masking(substitution, ts_file_template, beta_file_template, p_file_template, design_file_template, event_file_template, p_level, brain_mask):
 	"""Apply a substitution pattern to timecourse, beta, and design file templates - and mask the data of the former two according to a roi. Subsequently scale the design by the mean beta.

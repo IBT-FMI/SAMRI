@@ -207,9 +207,9 @@ def fc_per_session(substitutions, analytic_pattern,
 
 
 def responders(l2_dir,
-	roi="DSURQEc_ctx",
+	roi="dsurqec_200micron_roi-dr",
 	data_root="~/ni_data/ofM.dr",
-	roi_root="~/ni_data/templates/roi"
+	roi_root="/usr/share/mouse-brain-atlases/"
 	):
 
 	data_regex = "(?P<subject>.+)/tstat1.nii.gz"

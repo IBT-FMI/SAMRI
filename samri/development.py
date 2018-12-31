@@ -213,36 +213,3 @@ def reg_cc(
 			save_as= save + "_" + metric +  ".csv",
                         )
 
-
-def test_autofind():
-	"""We may be able to turn this into a CI function, if we put together a data fetching script for dummy (empty) BIDS-formatted data.
-	"""
-	from samri.utilities import bids_autofind
-	from samri.plotting.aggregate import registration_qc
-	from samri.report.registration import iter_measure_sim
-	from samri.typesetting import inline_anova
-	from samri.utilities import bids_substitution_iterator
-
-	path_template, substitutions = bids_autofind("~/ni_data/ofM.dr/preprocessing/composite","func")
-
-	df = iter_measure_sim(path_template, substitutions,
-		"/usr/share/mouse-brain-atlases/dsurqec_200micron.nii",
-		metric="CC",
-		radius_or_number_of_bins=10,
-		sampling_strategy="Regular",
-		sampling_percentage=0.33,
-		save_as=False,
-		)
-
-	anova_summary = registration_qc(df,
-		value={"similarity":"Similarity"},
-		group={"sub":"Subject"},
-		repeat={"ses":"Session"},
-		show=False,
-		save_as="/tmp/f_reg_cc10.png",
-		)
-
-	subject_effect = inline_anova(anova_summary,"C(Subject)",style="python")
-	print("Subject Main Effect: {}".format(subject_effect))
-	session_effect = inline_anova(anova_summary,"C(Session)",style="python")
-	print("Session Main Effect: {}".format(session_effect))

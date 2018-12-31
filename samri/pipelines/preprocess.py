@@ -33,7 +33,6 @@ def divideby_10(x):
 	return x/10.
 
 def legacy(bids_base, template,
-	autorotate=False,
 	debug=False,
 	functional_blur_xy=False,
 	functional_match={},
@@ -59,9 +58,6 @@ def legacy(bids_base, template,
 		Path to the BIDS data set root.
 	template : str
 		Path to the template to register the data to.
-	autorotate : bool, optional
-		Whether to use a multi-rotation-state transformation start.
-		This allows the registration to commence with the best rotational fit, and may help if the orientation of the data is malformed with respect to the header.
 	debug : bool, optional
 		Whether to enable nipype debug mode.
 		This increases logging.

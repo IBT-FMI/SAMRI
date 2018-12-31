@@ -206,26 +206,3 @@ def structural(substitutions, parameters,
 			struct_registration.inputs.moving_image = n4_out
 			print("Running registration:\n{}".format(struct_registration.cmdline))
 			struct_registration_run = struct_registration.run()
-
-if __name__ == '__main__':
-	# substitutions = bids_substitution_iterator(
-	# 	["ofM","ofM_aF","ofM_cF1","ofM_cF2","ofM_pF"],
-	# 	["4011","4012","5689","5690","5691"],
-	# 	["EPI_CBV_jb_long","EPI_CBV_chr_longSOA"],
-	# 	"composite")
-	substitutions = bids_substitution_iterator(
-		["ofM","ofM_aF","ofM_cF1","ofM_cF2","ofM_pF"],
-		["5690"],
-		["TurboRARE"],
-		"~/ni_data/ofM.dr",
-		"composite")
-	structural(substitutions, [PHASES["rigid"],PHASES["affine"],PHASES["syn"]],
-		structural_file_template="~/ni_data/ofM.dr/preprocessing/{preprocessing_workdir}/_subject_session_{subject}.{session}/_scan_type_{scan}/s_bru2nii/",
-		)
-
-	# structural_to_functional_per_participant_test(
-	# 	subjects_participants = [{'subjfect' : 11, 'session': 'rstFMRI_with_medetadomine'}],
-	# 	template = "~/GitHub/mriPipeline/templates/waxholm/WHS_SD_rat_T2star_v1.01_downsample3.nii.gz",
-	# 	f_file_format = "~/GitHub/mripipeline/base/preprocessing/generic_work/_subject_session_{subject}.{session}/_scan_type_SE_EPI/f_bru2nii/",
-	# 	s_file_format = "~/GitHub/mripipeline/base/preprocessing/generic_work/_subject_session_{subject}.{session}/_scan_type_T2_TurboRARE/s_bru2nii/",
-	# 	)

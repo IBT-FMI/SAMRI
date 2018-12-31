@@ -75,7 +75,7 @@ def reset_background(in_file,
 	bg_value : float, optional
 		What value to insert in voxels identified as background.
 	out_file : str, optional
-		Path where the background reset NIfTI image will be written. 
+		Path where the background reset NIfTI image will be written.
 	restriction_range : int or string, optional
 		What restricted range (if any) to use as the bounding box for the image area on which the mode is actually determined.
 		If auto, the mode is determined on a bounding box the size of the smallest spatial axis.

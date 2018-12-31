@@ -2,7 +2,6 @@ import nipype.interfaces.ants as ants
 import os
 import re
 from samri.pipelines.utils import TRANSFORM_PHASES
-from samri.pipelines.nodes import autorotate
 
 from samri.utilities import iter_collapse_by_path
 

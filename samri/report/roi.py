@@ -188,8 +188,8 @@ def analytic_pattern_per_session(substitutions, analytic_pattern,
 	return df
 
 def activity(roi,
-	atlas='',
-	mapping='',
+	atlas='/usr/share/mouse-brain-atlases/dsurqec_40micron_labels.nii',
+	mapping='/usr/share/mouse-brain-atlases/dsurqe_labels.csv',
 	):
 	"""
 	TODO : make more generalizable, too many hardcoded values
@@ -204,8 +204,6 @@ def activity(roi,
 	from samri.fetch.local import roi_from_atlaslabel
 	from os.path import basename, splitext
 
-	#mapping='/usr/share/mouse-brain-atlases/dsurqec_mapping.csv'
-	#atlas='/usr/share/mouse-brain-atlases/dsurqec_40micron_labels.nii'
 	if mapping and atlas:
 		mapping = path.abspath(path.expanduser(mapping))
 		atlas = path.abspath(path.expanduser(atlas))

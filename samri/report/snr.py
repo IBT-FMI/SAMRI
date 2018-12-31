@@ -224,6 +224,7 @@ def threshold_volume(in_file,
 def significant_signal(data_path,
 	substitution={},
 	mask_path='',
+	exclude_ones=False,
 	):
 	"""Return the mean and median inverse logarithm of a p-value map.
 
@@ -266,6 +267,8 @@ def significant_signal(data_path,
 	nonzero = data[np.nonzero(data)]
 	data_min = np.min(nonzero)*0.49
 	data[data == 0] = data_min
+	if exclude_ones:
+		data = data[data!=1]
 	data = -np.log10(data)
 	# We use np.ma.median() because life is complicated:
 	# https://github.com/numpy/numpy/issues/7330
@@ -276,6 +279,7 @@ def significant_signal(data_path,
 
 def df_significant_signal(df,
 	mask_path='',
+	exclude_ones=False,
 	save_as='',
 	n_jobs=False,
 	n_jobs_percentage=0.8,
@@ -317,6 +321,7 @@ def df_significant_signal(df,
 		in_files,
 		[None]*iter_length,
 		[mask_path]*iter_length,
+		[exclude_ones]*iter_length,
 		))
 	df['Mean '+column_string] = [i[0] for i in iter_data]
 	df['Median '+column_string] = [i[1] for i in iter_data]
@@ -332,6 +337,7 @@ def df_significant_signal(df,
 def iter_significant_signal(file_template, substitutions,
 	mask_path='',
 	save_as='',
+	exclude_ones=False,
 	):
 	"""
 	Create a `pandas.DataFrame` (optionally savable as `.csv`), containing the means and medians of a number of p-value maps specified by a file template supporting substitution and a substitution list of dictionaries.
@@ -361,6 +367,7 @@ def iter_significant_signal(file_template, substitutions,
 		[file_template]*len(substitutions),
 		substitutions,
 		[mask_path]*len(substitutions),
+		[exclude_ones]*len(substitutions),
 		))
 
 	df_items = [

@@ -166,7 +166,8 @@ def diagnose(bids_base,
 			workflow_connections.extend([
 				(report_tr, realigner, [('tr', 'tr')]),
 				])
-		realigner.inputs.slice_info = 3 #3 for coronal slices (2 for horizontal, 1 for sagittal)
+		#3 for coronal slices (2 for horizontal, 1 for sagittal)
+		realigner.inputs.slice_info = 3
 		workflow_connections.extend([
 			(dummy_scans, realigner, [('out_file', 'in_file')]),
 			(realigner, melodic, [('out_file', 'in_files')]),

@@ -180,6 +180,22 @@ def write_bids_metadata_file(scan_dir, extraction_dicts,
 	out_file="bids_metadata.json",
 	task_name=False,
 	):
+	"""Create a sidecar JSON file according to the BIDS standard.
+
+	Parameters
+	----------
+
+	scan_dir : str
+		Path to the scan directory containing the acquisition protocol files.
+	extraction_dicts : str
+		A list of dictionaries which contain keys including `query_file` (which specifies the file, relative to `scan dir`, which to query), `regex` (which gives a regex expression which will be tested against each rowin the file until a match is found), and `field_name` (which specifies under what field name to record this value in the JSON file).
+		Additionally, the following keys are also supported: `type` (a python class operator, e.g. `str` to which the value should be converted), and `scale` (a float with which the value is multiplied before recording in JSON).
+	out_file : str, optional
+		Path under which to save the resulting JSON.
+	task_name : str, optional
+		String value to assign to the “TaskName” field in the BIDS JSON.
+		If this parameter evaluates to false, no “TaskName” will be recorded.
+	"""
 
 	import json
 	import re

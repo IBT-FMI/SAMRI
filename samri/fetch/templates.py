@@ -6,10 +6,6 @@ import os
 
 def fetch_rat_waxholm(template_dir="~/.samri_files/templates/rat/waxholm/", verbose=1):
 	"""
-	!!!ATTENTION:
-	!!!	Please deprecate this function.
-	!!!	We should distribute dependencies such as atlases in the form of unambiguously managed packages, and not data fetched from the web at runtime.
-
 	Download and load waxholm atlas for Sprague Dawley rat
 
 	Returns
@@ -20,6 +16,11 @@ def fetch_rat_waxholm(template_dir="~/.samri_files/templates/rat/waxholm/", verb
 		atlas - pixelvalues of regions are grouped together, with corresponding labels in labels.ccv; nifti file
 		labels - labels annotating brain regions for pixelgroups in atlas; csv file
 
+
+	Notes
+	-----
+	Please deprecate this function.
+	We should distribute dependencies such as atlases in the form of unambiguously managed packages, and not data fetched from the web at runtime.
 
 	References
 	----------

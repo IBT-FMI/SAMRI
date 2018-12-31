@@ -1,5 +1,5 @@
 from os import path, remove
-from samri.pipelines.extra_functions import get_data_selection, get_scan, get_bids_scan, write_bids_metadata_file, write_bids_events_file, BIDS_METADATA_EXTRACTION_DICTS
+from samri.pipelines.extra_functions import get_data_selection, get_bids_scan, write_bids_metadata_file, write_bids_events_file, BIDS_METADATA_EXTRACTION_DICTS
 
 import argh
 import re
@@ -264,41 +264,6 @@ def bru2bids(measurements_base,
 			(d_metadata_file, datasink, [('out_file', 'dwi.@metadata')]),
 			]
 
-		#get_d_scan = pe.Node(name='get_d_scan', interface=util.Function(function=get_scan, input_names=inspect.getargspec(get_scan)[0], output_names=['scan_path','scan_type','task']))
-		#get_d_scan.inputs.ignore_exception = True
-		#get_d_scan.inputs.data_selection = data_selection
-		#get_d_scan.inputs.measurements_base = measurements_base
-		#get_d_scan.iterables = ("scan_type", diffusion_scan_types)
-
-		#d_bru2nii = pe.Node(interface=bru2nii.Bru2(), name="d_bru2nii")
-		#d_bru2nii.inputs.force_conversion=True
-		#d_bru2nii.inputs.actual_size = not inflated_size
-
-		#d_filename = pe.Node(name='d_filename', interface=util.Function(function=bids_naming,input_names=inspect.getargspec(bids_naming)[0], output_names=['filename']))
-		#d_filename.inputs.metadata = data_selection
-		#d_filename.inputs.extension=''
-
-		#d_metadata_filename = pe.Node(name='d_metadata_filename', interface=util.Function(function=bids_naming,input_names=inspect.getargspec(bids_naming)[0], output_names=['filename']))
-		#d_metadata_filename.inputs.extension = ".json"
-		#d_metadata_filename.inputs.metadata = data_selection
-
-		#d_metadata_file = pe.Node(name='d_metadata_file', interface=util.Function(function=write_bids_metadata_file,input_names=inspect.getargspec(write_bids_metadata_file)[0], output_names=['out_file']))
-		#d_metadata_file.inputs.extraction_dicts = BIDS_METADATA_EXTRACTION_DICTS
-
-		#workflow_connections = [
-		#	(infosource, datasink, [(('subject_session',ss_to_path), 'container')]),
-		#	(infosource, get_d_scan, [('subject_session', 'selector')]),
-		#	(infosource, d_filename, [('subject_session', 'subject_session')]),
-		#	(infosource, d_metadata_filename, [('subject_session', 'subject_session')]),
-		#	(get_d_scan, d_bru2nii, [('scan_path','input_dir')]),
-		#	(get_d_scan, d_filename, [('scan_type', 'scan_type')]),
-		#	(get_d_scan, d_metadata_filename, [('scan_type', 'scan_type')]),
-		#	(get_d_scan, d_metadata_file, [('scan_path', 'scan_dir')]),
-		#	(d_filename, d_bru2nii, [('filename','output_filename')]),
-		#	(d_metadata_filename, d_metadata_file, [('filename', 'out_file')]),
-		#	(d_bru2nii, datasink, [('nii_file', 'dwi')]),
-		#	(d_metadata_file, datasink, [('out_file', 'dwi.@metadata')]),
-		#	]
 		crashdump_dir = path.join(out_base,workflow_name+'_crashdump')
 		workflow_config = {'execution': {'crashdump_dir': crashdump_dir}}
 		if debug:

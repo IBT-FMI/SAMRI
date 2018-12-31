@@ -471,7 +471,8 @@ BIDS_KEY_DICTIONARY = {
 	}
 
 def assign_modality(scan_type, record):
-	"""Add a modality column with a corresponding value to a `pandas.DataFrame` object.
+	"""
+	Add a modality column with a corresponding value to a `pandas.DataFrame` object.
 
 	Parameters
 	----------
@@ -483,6 +484,11 @@ def assign_modality(scan_type, record):
 	Returns
 	-------
 	An updated `pandas.DataFrame` obejct.
+
+	Notes
+	-----
+	The term “modality” is ambiguous in BIDS; here we use it to mean what is better though of as “contrast”:
+	https://github.com/bids-standard/bids-specification/pull/119
 	"""
 	for modality_group in MODALITY_MATCH:
 		for modality_string in modality_group:

@@ -10,6 +10,6 @@ def test_generic():
 		functional_match={'acquisition':['EPIlowcov'],},
 		structural_match={'acquisition':['TurboRARElowcov'],},
 		actual_size=True,
-		out_base='/tmp/samri_testing/',
+		out_base='/tmp/samri_testing/pytest/',
 		workflow_name='preprocessed',
 		)

@@ -116,7 +116,7 @@ def bru2bids(measurements_base,
 			)
 		structural_scan_types = list(s_data_selection['scan_type'].unique())
 		struct_ind = s_data_selection.index.tolist()
-		data_selection = pd.concat([data_selection,s_data_selection])
+		data_selection = pd.concat([data_selection,s_data_selection], sort=True)
 	if functional_match:
 		f_data_selection = get_data_selection(measurements_base,
 			match=functional_match,
@@ -125,7 +125,7 @@ def bru2bids(measurements_base,
 			)
 		functional_scan_types = list(f_data_selection['scan_type'].unique())
 		func_ind = f_data_selection.index.tolist()
-		data_selection = pd.concat([data_selection,f_data_selection])
+		data_selection = pd.concat([data_selection,f_data_selection], sort=True)
 	if diffusion_match:
 		d_data_selection = get_data_selection(measurements_base,
 			match=diffusion_match,
@@ -134,7 +134,7 @@ def bru2bids(measurements_base,
 			)
 		diffusion_scan_types = list(d_data_selection['scan_type'].unique())
 		dwi_ind = d_data_selection.index.tolist()
-		data_selection = pd.concat([data_selection,d_data_selection])
+		data_selection = pd.concat([data_selection,d_data_selection], sort=True)
 
 	# we start to define nipype workflow elements (nodes, connections, meta)
 	subjects_sessions = data_selection[["subject","session"]].drop_duplicates().values.tolist()

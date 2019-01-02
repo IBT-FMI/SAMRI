@@ -216,6 +216,7 @@ def l1(preprocessing_dir,
 				(bandpass, specify_model, [('out_file', 'functional_runs')]),
 				(bandpass, glm, [('out_file', 'in_file')]),
 				(bandpass, datasink, [('out_file', '@ts_file')]),
+				(get_scan, bandpass, [('nii_name', 'out_file')]),
 				])
 		else:
 			workflow_connections.extend([
@@ -223,6 +224,7 @@ def l1(preprocessing_dir,
 				(bandpass, specify_model, [('out_file', 'functional_runs')]),
 				(bandpass, glm, [('out_file', 'in_file')]),
 				(bandpass, datasink, [('out_file', '@ts_file')]),
+				(get_scan, bandpass, [('nii_name', 'out_file')]),
 				])
 	else:
 		if invert:
@@ -231,6 +233,7 @@ def l1(preprocessing_dir,
 				(invert, specify_model, [('out_file', 'functional_runs')]),
 				(invert, glm, [('out_file', 'in_file')]),
 				(invert, datasink, [('out_file', '@ts_file')]),
+				(get_scan, invert, [('nii_name', 'out_file')]),
 				])
 		else:
 			workflow_connections.extend([

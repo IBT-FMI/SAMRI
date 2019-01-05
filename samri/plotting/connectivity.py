@@ -1,6 +1,6 @@
 import numpy as np
 import collections
-import seaborn.apionly as sns
+import seaborn as sns
 import matplotlib
 matplotlib.use('Agg')
 from matplotlib import pyplot as plt

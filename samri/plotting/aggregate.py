@@ -3,7 +3,7 @@ import matplotlib as mpl
 import matplotlib.patheffects as path_effects
 import numpy as np
 import pandas as pd
-import seaborn.apionly as sns
+import seaborn as sns
 from os import path
 from matplotlib import rcParams
 

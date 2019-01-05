@@ -8,7 +8,7 @@ import numpy as np
 import multiprocessing as mp
 import pandas as pd
 import matplotlib.pyplot as plt
-import seaborn.apionly as sns
+import seaborn as sns
 import statsmodels.formula.api as smf
 from joblib import Parallel, delayed
 from matplotlib import rcParams

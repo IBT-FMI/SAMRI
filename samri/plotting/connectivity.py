@@ -88,5 +88,5 @@ def plot_connectivity_matrix(correlation_matrix,
 	# plt.subplots_adjust(left=.01, bottom=.3, top=.99, right=.62)
 	if(save_as):
 		plt.savefig(path.abspath(path.expanduser(save_as)))
-	
+
 	return plt

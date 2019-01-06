@@ -15,8 +15,6 @@ SLOT="0"
 IUSE="+atlases labbookdb test"
 KEYWORDS=""
 
-# Numpy dependency to circumvent scikits_learn dependency bug:
-# https://bugs.gentoo.org/653052
 DEPEND="
 	test? (
 		sci-biology/samri_bindata

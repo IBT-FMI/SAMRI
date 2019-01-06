@@ -380,7 +380,7 @@ def roi_masking(substitution, ts_file_template, beta_file_template, design_file_
 		design = pd.read_csv(design_file, skiprows=5, sep="\t", header=None, index_col=False)
 		event_df = pd.read_csv(event_file, sep="\t")
 	except ValueError:
-		print('Not found',ts_file,beta_file,design_file,event_file)
+		print('Not found:','\n',ts_file,'\n',beta_file,'\n',design_file,'\n',event_file)
 		return None,None,None,None,None
 	subplot_title = "Subject {} | Session {}".format(str(substitution["subject"]),str(substitution["session"]))
 	timecourse = np.mean(timecourse, axis=0)

@@ -503,6 +503,7 @@ def assign_modality(scan_type, record):
 	return scan_type, record
 
 def match_exclude_ss(entry, match, exclude, record, key):
+	"""Return true if an entry is to be accepted based on the match and exclude criteria."""
 	try:
 		exclude_list = exclude[key]
 	except KeyError:
@@ -512,15 +513,19 @@ def match_exclude_ss(entry, match, exclude, record, key):
 	except KeyError:
 		match_list = []
 	if entry not in exclude_list:
-		if len(match_list) > 0 and entry not in match_list:
+		if len(match_list) > 0 and (entry not in match_list or str(entry) not in match_list):
 			return False
-		else:
-			record[key] = str(entry).strip(' ')
+		record[key] = str(entry).strip(' ')
 		return True
 	else:
 		return False
 
 def match_exclude_bids(key, values, record, scan_type, number):
+	"""
+	Return True if the key and value pair are represented in the scan_type string (and add the scan_type and number values to the record dictionary).
+	Return False if not.
+	"""
+
 	try:
 		key_alternatives = BIDS_KEY_DICTIONARY[key]
 	except KeyError:
@@ -530,8 +535,6 @@ def match_exclude_bids(key, values, record, scan_type, number):
 			for value in values:
 				match_string = r'(^|.*?_|.*? ){alternative}-{value}( .*?|_.*?|$)'.format(alternative=alternative,value=value)
 				if re.match(match_string, scan_type):
-					record['scan_type'] = str(scan_type).strip(' ')
-					record['scan'] = str(int(number))
 					record[key] = str(value).strip(' ')
 					scan_type, record = assign_modality(scan_type, record)
 					for key_ in BIDS_KEY_DICTIONARY:
@@ -619,7 +622,10 @@ def get_data_selection(workflow_base,
 										number = m.groupdict()['number']
 										scan_type = m.groupdict()['scan_type']
 										for key in match:
-											if match_exclude_bids(key, match[key], measurement_copy, scan_type, number):
+											# Session and subject fields are not recorded in scan_type and were already checked at this point.
+											if match_exclude_bids(key, match[key], measurement_copy, scan_type, number) or key in ['session','subject']:
+												measurement_copy['scan_type'] = str(scan_type).strip(' ')
+												measurement_copy['scan'] = str(int(number))
 												measurement_copy['run'] = run_counter
 												run_counter += 1
 												selected_measurements.append(measurement_copy)
@@ -654,6 +660,7 @@ def get_data_selection(workflow_base,
 									pass
 						break #prevent loop from going on forever
 			except IOError:
+				print('Could not open {}'.format(os.path.join(workflow_base,sub_dir,"subject")))
 				pass
 	data_selection = pd.DataFrame(selected_measurements)
 	return data_selection

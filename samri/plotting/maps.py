@@ -21,7 +21,7 @@ from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 from samri.fetch.local import roi_from_atlaslabel
 from samri.plotting.utilities import QUALITATIVE_COLORSET
 from samri.utilities import collapse
-from samri.plotting.create_mesh_featuremaps import create_mesh 
+from samri.plotting.create_mesh_featuremaps import create_mesh
 
 COLORS_PLUS = plt.cm.autumn(np.linspace(0., 1, 128))
 COLORS_MINUS = plt.cm.winter(np.linspace(0, 1, 128))
@@ -144,6 +144,11 @@ def scaled_plot(template,
 	except AttributeError:
 		pass
 
+	try:
+		stat_map = path.abspath(path.expanduser(stat_map))
+	except (AttributeError, TypeError):
+		pass
+
 	if stat_cmap:
 		cmap=stat_cmap
 
@@ -166,10 +171,6 @@ def scaled_plot(template,
 		colorbar=False,
 		display_mode=display_mode,
 		)
-	try:
-		stat_map = path.abspath(path.expanduser(stat_map))
-	except (AttributeError, TypeError):
-		pass
 	if stat_map:
 		display.add_overlay(stat_map,
 			threshold=threshold,

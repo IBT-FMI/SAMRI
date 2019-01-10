@@ -261,6 +261,57 @@ def write_bids_metadata_file(scan_dir, extraction_dicts,
 
 	return out_file
 
+def eventfile_add_habituation(in_file,
+	amplitude_column='',
+	discriminant_column='samri_l1_regressors',
+	original_stimulation_value='stim',
+	habituation_value='habituation',
+	out_file="events.tsv",
+	):
+	"""Add habituation events to be used as regressors in BIDS file.
+
+	Parameters
+	----------
+
+	in_file : str
+		Path to TSV file with columns including 'onset' (formatted e.g. according to the BIDS specification).
+	out_file : str, optional
+		Path to which to write the adjusted events file
+
+	Returns
+	-------
+
+	str : Path to which the adjusted events file was saved.
+	"""
+
+	import pandas as pd
+	from copy import deepcopy
+	from os import path
+
+	in_file = path.abspath(path.expanduser(in_file))
+	out_file = path.abspath(path.expanduser(out_file))
+
+	df = pd.read_csv(in_file, sep="\t")
+	# We need to ascertain events are listed in progressive chronological order.
+	df = df.sort_values(by=['onset'], ascending=True)
+
+	df[discriminant_column] = ""
+	df[discriminant_column] = original_stimulation_value
+	df_ = deepcopy(df)
+	df_[discriminant_column] = habituation_value
+	total_events=len(df)
+	habituation_amplitudes = [i for i in range(total_events)[::-1]]
+	if not amplitude_column:
+		amplitude_column='samri_l1_amplitude'
+	df_[amplitude_column] = habituation_amplitudes
+	df[amplitude_column] = [1]*total_events
+
+	df = pd.concat([df,df_], sort=False)
+
+	df.to_csv(out_file, sep=str('\t'), index=False)
+
+	return out_file
+
 def write_bids_events_file(scan_dir,
 	db_path="~/syncdata/meta.db",
 	metadata_file='',
@@ -372,7 +423,7 @@ def write_bids_events_file(scan_dir,
 
 	return out_file
 
-def corresponding_eventfile(timecourse_file):
+def corresponding_eventfile(timecourse_file, as_list=False):
 	"""Based on a BIDS timecourse path, get the corresponding BIDS eventfile."""
 
 	from os import path
@@ -382,7 +433,10 @@ def corresponding_eventfile(timecourse_file):
 	stripped_name = timecourse_name.split('.', 1)[0].rsplit('_', 1)[0]
 	eventfile = path.join(timecourse_dir,stripped_name+'_events.tsv')
 
-	return eventfile
+	if as_list:
+		return [eventfile,]
+	else:
+		return eventfile
 
 def get_bids_scan(data_selection,
 	bids_base="",

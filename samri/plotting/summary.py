@@ -362,25 +362,40 @@ def roi_masking(substitution, ts_file_template, beta_file_template, design_file_
 	Title for the subplot, computed from the substitution fields.
 	"""
 
+	from nibabel import processing
+
 	ts_file = path.expanduser(ts_file_template.format(**substitution))
 	beta_file = path.expanduser(beta_file_template.format(**substitution))
 	design_file = path.expanduser(design_file_template.format(**substitution))
 	event_file = path.expanduser(event_file_template.format(**substitution))
 
 	# We specify a target affine to avoid a nilearn MemoryError bug: https://github.com/nilearn/nilearn/issues/1883
-	ts_img = nib.load(ts_file)
-	masker = NiftiMasker(mask_img=roi, target_affine=ts_img.affine)
+	try:
+		ts_img = nib.load(ts_file)
+	except ValueError:
+		print('Not found:','\n',ts_file)
+		return None,None,None,None,None
+	roi_resampled = processing.resample_from_to(roi, (ts_img.shape[:3],ts_img.affine))
+	masker = NiftiMasker(mask_img=roi_resampled)
 	if isinstance(roi, str):
 		mask_map = nib.load(roi)
 	else:
 		mask_map = roi
+	timecourse = masker.fit_transform(ts_img).T
 	try:
-		timecourse = masker.fit_transform(ts_img).T
 		betas = masker.fit_transform(beta_file).T
+	except ValueError:
+		print('Not found:','\n',beta_file)
+		return None,None,None,None,None
+	try:
 		design = pd.read_csv(design_file, skiprows=5, sep="\t", header=None, index_col=False)
+	except ValueError:
+		print('Not found:','\n',design_file)
+		return None,None,None,None,None
+	try:
 		event_df = pd.read_csv(event_file, sep="\t")
 	except ValueError:
-		print('Not found:','\n',ts_file,'\n',beta_file,'\n',design_file,'\n',event_file)
+		print('Not found:','\n',event_file)
 		return None,None,None,None,None
 	subplot_title = "Subject {} | Session {}".format(str(substitution["subject"]),str(substitution["session"]))
 	timecourse = np.mean(timecourse, axis=0)

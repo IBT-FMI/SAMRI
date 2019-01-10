@@ -16,7 +16,7 @@ from nipype.interfaces.fsl.model import Level1Design
 #from nipype.algorithms.modelgen import SpecifyModel
 
 from samri.pipelines.extra_interfaces import SpecifyModel
-from samri.pipelines.extra_functions import select_from_datafind_df, corresponding_eventfile, get_bids_scan
+from samri.pipelines.extra_functions import select_from_datafind_df, corresponding_eventfile, get_bids_scan, eventfile_add_habituation
 from samri.pipelines.utils import bids_dict_to_source, ss_to_path, iterfield_selector, datasource_exclude, bids_dict_to_dir
 from samri.utilities import N_PROCS
 
@@ -111,7 +111,6 @@ def l1(preprocessing_dir,
 	specify_model.inputs.input_units = 'secs'
 	specify_model.inputs.time_repetition = tr
 	specify_model.inputs.high_pass_filter_cutoff = highpass_sigma
-	specify_model.inputs.habituation_regressor = bool(habituation)
 
 	level1design = pe.Node(interface=Level1Design(), name="level1design")
 	level1design.inputs.interscan_interval = tr
@@ -121,14 +120,6 @@ def l1(preprocessing_dir,
 	# level1design.inputs.bases = {'gamma': {'derivs':False, 'gammasigma':10, 'gammadelay':5}}
 	level1design.inputs.orthogonalization = {1: {0:0,1:0,2:0}, 2: {0:1,1:1,2:0}}
 	level1design.inputs.model_serial_correlations = True
-	if habituation=="separate_contrast":
-		level1design.inputs.contrasts = [('allStim','T', ["e0"],[1]),('allStim','T', ["e1"],[1])] #condition names as defined in specify_model
-	elif habituation=="in_main_contrast":
-		level1design.inputs.contrasts = [('allStim','T', ["e0", "e1"],[1,1])] #condition names as defined in specify_model
-	elif habituation=="confound" or not habituation:
-		level1design.inputs.contrasts = [('allStim','T', ["e0"],[1])] #condition names as defined in specify_model
-	else:
-		raise ValueError('The value you have provided for the `habituation` parameter, namely "{}", is invalid. Please choose one of: {"confound","in_main_contrast","separate_contrast"}'.format(habituation))
 
 	modelgen = pe.Node(interface=fsl.FEATModel(), name='modelgen')
 	#modelgen.inputs.ignore_exception = True
@@ -170,7 +161,6 @@ def l1(preprocessing_dir,
 
 	workflow_connections = [
 		(get_scan, eventfile, [('nii_path', 'timecourse_file')]),
-		(eventfile, specify_model, [('eventfile', 'event_files')]),
 		(specify_model, level1design, [('session_info', 'session_info')]),
 		(level1design, modelgen, [('ev_files', 'ev_files')]),
 		(level1design, modelgen, [('fsf_files', 'fsf_file')]),
@@ -200,6 +190,30 @@ def l1(preprocessing_dir,
 		(glm, datasink, [('out_varcb', '@varcb')]),
 		(design_rename, datasink, [('out_file', '@design')]),
 		]
+
+	if habituation:
+		specify_model.inputs.bids_condition_column = 'samri_l1_regressors'
+		specify_model.inputs.bids_amplitude_column = 'samri_l1_amplitude'
+		add_habituation = pe.Node(name='add_habituation', interface=util.Function(function=eventfile_add_habituation,input_names=inspect.getargspec(eventfile_add_habituation)[0], output_names=['out_file']))
+		workflow_connections.extend([
+			(eventfile, add_habituation, [('eventfile', 'in_file')]),
+			(add_habituation, specify_model, [('out_file', 'bids_event_file')]),
+			])
+	if not habituation:
+		level1design.inputs.contrasts = [('allStim','T', ["e0"],[1])]
+		workflow_connections.extend([
+			(eventfile, specify_model, [('eventfile', 'bids_event_file')]),
+			])
+	#condition names as defined in eventfile_add_habituation:
+	elif habituation=="separate_contrast":
+		level1design.inputs.contrasts = [('allStim','T', ['stim'],[1]),('allStim','T', ["habituation"],[1])]
+	elif habituation=="in_main_contrast":
+		level1design.inputs.contrasts = [('allStim','T', ["stim", "habituation"],[1,1])]
+	elif habituation=="confound":
+		level1design.inputs.contrasts = [('allStim','T', ["stim"],[1])]
+	else:
+		print(habituation)
+		raise ValueError('The value you have provided for the `habituation` parameter, namely "{}", is invalid. Please choose one of: {{None, False,"","confound","in_main_contrast","separate_contrast"}}'.format(habituation))
 
 	if highpass_sigma or lowpass_sigma:
 		bandpass = pe.Node(interface=fsl.maths.TemporalFilter(), name="bandpass")
@@ -405,7 +419,7 @@ def seed_fc(preprocessing_dir,
 	workflow_connections = [
 		(infosource, datafile_source, [('bids_dictionary', 'bids_dictionary')]),
 		(infosource, eventfile_source, [('bids_dictionary', 'bids_dictionary')]),
-		(eventfile_source, specify_model, [('out_file', 'event_files')]),
+		(eventfile_source, specify_model, [('out_file', 'bids_event_files')]),
 		(specify_model, level1design, [('session_info', 'session_info')]),
 		(level1design, modelgen, [('ev_files', 'ev_files')]),
 		(level1design, modelgen, [('fsf_files', 'fsf_file')]),

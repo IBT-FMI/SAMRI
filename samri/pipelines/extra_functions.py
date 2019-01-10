@@ -286,8 +286,10 @@ def eventfile_add_habituation(in_file,
 
 	import pandas as pd
 	from copy import deepcopy
+	from os import path
 
-	in_file = os.path.abspath(os.path.expanduser(in_file))
+	in_file = path.abspath(path.expanduser(in_file))
+	out_file = path.abspath(path.expanduser(out_file))
 
 	df = pd.read_csv(in_file, sep="\t")
 	# We need to ascertain events are listed in progressive chronological order.

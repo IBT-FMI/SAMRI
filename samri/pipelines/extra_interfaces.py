@@ -1,14 +1,10 @@
 from nipype.interfaces.base import BaseInterface, BaseInterfaceInputSpec, traits, File, Str, TraitedSpec, Directory, CommandLineInputSpec, CommandLine, InputMultiPath, isdefined, Bunch, OutputMultiPath
-from nipype.interfaces.afni.base import AFNICommandOutputSpec, AFNICommandInputSpec, AFNICommand
 from nipype.interfaces.ants.base import ANTSCommand, ANTSCommandInputSpec
 from nipype.interfaces.fsl.base import FSLCommandInputSpec, FSLCommand
-from nipype.utils.filemanip import split_filename
-from itertools import product
 from nibabel import load
 
 import csv
 import math
-import nibabel as nb
 import numpy as np
 import os
 import shutil

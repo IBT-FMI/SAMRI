@@ -341,7 +341,7 @@ def roi_masking(substitution, ts_file_template, beta_file_template, design_file_
 	Beta file template with replacement fields. The file should be in NIfTI format.
 
 	design_file_template : string
-	Design file template with replacement fields. The file should be in CSV format.
+	Design file template with replacement fields. The file should be in TSV format.
 
 	roi_path : string
 	Path to the region of interest file based on which to create a mask for the time course and beta files. The file should be in NIfTI format.

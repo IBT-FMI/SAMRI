@@ -11,8 +11,8 @@ def test_activity_timecourse_with_inlay():
 	# Style elements
 	palette=["#56B4E9", "#E69F00"]
 
-	data_dir = path.join(path.dirname(path.realpath(__file__)),"../../../example_data/ioanas2018")
-	data_path = path.join(data_dir,'DSURQEc_drp.csv')
+	data_dir = path.join(path.dirname(path.realpath(__file__)),"../../../example_data")
+	data_path = path.join(data_dir,'drs_activity.csv')
 	df = pd.read_csv(data_path)
 
 	df = df.rename(columns={'t':'Mean t-Statistic'})

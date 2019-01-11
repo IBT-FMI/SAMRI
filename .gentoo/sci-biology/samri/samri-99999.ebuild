@@ -17,6 +17,7 @@ KEYWORDS=""
 
 DEPEND="
 	test? (
+		dev-python/pytest[${PYTHON_USEDEP}]
 		sci-biology/samri_bindata
 		sci-biology/samri_bidsdata
 		)

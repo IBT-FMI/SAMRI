@@ -303,7 +303,8 @@ def multi(timecourses,
 			except:
 				pass
 			else:
-				ax.plot(design[0])
+				for column in design:
+					ax.plot(design[column])
 
 			if not ix in xlabel_positive:
 				plt.setp(ax.get_xticklabels(), visible=False)

@@ -325,7 +325,7 @@ def p_roi_masking(substitution, ts_file_template, beta_file_template, p_file_tem
 
 	return timecourse, design, mask_map, event_df, subplot_title
 
-def roi_masking(substitution, ts_file_template, beta_file_template, design_file_template, event_file_template, roi):
+def roi_masking(substitution, ts_file_template, betas_file_template, design_file_template, event_file_template, roi):
 	"""Apply a substitution pattern to timecourse, beta, and design file templates - and mask the data of the former two according to a roi. Subsequently scale the design by the mean beta.
 
 	Parameters
@@ -365,7 +365,7 @@ def roi_masking(substitution, ts_file_template, beta_file_template, design_file_
 	from nibabel import processing
 
 	ts_file = path.expanduser(ts_file_template.format(**substitution))
-	beta_file = path.expanduser(beta_file_template.format(**substitution))
+	betas_file = path.expanduser(betas_file_template.format(**substitution))
 	design_file = path.expanduser(design_file_template.format(**substitution))
 	event_file = path.expanduser(event_file_template.format(**substitution))
 
@@ -383,9 +383,9 @@ def roi_masking(substitution, ts_file_template, beta_file_template, design_file_
 		mask_map = roi
 	timecourse = masker.fit_transform(ts_img).T
 	try:
-		betas = masker.fit_transform(beta_file).T
+		betas = masker.fit_transform(betas_file).T
 	except ValueError:
-		print('Not found:','\n',beta_file)
+		print('Not found:','\n',betas_file)
 		return None,None,None,None,None
 	try:
 		design = pd.read_csv(design_file, skiprows=5, sep="\t", header=None, index_col=False)
@@ -397,15 +397,19 @@ def roi_masking(substitution, ts_file_template, beta_file_template, design_file_
 	except ValueError:
 		print('Not found:','\n',event_file)
 		return None,None,None,None,None
-	subplot_title = "Subject {} | Session {}".format(str(substitution["subject"]),str(substitution["session"]))
+	try:
+		subplot_title = "Subject {} | Session {}".format(str(substitution["subject"]),str(substitution["session"]))
+	except KeyError:
+		subplot_title = ''
 	timecourse = np.mean(timecourse, axis=0)
-	design = design*np.mean(betas)
+	for ix, i in enumerate(betas.T):
+		design[ix] = design[ix]*np.mean(i)
 
 	return timecourse, design, mask_map, event_df, subplot_title
 
 def ts_overviews(substitutions, roi,
 	ts_file_template="~/ni_data/ofM.dr/preprocessing/{preprocessing_dir}/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_task-{scan}.nii.gz",
-	beta_file_template="~/ni_data/ofM.dr/l1/{l1_dir}/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_task-{scan}_cope.nii.gz",
+	betas_file_template="~/ni_data/ofM.dr/l1/{l1_dir}/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_task-{scan}_cope.nii.gz",
 	design_file_template="~/ni_data/ofM.dr/l1/{l1_workdir}/_subject_session_scan_{subject}.{session}.{scan}/modelgen/run0.mat",
 	event_file_template="~/ni_data/ofM.dr/preprocessing/{preprocessing_dir}/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_task-{scan}_events.tsv",
 	n_jobs=False,
@@ -426,7 +430,7 @@ def ts_overviews(substitutions, roi,
 	substitutions_data = Parallel(n_jobs=n_jobs, verbose=0, backend="threading")(map(delayed(roi_masking),
 		substitutions,
 		[ts_file_template]*len(substitutions),
-		[beta_file_template]*len(substitutions),
+		[betas_file_template]*len(substitutions),
 		[design_file_template]*len(substitutions),
 		[event_file_template]*len(substitutions),
 		[roi]*len(substitutions),

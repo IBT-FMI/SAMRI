@@ -126,12 +126,12 @@ def l1(preprocessing_dir,
 	#modelgen.inputs.ignore_exception = True
 
 	glm = pe.Node(interface=fsl.GLM(), name='glm', iterfield='design')
-	glm.inputs.out_cope = "cope.nii.gz"
-	glm.inputs.out_varcb_name = "varcb.nii.gz"
-	#not setting a betas output file might lead to beta export in lieu of COPEs
-	glm.inputs.out_file = "betas.nii.gz"
-	glm.inputs.out_t_name = "t_stat.nii.gz"
-	glm.inputs.out_p_name = "p_stat.nii.gz"
+#	glm.inputs.out_cope = "cope.nii.gz"
+#	glm.inputs.out_varcb_name = "varcb.nii.gz"
+#	#not setting a betas output file might lead to beta export in lieu of COPEs
+#	glm.inputs.out_file = "betas.nii.gz"
+#	glm.inputs.out_t_name = "t_stat.nii.gz"
+#	glm.inputs.out_p_name = "p_stat.nii.gz"
 	if mask:
 		glm.inputs.mask = path.abspath(path.expanduser(mask))
 	glm.interface.mem_gb = 6
@@ -139,6 +139,8 @@ def l1(preprocessing_dir,
 
 	out_file_name_base = 'sub-{{subject}}_ses-{{session}}_task-{{task}}_acq-{{acquisition}}_run-{{run}}_{{modality}}_{}.{}'
 
+	betas_filename = pe.Node(name='betas_filename', interface=util.Function(function=bids_dict_to_source,input_names=inspect.getargspec(bids_dict_to_source)[0], output_names=['filename']))
+	betas_filename.inputs.source_format = out_file_name_base.format('betas','nii.gz')
 	cope_filename = pe.Node(name='cope_filename', interface=util.Function(function=bids_dict_to_source,input_names=inspect.getargspec(bids_dict_to_source)[0], output_names=['filename']))
 	cope_filename.inputs.source_format = out_file_name_base.format('cope','nii.gz')
 	varcb_filename = pe.Node(name='varcb_filename', interface=util.Function(function=bids_dict_to_source,input_names=inspect.getargspec(bids_dict_to_source)[0], output_names=['filename']))
@@ -168,6 +170,7 @@ def l1(preprocessing_dir,
 		(modelgen, glm, [('design_file', 'design')]),
 		(modelgen, glm, [('con_file', 'contrasts')]),
 		(get_scan, datasink, [(('dict_slice',bids_dict_to_dir), 'container')]),
+		(get_scan, betas_filename, [('dict_slice', 'bids_dictionary')]),
 		(get_scan, cope_filename, [('dict_slice', 'bids_dictionary')]),
 		(get_scan, varcb_filename, [('dict_slice', 'bids_dictionary')]),
 		(get_scan, tstat_filename, [('dict_slice', 'bids_dictionary')]),
@@ -175,6 +178,7 @@ def l1(preprocessing_dir,
 		(get_scan, pstat_filename, [('dict_slice', 'bids_dictionary')]),
 		(get_scan, pfstat_filename, [('dict_slice', 'bids_dictionary')]),
 		(get_scan, design_filename, [('dict_slice', 'bids_dictionary')]),
+		(betas_filename, glm, [('filename', 'out_file')]),
 		(cope_filename, glm, [('filename', 'out_cope')]),
 		(varcb_filename, glm, [('filename', 'out_varcb_name')]),
 		(tstat_filename, glm, [('filename', 'out_t_name')]),
@@ -189,6 +193,7 @@ def l1(preprocessing_dir,
 		(glm, datasink, [('out_t', '@tstat')]),
 		(glm, datasink, [('out_cope', '@cope')]),
 		(glm, datasink, [('out_varcb', '@varcb')]),
+		(glm, datasink, [('out_file', '@betas')]),
 		(design_rename, datasink, [('out_file', '@design')]),
 		]
 

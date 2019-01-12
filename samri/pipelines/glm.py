@@ -117,7 +117,8 @@ def l1(preprocessing_dir,
 	if bf_path:
 		bf_path = path.abspath(path.expanduser(bf_path))
 		level1design.inputs.bases = {"custom": {"bfcustompath":bf_path}}
-	# level1design.inputs.bases = {'gamma': {'derivs':False, 'gammasigma':10, 'gammadelay':5}}
+	else:
+		level1design.inputs.bases = {'gamma': {'derivs':False, 'gammasigma':10, 'gammadelay':5}}
 	level1design.inputs.orthogonalization = {1: {0:0,1:0,2:0}, 2: {0:1,1:1,2:0}}
 	level1design.inputs.model_serial_correlations = True
 
@@ -195,6 +196,8 @@ def l1(preprocessing_dir,
 		specify_model.inputs.bids_condition_column = 'samri_l1_regressors'
 		specify_model.inputs.bids_amplitude_column = 'samri_l1_amplitude'
 		add_habituation = pe.Node(name='add_habituation', interface=util.Function(function=eventfile_add_habituation,input_names=inspect.getargspec(eventfile_add_habituation)[0], output_names=['out_file']))
+		add_habituation.inputs.original_stimulation_value='e0_stim'
+		add_habituation.inputs.habituation_value='e1_habituation'
 		workflow_connections.extend([
 			(eventfile, add_habituation, [('eventfile', 'in_file')]),
 			(add_habituation, specify_model, [('out_file', 'bids_event_file')]),
@@ -206,11 +209,11 @@ def l1(preprocessing_dir,
 			])
 	#condition names as defined in eventfile_add_habituation:
 	elif habituation=="separate_contrast":
-		level1design.inputs.contrasts = [('allStim','T', ['stim'],[1]),('allStim','T', ["habituation"],[1])]
+		level1design.inputs.contrasts = [('allStim','T', ['e0_stim'],[1]),('allStim','T', ["e1_habituation"],[1])]
 	elif habituation=="in_main_contrast":
-		level1design.inputs.contrasts = [('allStim','T', ["stim", "habituation"],[1,1])]
+		level1design.inputs.contrasts = [('allStim','T', ["e0_stim", "e1_habituation"],[1,1])]
 	elif habituation=="confound":
-		level1design.inputs.contrasts = [('allStim','T', ["stim"],[1])]
+		level1design.inputs.contrasts = [('allStim','T', ["e0_stim"],[1])]
 	else:
 		print(habituation)
 		raise ValueError('The value you have provided for the `habituation` parameter, namely "{}", is invalid. Please choose one of: {{None, False,"","confound","in_main_contrast","separate_contrast"}}'.format(habituation))
@@ -399,6 +402,8 @@ def seed_fc(preprocessing_dir,
 		glm.inputs.mask = path.abspath(path.expanduser(mask))
 	glm.inputs.ignore_exception = True
 
+	betas_filename = pe.Node(name='betas_filename', interface=util.Function(function=bids_dict_to_source,input_names=inspect.getargspec(bids_dict_to_source)[0], output_names=['filename']))
+	betas_filename.inputs.source_format = "sub-{subject}_ses-{session}_task-{task}_acq-{acquisition}_{modality}_betas.nii.gz"
 	cope_filename = pe.Node(name='cope_filename', interface=util.Function(function=bids_dict_to_source,input_names=inspect.getargspec(bids_dict_to_source)[0], output_names=['filename']))
 	cope_filename.inputs.source_format = "sub-{subject}_ses-{session}_task-{task}_acq-{acquisition}_{modality}_cope.nii.gz"
 	varcb_filename = pe.Node(name='varcb_filename', interface=util.Function(function=bids_dict_to_source,input_names=inspect.getargspec(bids_dict_to_source)[0], output_names=['filename']))
@@ -426,12 +431,14 @@ def seed_fc(preprocessing_dir,
 		(modelgen, glm, [('design_file', 'design')]),
 		(modelgen, glm, [('con_file', 'contrasts')]),
 		(infosource, datasink, [(('bids_dictionary',bids_dict_to_dir), 'container')]),
+		(infosource, betas_filename, [('bids_dictionary', 'bids_dictionary')]),
 		(infosource, cope_filename, [('bids_dictionary', 'bids_dictionary')]),
 		(infosource, varcb_filename, [('bids_dictionary', 'bids_dictionary')]),
 		(infosource, tstat_filename, [('bids_dictionary', 'bids_dictionary')]),
 		(infosource, zstat_filename, [('bids_dictionary', 'bids_dictionary')]),
 		(infosource, pstat_filename, [('bids_dictionary', 'bids_dictionary')]),
 		(infosource, pfstat_filename, [('bids_dictionary', 'bids_dictionary')]),
+		(betas_filename, glm, [('filename', 'out_file')]),
 		(cope_filename, glm, [('filename', 'out_cope')]),
 		(varcb_filename, glm, [('filename', 'out_varcb_name')]),
 		(tstat_filename, glm, [('filename', 'out_t_name')]),
@@ -444,6 +451,7 @@ def seed_fc(preprocessing_dir,
 		(glm, datasink, [('out_t', '@tstat')]),
 		(glm, datasink, [('out_cope', '@cope')]),
 		(glm, datasink, [('out_varcb', '@varcb')]),
+		(glm, datasink, [('out_file', '@betas')]),
 		]
 
 	if highpass_sigma or lowpass_sigma:

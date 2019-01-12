@@ -15,7 +15,7 @@ import nipype.pipeline.engine as pe				# pypeline engine
 import pandas as pd
 #from nipype.interfaces.bru2nii import Bru2
 
-from samri.pipelines.utils import bids_naming, ss_to_path
+from samri.pipelines.utils import ss_to_path
 from samri.pipelines.extra_interfaces import Bru2
 from samri.utilities import N_PROCS
 

@@ -373,20 +373,26 @@ def container(selection_df, out_path,
 
 	return container
 
-def bids_naming(subject_session, scan_type, metadata,
+def bids_naming(subject_session, metadata,
 	extra=['acq'],
 	extension='.nii.gz',
 	suffix='',
 	):
 	"""
 	Generate a BIDS filename from a subject-and-session iterator, a scan type, and a `pandas.DataFrame` metadata container.
+
+	Parameters
+	----------
+
+	subject_session : tuple
+		Length-2 tuple containing two strings, of which the first denotes the subject and the second the session.
+	metadata : pandas.DataFrame
+		Pandas Dataframe object containing columns named 'subject', and 'session'.
 	"""
 	subject, session = subject_session
 	filename = 'sub-{}'.format(subject)
 	filename += '_ses-{}'.format(session)
 	selection =  metadata.loc[(metadata['subject']==subject)&(metadata['session']==session)]
-	if scan_type:
-		selection = selection.loc[selection['scan_type']==scan_type]
 
 	if selection.empty:
 		return

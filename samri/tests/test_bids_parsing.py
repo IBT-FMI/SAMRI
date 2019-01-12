@@ -18,39 +18,40 @@ def test_bids_naming():
 	import os
 
 	bruker_data_dir = path.join(DATA_DIR,'bruker')
-	data_selection = get_data_selection(bruker_data_dir,
+	f_data_selection = get_data_selection(bruker_data_dir,
 		match={
 			'task':['JogB','CogB','CogB2m'],
-			'acquisition':['TurboRARE', 'TurboRARElowcov']},
+			},
+		)
+	s_data_selection = get_data_selection(bruker_data_dir,
+		match={
+			'acquisition':['TurboRARE', 'TurboRARElowcov'],
+			},
 		)
 
 	name = bids_naming(
-			metadata=data_selection,
-			scan_type='acq-EPI_cbv_task-CogB',
 			subject_session=('5706','ofMpF'),
+			metadata=f_data_selection,
 			)
-	assert_and_feedback(name,'sub-5706_ses-ofMpF_task-CogB_acq-EPI_cbv.nii.gz', debug=data_selection)
+	assert_and_feedback(name,'sub-5706_ses-ofMpF_task-CogB_acq-EPI_cbv.nii.gz', debug=f_data_selection)
 
 	name = bids_naming(
-			metadata=data_selection,
-			scan_type='acq-TurboRARElowcov',
 			subject_session=('4011','ofMaF'),
+			metadata=s_data_selection,
 			)
-	assert_and_feedback(name,'sub-4011_ses-ofMaF_acq-TurboRARElowcov_T2w.nii.gz', debug=data_selection)
+	assert_and_feedback(name,'sub-4011_ses-ofMaF_acq-TurboRARElowcov_T2w.nii.gz', debug=s_data_selection)
 
 	name = bids_naming(
-			metadata=data_selection,
-			scan_type='acq-EPI_cbv_task-CogB',
 			subject_session=('5704','ofMpF'),
+			metadata=f_data_selection,
 			)
-	assert_and_feedback(name,'sub-5704_ses-ofMpF_task-CogB_acq-EPI_cbv.nii.gz', debug=data_selection)
+	assert_and_feedback(name,'sub-5704_ses-ofMpF_task-CogB_acq-EPI_cbv.nii.gz', debug=f_data_selection)
 
 	name = bids_naming(
-			metadata=data_selection,
-			scan_type='acq-TurboRARE',
 			subject_session=('5704','ofMpF'),
+			metadata=s_data_selection,
 			)
-	assert_and_feedback(name,'sub-5704_ses-ofMpF_acq-TurboRARE_T2w.nii.gz', debug=data_selection)
+	assert_and_feedback(name,'sub-5704_ses-ofMpF_acq-TurboRARE_T2w.nii.gz', debug=s_data_selection)
 
 # The following test fails because it will not work with our dummy data (containing only the directory hierarchy and some metadata files).
 # This should work once we can include `2dseq` files in our example data.

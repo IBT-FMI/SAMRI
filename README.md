@@ -135,7 +135,6 @@ Needed if no other data is available for testing and development:
 * SAMRI example binary data: [download link](http://chymera.eu/distfiles/samri_bindata-0.1.2.tar.xz)
 
 Needed only in conjunction with LabbookDB metadata management:
-* [SQLAlchemy](http://www.sqlalchemy.org/library.html)
 * [LabbookDB](https://github.com/TheChymera/LabbookDB)
 
 ## Contributing

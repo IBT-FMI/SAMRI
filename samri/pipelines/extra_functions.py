@@ -6,6 +6,7 @@ import json
 
 from copy import deepcopy
 import pandas as pd
+from bids.grabbids import BIDSLayout
 
 BEST_GUESS_MODALITY_MATCH = {
 	('FLASH',):'T1w',
@@ -496,7 +497,7 @@ def get_bids_scan(data_selection,
 		except KeyError:
 			nii_path = filtered_data['measurement'].item()
 			nii_path += '/'+filtered_data['scan'].item()
-			nii_name = bids_naming(subject_session, False, filtered_data,
+			nii_name = bids_naming(subject_session, filtered_data,
 					extra=extra,
 					extension='',
 					)
@@ -505,12 +506,12 @@ def get_bids_scan(data_selection,
 			scan_path = os.path.dirname(nii_path)
 			nii_name = os.path.basename(nii_path)
 
-		eventfile_name = bids_naming(subject_session, False, filtered_data,
+		eventfile_name = bids_naming(subject_session, filtered_data,
 				extra=extra,
 				extension='.tsv',
 				suffix='events'
 				)
-		metadata_filename = bids_naming(subject_session, False, filtered_data,
+		metadata_filename = bids_naming(subject_session, filtered_data,
 				extra=extra,
 				extension='.json',
 				)
@@ -557,6 +558,7 @@ def assign_modality(scan_type, record):
 	return scan_type, record
 
 def match_exclude_ss(entry, match, exclude, record, key):
+	"""Return true if an entry is to be accepted based on the match and exclude criteria."""
 	try:
 		exclude_list = exclude[key]
 	except KeyError:
@@ -566,41 +568,12 @@ def match_exclude_ss(entry, match, exclude, record, key):
 	except KeyError:
 		match_list = []
 	if entry not in exclude_list:
-		if len(match_list) > 0 and entry not in match_list:
+		if len(match_list) > 0 and (entry not in match_list or str(entry) not in match_list):
 			return False
-		else:
-			record[key] = str(entry).strip(' ')
+		record[key] = str(entry).strip(' ')
 		return True
 	else:
 		return False
-
-def match_exclude_bids(key, values, record, scan_type, number):
-	try:
-		key_alternatives = BIDS_KEY_DICTIONARY[key]
-	except KeyError:
-		key_alternatives = [key,]
-	for alternative in key_alternatives:
-		if alternative in scan_type:
-			for value in values:
-				match_string = r'(^|.*?_|.*? ){alternative}-{value}( .*?|_.*?|$)'.format(alternative=alternative,value=value)
-				if re.match(match_string, scan_type):
-					record['scan_type'] = str(scan_type).strip(' ')
-					record['scan'] = str(int(number))
-					record[key] = str(value).strip(' ')
-					scan_type, record = assign_modality(scan_type, record)
-					for key_ in BIDS_KEY_DICTIONARY:
-						for alternative_ in BIDS_KEY_DICTIONARY[key_]:
-							if alternative_ in scan_type:
-								match_string_ = r'(^|.*?_|.*? ){}-(?P<value>\w+?)( .*?|_.*?|$)'.format(alternative_)
-								m = re.match(match_string_, scan_type)
-								try:
-									value_ = m.groupdict()['value']
-								except AttributeError:
-									pass
-								else:
-									record[key_] = str(value_).strip(' ')
-					return True
-	return False
 
 def get_data_selection(workflow_base,
 	match={},
@@ -641,6 +614,7 @@ def get_data_selection(workflow_base,
 
 	selected_measurements=[]
 	#populate a list of lists with acceptable subject names, sessions, and sub_dir's
+	layout = BIDSLayout('/dummy/path/')
 	for sub_dir in measurement_path_list:
 		if sub_dir not in exclude_measurements:
 			run_counter = 0
@@ -667,18 +641,33 @@ def get_data_selection(workflow_base,
 						try:
 							with open(scan_program_file) as search:
 								for line in search:
+									line_considered = True
 									measurement_copy = deepcopy(selected_measurement)
 									if re.match(r'^[ \t]+<displayName>[a-zA-Z0-9-_]+? \(E\d+\)</displayName>[\r\n]+', line):
 										m = re.match(r'^[ \t]+<displayName>(?P<scan_type>.+?) \(E(?P<number>\d+)\)</displayName>[\r\n]+', line)
 										number = m.groupdict()['number']
 										scan_type = m.groupdict()['scan_type']
+										bids_keys = layout.parse_file_entities('/dummy/path/{}'.format(scan_type))
 										for key in match:
-											if match_exclude_bids(key, match[key], measurement_copy, scan_type, number):
-												measurement_copy['run'] = run_counter
-												run_counter += 1
-												selected_measurements.append(measurement_copy)
-												scan_dir_resolved = True
+											# Session and subject fields are not recorded in scan_type and were already checked at this point.
+											if key in ['session', 'subject']:
+												continue
+											try:
+												if bids_keys[key] not in match[key]:
+													line_considered = False
+													break
+											except KeyError:
+												line_considered = False
 												break
+										if line_considered:
+											measurement_copy['scan_type'] = str(scan_type).strip(' ')
+											measurement_copy['scan'] = str(int(number))
+											measurement_copy['run'] = run_counter
+											scan_type, measurement_copy= assign_modality(scan_type, measurement_copy)
+											measurement_copy.update(bids_keys)
+											run_counter += 1
+											selected_measurements.append(measurement_copy)
+											scan_dir_resolved = True
 							if not scan_dir_resolved:
 								raise IOError()
 						except IOError:
@@ -689,25 +678,41 @@ def get_data_selection(workflow_base,
 								try:
 									with open(acqp_file_path,'r') as search:
 										for line in search:
+											line_considered = True
 											if scan_subdir_resolved:
 												break
 											if re.match(r'^(?!/)<[a-zA-Z0-9-_]+?>[\r\n]+', line):
 												number = sub_sub_dir
 												m = re.match(r'^(?!/)<(?P<scan_type>.+?)>[\r\n]+', line)
 												scan_type = m.groupdict()['scan_type']
+												bids_keys = layout.parse_file_entities('/dummy/path/{}'.format(scan_type))
 												for key in match:
-													if match_exclude_bids(key, match[key], measurement_copy, scan_type, number):
-														measurement_copy['run'] = run_counter
-														run_counter += 1
-														selected_measurements.append(measurement_copy)
-														scan_subdir_resolved = True
+													# Session and subject fields are not recorded in scan_type and were already checked at this point.
+													if key in ['session', 'subject']:
+														continue
+													try:
+														if bids_keys[key] not in match[key]:
+															line_considered = False
+															break
+													except KeyError:
+														line_considered = False
 														break
+												if line_considered:
+													measurement_copy['scan_type'] = str(scan_type).strip(' ')
+													measurement_copy['scan'] = str(int(number))
+													measurement_copy['run'] = run_counter
+													scan_type, measurement_copy= assign_modality(scan_type, measurement_copy)
+													measurement_copy.update(bids_keys)
+													run_counter += 1
+													selected_measurements.append(measurement_copy)
+													scan_subdir_resolved = True
 										else:
 											pass
 								except IOError:
 									pass
 						break #prevent loop from going on forever
 			except IOError:
+				print('Could not open {}'.format(os.path.join(workflow_base,sub_dir,"subject")))
 				pass
 	data_selection = pd.DataFrame(selected_measurements)
 	return data_selection

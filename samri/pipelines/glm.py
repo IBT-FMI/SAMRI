@@ -118,8 +118,8 @@ def l1(preprocessing_dir,
 		bf_path = path.abspath(path.expanduser(bf_path))
 		level1design.inputs.bases = {"custom": {"bfcustompath":bf_path}}
 	else:
-		level1design.inputs.bases = {'gamma': {'derivs':False, 'gammasigma':10, 'gammadelay':5}}
-	level1design.inputs.orthogonalization = {1: {0:0,1:0,2:0}, 2: {0:1,1:1,2:0}}
+		level1design.inputs.bases = {'gamma': {'derivs':True, 'gammasigma':10, 'gammadelay':5}}
+	level1design.inputs.orthogonalization = {1: {0:1,1:0,2:0}, 2: {0:1,1:1,2:0}}
 	level1design.inputs.model_serial_correlations = True
 
 	modelgen = pe.Node(interface=fsl.FEATModel(), name='modelgen')
@@ -201,8 +201,9 @@ def l1(preprocessing_dir,
 		specify_model.inputs.bids_condition_column = 'samri_l1_regressors'
 		specify_model.inputs.bids_amplitude_column = 'samri_l1_amplitude'
 		add_habituation = pe.Node(name='add_habituation', interface=util.Function(function=eventfile_add_habituation,input_names=inspect.getargspec(eventfile_add_habituation)[0], output_names=['out_file']))
-		add_habituation.inputs.original_stimulation_value='e0_stim'
-		add_habituation.inputs.habituation_value='e1_habituation'
+		# Regressor names need to be prefixed with a numerator so that Level1Design will be certain to conserve the order.
+		add_habituation.inputs.original_stimulation_value='0stim'
+		add_habituation.inputs.habituation_value='1habituation'
 		workflow_connections.extend([
 			(eventfile, add_habituation, [('eventfile', 'in_file')]),
 			(add_habituation, specify_model, [('out_file', 'bids_event_file')]),
@@ -214,11 +215,13 @@ def l1(preprocessing_dir,
 			])
 	#condition names as defined in eventfile_add_habituation:
 	elif habituation=="separate_contrast":
-		level1design.inputs.contrasts = [('allStim','T', ['e0_stim'],[1]),('allStim','T', ["e1_habituation"],[1])]
+		level1design.inputs.contrasts = [('allStim','T', ['0stim'],[1]),('allStim','T', ["1habituation"],[1])]
+	elif habituation=="in_main_contrast_fix":
+		level1design.inputs.contrasts = [('allStim','T', ["1habituation","0stim"], [1,1])]
 	elif habituation=="in_main_contrast":
-		level1design.inputs.contrasts = [('allStim','T', ["e0_stim", "e1_habituation"],[1,1])]
+		level1design.inputs.contrasts = [('allStim','T', ["0stim", "1habituation"],[1,1])]
 	elif habituation=="confound":
-		level1design.inputs.contrasts = [('allStim','T', ["e0_stim"],[1])]
+		level1design.inputs.contrasts = [('allStim','T', ["0stim"],[1])]
 	else:
 		print(habituation)
 		raise ValueError('The value you have provided for the `habituation` parameter, namely "{}", is invalid. Please choose one of: {{None, False,"","confound","in_main_contrast","separate_contrast"}}'.format(habituation))

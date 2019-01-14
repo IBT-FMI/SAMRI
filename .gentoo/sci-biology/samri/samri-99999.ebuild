@@ -29,20 +29,20 @@ RDEPEND="
 	>=dev-python/numpy-1.13.3[${PYTHON_USEDEP}]
 	dev-python/pandas[${PYTHON_USEDEP}]
 	dev-python/seaborn[${PYTHON_USEDEP}]
-	dev-python/sqlalchemy[${PYTHON_USEDEP}]
 	dev-python/statsmodels[${PYTHON_USEDEP}]
-	sci-biology/afni
-	sci-biology/ants
-	sci-biology/bru2nii
 	>=sci-biology/fsl-5.0.9
+	sci-biology/bru2nii
 	atlases? ( sci-biology/mouse-brain-atlases )
-	sci-biology/nilearn[${PYTHON_USEDEP}]
 	labbookdb? ( sci-libs/labbookdb[${PYTHON_USEDEP}] )
 	sci-libs/nibabel[${PYTHON_USEDEP}]
 	>=sci-libs/nipy-0.4.1[${PYTHON_USEDEP}]
 	>=sci-libs/nipype-1.0.0[${PYTHON_USEDEP}]
 	sci-libs/pybids[${PYTHON_USEDEP}]
+	sci-libs/scikits_image[${PYTHON_USEDEP}]
 	sci-libs/scipy[${PYTHON_USEDEP}]
+	sci-biology/ants
+	sci-biology/afni
+	sci-biology/nilearn[${PYTHON_USEDEP}]
 	"
 
 src_unpack() {

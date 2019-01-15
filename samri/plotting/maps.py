@@ -70,7 +70,8 @@ def _draw_colorbar(stat_map_img, axes,
 	istart = int(norm(-threshold, clip=True) * (colmap.N - 1))
 	istop = int(norm(threshold, clip=True) * (colmap.N - 1))
 	for i in range(istart, (istop+1)):
-		cmaplist[i] = (0.5, 0.5, 0.5, 1.)  # just an average gray color
+		# just an average gray color
+		cmaplist[i] = (0.5, 0.5, 0.5, 1.)
 	our_cmap = colmap.from_list('Custom cmap', cmaplist, colmap.N)
 
 	cbar = ColorbarBase(
@@ -511,7 +512,7 @@ def _create_3Dplot(stat_maps,
 		if len(idx_i) != 2:
 			idx_i = [0, dims[kdim]-2]
 		bbox.append([idx_i[0]+1, idx_i[1]+1])
-	mesh_trimmed = mesh[bbox[0][0] : bbox[0][1] ,bbox[1][0]  : bbox[1][1] , :]
+	mesh_trimmed = mesh[bbox[0][0] : bbox[0][1] ,bbox[1][0] : bbox[1][1] , :]
 
 	return mesh_trimmed
 
@@ -531,7 +532,7 @@ def _plots_overlay(display,display_3Dplot):
 
 	"""
 	#get matplotlib figure from Nilearn.OrthoSlicer2 object
-	fh = display.frame_axes.get_figure()    
+	fh = display.frame_axes.get_figure()
 	fh.canvas.draw()
 
 	#Determine correct location to put the plot in relation to existing figure axes
@@ -950,6 +951,9 @@ def contour_slices(bg_image, file_template,
 	if save_as:
 		save_as = save_as.format(**substitutions[0])
 		save_as = path.abspath(path.expanduser(save_as))
+		save_dir,_ = os.path.split(save_as)
+		if not os.path.exists(save_dir):
+			os.makedirs(save_dir)
 		plt.savefig(save_as,
 			#facecolor=fig.get_facecolor(),
 			)

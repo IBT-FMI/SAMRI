@@ -196,8 +196,8 @@ def write_bids_metadata_file(scan_dir, extraction_dicts,
 	out_file : str, optional
 		Path under which to save the resulting JSON.
 	task_name : str, optional
-		String value to assign to the “TaskName” field in the BIDS JSON.
-		If this parameter evaluates to false, no “TaskName” will be recorded.
+		String value to assign to the "TaskName" field in the BIDS JSON.
+		If this parameter evaluates to false, no "TaskName" will be recorded.
 	"""
 
 	import json
@@ -544,7 +544,7 @@ def assign_modality(scan_type, record):
 
 	Notes
 	-----
-	The term “modality” is ambiguous in BIDS; here we use it to mean what is better though of as “contrast”:
+	The term "modality" is ambiguous in BIDS; here we use it to mean what is better though of as "contrast":
 	https://github.com/bids-standard/bids-specification/pull/119
 	"""
 	for modality_group in MODALITY_MATCH:

@@ -97,7 +97,7 @@ def roi_based(
 	substitutions : dict, optional
 		Dictionary which, if provided will be applied to formattable Python strings passed to the `beta_filename`, `events_filename`, `ts_filename`, and `design_filename` parameters (e.g. "part_of_path-{replace_this}-other_part_of_path") in order to replace occurrences of each key with its respective value pair.
 	flip : bool, optional
-		Whether to flip the plot by 90 degrees (plotting in “portrait” rather than “landscape” mode, as it were).
+		Whether to flip the plot by 90 degrees (plotting in "portrait" rather than "landscape" mode, as it were).
 	roi : str, optional
 		Path to a NIfTI mask file which determines based on what region to extract summaries from the voxelwise inputs.
 	save_as : str, optional

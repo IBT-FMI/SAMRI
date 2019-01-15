@@ -1,2 +1,2 @@
 include samri/plotting/samri.conf
-
+include example_data/*

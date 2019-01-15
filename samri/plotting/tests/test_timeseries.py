@@ -34,7 +34,7 @@ def test_multi_roi_timeseries():
 		)
 	timecourses, designs, _, events_dfs, subplot_titles = summary.ts_overviews(substitutions, my_roi,
 		ts_file_template="{data_dir}/l1/generic/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_task-JogB_acq-EPIlowcov_run-{run}_{modality}_maths_filt.nii.gz",
-		beta_file_template="{data_dir}/l1/generic/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_task-JogB_acq-EPIlowcov_run-{run}_{modality}_cope.nii.gz",
+		betas_file_template="{data_dir}/l1/generic/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_task-JogB_acq-EPIlowcov_run-{run}_{modality}_beta.nii.gz",
 		design_file_template="{data_dir}/l1/generic/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_task-JogB_acq-EPIlowcov_run-{run}_{modality}_design.mat",
 		event_file_template='{data_dir}/preprocessing/generic/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_task-JogB_acq-EPIlowcov_run-{run}_events.tsv',
 		n_jobs_percentage=0.5,

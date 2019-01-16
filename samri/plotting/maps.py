@@ -558,7 +558,7 @@ def stat3D(stat_maps,
 	overlays=[],
 	figure_title="",
 	interpolation="hermite",
-	template="/usr/share/mouse-brain-atlases/ambmc2dsurqec_15micron_masked.obj",
+	template="/usr/share/mouse-brain-atlases/dsurqec_40micron_masked.nii",
 	save_as="",
 	scale=1.,
 	subplot_titles=[],
@@ -575,6 +575,7 @@ def stat3D(stat_maps,
 	ax=None,
 	pos_values = False,
 	threshold_mesh = None,
+	template_mesh='/usr/share/mouse-brain-atlases/ambmc2dsurqec_15micron_masked.obj'
 	):
 
 	"""Same plotting options as stat(), but with an additional 3D plot and a 2x2 layout of plots.
@@ -631,7 +632,7 @@ def stat3D(stat_maps,
 	if threshold_mesh is None:
 		threshold_mesh = threshold
 
-	plot_3D = _create_3Dplot(stat_maps,threshold=threshold_mesh,pos_values=pos_values,vmin=vmin,vmax=vmax)
+	plot_3D = _create_3Dplot(stat_maps,template_mesh=template_mesh,threshold=threshold_mesh,pos_values=pos_values,vmin=vmin,vmax=vmax)
 	fh = _plots_overlay(display,plot_3D)
 	if save_as:
 		if isinstance(save_as, str):

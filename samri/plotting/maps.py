@@ -189,11 +189,12 @@ def scaled_plot(template,
 			overlay = path.abspath(path.expanduser(overlay))
 		except AttributeError:
 			pass
-		try:
-			display.add_contours(overlay, threshold=.5)
-		except ValueError:
-			pass
-
+		display.add_contours(overlay,
+			colors=['tab:pink'],
+			#linesyles='dotted',
+			linewidths=.4,
+			threshold=.5,
+			)
 	return display
 
 def stat(stat_maps,

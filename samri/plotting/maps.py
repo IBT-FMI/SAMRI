@@ -957,3 +957,4 @@ def contour_slices(bg_image, file_template,
 		plt.savefig(save_as,
 			#facecolor=fig.get_facecolor(),
 			)
+		plt.close()

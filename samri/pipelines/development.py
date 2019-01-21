@@ -69,24 +69,6 @@ def anova():
 			},
 		)
 	#glm.l2_anova("~/ni_data/ofM.dr/l1/composite/",
-	#	workflow_name="anova_drs",
-	#	keep_work=False,
-	#	mask="~/ni_data/templates/roi/DSURQEc_drs.nii.gz",
-	#	include={
-	#		'session':['ofM','ofMaF','ofMcF1','ofMcF2','ofMpF'],
-	#		'subject':['5691',"5689","5690","5700"],
-	#		},
-	#	)
-	#glm.l2_anova("~/ni_data/ofM.dr/l1/composite/",
-	#	workflow_name="anova_dr",
-	#	keep_work=False,
-	#	mask="~/ni_data/templates/roi/DSURQEc_dr.nii.gz",
-	#	include={
-	#		'session':['ofM','ofMaF','ofMcF1','ofMcF2','ofMpF'],
-	#		'subject':['5691',"5689","5690","5700"],
-	#		},
-	#	)
-	#glm.l2_anova("~/ni_data/ofM.dr/l1/composite/",
 	#	workflow_name="anova_control",
 	#	keep_work=False,
 	#	mask="/usr/share/mouse-brain-atlases/dsurqec_200micron_mask.nii",

@@ -7,7 +7,6 @@ import samri.plotting.maps as maps
 import seaborn as sns
 from os import path
 
-
 def test_population_roi_over_time():
        # Style elements
        palette=["#56B4E9", "#E69F00"]
@@ -50,7 +49,7 @@ def test_population_roi_over_time():
 	      )
 
        ax2 = plt.axes(roi_coordinates)
-       maps.atlas_label("~/ni_data/templates/roi/DSURQEc_drp.nii.gz",
+       maps.atlas_label('/usr/share/mouse-brain-atlases/dsurqec_200micron_roi-dr.nii',
 	       scale=0.3,
 	       color="#E69F00",
 	       ax=ax2,

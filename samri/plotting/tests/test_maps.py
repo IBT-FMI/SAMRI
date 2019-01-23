@@ -11,7 +11,7 @@ def test_population_roi_over_time():
        # Style elements
        palette=["#56B4E9", "#E69F00"]
 
-       data_dir = path.join(path.dirname(path.realpath(__file__)),"../../../example_data")
+       data_dir = path.join(path.dirname(path.realpath(__file__)),"../../tests/data")
        data_path = path.join(data_dir,'drs_activity.csv')
        df = pd.read_csv(data_path)
 

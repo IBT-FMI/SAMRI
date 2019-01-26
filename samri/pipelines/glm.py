@@ -121,7 +121,7 @@ def l1(preprocessing_dir,
 		# We are not adding derivatives here, as these conflict with the habituation option.
 		# !!! This is not difficult to solve, and would only require the addition of an elif condition to the habituator definition, which would add multiple column copies for each of the derivs.
 		level1design.inputs.bases = {'gamma': {'derivs':True, 'gammasigma':30, 'gammadelay':10}}
-	level1design.inputs.orthogonalization = {1: {0:1,1:0,2:0}, 2: {0:1,1:1,2:0}}
+	level1design.inputs.orthogonalization = {1: {0:0,1:0,2:0}, 2: {0:1,1:1,2:0}}
 	level1design.inputs.model_serial_correlations = True
 
 	modelgen = pe.Node(interface=fsl.FEATModel(), name='modelgen')
@@ -204,8 +204,8 @@ def l1(preprocessing_dir,
 		specify_model.inputs.bids_amplitude_column = 'samri_l1_amplitude'
 		add_habituation = pe.Node(name='add_habituation', interface=util.Function(function=eventfile_add_habituation,input_names=inspect.getargspec(eventfile_add_habituation)[0], output_names=['out_file']))
 		# Regressor names need to be prefixed with "e" plus a numerator so that Level1Design will be certain to conserve the order.
-		add_habituation.inputs.original_stimulation_value='e0stim'
-		add_habituation.inputs.habituation_value='e1habituation'
+		add_habituation.inputs.original_stimulation_value='1stim'
+		add_habituation.inputs.habituation_value='2habituation'
 		workflow_connections.extend([
 			(eventfile, add_habituation, [('eventfile', 'in_file')]),
 			(add_habituation, specify_model, [('out_file', 'bids_event_file')]),
@@ -217,15 +217,11 @@ def l1(preprocessing_dir,
 			])
 	#condition names as defined in eventfile_add_habituation:
 	elif habituation=="separate_contrast":
-		level1design.inputs.contrasts = [('stim','T', ['e0stim','e1habituation'],[1,0]),('hab','T', ['e0stim','e1habituation'],[0,1])]
-	elif habituation=="in_main_contrast_fix":
-		level1design.inputs.contrasts = [('all','T', ['e1habituation','e0stim'], [1,1])]
+		level1design.inputs.contrasts = [('stim','T', ['1stim','2habituation'],[1,0]),('hab','T', ['1stim','2habituation'],[0,1])]
 	elif habituation=="in_main_contrast":
-		level1design.inputs.contrasts = [('all','T', ['e0stim','e1habituation'],[1,1])]
+		level1design.inputs.contrasts = [('all','T', ['1stim','2habituation'],[1,1])]
 	elif habituation=="confound":
-		#level1design.inputs.contrasts = [('allStim','T', ["e0stim", "e1habituation"],[1,0])]
-		#level1design.inputs.contrasts = [('allStim','T', ["e0stim"],[1]), (,)]
-		level1design.inputs.contrasts = [('stim','T', ['e0stim'],[1])]
+		level1design.inputs.contrasts = [('stim','T', ["1stim", "2habituation"],[1,0])]
 	else:
 		print(habituation)
 		raise ValueError('The value you have provided for the `habituation` parameter, namely "{}", is invalid. Please choose one of: {{None, False,"","confound","in_main_contrast","separate_contrast"}}'.format(habituation))

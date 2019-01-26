@@ -1,2 +1,2 @@
-include samri/plotting/samri.conf
-include example_data/*
+include tests/data/drs_activity.csv
+include tests/data/f_reg_quality.csv

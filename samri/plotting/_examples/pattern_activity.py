@@ -7,7 +7,7 @@ import samri.plotting.maps as maps
 import seaborn as sns
 from os import path
 
-data_dir = path.join(path.dirname(path.realpath(__file__)),"../../../example_data/ioanas2018")
+data_dir = path.join(path.dirname(path.realpath(__file__)),"../../tests/data/ioanas2018")
 data_path = path.join(data_dir,'pattern_summary.csv')
 df = pd.read_csv(data_path)
 

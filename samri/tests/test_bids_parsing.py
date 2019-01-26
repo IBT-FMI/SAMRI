@@ -1,6 +1,6 @@
 from os import path
 
-DATA_DIR = path.join(path.dirname(path.realpath(__file__)),'../../example_data/')
+DATA_DIR = path.join(path.dirname(path.realpath(__file__)),'../tests/data/')
 
 def assert_and_feedback(obtained, expected,
 	debug='',

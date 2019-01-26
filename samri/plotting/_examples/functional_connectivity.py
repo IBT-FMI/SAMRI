@@ -11,7 +11,7 @@ from samri.plotting import connectivity
 from samri.fetch.templates import fetch_rat_waxholm
 
 # fetch data templates and data
-data_dir = path.join(path.dirname(path.realpath(__file__)),"../../example_data/")
+data_dir = path.join(path.dirname(path.realpath(__file__)),"../tests/data/")
 results_dir = path.abspath(path.expanduser('~/.samri_files/results/fc/'))
 # check if results dir exists, otherwise create
 if not os.path.exists(path.abspath(path.expanduser(results_dir))):

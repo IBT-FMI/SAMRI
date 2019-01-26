@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
 	name="SAMRI",
-	version="",
+	version="9999",
 	description = "Small animal magnetic resonance imaging via Python.",
 	author = "Horea Christian",
 	author_email = "horea.christ@yandex.com",

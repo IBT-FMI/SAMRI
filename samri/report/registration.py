@@ -1,5 +1,6 @@
 import hashlib
 import multiprocessing as mp
+import nibabel as nib
 import pandas as pd
 from os import path
 from joblib import Parallel, delayed
@@ -28,7 +29,8 @@ def measure_sim(path_template, substitutions, reference,
 	file_data["subject"] = substitutions["subject"]
 	file_data["acquisition"] = substitutions["acquisition"]
 
-	if "/func/" in path_template or "/dwi/" in path_template:
+	img = nib.load(image_path)
+	if img.header['dim'][0] > 3:
 		image_name = path.basename(file_data["path"])
 		merged_image_name = "merged_"+image_name
 		merged_image_path = path.join("/tmp",merged_image_name)

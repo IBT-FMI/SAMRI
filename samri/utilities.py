@@ -90,7 +90,10 @@ def bids_autofind(bids_dir,
 		substitution["session"] = datafind_res.outputs.ses[ix]
 		substitution["task"] = datafind_res.outputs.task[ix]
 		substitution["run"] = datafind_res.outputs.run[ix]
-		substitution["modality"] = datafind_res.outputs.modality[ix]
+		try:
+			substitution["modality"] = datafind_res.outputs.modality[ix]
+		except AttributeError:
+			pass
 		if path_template.format(**substitution) != i:
 			print("Original DataFinder path: "+i)
 			print("Reconstructed path:       "+path_template.format(**substitution))

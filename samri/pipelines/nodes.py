@@ -163,43 +163,6 @@ def generic_registration(template,
 
 	return s_registration, s_warp, f_registration, f_warp
 
-def composite_registration(template, num_threads=4):
-	f_registration = pe.Node(ants.Registration(), name="f_register")
-	f_registration.inputs.output_transform_prefix = "output_"
-	f_registration.inputs.transforms = ['Rigid']
-	f_registration.inputs.transform_parameters = [(0.1,)]
-	f_registration.inputs.number_of_iterations = [[40, 20, 10]]
-	f_registration.inputs.dimension = 3
-	f_registration.inputs.write_composite_transform = True
-	f_registration.inputs.collapse_output_transforms = True
-	f_registration.inputs.initial_moving_transform_com = True
-	f_registration.inputs.metric = ['MeanSquares']
-	f_registration.inputs.metric_weight = [1]
-	f_registration.inputs.radius_or_number_of_bins = [16]
-	f_registration.inputs.sampling_strategy = ["Regular"]
-	f_registration.inputs.sampling_percentage = [0.3]
-	f_registration.inputs.convergence_threshold = [1.e-2]
-	f_registration.inputs.convergence_window_size = [8]
-	f_registration.inputs.smoothing_sigmas = [[4, 2, 1]] #
-	f_registration.inputs.sigma_units = ['vox']
-	f_registration.inputs.shrink_factors = [[3, 2, 1]]
-	f_registration.inputs.use_estimate_learning_rate_once = [True]
-	f_registration.inputs.use_histogram_matching = [False]
-	f_registration.inputs.winsorize_lower_quantile = 0.005
-	f_registration.inputs.winsorize_upper_quantile = 0.995
-	f_registration.inputs.args = '--float'
-	f_registration.inputs.num_threads = num_threads
-
-	f_warp = pe.Node(ants.ApplyTransforms(), name="f_warp")
-	f_warp.inputs.reference_image = path.abspath(path.expanduser(template))
-	f_warp.inputs.input_image_type = 3
-	f_warp.inputs.interpolation = 'NearestNeighbor'
-	f_warp.inputs.invert_transform_flags = [False, False]
-	f_warp.inputs.terminal_output = 'file'
-	f_warp.num_threads = num_threads
-
-	return f_registration, f_warp
-
 def functional_registration(template,
 	mask="/usr/share/mouse-brain-atlases/dsurqec_200micron_mask.nii",
 	num_threads=4,

@@ -15,7 +15,6 @@ import pandas as pd
 from nipype.interfaces import fsl, nipy, bru2nii
 
 from samri.pipelines.extra_functions import force_dummy_scans, get_tr
-from samri.pipelines.nodes import functional_registration, structural_registration, composite_registration
 from samri.pipelines.utils import out_path, container
 from samri.utilities import N_PROCS
 

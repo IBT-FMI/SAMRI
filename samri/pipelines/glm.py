@@ -213,7 +213,7 @@ def l1(preprocessing_dir,
 			(add_habituation, specify_model, [('out_file', 'bids_event_file')]),
 			])
 	if not habituation:
-		level1design.inputs.contrasts = [('allStim','T', ["e0"],[1])]
+		level1design.inputs.contrasts = [('allStim','T', ['e0'],[1])]
 		workflow_connections.extend([
 			(eventfile, specify_model, [('eventfile', 'bids_event_file')]),
 			])

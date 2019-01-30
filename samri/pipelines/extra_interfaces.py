@@ -45,9 +45,10 @@ def bids_gen_info(bids_event_files,
 	bids_event_files : list of str
 		Filenames of BIDS .tsv event files containing columns including:
 		'onset', 'duration', and 'trial_type' or the `condition_column` value.
-	condition_column : str
+	condition_column : str or bool
 		Column of files in `bids_event_files` based on the values of which
-		events will be sorted into different regressors
+		events will be sorted into different regressors. If parameter evaluates
+		as `False`, all events are modelled in the same regressor, named 'e0'.
 	amplitude_column : str
 		Column of files in `bids_event_files` based on the values of which
 		to apply amplitudes to events. If unspecified, all events will be
@@ -63,6 +64,10 @@ def bids_gen_info(bids_event_files,
 		with open(bids_event_file) as f:
 			f_events = csv.DictReader(f, skipinitialspace=True, delimiter='\t')
 			events = [{k: v for k, v in row.items()} for row in f_events]
+		if not condition_column:
+			condition_column = '_trial_type'
+			for i in events:
+				i.update({condition_column:'ev0'})
 		conditions = list(set([i[condition_column] for i in events]))
 		conditions = sorted(conditions)
 		runinfo = Bunch(conditions=[], onsets=[], durations=[], amplitudes=[])
@@ -74,10 +79,7 @@ def bids_gen_info(bids_event_files,
 				decimals = math.ceil(-math.log10(time_repetition))
 				onsets = [np.round(i, decimals) for i in onsets]
 				durations = [np.round(i ,decimals) for i in durations]
-			if condition:
-				runinfo.conditions.append(condition)
-			else:
-				runinfo.conditions.append('e0')
+			runinfo.conditions.append(condition)
 			runinfo.onsets.append(onsets)
 			runinfo.durations.append(durations)
 			try:

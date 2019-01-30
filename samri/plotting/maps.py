@@ -389,7 +389,7 @@ def stat(stat_maps,
 			# The missing statistic maps may either be missing (raising an `IndexError`) or `None` (raising an `AttributeError` from `_draw_colorbar` and `TypeError` from `scaled_plot`).
 			try:
 				if draw_colorbar:
-					cax, kw = _draw_colorbar(stat_maps[ix],flat_axes[ix:ix+conserve_colorbar_steps],
+					cax, _,_,_,_ = _draw_colorbar(stat_maps[ix],flat_axes[ix:ix+conserve_colorbar_steps],
 						threshold=threshold,
 						aspect=cbar_aspect,
 						fraction=fraction,

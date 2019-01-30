@@ -89,7 +89,7 @@ def generic_registration(template,
 	s_registration.inputs.dimension = 3
 	s_registration.inputs.write_composite_transform = True
 	s_registration.inputs.collapse_output_transforms = True
-	s_registration.inputs.initial_moving_transform_com = True
+	s_registration.inputs.initial_moving_transform_com = 1
 	s_registration.inputs.metric = [i["metric"] for i in s_parameters]
 	s_registration.inputs.metric_weight = [i["metric_weight"] for i in s_parameters]
 	s_registration.inputs.radius_or_number_of_bins = [i["radius_or_number_of_bins"] for i in s_parameters]
@@ -120,7 +120,7 @@ def generic_registration(template,
 	f_registration.inputs.dimension = 3
 	f_registration.inputs.write_composite_transform = True
 	f_registration.inputs.collapse_output_transforms = True
-	f_registration.inputs.initial_moving_transform_com = True
+	f_registration.inputs.initial_moving_transform_com = 1
 	f_registration.inputs.metric = [i["metric"] for i in f_parameters]
 	f_registration.inputs.metric_weight = [i["metric_weight"] for i in f_parameters]
 	f_registration.inputs.radius_or_number_of_bins = [i["radius_or_number_of_bins"] for i in f_parameters]

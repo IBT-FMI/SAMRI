@@ -150,8 +150,6 @@ def generic_registration(template,
 	f_warp.inputs.interpolation = 'BSpline'
 	f_warp.inputs.interpolation_parameters = (5,)
 	f_warp.inputs.invert_transform_flags = [False, False]
-	#DEPRECATED in =nipype-1.1.0
-	#f_warp.inputs.terminal_output = 'file'
 	f_warp.num_threads = num_threads
 	f_warp.interface.mem_gb = 12
 
@@ -161,8 +159,6 @@ def generic_registration(template,
 	s_warp.inputs.interpolation = 'BSpline'
 	s_warp.inputs.interpolation_parameters = (5,)
 	s_warp.inputs.invert_transform_flags = [False]
-	#DEPRECATED in =nipype-1.1.0
-	#s_warp.inputs.terminal_output = 'file'
 	s_warp.num_threads = num_threads
 
 	return s_registration, s_warp, f_registration, f_warp

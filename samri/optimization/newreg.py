@@ -1,3 +1,4 @@
+import nipype.interfaces.utility as util
 import nipype.interfaces.ants as ants
 import os
 from nipype.interfaces.fsl import ApplyMask, GLM, MELODIC, FAST, BET, MeanImage, FLIRT, ImageMaths, FSLCommand
@@ -101,17 +102,19 @@ def single_generic(in_func, in_anat, template,
 	s_biascorrect.inputs.output_image = s_biascorrect_outfile
 	s_biascorrect_run = s_biascorrect.run()
 
-	#f_biascorrect = pe.Node(interface=ants.N4BiasFieldCorrection(), name="f_biascorrect")
-	#f_biascorrect.inputs.dimension = 3
-	#f_biascorrect.inputs.bspline_fitting_distance = 10
-	#f_biascorrect.inputs.bspline_order = 4
-	#f_biascorrect.inputs.shrink_factor = 2
-	#f_biascorrect.inputs.n_iterations = [150,100,50,30]
-	#f_biascorrect.inputs.convergence_threshold = 1e-11
-	#f_biascorrect.inputs.input_image = in_func
-	#f_biascorrect_run = f_biascorrect.run()
+	f_biascorrect = pe.Node(interface=ants.N4BiasFieldCorrection(), name="f_biascorrect")
+	f_biascorrect.inputs.dimension = 3
+	f_biascorrect.inputs.bspline_fitting_distance = 10
+	f_biascorrect.inputs.bspline_order = 4
+	f_biascorrect.inputs.shrink_factor = 2
+	f_biascorrect.inputs.n_iterations = [150,100,50,30]
+	f_biascorrect.inputs.convergence_threshold = 1e-11
+	f_biascorrect.inputs.input_image = in_func
+	f_biascorrect_run = f_biascorrect.run()
 
 	s_register_outfile = '{}/{}_warped.nii.gz'.format(out_base,in_anat_name)
+	f_register_outfile = '{}/{}_semi_warped.nii.gz'.format(out_base,in_func_name)
+	f_registered = '{}/{}_warped.nii.gz'.format(out_base,in_func_name)
 	try:
 		os.remove(s_register_outfile)
 	except OSError:
@@ -120,7 +123,19 @@ def single_generic(in_func, in_anat, template,
 		**kwargs)
 	s_register.inputs.moving_image = s_biascorrect_run.outputs.output_image
 	s_register.inputs.output_warped_image = s_register_outfile
-	s_register.run()
+	s_register_run = s_register.run()
+	f_register.inputs.fixed_image = s_biascorrect_run.outputs.output_image
+	f_register.inputs.moving_image = f_biascorrect_run.outputs.output_image
+	f_register.inputs.output_warped_image = f_register_outfile
+	f_register_run = f_register.run()
+
+	merge = util.Merge(2)
+	merge.inputs.in1 = s_register_run.outputs.composite_transform
+	merge.inputs.in2 = f_register_run.outputs.composite_transform
+	merge_run= merge.run()
+	f_warp.inputs.transforms = merge_run.outputs.out
+	f_warp.inputs.output_image = f_registered
+
 
 def structural(substitutions, parameters,
 	reference="/usr/share/mouse-brain-atlases/dsurqec_200micron.nii",

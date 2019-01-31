@@ -133,8 +133,10 @@ def single_generic(in_func, in_anat, template,
 	merge.inputs.in1 = s_register_run.outputs.composite_transform
 	merge.inputs.in2 = f_register_run.outputs.composite_transform
 	merge_run= merge.run()
+	f_warp.inputs.input_image = in_func
 	f_warp.inputs.transforms = merge_run.outputs.out
 	f_warp.inputs.output_image = f_registered
+	f_warp_run = f_warp.run()
 
 
 def structural(substitutions, parameters,

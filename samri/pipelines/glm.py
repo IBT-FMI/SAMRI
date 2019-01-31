@@ -133,7 +133,9 @@ def l1(preprocessing_dir,
 #	glm.inputs.out_file = "betas.nii.gz"
 #	glm.inputs.out_t_name = "t_stat.nii.gz"
 #	glm.inputs.out_p_name = "p_stat.nii.gz"
-	if mask:
+	if mask == 'mouse':
+		mask = '/usr/share/mouse-brain-atlases/dsurqec_200micron_mask.nii'
+	else:
 		glm.inputs.mask = path.abspath(path.expanduser(mask))
 	glm.interface.mem_gb = 6
 	#glm.inputs.ignore_exception = True

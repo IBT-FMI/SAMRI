@@ -112,7 +112,7 @@ def generic_registration(template,
 	f_parameters = [phase_dictionary[selection] for selection in f_phases]
 
 	f_registration = pe.Node(ants.Registration(), name="f_register")
-	f_registration.inputs.fixed_image = path.abspath(path.expanduser(template))
+	#f_registration.inputs.fixed_image = path.abspath(path.expanduser(template))
 	f_registration.inputs.output_transform_prefix = "output_"
 	f_registration.inputs.transforms = [i["transforms"] for i in f_parameters] ##
 	f_registration.inputs.transform_parameters = [i["transform_parameters"] for i in f_parameters] ##

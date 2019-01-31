@@ -121,7 +121,6 @@ def l1(preprocessing_dir,
 		# We are not adding derivatives here, as these conflict with the habituation option.
 		# !!! This is not difficult to solve, and would only require the addition of an elif condition to the habituator definition, which would add multiple column copies for each of the derivs.
 		level1design.inputs.bases = {'gamma': {'derivs':True, 'gammasigma':30, 'gammadelay':10}}
-	level1design.inputs.orthogonalization = {1: {0:0,1:0,2:0}, 2: {0:1,1:1,2:0}}
 	level1design.inputs.model_serial_correlations = True
 
 	modelgen = pe.Node(interface=fsl.FEATModel(), name='modelgen')
@@ -200,6 +199,7 @@ def l1(preprocessing_dir,
 		]
 
 	if habituation:
+		level1design.inputs.orthogonalization = {1: {0:0,1:0,2:0}, 2: {0:1,1:1,2:0}}
 		specify_model.inputs.bids_condition_column = 'samri_l1_regressors'
 		specify_model.inputs.bids_amplitude_column = 'samri_l1_amplitude'
 		add_habituation = pe.Node(name='add_habituation', interface=util.Function(function=eventfile_add_habituation,input_names=inspect.getargspec(eventfile_add_habituation)[0], output_names=['out_file']))
@@ -211,7 +211,8 @@ def l1(preprocessing_dir,
 			(add_habituation, specify_model, [('out_file', 'bids_event_file')]),
 			])
 	if not habituation:
-		level1design.inputs.contrasts = [('allStim','T', ['e0'],[1])]
+		specify_model.inputs.bids_condition_column = ''
+		level1design.inputs.contrasts = [('allStim','T', ['ev0'],[1])]
 		workflow_connections.extend([
 			(eventfile, specify_model, [('eventfile', 'bids_event_file')]),
 			])

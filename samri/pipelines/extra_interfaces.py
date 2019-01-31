@@ -45,10 +45,10 @@ def bids_gen_info(bids_event_files,
 	bids_event_files : list of str
 		Filenames of BIDS .tsv event files containing columns including:
 		'onset', 'duration', and 'trial_type' or the `condition_column` value.
-	condition_column : str or bool
+	condition_column : str
 		Column of files in `bids_event_files` based on the values of which
-		events will be sorted into different regressors. If parameter evaluates
-		as `False`, all events are modelled in the same regressor, named 'e0'.
+		events will be sorted into different regressors. If empty, all events
+		are modelled in the same regressor, named 'e0'.
 	amplitude_column : str
 		Column of files in `bids_event_files` based on the values of which
 		to apply amplitudes to events. If unspecified, all events will be
@@ -146,13 +146,13 @@ class SpecifyModelInputSpec(BaseInterfaceInputSpec):
 		mandatory=False,
 		default_value='trial_type',
 		usedefault=True,
-		desc='Column of the file passed to `bids_event_file` to the '
-		'unique values of which events will be assigned'
-		'to regressors')
+		desc='Column of the file passed to `bids_event_file` based on '
+		'the unique values of which events will be assigned to '
+		'regressors')
 	bids_amplitude_column = traits.Str(exists=True,
 		mandatory=False,
 		desc='Column of the file passed to `bids_event_file` '
-		'according to which to assign amplitudes to events')
+		'based on which amplitudes are assigned to events')
 	realignment_parameters = InputMultiPath(
 		File(exists=True),
 		desc='Realignment parameters returned '

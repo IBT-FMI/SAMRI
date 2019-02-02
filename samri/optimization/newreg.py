@@ -68,6 +68,7 @@ PHASES = {
 	}
 
 def single_generic(in_func, in_anat, template,
+	target_in_func=False,
 	mask=False,
 	phases=GENERIC_PHASES,
 	out_base='/var/tmp/samri_optimize',
@@ -133,7 +134,11 @@ def single_generic(in_func, in_anat, template,
 	merge.inputs.in1 = s_register_run.outputs.composite_transform
 	merge.inputs.in2 = f_register_run.outputs.composite_transform
 	merge_run= merge.run()
-	f_warp.inputs.input_image = in_func
+	if target_in_func:
+		target_in_func=os.path.abspath(os.path.expanduser(target_in_func))
+		f_warp.inputs.input_image = target_in_func
+	else:
+		f_warp.inputs.input_image = in_func
 	f_warp.inputs.transforms = merge_run.outputs.out
 	f_warp.inputs.output_image = f_registered
 	f_warp_run = f_warp.run()

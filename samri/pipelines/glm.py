@@ -635,7 +635,10 @@ def l2_common_effect(l1_dir,
 	elif groupby == "session":
 		common_fields = ''
 		common_fields += 'acq-'+data_selection.acq.drop_duplicates().item()
-		common_fields += '_run-'+data_selection.run.drop_duplicates().item()
+		try:
+			common_fields += '_run-'+data_selection.run.drop_duplicates().item()
+		except ValueError:
+			pass
 
 		datasink_substitutions.extend([('session', 'ses-')])
 		datasink_substitutions.extend([('cope1.nii.gz', common_fields+'_'+'cope.nii.gz')])
@@ -667,6 +670,48 @@ def l2_common_effect(l1_dir,
 			(infosource, copemerge, [(('iterable',dict_and_suffix,"session","_cope.nii.gz"), 'merged_file')]),
 			(infosource, varcopemerge, [(('iterable',dict_and_suffix,"session","_varcb.nii.gz"), 'merged_file')]),
 			]
+	elif groupby == "task":
+		common_fields = ''
+		common_fields += 'acq-'+data_selection.acq.drop_duplicates().item()
+		try:
+			common_fields += '_run-'+data_selection.run.drop_duplicates().item()
+		except ValueError:
+			pass
+		try:
+			common_fields += '_ses-'+data_selection.session.drop_duplicates().item()
+		except ValueError:
+			pass
+
+		datasink_substitutions.extend([('task', 'task-')])
+		datasink_substitutions.extend([('cope1.nii.gz', common_fields+'_'+'cope.nii.gz')])
+		datasink_substitutions.extend([('tstat1.nii.gz', common_fields+'_'+'tstat.nii.gz')])
+		datasink_substitutions.extend([('zstat1.nii.gz', common_fields+'_'+'zstat.nii.gz')])
+		datasink.inputs.substitutions = datasink_substitutions
+
+		iters = data_selection[['task']].drop_duplicates()
+		# TODO: could not find a better way to convert pandas df column into list of dicts
+		iters_ = iters.T.to_dict()
+		iters = [iters_[i] for i in iters_.keys()]
+
+		infosource = pe.Node(interface=util.IdentityInterface(fields=['iterable']), name="infosource")
+		infosource.iterables = [('iterable', iters)]
+
+		copes = pe.Node(name='copes', interface=util.Function(function=select_from_datafind_df, input_names=inspect.getargspec(select_from_datafind_df)[0], output_names=['selection']))
+		copes.inputs.bids_dictionary_override = {'modality':'cope'}
+		copes.inputs.df = data_selection
+		copes.inputs.list_output = True
+
+		varcopes = pe.Node(name='varcopes', interface=util.Function(function=select_from_datafind_df, input_names=inspect.getargspec(select_from_datafind_df)[0], output_names=['selection']))
+		varcopes.inputs.bids_dictionary_override = {'modality':'varcb'}
+		varcopes.inputs.df = data_selection
+		varcopes.inputs.list_output = True
+
+		workflow_connections = [
+			(infosource, copes, [('iterable', 'bids_dictionary')]),
+			(infosource, varcopes, [('iterable', 'bids_dictionary')]),
+			(infosource, copemerge, [(('iterable',dict_and_suffix,"task","_cope.nii.gz"), 'merged_file')]),
+			(infosource, varcopemerge, [(('iterable',dict_and_suffix,"task","_varcb.nii.gz"), 'merged_file')]),
+			]
 	elif groupby == "none":
 		common_fields = ''
 		common_fields += 'acq-'+data_selection.acq.drop_duplicates().item()
@@ -692,7 +737,7 @@ def l2_common_effect(l1_dir,
 
 		workflow_connections = []
 
-	elif groupby == "task":
+	elif groupby == "mtask":
 		infosource = pe.Node(interface=util.IdentityInterface(fields=['iterable']), name="infosource")
 		infosource.iterables = [('iterable', tasks)]
 		datasource = pe.Node(interface=nio.DataGrabber(infields=["group",], outfields=["copes", "varcbs"]), name="datasource")

@@ -265,7 +265,8 @@ def significant_signal(data_path,
 		data = data[~np.isnan(data)]
 	# We interpret zero as the lowest p-value, and conservatively estimate it to be equal to just under half of the smallest value in the defined range
 	nonzero = data[np.nonzero(data)]
-	data_min = np.min(nonzero)*0.49
+	data_min = np.min(nonzero)
+	data_min = data_min*0.49
 	data[data == 0] = data_min
 	if exclude_ones:
 		data = data[data!=1]

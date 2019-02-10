@@ -570,7 +570,6 @@ def l2_common_effect(l1_dir,
 	workdir = path.join(out_base,workdir_name)
 	if not os.path.exists(workdir):
 		os.makedirs(workdir)
-	data_selection.to_csv(path.join(workdir,'data_selection.csv'))
 
 	data_selection = data_selection.sort_values(['session', 'subject'], ascending=[1, 1])
 	if exclude:
@@ -579,6 +578,7 @@ def l2_common_effect(l1_dir,
 	if include:
 		for key in include:
 			data_selection = data_selection[data_selection[key].isin(include[key])]
+	data_selection.to_csv(path.join(workdir,'data_selection.csv'))
 
 	copemerge = pe.Node(interface=fsl.Merge(dimension='t'),name="copemerge")
 	varcopemerge = pe.Node(interface=fsl.Merge(dimension='t'),name="varcopemerge")
@@ -681,7 +681,6 @@ def l2_common_effect(l1_dir,
 			common_fields += '_ses-'+data_selection.session.drop_duplicates().item()
 		except ValueError:
 			pass
-
 		datasink_substitutions.extend([('task', 'task-')])
 		datasink_substitutions.extend([('cope1.nii.gz', common_fields+'_'+'cope.nii.gz')])
 		datasink_substitutions.extend([('tstat1.nii.gz', common_fields+'_'+'tstat.nii.gz')])

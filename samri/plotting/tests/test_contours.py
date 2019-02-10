@@ -5,7 +5,7 @@ def test_contours_single():
 	file_template = '/usr/share/mouse-brain-atlases/dsurqec_200micron_masked.nii'
 
 	cmap = plt.get_cmap('tab20').colors
-	contour_slices('/usr/share/samri_bidsdata/preprocessing/generic/sub-4007/ses-ofM/func/sub-4007_ses-ofM_task-JogB_acq-EPIlowcov_run-1_cbv.nii.gz',
+	contour_slices('/usr/share/samri_bidsdata/preprocessing/sub-4007/ses-ofM/func/sub-4007_ses-ofM_task-JogB_acq-EPIlowcov_run-1_cbv.nii.gz',
 		alpha=[0.9],
 		colors=cmap[::2],
 		figure_title='Single-Session Fit and Distortion Control',
@@ -34,7 +34,7 @@ def test_contours_substitutions():
 		]
 
 	for i in list(itertools.product(subjects, contrasts)):
-		file_template='{{data_dir}}/preprocessing/generic/sub-{{subject}}/ses-{{session}}/func/sub-{{subject}}_ses-{{session}}_task-JogB_acq-EPIlowcov_run-{{run}}_{}.nii.gz'.format(i[1])
+		file_template='{{data_dir}}/preprocessing/sub-{{subject}}/ses-{{session}}/func/sub-{{subject}}_ses-{{session}}_task-JogB_acq-EPIlowcov_run-{{run}}_{}.nii.gz'.format(i[1])
 
 		substitutions = bids_substitution_iterator(
 			sessions=[

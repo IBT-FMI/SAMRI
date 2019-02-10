@@ -23,7 +23,7 @@ def test_multi_roi_timeseries():
 		     ],
 		data_dir='/usr/share/samri_bidsdata',
 		# BOLD scans are not recognized, since the current (=sci-biology/samri_bidsdata-0.2) filt file suffix also contains `_maths_` for CBV, but not for BOLD.
-		validate_for_template="{data_dir}/l1/generic/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_task-JogB_acq-EPIlowcov_run-{run}_{modality}_maths_filt.nii.gz",
+		validate_for_template="{data_dir}/l1/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_task-JogB_acq-EPIlowcov_run-{run}_{modality}_maths_filt.nii.gz",
 		)
 
 	mapping='/usr/share/mouse-brain-atlases/dsurqe_labels.csv'
@@ -33,10 +33,10 @@ def test_multi_roi_timeseries():
 		label_names=['cortex'],
 		)
 	timecourses, designs, _, events_dfs, subplot_titles = summary.ts_overviews(substitutions, my_roi,
-		ts_file_template="{data_dir}/l1/generic/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_task-JogB_acq-EPIlowcov_run-{run}_{modality}_maths_filt.nii.gz",
-		betas_file_template="{data_dir}/l1/generic/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_task-JogB_acq-EPIlowcov_run-{run}_{modality}_beta.nii.gz",
-		design_file_template="{data_dir}/l1/generic/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_task-JogB_acq-EPIlowcov_run-{run}_{modality}_design.mat",
-		event_file_template='{data_dir}/preprocessing/generic/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_task-JogB_acq-EPIlowcov_run-{run}_events.tsv',
+		ts_file_template="{data_dir}/l1/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_task-JogB_acq-EPIlowcov_run-{run}_{modality}_maths_filt.nii.gz",
+		betas_file_template="{data_dir}/l1/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_task-JogB_acq-EPIlowcov_run-{run}_{modality}_beta.nii.gz",
+		design_file_template="{data_dir}/l1/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_task-JogB_acq-EPIlowcov_run-{run}_{modality}_design.mat",
+		event_file_template='{data_dir}/preprocessing/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_task-JogB_acq-EPIlowcov_run-{run}_events.tsv',
 		n_jobs_percentage=0.5,
 		)
 

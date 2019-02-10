@@ -633,18 +633,13 @@ def l2_common_effect(l1_dir,
 			(merge, varcopemerge, [(('out',add_suffix,"_varcb.nii.gz"), 'merged_file')]),
 			]
 	elif groupby == "session":
+		datasink_substitutions.extend([('session', 'ses-')])
 		common_fields = ''
 		common_fields += 'acq-'+data_selection.acq.drop_duplicates().item()
 		try:
 			common_fields += '_run-'+data_selection.run.drop_duplicates().item()
 		except ValueError:
 			pass
-
-		datasink_substitutions.extend([('session', 'ses-')])
-		datasink_substitutions.extend([('cope1.nii.gz', common_fields+'_'+'cope.nii.gz')])
-		datasink_substitutions.extend([('tstat1.nii.gz', common_fields+'_'+'tstat.nii.gz')])
-		datasink_substitutions.extend([('zstat1.nii.gz', common_fields+'_'+'zstat.nii.gz')])
-		datasink.inputs.substitutions = datasink_substitutions
 
 		sessions = data_selection[['session']].drop_duplicates()
 		# TODO: could not find a better way to convert pandas df column into list of dicts
@@ -671,6 +666,7 @@ def l2_common_effect(l1_dir,
 			(infosource, varcopemerge, [(('iterable',dict_and_suffix,"session","_varcb.nii.gz"), 'merged_file')]),
 			]
 	elif groupby == "task":
+		datasink_substitutions.extend([('task', 'task-')])
 		common_fields = ''
 		common_fields += 'acq-'+data_selection.acq.drop_duplicates().item()
 		try:
@@ -681,11 +677,6 @@ def l2_common_effect(l1_dir,
 			common_fields += '_ses-'+data_selection.session.drop_duplicates().item()
 		except ValueError:
 			pass
-		datasink_substitutions.extend([('task', 'task-')])
-		datasink_substitutions.extend([('cope1.nii.gz', common_fields+'_'+'cope.nii.gz')])
-		datasink_substitutions.extend([('tstat1.nii.gz', common_fields+'_'+'tstat.nii.gz')])
-		datasink_substitutions.extend([('zstat1.nii.gz', common_fields+'_'+'zstat.nii.gz')])
-		datasink.inputs.substitutions = datasink_substitutions
 
 		iters = data_selection[['task']].drop_duplicates()
 		# TODO: could not find a better way to convert pandas df column into list of dicts
@@ -753,6 +744,11 @@ def l2_common_effect(l1_dir,
 			(infosource, copemerge, [(('iterable',add_suffix,"_cope.nii.gz"), 'merged_file')]),
 			(infosource, varcopemerge, [(('iterable',add_suffix,"_varcb.nii.gz"), 'merged_file')]),
 			]
+
+	datasink_substitutions.extend([('cope1.nii.gz', common_fields+'_'+'cope.nii.gz')])
+	datasink_substitutions.extend([('tstat1.nii.gz', common_fields+'_'+'tstat.nii.gz')])
+	datasink_substitutions.extend([('zstat1.nii.gz', common_fields+'_'+'zstat.nii.gz')])
+	datasink.inputs.substitutions = datasink_substitutions
 
 	workflow_connections.extend([
 		(copes, copemerge, [('selection', 'in_files')]),

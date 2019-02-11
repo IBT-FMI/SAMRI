@@ -187,7 +187,7 @@ def analytic_pattern_per_session(substitutions, analytic_pattern,
 
 	return df
 
-def activity(roi,
+def drs_activity(roi,
 	atlas='/usr/share/mouse-brain-atlases/dsurqec_40micron_labels.nii',
 	mapping='/usr/share/mouse-brain-atlases/dsurqe_labels.csv',
 	):

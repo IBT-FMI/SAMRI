@@ -583,6 +583,7 @@ def get_data_selection(workflow_base,
 	measurements=[],
 	exclude_measurements=[],
 	count_runs=False,
+	fail_suffix='_failed',
 	):
 	"""
 	Return a `pandas.DaaFrame` object of the Bruker measurement directories located under a given base directory, and their respective scans, subjects, and tasks.
@@ -646,6 +647,8 @@ def get_data_selection(workflow_base,
 									line_considered = True
 									measurement_copy = deepcopy(selected_measurement)
 									if re.match(r'^[ \t]+<displayName>[a-zA-Z0-9-_]+? \(E\d+\)</displayName>[\r\n]+', line):
+										if fail_suffix and re.match(r'^.+?{} \(E\d+\)</displayName>[\r\n]+'.format(fail_suffix), line):
+											continue
 										m = re.match(r'^[ \t]+<displayName>(?P<scan_type>.+?) \(E(?P<number>\d+)\)</displayName>[\r\n]+', line)
 										number = m.groupdict()['number']
 										scan_type = m.groupdict()['scan_type']
@@ -684,6 +687,8 @@ def get_data_selection(workflow_base,
 											if scan_subdir_resolved:
 												break
 											if re.match(r'^(?!/)<[a-zA-Z0-9-_]+?>[\r\n]+', line):
+												if fail_suffix and re.match(r'^.+?{}$'.format(fail_suffix), line):
+													continue
 												number = sub_sub_dir
 												m = re.match(r'^(?!/)<(?P<scan_type>.+?)>[\r\n]+', line)
 												scan_type = m.groupdict()['scan_type']

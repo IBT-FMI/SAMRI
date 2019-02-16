@@ -594,7 +594,7 @@ def l2_common_effect(l1_dir,
 	datasink_substitutions = [('_iterable_', '')]
 
 	if groupby == "subject":
-		datasink_substitutions.extend([('subject', 'ses-')])
+		datasink_substitutions.extend([('subject', 'sub-')])
 		common_fields = ''
 		common_fields += 'acq-'+data_selection.acq.drop_duplicates().item()
 		try:

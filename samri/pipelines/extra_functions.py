@@ -740,8 +740,12 @@ def select_from_datafind_df(df,
 
 	if bids_dictionary:
 		for key in bids_dictionary:
-			if not key in override:
+			if key in override:
+				continue
+			elif isinstance(bids_dictionary[key], (float, int, str)):
 				df=df[df[key]==bids_dictionary[key]]
+			else:
+				df=df[df[key].isin(bids_dictionary[key])]
 	if bids_dictionary_override:
 		for key in bids_dictionary_override:
 				df=df[df[key]==bids_dictionary_override[key]]

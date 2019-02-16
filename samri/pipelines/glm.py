@@ -540,6 +540,7 @@ def l2_common_effect(l1_dir,
 	include={},
 	workflow_name="generic",
 	debug=False,
+	target_set=[],
 	):
 	"""Determine the common effect in a sample of 3D feature maps.
 
@@ -593,6 +594,34 @@ def l2_common_effect(l1_dir,
 	datasink.inputs.base_directory = out_dir
 	datasink_substitutions = [('_iterable_', '')]
 
+	if groupby == "subject_set":
+		datasink_substitutions.extend([('subject', 'sub-')])
+		common_fields = ''
+		common_fields += 'acq-'+data_selection.acq.drop_duplicates().item()
+		try:
+			common_fields += '_run-'+data_selection.run.drop_duplicates().item()
+		except ValueError:
+			pass
+
+		infosource = pe.Node(interface=util.IdentityInterface(fields=['iterable']), name="infosource")
+		infosource.iterables = [('iterable', target_set)]
+
+		copes = pe.Node(name='copes', interface=util.Function(function=select_from_datafind_df, input_names=inspect.getargspec(select_from_datafind_df)[0], output_names=['selection']))
+		copes.inputs.bids_dictionary_override = {'modality':'cope'}
+		copes.inputs.df = data_selection
+		copes.inputs.list_output = True
+
+		varcopes = pe.Node(name='varcopes', interface=util.Function(function=select_from_datafind_df, input_names=inspect.getargspec(select_from_datafind_df)[0], output_names=['selection']))
+		varcopes.inputs.bids_dictionary_override = {'modality':'varcb'}
+		varcopes.inputs.df = data_selection
+		varcopes.inputs.list_output = True
+
+		workflow_connections = [
+			(infosource, copes, [('iterable', 'bids_dictionary')]),
+			(infosource, varcopes, [('iterable', 'bids_dictionary')]),
+			(infosource, copemerge, [(('iterable',dict_and_suffix,"subject","_cope.nii.gz"), 'merged_file')]),
+			(infosource, varcopemerge, [(('iterable',dict_and_suffix,"subject","_varcb.nii.gz"), 'merged_file')]),
+			]
 	if groupby == "subject":
 		datasink_substitutions.extend([('subject', 'sub-')])
 		common_fields = ''
@@ -814,6 +843,8 @@ def mylen(foo):
 
 def dict_and_suffix(my_dictionary,key,suffix):
 	filename = my_dictionary[key]
+	if not isinstance(filename, (float, int, str)):
+		filename = '+'.join(filename)
 	filename = str(filename)+suffix
 	return filename
 

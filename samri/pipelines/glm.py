@@ -594,23 +594,37 @@ def l2_common_effect(l1_dir,
 	datasink_substitutions = [('_iterable_', '')]
 
 	if groupby == "subject":
-		subjects = data_selection[['subject']].drop_duplicates().values.tolist()
+		datasink_substitutions.extend([('subject', 'ses-')])
+		common_fields = ''
+		common_fields += 'acq-'+data_selection.acq.drop_duplicates().item()
+		try:
+			common_fields += '_run-'+data_selection.run.drop_duplicates().item()
+		except ValueError:
+			pass
+
+		subjects = data_selection[['subject']].drop_duplicates()
+		# TODO: could not find a better way to convert pandas df column into list of dicts
+		subjects_ = subjects.T.to_dict()
+		subjects = [subjects_[i] for i in subjects_.keys()]
 
 		infosource = pe.Node(interface=util.IdentityInterface(fields=['iterable']), name="infosource")
 		infosource.iterables = [('iterable', subjects)]
-		datasource = pe.Node(interface=nio.DataGrabber(infields=["group",], outfields=["copes", "varcbs"]), name="datasource")
-		datasource.inputs.template_args = dict(
-			copes=[['group','group']],
-			varcbs=[['group','group']]
-			)
-		datasource.inputs.field_template = dict(
-			copes="sub-%s/ses-*/sub-%s_ses-*_task-*_cope.nii.gz",
-			varcbs="sub-%s/ses-*/sub-%s_ses-*_task-*_varcb.nii.gz",
-			)
+
+		copes = pe.Node(name='copes', interface=util.Function(function=select_from_datafind_df, input_names=inspect.getargspec(select_from_datafind_df)[0], output_names=['selection']))
+		copes.inputs.bids_dictionary_override = {'modality':'cope'}
+		copes.inputs.df = data_selection
+		copes.inputs.list_output = True
+
+		varcopes = pe.Node(name='varcopes', interface=util.Function(function=select_from_datafind_df, input_names=inspect.getargspec(select_from_datafind_df)[0], output_names=['selection']))
+		varcopes.inputs.bids_dictionary_override = {'modality':'varcb'}
+		varcopes.inputs.df = data_selection
+		varcopes.inputs.list_output = True
+
 		workflow_connections = [
-			(infosource, datasource, [('iterable', 'group')]),
-			(infosource, copemerge, [(('iterable',add_suffix,"_cope.nii.gz"), 'merged_file')]),
-			(infosource, varcopemerge, [(('iterable',add_suffix,"_varcb.nii.gz"), 'merged_file')]),
+			(infosource, copes, [('iterable', 'bids_dictionary')]),
+			(infosource, varcopes, [('iterable', 'bids_dictionary')]),
+			(infosource, copemerge, [(('iterable',dict_and_suffix,"subject","_cope.nii.gz"), 'merged_file')]),
+			(infosource, varcopemerge, [(('iterable',dict_and_suffix,"subject","_varcb.nii.gz"), 'merged_file')]),
 			]
 	elif groupby == "subject_task":
 		#does not currently work, due to missing iterator combinations (same issue as preprocessing)

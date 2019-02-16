@@ -844,7 +844,7 @@ def mylen(foo):
 def dict_and_suffix(my_dictionary,key,suffix):
 	filename = my_dictionary[key]
 	if not isinstance(filename, (float, int, str)):
-		filename = '+'.join(filename)
+		filename = '+'.join([str(i) for i in filename])
 	filename = str(filename)+suffix
 	return filename
 

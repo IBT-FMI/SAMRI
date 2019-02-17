@@ -428,12 +428,12 @@ def stat(stat_maps,
 	return display,vmin,vmax
 
 def _create_3Dplot(stat_maps,
-		template_mesh = '/usr/share/mouse-brain-atlases/ambmc2dsurqec_15micron_masked.obj',
-		threshold = 3,
-		pos_values = False,
-		vmin = None,
-		vmax = None,
-):
+	template_mesh = '/usr/share/mouse-brain-atlases/ambmc2dsurqec_15micron_masked.obj',
+	threshold = 3,
+	pos_values = False,
+	vmin = None,
+	vmax = None,
+	):
 
 	"""Internal function to create the 3D plot.
 

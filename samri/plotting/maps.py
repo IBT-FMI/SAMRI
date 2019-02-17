@@ -495,7 +495,7 @@ def _create_3Dplot(stat_maps,
 				cli.append('-c'),
 				cli.append(col_plus)
 
-	#python script cannot be run directly, need to start blender in background via commandline, then run script.
+	#python script cannot be run directly, need to start blender in background via command line, then run script.
 	subprocess.run(cli,check=True)
 
 	mesh = plt.imread("/var/tmp/3Dplot.png")

@@ -235,6 +235,7 @@ def TakePic(FileName):
     bpy.context.scene.render.alpha_mode = 'TRANSPARENT'
     bpy.context.scene.render.resolution_x = 4500
     bpy.context.scene.render.resolution_y = 5250
+    bpy.context.scene.render.image_settings.file_format = 'PNG'
     bpy.data.scenes["Scene"].render.filepath = path + "/" + FileName
     bpy.ops.render.render( write_still=True )
     

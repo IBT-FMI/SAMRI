@@ -11,19 +11,19 @@ import argparse
 def f(i, j, k, affine):
 	"""
 	Returns affine transformed coordinates (i,j,k) -> (x,y,z) Use to set correct coordinates and size for the mesh.
-	
+
 	Parameters:
 	-----------
 	i,j,k : int
 		Integer coordinates of points in 3D space to be transformed.
 	affine : array
 		4x4 matrix containing affine transformation information of Nifti-Image.
-	
+
 	Returns:
 	--------
 	x,y,z : int
 		Affine transformed coordinates of input points.
-	
+
 	"""
 
 	M = affine[:3, :3]
@@ -49,7 +49,7 @@ def write_obj(name,verts,faces,normals,values,affine=None,one=False):
 		If given, vertices coordinates are affine transformed to create mesh with correct origin and size.
 	one : bool
 		Specify if faces values should start at 1 or at 0. Different visualization programs use different conventions.
-	
+
 	"""
 	if (one) : faces=faces+1
 	thefile = open(name,'w')
@@ -68,8 +68,11 @@ def write_obj(name,verts,faces,normals,values,affine=None,one=False):
 		thefile.write("f {0}//{0} {1}//{1} {2}//{2}\n".format(item[0],item[1],item[2]))
 	thefile.close()
 
-def create_mesh(stat_map,threshold,one=True,pos_values=False):
-	##TODO: stat_map also possibly alread a Nifit1Image, adjust
+def create_mesh(stat_map,threshold,
+	one=True,
+	pos_values=False,
+	):
+	##TODO: stat_map also possibly already a Nifit1Image, adjust
 	img= nibabel.load(stat_map)
 	img_data = img.get_fdata()
 	neg = False
@@ -110,5 +113,5 @@ def main():
 	parser.add_argument('--stat_map','-i',type=str)
 	args = parser.parse_args()
 	create_mesh(args.stat_map,args.threshold,one = True)
-    
+
 if __name__ == '__main__': main()

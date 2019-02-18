@@ -536,6 +536,9 @@ def _plots_overlay(display,display_3Dplot):
 	fh = display.frame_axes.get_figure()
 	fh.canvas.draw()
 
+	# Hackish fix for 3D image displacement on zenhost configuration !!!
+	plt.savefig("/var/tmp/tmp.png")
+
 	#Determine correct location to put the plot in relation to existing figure axes
 	box = [max(display.axes['x'].ax.get_position().x0,display.axes['y'].ax.get_position().x0,display.axes['z'].ax.get_position().x0),min(display.axes['x'].ax.get_position().y0,display.axes['y'].ax.get_position().y0,display.axes['z'].ax.get_position().y0),display.axes['x'].ax.get_position().bounds[2],display.axes['z'].ax.get_position().bounds[3]]
 

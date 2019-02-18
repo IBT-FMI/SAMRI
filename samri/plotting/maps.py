@@ -634,7 +634,7 @@ def stat3D(stat_maps,
 		stat_maps = [path.abspath(path.expanduser(i)) for i in stat_maps]
 
 	#plot initial figure
-	display,vmin,vmax = stat(stat_maps,display_mode='tiled',template=template,draw_colorbar=draw_colorbar,cut_coords=cut_coords,threshold=threshold,pos_values = pos_values,save_as=save_as,overlays=overlays,figure_title=figure_title,show_plot=show_plot,draw_cross=draw_cross,annotate=annotate,black_bg=black_bg,dim=dim,shape="portrait")
+	display,vmin,vmax = stat(stat_maps,display_mode='tiled',template=template,draw_colorbar=draw_colorbar,cut_coords=cut_coords,threshold=threshold,pos_values = pos_values,save_as=save_as,overlays=overlays,figure_title=figure_title,show_plot=show_plot,draw_cross=draw_cross,annotate=annotate,black_bg=black_bg,dim=dim,scale=scale,shape="portrait")
 
 	if threshold_mesh is None:
 		threshold_mesh = threshold

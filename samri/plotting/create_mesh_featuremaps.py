@@ -60,10 +60,8 @@ def write_obj(name,verts,faces,normals,values,affine=None,one=False):
 	else :
 		for item in verts:
 			thefile.write("v {0} {1} {2}\n".format(item[0],item[1],item[2]))
-	print("File written 30%")
 	for item in normals:
 		thefile.write("vn {0} {1} {2}\n".format(item[0],item[1],item[2]))
-	print("File written 60%")
 	for item in faces:
 		thefile.write("f {0}//{0} {1}//{1} {2}//{2}\n".format(item[0],item[1],item[2]))
 	thefile.close()
@@ -76,7 +74,6 @@ def create_mesh(stat_map,threshold,
 	img= nibabel.load(stat_map)
 	img_data = img.get_fdata()
 	neg = False
-	print(threshold)
 	#all negative values
 	if (numpy.max(img_data)<= 0):
 		img_data = numpy.absolute(img_data)

@@ -496,7 +496,7 @@ def _create_3Dplot(stat_maps,
 				cli.append(col_plus)
 
 	#python script cannot be run directly, need to start blender in background via command line, then run script.
-	subprocess.run(cli,check=True)
+	subprocess.run(cli,check=True,stdout=open(os.devnull,'wb'))
 
 	mesh = plt.imread("/var/tmp/3Dplot.png")
 
@@ -542,7 +542,7 @@ def _plots_overlay(display,display_3Dplot):
 	#add new axes
 	ax_mesh = fh.add_axes(box)
 
-	#set all backgtuond options to invisible
+	#set all background options to invisible
 	ax_mesh.get_xaxis().set_visible(False)
 	ax_mesh.get_yaxis().set_visible(False)
 	ax_mesh.patch.set_alpha(0.1)
@@ -624,6 +624,7 @@ def stat3D(stat_maps,
 	Identical consequitive statistical maps are auto-detected and share a colorbar.
 	To avoid starting a shared colorbar at the end of a column, please ensure that the length of statistical maps to be plotted is divisible both by the group size and the number of columns.
 	"""
+
 	if isinstance(cut_coords[0],int):
 		print(cut_coords[0])
 		cut_coords=[cut_coords]

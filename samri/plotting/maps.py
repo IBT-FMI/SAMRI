@@ -493,7 +493,7 @@ def _create_3Dplot(stat_maps,
 				cli.append(col_plus)
 
 	#python script cannot be run directly, need to start blender in background via command line, then run script.
-	subprocess.run(cli,check=True)
+	subprocess.run(cli,check=True,stdout=open(os.devnull,'wb'))
 
 	mesh = plt.imread("/var/tmp/3Dplot.png")
 
@@ -533,13 +533,16 @@ def _plots_overlay(display,display_3Dplot):
 	fh = display.frame_axes.get_figure()
 	fh.canvas.draw()
 
+	# Hackish fix for 3D image displacement on zenhost configuration !!!
+	plt.savefig("/var/tmp/tmp.png")
+
 	#Determine correct location to put the plot in relation to existing figure axes
 	box = [max(display.axes['x'].ax.get_position().x0,display.axes['y'].ax.get_position().x0,display.axes['z'].ax.get_position().x0),min(display.axes['x'].ax.get_position().y0,display.axes['y'].ax.get_position().y0,display.axes['z'].ax.get_position().y0),display.axes['x'].ax.get_position().bounds[2],display.axes['z'].ax.get_position().bounds[3]]
 
 	#add new axes
 	ax_mesh = fh.add_axes(box)
 
-	#set all backgtuond options to invisible
+	#set all background options to invisible
 	ax_mesh.get_xaxis().set_visible(False)
 	ax_mesh.get_yaxis().set_visible(False)
 	ax_mesh.patch.set_alpha(0.1)
@@ -621,6 +624,7 @@ def stat3D(stat_maps,
 	Identical consequitive statistical maps are auto-detected and share a colorbar.
 	To avoid starting a shared colorbar at the end of a column, please ensure that the length of statistical maps to be plotted is divisible both by the group size and the number of columns.
 	"""
+  
 	cut_coords=[cut_coords]
 
 	if isinstance(stat_maps, str):
@@ -629,7 +633,7 @@ def stat3D(stat_maps,
 		stat_maps = [path.abspath(path.expanduser(i)) for i in stat_maps]
 
 	#plot initial figure
-	display,vmin,vmax = stat(stat_maps,display_mode='tiled',template=template,draw_colorbar=draw_colorbar,cut_coords=cut_coords,threshold=threshold,pos_values = pos_values,save_as=save_as,overlays=overlays,figure_title=figure_title,show_plot=show_plot,draw_cross=draw_cross,annotate=annotate,black_bg=black_bg,dim=dim,shape="portrait")
+	display,vmin,vmax = stat(stat_maps,display_mode='tiled',template=template,draw_colorbar=draw_colorbar,cut_coords=cut_coords,threshold=threshold,pos_values = pos_values,save_as=save_as,overlays=overlays,figure_title=figure_title,show_plot=show_plot,draw_cross=draw_cross,annotate=annotate,black_bg=black_bg,dim=dim,scale=scale,shape="portrait")
 
 	if threshold_mesh is None:
 		threshold_mesh = threshold

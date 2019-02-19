@@ -220,7 +220,10 @@ def TakePic_Loc(FileName,loc):
     #bpy.ops.transform.rotate(value=-3.14, constraint_axis=(True, False, False), constraint_orientation='LOCAL', mirror=False, proportional='DISABLED', proportional_edit_falloff='SMOOTH', proportional_size=1)
     #bpy.ops.transform.rotate(value=3.14, axis=(0, 0, -1), constraint_axis=(False, False, False), constraint_orientation='GLOBAL', mirror=False, proportional='DISABLED', proportional_edit_falloff='SMOOTH', proportional_size=1)
     bpy.context.scene.render.alpha_mode = 'TRANSPARENT'
+    bpy.context.scene.render.layers["RenderLayer"].use_sky = False
     bpy.context.scene.render.image_settings.file_format = 'PNG'
+    bpy.context.scene.render.image_settings.color_depth = '16'
+    bpy.context.scene.render.image_settings.color_mode = 'RGBA'
     bpy.context.scene.render.resolution_x = 3000
     bpy.context.scene.render.resolution_y = 5250
     bpy.data.scenes["Scene"].render.filepath = path + "/" + FileName
@@ -233,9 +236,12 @@ def TakePic(FileName):
     #bpy.ops.transform.rotate(value=-3.14, constraint_axis=(True, False, False), constraint_orientation='LOCAL', mirror=False, proportional='DISABLED', proportional_edit_falloff='SMOOTH', proportional_size=1)
     #bpy.ops.transform.rotate(value=3.14, axis=(0, 0, -1), constraint_axis=(False, False, False), constraint_orientation='GLOBAL', mirror=False, proportional='DISABLED', proportional_edit_falloff='SMOOTH', proportional_size=1)
     bpy.context.scene.render.alpha_mode = 'TRANSPARENT'
+    bpy.context.scene.render.layers["RenderLayer"].use_sky = False
     bpy.context.scene.render.resolution_x = 4500
     bpy.context.scene.render.resolution_y = 5250
     bpy.context.scene.render.image_settings.file_format = 'PNG'
+    bpy.context.scene.render.image_settings.color_mode = 'RGBA'
+    bpy.context.scene.render.image_settings.color_depth = '16'
     bpy.data.scenes["Scene"].render.filepath = path + "/" + FileName
     bpy.ops.render.render( write_still=True )
     

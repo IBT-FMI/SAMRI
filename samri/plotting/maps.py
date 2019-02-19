@@ -515,6 +515,11 @@ def _create_3Dplot(stat_maps,
 		bbox.append([idx_i[0]+1, idx_i[1]+1])
 	mesh_trimmed = mesh[bbox[0][0] : bbox[0][1] ,bbox[1][0] : bbox[1][1] , :]
 
+	#delete obj files:
+	for path in obj_paths:
+		if not path is None:
+			if os.path.exists(path):os.remove(path)
+
 	return mesh_trimmed
 
 

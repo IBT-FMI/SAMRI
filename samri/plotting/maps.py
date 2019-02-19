@@ -262,9 +262,6 @@ def stat(stat_maps,
 	Identical consequitive statistical maps are auto-detected and share a colorbar.
 	To avoid starting a shared colorbar at the end of a column, please ensure that the length of statistical maps to be plotted is divisible both by the group size and the number of columns.
 	"""
-	if isinstance(cut_coords[0],int):
-		print(cut_coords[0])
-		cut_coords=[cut_coords]
 
 	if isinstance(stat_maps, str):
 		stat_maps=[stat_maps]
@@ -571,7 +568,7 @@ def stat3D(stat_maps,
 	save_as="",
 	scale=1.,
 	subplot_titles=[],
-	cut_coords=[None],
+	cut_coords=None,
 	threshold=3,
 	black_bg=False,
 	annotate=True,
@@ -632,10 +629,8 @@ def stat3D(stat_maps,
 	Identical consequitive statistical maps are auto-detected and share a colorbar.
 	To avoid starting a shared colorbar at the end of a column, please ensure that the length of statistical maps to be plotted is divisible both by the group size and the number of columns.
 	"""
-
-	if isinstance(cut_coords[0],int):
-		print(cut_coords[0])
-		cut_coords=[cut_coords]
+  
+	cut_coords=[cut_coords]
 
 	if isinstance(stat_maps, str):
 		stat_maps = path.abspath(path.expanduser(stat_maps))

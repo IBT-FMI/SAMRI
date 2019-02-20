@@ -12,14 +12,14 @@ def f(i, j, k, affine):
 	"""
 	Returns affine transformed coordinates (i,j,k) -> (x,y,z) Use to set correct coordinates and size for the mesh.
 
-	Parameters:
+	Parameters
 	-----------
 	i,j,k : int
 		Integer coordinates of points in 3D space to be transformed.
 	affine : array
 		4x4 matrix containing affine transformation information of Nifti-Image.
 
-	Returns:
+	Returns
 	--------
 	x,y,z : int
 		Affine transformed coordinates of input points.
@@ -35,7 +35,7 @@ def write_obj(name,verts,faces,normals,values,affine=None,one=False):
 	"""
 	Write a .obj file for the output of marching cube algorithm.
 
-	Parameters:
+	Parameters
 	-----------
 	name : str
 		Ouput file name.
@@ -70,6 +70,30 @@ def create_mesh(stat_map,threshold,
 	one=True,
 	pos_values=False,
 	):
+	"""
+	Runs Marching Cube algorithm for iso-surface extraction of 3D Volume data at a given threshold.
+
+	Parameters
+	----------
+	stat_map: str
+		path to NIfTI-file
+	threshold: int or float
+		level for iso-surface extraction
+	one: bool,optional
+		for writing the .obj-file, specify if faces values should start at 1 or at 0.
+		Different visualization programs use different conventions.
+	pos_values: bool, optional
+		If true, negative values will be ignored. If false, two meshes will be generated once
+		for a positive cluster and one for a negative cluster, using -threshold as iso-surface level.
+
+	Returns
+	--------
+	output_path: str
+		path to .obj file
+	output_path_neg: str or none
+		path to .obj file generated from the negative cluster. None if no .obj file is generated.
+
+	"""
 	##TODO: stat_map also possibly already a Nifit1Image, adjust
 	img= nibabel.load(stat_map)
 	img_data = img.get_fdata()

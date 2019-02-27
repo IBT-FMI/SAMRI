@@ -13,9 +13,9 @@ def test_contours_single():
 		force_reverse_slice_order=True,
 		legend_template='Template',
 		levels_percentile=[79],
-		ratio=[8,5],
+		ratio=[7,5],
 		slice_spacing=0.45,
-		save_as='_contours_single.png',
+		save_as='_contours_single.pdf',
 		)
 
 def test_contours_substitutions():
@@ -58,7 +58,7 @@ def test_contours_substitutions():
 			force_reverse_slice_order=True,
 			legend_template='{session} session',
 			levels_percentile=[77],
-			save_as='_contours_multi_{}_{}.png'.format(i[0],i[1]),
+			save_as='_contours_multi_{}_{}.pdf'.format(i[0],i[1]),
 			slice_spacing=0.45,
 			substitutions=substitutions,
 			)

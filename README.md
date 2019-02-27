@@ -22,8 +22,8 @@ mv mouse_brain_atlases /usr/share/
 wget http://chymera.eu/distfiles/samri_bindata-0.1.2.tar.xz
 tar xf samri_bindata-0.1.2.tar.xz
 mv samri_bindata /usr/share/
-wget http://chymera.eu/distfiles/samri_bidsdata-0.2.tar.xz
-tar xf samri_bidsdata-0.2.tar.xz
+wget http://chymera.eu/distfiles/samri_bidsdata-0.2.1.tar.xz
+tar xf samri_bidsdata-0.2.1.tar.xz
 mv samri_bidsdata /usr/share/
 ```
 
@@ -41,7 +41,7 @@ SAMRI diagnose bids
 
 #### Run a full preprocessing pipeline (including template registration) on the BIDS input:
 ```
-SAMRI generic-prep -o preprocessing --registration-mask mouse-brain-atlases/dsurqec_200micron_mask.nii --functional-registration-method composite --negative-contrast-agent bids mouse-brain-atlases/dsurqec_200micron.nii
+SAMRI generic-prep -m '/usr/share/mouse-brain-atlases/dsurqec_200micron_mask.nii' -f '{"acquisition":["EPIlowcov"]}' -s '{"acquisition":["TurboRARElowcov"]}' bids '/usr/share/mouse-brain-atlases/dsurqec_200micron.nii'
 ```
 
 ## Installation

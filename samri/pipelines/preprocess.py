@@ -36,6 +36,7 @@ def divideby_10(x):
 
 @argh.arg('-f','--functional-match', type=json.loads)
 @argh.arg('-s','--structural-match', type=json.loads)
+@argh.arg('-m','--registration-mask')
 def legacy(bids_base, template,
 	debug=False,
 	functional_blur_xy=False,
@@ -295,6 +296,7 @@ def legacy(bids_base, template,
 
 @argh.arg('-f','--functional-match', type=json.loads)
 @argh.arg('-s','--structural-match', type=json.loads)
+@argh.arg('-m','--registration-mask')
 def generic(bids_base, template,
 	actual_size=True,
 	autorotate=False,

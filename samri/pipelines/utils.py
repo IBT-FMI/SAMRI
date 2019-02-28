@@ -10,14 +10,14 @@ from copy import deepcopy
 GENERIC_PHASES = {
 	"f_rigid":{
 		"transforms":"Rigid",
-		"transform_parameters":(0.1,),
-		"number_of_iterations":[300],
+		"transform_parameters":(0.05,),
+		"number_of_iterations":[500],
 		"metric":"MI",
 		"metric_weight":1,
-		"radius_or_number_of_bins":32,
+		"radius_or_number_of_bins":64,
 		"sampling_strategy":"Regular",
 		"sampling_percentage":0.5,
-		"convergence_threshold":1.e-8,
+		"convergence_threshold":1.e-6,
 		"convergence_window_size":10,
 		"smoothing_sigmas":[0],
 		"sigma_units":"vox",

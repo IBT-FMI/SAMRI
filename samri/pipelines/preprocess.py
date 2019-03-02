@@ -1,4 +1,6 @@
+import argh
 import inspect
+import json
 import os
 import re
 import shutil
@@ -32,12 +34,14 @@ def divideby_10(x):
 	"""This is a wrapper function needed in order for nipype workflow connections to accept inline division."""
 	return x/10.
 
+@argh.arg('-f','--functional-match', type=json.loads)
+@argh.arg('-s','--structural-match', type=json.loads)
+@argh.arg('-m','--registration-mask')
 def legacy(bids_base, template,
 	debug=False,
 	functional_blur_xy=False,
 	functional_match={},
 	keep_work=False,
-	negative_contrast_agent=False,
 	n_jobs=False,
 	n_jobs_percentage=0.8,
 	out_base=None,
@@ -290,6 +294,9 @@ def legacy(bids_base, template,
 			else:
 				raise OSError(str(e))
 
+@argh.arg('-f','--functional-match', type=json.loads)
+@argh.arg('-s','--structural-match', type=json.loads)
+@argh.arg('-m','--registration-mask')
 def generic(bids_base, template,
 	actual_size=True,
 	autorotate=False,
@@ -298,7 +305,6 @@ def generic(bids_base, template,
 	functional_match={},
 	functional_registration_method="composite",
 	keep_work=False,
-	negative_contrast_agent=False,
 	n_jobs=False,
 	n_jobs_percentage=0.8,
 	out_base=None,

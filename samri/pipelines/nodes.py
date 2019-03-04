@@ -78,6 +78,9 @@ def generic_registration(template,
 	f_phases=["f_rigid",],
 	):
 
+	s_phases = [phase for phase in s_phases if phase in phase_dictionary]
+	f_phases = [phase for phase in f_phases if phase in phase_dictionary]
+
 	s_parameters = [phase_dictionary[selection] for selection in s_phases]
 
 	s_registration = pe.Node(ants.Registration(), name="s_register")
@@ -142,7 +145,6 @@ def generic_registration(template,
 
 
 	#f_warp = pe.Node(ants.WarpTimeSeriesImageMultiTransform(), name='f_warp')
-	#f_warp.inputs.reference_image = template
 	#f_warp.inputs.dimension = 4
 	f_warp = pe.Node(ants.ApplyTransforms(), name="f_warp")
 	f_warp.inputs.reference_image = path.abspath(path.expanduser(template))
@@ -151,7 +153,7 @@ def generic_registration(template,
 	f_warp.inputs.interpolation_parameters = (5,)
 	f_warp.inputs.invert_transform_flags = [False, False]
 	f_warp.num_threads = num_threads
-	f_warp.interface.mem_gb = 12
+	f_warp.interface.mem_gb = 16
 
 	s_warp = pe.Node(ants.ApplyTransforms(), name="s_warp")
 	s_warp.inputs.reference_image = path.abspath(path.expanduser(template))

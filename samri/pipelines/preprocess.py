@@ -559,8 +559,8 @@ def generic(bids_base, template,
 			(temporal_mean, f_biascorrect, [('out_file', 'input_image')]),
 			(f_biascorrect, f_register, [('output_image', 'moving_image')]),
 			(s_biascorrect, f_register, [('output_image', 'fixed_image')]),
-			(f_register, merge, [('composite_transform', 'in1')]),
-			(s_register, merge, [('composite_transform', 'in2')]),
+			(s_register, merge, [('composite_transform', 'in1')]),
+			(f_register, merge, [('composite_transform', 'in2')]),
 			(merge, f_warp, [('out', 'transforms')]),
 			])
 		if realign == "space":

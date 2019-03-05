@@ -298,7 +298,6 @@ def legacy(bids_base, template,
 @argh.arg('-s','--structural-match', type=json.loads)
 @argh.arg('-m','--registration-mask')
 def generic(bids_base, template,
-	actual_size=True,
 	autorotate=False,
 	debug=False,
 	functional_blur_xy=False,
@@ -327,8 +326,6 @@ def generic(bids_base, template,
 		Path to the BIDS data set root.
 	template : str
 		Path to the template to register the data to.
-	actual_size : bool, optional
-		Whether to keep the data at its original scale; if `False`, the spatial representation will be stretched 10-fold in each dimension.
 	autorotate : bool, optional
 		Whether to use a multi-rotation-state transformation start.
 		This allows the registration to commence with the best rotational fit, and may help if the orientation of the data is malformed with respect to the header.
@@ -438,10 +435,7 @@ def generic(bids_base, template,
 			])
 
 	#ADDING SELECTABLE NODES AND EXTENDING WORKFLOW AS APPROPRIATE:
-	if actual_size:
-		s_biascorrect, f_biascorrect = real_size_nodes()
-	else:
-		s_biascorrect, f_biascorrect = inflated_size_nodes()
+	s_biascorrect, f_biascorrect = real_size_nodes()
 
 	if structural_scan_types.any():
 		s_data_selection = deepcopy(data_selection)
@@ -453,68 +447,24 @@ def generic(bids_base, template,
 		get_s_scan.inputs.data_selection = s_data_selection
 		get_s_scan.inputs.bids_base = bids_base
 
-		if actual_size:
-			s_register, s_warp, _, _ = generic_registration(template,
-				structural_mask=registration_mask,
-				phase_dictionary=phase_dictionary,
-				)
-			#TODO: incl. in func registration
-			if autorotate:
-				workflow_connections.extend([
-					(s_biascorrect, s_rotated, [('output_image', 'out_file')]),
-					(s_rotated, s_register, [('out_file', 'moving_image')]),
-					])
-			else:
-				workflow_connections.extend([
-					(s_biascorrect, s_register, [('output_image', 'moving_image')]),
-					(s_register, s_warp, [('composite_transform', 'transforms')]),
-					(get_s_scan, s_warp, [('nii_path', 'input_image')]),
-					(s_warp, datasink, [('output_image', 'anat')]),
-					])
-		else:
-			s_reg_biascorrect = pe.Node(interface=ants.N4BiasFieldCorrection(), name="s_reg_biascorrect")
-			s_reg_biascorrect.inputs.dimension = 3
-			s_reg_biascorrect.inputs.bspline_fitting_distance = 95
-			s_reg_biascorrect.inputs.shrink_factor = 2
-			s_reg_biascorrect.inputs.n_iterations = [500,500,500,500]
-			s_reg_biascorrect.inputs.convergence_threshold = 1e-14
-
-			s_cutoff = pe.Node(interface=fsl.ImageMaths(), name="s_cutoff")
-			s_cutoff.inputs.op_string = "-thrP 20 -uthrp 98"
-
-			s_BET = pe.Node(interface=fsl.BET(), name="s_BET")
-			s_BET.inputs.mask = True
-			s_BET.inputs.frac = 0.3
-			s_BET.inputs.robust = True
-
-			s_mask = pe.Node(interface=fsl.ApplyMask(), name="s_mask")
-			s_register, s_warp, f_warp = structural_registration(template)
-
-			workflow_connections.extend([
-				(get_s_scan, s_reg_biascorrect, [('nii_path', 'input_image')]),
-				(s_reg_biascorrect, s_cutoff, [('output_image', 'in_file')]),
-				(s_cutoff, s_BET, [('out_file', 'in_file')]),
-				(s_biascorrect, s_mask, [('output_image', 'in_file')]),
-				(s_BET, s_mask, [('mask_file', 'mask_file')]),
-				])
-
-			#TODO: incl. in func registration
-			if autorotate:
-				workflow_connections.extend([
-					(s_mask, s_rotated, [('out_file', 'out_file')]),
-					(s_rotated, s_register, [('out_file', 'moving_image')]),
-					])
-			else:
-				workflow_connections.extend([
-					(s_mask, s_register, [('out_file', 'moving_image')]),
-					(s_register, s_warp, [('composite_transform', 'transforms')]),
-					(get_s_scan, s_warp, [('nii_path', 'input_image')]),
-					(s_warp, datasink, [('output_image', 'anat')]),
-					])
-
-
+		s_register, s_warp, _, _ = generic_registration(template,
+			structural_mask=registration_mask,
+			phase_dictionary=phase_dictionary,
+			)
+		#TODO: incl. in func registration
 		if autorotate:
 			s_rotated = autorotate(template)
+			workflow_connections.extend([
+				(s_biascorrect, s_rotated, [('output_image', 'out_file')]),
+				(s_rotated, s_register, [('out_file', 'moving_image')]),
+				])
+		else:
+			workflow_connections.extend([
+				(s_biascorrect, s_register, [('output_image', 'moving_image')]),
+				(s_register, s_warp, [('composite_transform', 'transforms')]),
+				(get_s_scan, s_warp, [('nii_path', 'input_image')]),
+				(s_warp, datasink, [('output_image', 'anat')]),
+				])
 
 		workflow_connections.extend([
 			(get_f_scan, get_s_scan, [('subject_session', 'selector')]),

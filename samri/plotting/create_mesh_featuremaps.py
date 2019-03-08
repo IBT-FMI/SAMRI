@@ -68,7 +68,7 @@ def write_obj(name,verts,faces,normals,values,affine=None,one=False):
 
 def create_mesh(stat_map,threshold,
 	one=True,
-	pos_values=False,
+	positive_only=False,
 	):
 	"""
 	Runs Marching Cube algorithm for iso-surface extraction of 3D Volume data at a given threshold.
@@ -82,7 +82,7 @@ def create_mesh(stat_map,threshold,
 	one: bool,optional
 		for writing the .obj-file, specify if faces values should start at 1 or at 0.
 		Different visualization programs use different conventions.
-	pos_values: bool, optional
+	positive_only: bool, optional
 		If true, negative values will be ignored. If false, two meshes will be generated once
 		for a positive cluster and one for a negative cluster, using -threshold as iso-surface level.
 
@@ -115,7 +115,7 @@ def create_mesh(stat_map,threshold,
 	write_obj(output_path,verts,faces,normals,values,affine = img.affine,one=one)
 
 	#create mesh for negative clusters if present
-	if numpy.min(img_data) < 0 and pos_values == False and neg == False:
+	if numpy.min(img_data) < 0 and positive_only == False and neg == False:
 		img_data[img_data > 0] = 0
 		img_data = numpy.absolute(img_data)
 		verts, faces, normals, values = measure.marching_cubes_lewiner(img_data,threshold)

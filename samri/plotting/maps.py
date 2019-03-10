@@ -212,6 +212,7 @@ def stat(stat_maps,
 	draw_cross=True,
 	show_plot=True,
 	dim=0,
+	cmap=MYMAP,
 	vmax=None,
 	vmin=None,
 	shape="portrait",
@@ -303,6 +304,7 @@ def stat(stat_maps,
 			cut=cut_coords[0],
 			interpolation=interpolation,
 			dim=dim,
+			cmap=MYMAP,
 			draw_cross=draw_cross,
 			annotate=annotate,
 			scale=scale,
@@ -396,6 +398,7 @@ def stat(stat_maps,
 					stat_map=stat_maps[ix],
 					overlay=overlays[ix],
 					title=title,
+					cmap=MYMAP,
 					threshold=threshold,
 					cut=cut_coords[ix],
 					interpolation=interpolation,
@@ -574,6 +577,7 @@ def stat3D(stat_maps,
 	annotate=True,
 	draw_cross=True,
 	show_plot=False,
+	cmap=MYMAP,
 	dim=0,
 	vmax=None,
 	shape="portrait",
@@ -643,7 +647,7 @@ def stat3D(stat_maps,
 	if threshold_mesh is None:
 		threshold_mesh = threshold
 
-	plot_3D = _create_3Dplot(stat_maps,template_mesh=template_mesh,threshold=threshold_mesh,pos_values=pos_values,vmin=vmin,vmax=vmax)
+	plot_3D = _create_3Dplot(stat_maps,template_mesh=template_mesh,threshold=threshold_mesh,pos_values=pos_values,cmap=MYMAP,vmin=vmin,vmax=vmax)
 	fh = _plots_overlay(display,plot_3D)
 	if save_as:
 		if isinstance(save_as, str):

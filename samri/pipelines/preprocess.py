@@ -447,7 +447,7 @@ def generic(bids_base, template,
 		get_s_scan.inputs.data_selection = s_data_selection
 		get_s_scan.inputs.bids_base = bids_base
 
-		s_register, s_warp, _, _ = generic_registration(template,
+		s_register, s_warp, f_register, f_warp = generic_registration(template,
 			structural_mask=registration_mask,
 			phase_dictionary=phase_dictionary,
 			)
@@ -497,10 +497,6 @@ def generic(bids_base, template,
 	elif functional_registration_method == "composite":
 		if not structural_scan_types.any():
 			raise ValueError('The option `registration="composite"` requires there to be a structural scan type.')
-		_, _, f_register, f_warp = generic_registration(template,
-			structural_mask=registration_mask,
-			phase_dictionary=phase_dictionary,
-			)
 		temporal_mean = pe.Node(interface=fsl.MeanImage(), name="temporal_mean")
 
 		merge = pe.Node(util.Merge(2), name='merge')

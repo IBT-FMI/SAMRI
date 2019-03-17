@@ -114,10 +114,14 @@ def atlasassignment(data_path='~/ni_data/ofM.dr/bids/l2/anova/anova_zfstat.nii.g
 	verbose=False,
 	lateralized=False,
 	):
+	'''
+	Create CSV file containing a tabular summary of mean image intensity per DSURQE region of interest.
+	'''
+
 	from copy import deepcopy
 
 	atlas_filename = '/usr/share/mouse-brain-atlases/dsurqec_40micron_labels.nii'
-	mapping = '/usr/share/mouse-brain-atlases/dsurqec_mapping.csv'
+	mapping = '/usr/share/mouse-brain-atlases/dsurqec_labels.csv'
 	atlas_filename = path.abspath(path.expanduser(atlas_filename))
 	mapping = path.abspath(path.expanduser(mapping))
 	data_path = path.abspath(path.expanduser(data_path))

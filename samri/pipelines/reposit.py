@@ -26,6 +26,7 @@ except NameError:
 
 N_PROCS=max(N_PROCS-4, 2)
 
+@argh.arg('-e','--exclude', type=json.loads)
 @argh.arg('-d','--diffusion-match', type=json.loads)
 @argh.arg('-f','--functional-match', type=json.loads)
 @argh.arg('-s','--structural-match', type=json.loads)

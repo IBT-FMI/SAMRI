@@ -125,7 +125,7 @@ For manual dependency management and overview you may use the following list:
 * [nipy](https://github.com/nipy/nipy) (>=`0.4.1`)
 * [nipype](https://github.com/nipy/nipype) (>=`1.0.0`)
 * [SciPy](https://www.scipy.org)
-* [PyBIDS](https://github.com/INCF/pybids)
+* [PyBIDS](https://github.com/INCF/pybids) (<=`0.6.5`)
 * [ANTs](https://github.com/ANTsX/ANTs/)
 * [AFNI](https://afni.nimh.nih.gov/)
 * [nilearn](https://nilearn.github.io/)

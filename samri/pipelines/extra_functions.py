@@ -5,6 +5,7 @@ import inspect
 import os
 import re
 import json
+import shutil
 
 from copy import deepcopy
 import pandas as pd
@@ -616,8 +617,14 @@ def get_data_selection(workflow_base,
 	measurement_path_list = [os.path.join(workflow_base,i) for i in measurements]
 
 	selected_measurements=[]
+	#create a dummy path for bidsgrabber to parse file names from
+	bids_temppath = '/var/tmp/samri_bids_temppaths/'
+	try:
+		os.mkdir(bids_temppath)
+	except FileExistsError:
+		pass
+	layout = BIDSLayout(bids_temppath)
 	#populate a list of lists with acceptable subject names, sessions, and sub_dir's
-	layout = BIDSLayout('/dummy/path/')
 	for sub_dir in measurement_path_list:
 		if sub_dir not in exclude_measurements:
 			run_counter = 0
@@ -652,7 +659,7 @@ def get_data_selection(workflow_base,
 										m = re.match(r'^[ \t]+<displayName>(?P<scan_type>.+?) \(E(?P<number>\d+)\)</displayName>[\r\n]+', line)
 										number = m.groupdict()['number']
 										scan_type = m.groupdict()['scan_type']
-										bids_keys = layout.parse_file_entities('/dummy/path/{}'.format(scan_type))
+										bids_keys = layout.parse_file_entities('{}/{}'.format(bids_temppath,scan_type))
 										for key in match:
 											# Session and subject fields are not recorded in scan_type and were already checked at this point.
 											if key in ['session', 'subject']:
@@ -692,7 +699,7 @@ def get_data_selection(workflow_base,
 												number = sub_sub_dir
 												m = re.match(r'^(?!/)<(?P<scan_type>.+?)>[\r\n]+', line)
 												scan_type = m.groupdict()['scan_type']
-												bids_keys = layout.parse_file_entities('/dummy/path/{}'.format(scan_type))
+												bids_keys = layout.parse_file_entities('{}/{}'.format(bids_temppath,scan_type))
 												for key in match:
 													# Session and subject fields are not recorded in scan_type and were already checked at this point.
 													if key in ['session', 'subject']:
@@ -722,6 +729,7 @@ def get_data_selection(workflow_base,
 				print('Could not open {}'.format(os.path.join(workflow_base,sub_dir,"subject")))
 				pass
 	data_selection = pd.DataFrame(selected_measurements)
+	shutil.rmtree(bids_temppath)
 	return data_selection
 
 def select_from_datafind_df(df,

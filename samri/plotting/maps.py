@@ -39,22 +39,35 @@ def _draw_colorbar(stat_map_img, axes,
 	fraction=0.025,
 	anchor=(10.0,0.5),
 	cut_coords = [None],
-	positive_only = False
+	positive_only = False,
+	negative_only = False,
+	cmap = None
 	):
 	if isinstance(stat_map_img, str):
 		stat_map_img = path.abspath(path.expanduser(stat_map_img))
 		stat_map_img = nib.load(stat_map_img)
 		stat_map_img_dat = _safe_get_data(stat_map_img, ensure_finite=True)
 
+	if cmap:
+		cmap = plt.cm.get_cmap(cmap)
+		colors = cmap(np.linspace(0,1,256))
+		cmap_minus = mcolors.LinearSegmentedColormap.from_list('my_colormap', colors[0:128,:])
+		cmap_plus = mcolors.LinearSegmentedColormap.from_list('my_colormap', colors[128:255,:])
+	else:
+		cmap_minus = MYMAP_MINUS
+		cmap_plus = MYMAP_PLUS
+		cmap = MYMAP
+
 	cbar_vmin,cbar_vmax,vmin, vmax = _get_colorbar_and_data_ranges(stat_map_img_dat,None,"auto","")
 	if cbar_vmin is not None or positive_only:
 		vmin = 0
-		colmap = MYMAP_PLUS
-	elif not cbar_vmax is None:
+		colmap = cmap_plus
+	elif cbar_vmax is not None or negative_only:
 		vmax = 0
-		colmap = MYMAP_MINUS
+		colmap = cmap_minus
 	else:
-		colmap = MYMAP
+		colmap = cmap
+
 	cbar_ax, p_ax = make_axes(axes,
 		aspect=aspect,
 		fraction=fraction,
@@ -93,7 +106,6 @@ def _draw_colorbar(stat_map_img, axes,
 	for tick in cbar_ax.yaxis.get_ticklabels():
 		tick.set_color(tick_color)
 	cbar_ax.yaxis.set_tick_params(width=0)
-
 	return cbar_ax, p_ax,vmin,vmax,colmap
 
 def make_pos(stat_map):
@@ -106,6 +118,17 @@ def make_pos(stat_map):
 	img_data[img_data < 0] = 0
 	img_pos=nib.Nifti1Image(img_data,img.affine)
 	return img_pos
+
+def make_neg(stat_map):
+	"""
+	Creates a Nifti1Image from given stat_map that contains only
+	negative values for plotting negative values only.
+	"""
+	img = nib.load(stat_map)
+	img_data = img.get_fdata()
+	img_data[img_data > 0] = 0
+	img_neg=nib.Nifti1Image(img_data,img.affine)
+	return img_neg
 
 def scaled_plot(template,
 	fig=None,
@@ -121,10 +144,11 @@ def scaled_plot(template,
 	interpolation="none",
 	dim=1,
 	scale=1.,
-	cmap=MYMAP,
+	cmap=None,
 	anat_cmap='binary',
 	display_mode='ortho',
 	positive_only=False,
+	negative_only=False,
 	vmin=None,
 	vmax = None,
 	stat_cmap = None,
@@ -166,6 +190,8 @@ def scaled_plot(template,
 
 	if positive_only:
 		stat_map=make_pos(stat_map)
+	if negative_only:
+		stat_map=make_neg(stat_map)
 
 	if stat_map and cut is None:
 		#If cut is not specified, use cut_coords as determined by nilearns plot_stat_map()
@@ -226,6 +252,7 @@ def stat(stat_maps,
 	draw_cross=True,
 	show_plot=True,
 	dim=0,
+	cmap=None,
 	vmax=None,
 	vmin=None,
 	shape="portrait",
@@ -233,7 +260,8 @@ def stat(stat_maps,
 	ax=None,
 	anat_cmap='binary',
 	display_mode='ortho',
-	positive_only = False
+	positive_only = False,
+	negative_only = False
 	):
 
 	"""Plot a list of statistical maps.
@@ -259,6 +287,9 @@ def stat(stat_maps,
 
 	scale : float, optional
 		Allows intelligent scaling of annotation, crosshairs, and title.
+
+	cmap : string, optional
+		Name of matplotlib colormap
 
 	vmax : int or None, optional
 		Allows explicit specificaion of the maximum range of the color bar (the color bar will span +vmax to -vmax).
@@ -303,7 +334,9 @@ def stat(stat_maps,
 				fraction=0.05,
 				anchor=(1.,0.5),
 				cut_coords = cut_coords,
-				positive_only = positive_only
+				positive_only = positive_only,
+				negative_only = negative_only,
+				cmap=cmap
 				)
 		if overlays:
 			my_overlay = overlays[0]
@@ -317,6 +350,7 @@ def stat(stat_maps,
 			cut=cut_coords[0],
 			interpolation=interpolation,
 			dim=dim,
+			cmap=cmap,
 			draw_cross=draw_cross,
 			annotate=annotate,
 			scale=scale,
@@ -324,6 +358,7 @@ def stat(stat_maps,
 			anat_cmap=anat_cmap,
 			display_mode=display_mode,
 			positive_only=positive_only,
+			negative_only = negative_only,
 			vmin=vmin,
 			vmax = vmax,
 			stat_cmap = stat_cmap,
@@ -410,6 +445,7 @@ def stat(stat_maps,
 					stat_map=stat_maps[ix],
 					overlay=overlays[ix],
 					title=title,
+					cmap=cmap,
 					threshold=threshold,
 					cut=cut_coords[ix],
 					interpolation=interpolation,
@@ -442,8 +478,10 @@ def _create_3Dplot(stat_maps,
 	template_mesh = '/usr/share/mouse-brain-atlases/ambmc2dsurqec_15micron_masked.obj',
 	threshold = 3,
 	positive_only = False,
+	negative_only = False,
 	vmin = None,
 	vmax = None,
+	cmap = None,
 	):
 
 	"""Internal function to create the 3D plot.
@@ -472,7 +510,7 @@ def _create_3Dplot(stat_maps,
 
 	obj_paths = []
 	for stat_map in stat_maps:
-		obj_paths.extend(create_mesh(stat_map,threshold,one=True,positive_only=positive_only))
+		obj_paths.extend(create_mesh(stat_map,threshold,one=True,positive_only=positive_only,negative_only=negative_only))
 
 	##Find matching color of used threshold in colorbar, needed to determine color for blender
 	if vmax == 0:
@@ -484,11 +522,16 @@ def _create_3Dplot(stat_maps,
 	if (vmin != 0 and vmax != 0):
 		norm = mcolors.Normalize(vmin=-float(vmax), vmax=vmax)
 
+	if not cmap: 
+		cmap = MYMAP
+	else:
+		cmap = plt.cm.get_cmap(cmap) 
+
 	col_plus = norm(threshold)
 	col_minus = norm(-threshold)
 
-	col_plus = MYMAP(col_plus)
-	col_minus = MYMAP(col_minus)
+	col_plus = cmap(col_plus)
+	col_minus = cmap(col_minus)
 
 	col_plus = mcolors.to_hex([col_plus[0],col_plus[1],col_plus[2]])
 	col_minus = mcolors.to_hex([col_minus[0],col_minus[1],col_minus[2]])
@@ -588,12 +631,14 @@ def stat3D(stat_maps,
 	annotate=True,
 	draw_cross=True,
 	show_plot=False,
+	cmap=None,
 	dim=0,
 	vmax=None,
 	shape="portrait",
 	draw_colorbar=True,
 	ax=None,
 	positive_only = False,
+	negative_only = False,
 	threshold_mesh = None,
 	template_mesh='/usr/share/mouse-brain-atlases/ambmc2dsurqec_15micron_masked.obj'
 	):
@@ -621,6 +666,9 @@ def stat3D(stat_maps,
 	scale : float, optional
 		Allows intelligent scaling of annotation, crosshairs, and title.
 
+	cmap : string, optional
+		Name of matplotlib colormap
+
 	vmax : int or None, optional
 		Allows explicit specificaion of the maximum range of the color bar (the color bar will span +vmax to -vmax).
 
@@ -632,7 +680,10 @@ def stat3D(stat_maps,
 		Setting this parameter to "portrait" will force a shape with two columns, whereas setting it to "landscape" will force a shape with two rows.
 
 	positive_only : bool, optional
-		to enforce positive values only in the case that the feature maps contains values of -1 (for no data aquired).
+		if True, only positive values are displayed.
+
+	negative_only : bool, optional
+		if True, only negative values are displayed.
 
 	threshold_mesh : int, optional
 		Threshold given for iso-surface extraction of the feature map for 3D plotting. If none is given, same threshold is used as for the 2D plots.
@@ -652,12 +703,13 @@ def stat3D(stat_maps,
 		stat_maps = [path.abspath(path.expanduser(i)) for i in stat_maps]
 
 	#plot initial figure
-	display,vmin,vmax = stat(stat_maps,display_mode='tiled',template=template,draw_colorbar=draw_colorbar,cut_coords=cut_coords,threshold=threshold,positive_only = positive_only,save_as=save_as,overlays=overlays,figure_title=figure_title,show_plot=show_plot,draw_cross=draw_cross,annotate=annotate,black_bg=black_bg,dim=dim,scale=scale,shape="portrait")
+	display,vmin,vmax = stat(stat_maps,display_mode='tiled',template=template,draw_colorbar=draw_colorbar,cmap=cmap,cut_coords=cut_coords,threshold=threshold,positive_only = positive_only,negative_only=negative_only,save_as=save_as,overlays=overlays,figure_title=figure_title,show_plot=show_plot,draw_cross=draw_cross,annotate=annotate,black_bg=black_bg,dim=dim,scale=scale,shape="portrait")
 
 	if threshold_mesh is None:
 		threshold_mesh = threshold
 
-	plot_3D = _create_3Dplot(stat_maps,template_mesh=template_mesh,threshold=threshold_mesh,positive_only=positive_only,vmin=vmin,vmax=vmax)
+	plot_3D = _create_3Dplot(stat_maps,template_mesh=template_mesh,threshold=threshold_mesh,cmap=cmap,positive_only=positive_only,negative_only=negative_only,vmin=vmin,vmax=vmax)
+
 	fh = _plots_overlay(display,plot_3D)
 	if save_as:
 		if isinstance(save_as, str):

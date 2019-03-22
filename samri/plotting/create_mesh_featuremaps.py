@@ -69,6 +69,7 @@ def write_obj(name,verts,faces,normals,values,affine=None,one=False):
 def create_mesh(stat_map,threshold,
 	one=True,
 	positive_only=False,
+	negative_only=False
 	):
 	"""
 	Runs Marching Cube algorithm for iso-surface extraction of 3D Volume data at a given threshold.
@@ -85,6 +86,8 @@ def create_mesh(stat_map,threshold,
 	positive_only: bool, optional
 		If true, negative values will be ignored. If false, two meshes will be generated once
 		for a positive cluster and one for a negative cluster, using -threshold as iso-surface level.
+	negative_only: bool, optional
+		Create Mesh only for negative cluster.
 
 	Returns
 	--------
@@ -98,8 +101,11 @@ def create_mesh(stat_map,threshold,
 	img= nibabel.load(stat_map)
 	img_data = img.get_fdata()
 	neg = False
+
+	if negative_only:
+		img_data[img_data > 0] = 0
 	#all negative values
-	if (numpy.max(img_data)<= 0):
+	if (numpy.max(img_data)<= 0) or negative_only:
 		img_data = numpy.absolute(img_data)
 		neg = True
 	#run marching cube

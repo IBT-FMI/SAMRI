@@ -283,7 +283,10 @@ def bru2bids(measurements_base,
 		workflow.connect(workflow_connections)
 		workflow.base_dir = path.join(out_base)
 		workflow.config = workflow_config
-		workflow.write_graph(dotfilename=path.join(workflow.base_dir,workdir_name,"graph_diffusion.dot"), graph2use="hierarchical", format="png")
+		try:
+			workflow.write_graph(dotfilename=path.join(workflow.base_dir,workdir_name,"graph_diffusion.dot"), graph2use="hierarchical", format="png")
+		except OSError:
+			print('We could not write the DOT file for visualization (`dot` function from the graphviz package). This is non-critical to the processing, but you should get this fixed.')
 
 		#Execute the workflow
 		if not keep_work or not keep_crashdump:
@@ -350,7 +353,10 @@ def bru2bids(measurements_base,
 		workflow.connect(workflow_connections)
 		workflow.base_dir = path.join(out_base)
 		workflow.config = workflow_config
-		workflow.write_graph(dotfilename=path.join(workflow.base_dir,workdir_name,"graph_structural.dot"), graph2use="hierarchical", format="png")
+		try:
+			workflow.write_graph(dotfilename=path.join(workflow.base_dir,workdir_name,"graph_structural.dot"), graph2use="hierarchical", format="png")
+		except OSError:
+			print('We could not write the DOT file for visualization (`dot` function from the graphviz package). This is non-critical to the processing, but you should get this fixed.')
 
 		#Execute the workflow
 		if not keep_work or not keep_crashdump:

@@ -275,7 +275,10 @@ def legacy(bids_base, template,
 	workflow.connect(workflow_connections)
 	workflow.base_dir = out_base
 	workflow.config = workflow_config
-	workflow.write_graph(dotfilename=path.join(workflow.base_dir,workdir_name,"graph.dot"), graph2use="hierarchical", format="png")
+	try:
+		workflow.write_graph(dotfilename=path.join(workflow.base_dir,workdir_name,"graph.dot"), graph2use="hierarchical", format="png")
+	except OSError:
+		print('We could not write the DOT file for visualization (`dot` function from the graphviz package). This is non-critical to the processing, but you should get this fixed.')
 
 	workflow.run(plugin="MultiProc", plugin_args={'n_procs' : n_jobs})
 	if not keep_work:
@@ -602,7 +605,10 @@ def generic(bids_base, template,
 	workflow.connect(workflow_connections)
 	workflow.base_dir = out_base
 	workflow.config = workflow_config
-	workflow.write_graph(dotfilename=path.join(workflow.base_dir,workdir_name,"graph.dot"), graph2use="hierarchical", format="png")
+	try:
+		workflow.write_graph(dotfilename=path.join(workflow.base_dir,workdir_name,"graph.dot"), graph2use="hierarchical", format="png")
+	except OSError:
+		print('We could not write the DOT file for visualization (`dot` function from the graphviz package). This is non-critical to the processing, but you should get this fixed.')
 
 	workflow.run(plugin="MultiProc", plugin_args={'n_procs' : n_jobs})
 	if not keep_work:

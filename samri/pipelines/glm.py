@@ -285,7 +285,10 @@ def l1(preprocessing_dir,
 	workflow.connect(workflow_connections)
 	workflow.base_dir = out_base
 	workflow.config = workflow_config
-	workflow.write_graph(dotfilename=path.join(workflow.base_dir,workdir_name,"graph.dot"), graph2use="hierarchical", format="png")
+	try:
+		workflow.write_graph(dotfilename=path.join(workflow.base_dir,workdir_name,"graph.dot"), graph2use="hierarchical", format="png")
+	except OSError:
+		print('We could not write the DOT file for visualization (`dot` function from the graphviz package). This is non-critical to the processing, but you should get this fixed.')
 
 	n_jobs = max(int(round(mp.cpu_count()*n_jobs_percentage)),2)
 	workflow.run(plugin="MultiProc", plugin_args={'n_procs' : n_jobs})
@@ -489,7 +492,10 @@ def seed_fc(preprocessing_dir,
 	workflow.connect(workflow_connections)
 	workflow.base_dir = out_dir
 	workflow.config = {"execution": {"crashdump_dir": path.join(out_dir,"crashdump")}}
-	workflow.write_graph(dotfilename=path.join(workflow.base_dir,workdir_name,"graph.dot"), graph2use="hierarchical", format="png")
+	try:
+		workflow.write_graph(dotfilename=path.join(workflow.base_dir,workdir_name,"graph.dot"), graph2use="hierarchical", format="png")
+	except OSError:
+		print('We could not write the DOT file for visualization (`dot` function from the graphviz package). This is non-critical to the processing, but you should get this fixed.')
 
 	workflow.run(plugin="MultiProc", plugin_args={'n_procs' : nprocs})
 	if not keep_work:
@@ -822,7 +828,10 @@ def l2_common_effect(l1_dir,
 	workflow.connect(workflow_connections)
 	workflow.base_dir = out_base
 	workflow.config = workflow_config
-	workflow.write_graph(dotfilename=path.join(workflow.base_dir,workdir_name,"graph.dot"), graph2use="hierarchical", format="png")
+	try:
+		workflow.write_graph(dotfilename=path.join(workflow.base_dir,workdir_name,"graph.dot"), graph2use="hierarchical", format="png")
+	except OSError:
+		print('We could not write the DOT file for visualization (`dot` function from the graphviz package). This is non-critical to the processing, but you should get this fixed.')
 
 	n_jobs = max(int(round(mp.cpu_count()*n_jobs_percentage)),2)
 	if not loud:
@@ -964,7 +973,10 @@ def l2_anova(l1_dir,
 	workflow.connect(workflow_connections)
 	workflow.config = {"execution": {"crashdump_dir": path.join(l2_dir,"crashdump")}}
 	workflow.base_dir = l2_dir
-	workflow.write_graph(dotfilename=path.join(workflow.base_dir,workdir_name,"graph.dot"), graph2use="hierarchical", format="png")
+	try:
+		workflow.write_graph(dotfilename=path.join(workflow.base_dir,workdir_name,"graph.dot"), graph2use="hierarchical", format="png")
+	except OSError:
+		print('We could not write the DOT file for visualization (`dot` function from the graphviz package). This is non-critical to the processing, but you should get this fixed.')
 
 	if not loud:
 		try:

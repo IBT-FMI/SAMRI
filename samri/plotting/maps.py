@@ -38,7 +38,7 @@ def _draw_colorbar(stat_map_img, axes,
 	aspect=40,
 	fraction=0.025,
 	anchor=(10.0,0.5),
-	cut_coords = [None],
+	cut_coords = [Non
 	positive_only = False,
 	negative_only = False,
 	cmap = None
@@ -703,6 +703,7 @@ def stat3D(stat_maps,
 		stat_maps = [path.abspath(path.expanduser(i)) for i in stat_maps]
 
 	#plot initial figure
+
 	display,vmin,vmax = stat(stat_maps,display_mode='tiled',template=template,draw_colorbar=draw_colorbar,cmap=cmap,cut_coords=cut_coords,threshold=threshold,positive_only = positive_only,negative_only=negative_only,save_as=save_as,overlays=overlays,figure_title=figure_title,show_plot=show_plot,draw_cross=draw_cross,annotate=annotate,black_bg=black_bg,dim=dim,scale=scale,shape="portrait")
 
 	if threshold_mesh is None:

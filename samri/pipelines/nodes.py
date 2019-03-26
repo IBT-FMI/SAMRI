@@ -74,7 +74,7 @@ def generic_registration(template,
 	functional_mask='',
 	num_threads=4,
 	phase_dictionary=GENERIC_PHASES,
-	s_phases=["s_rigid","affine","syn"],
+	s_phases=['s_rigid','similarity','affine','syn'],
 	f_phases=["f_rigid",],
 	):
 
@@ -105,8 +105,8 @@ def generic_registration(template,
 	s_registration.inputs.shrink_factors = [i["shrink_factors"] for i in s_parameters]
 	s_registration.inputs.use_estimate_learning_rate_once = [i["use_estimate_learning_rate_once"] for i in s_parameters]
 	s_registration.inputs.use_histogram_matching = [i["use_histogram_matching"] for i in s_parameters]
-	s_registration.inputs.winsorize_lower_quantile = 0.05
-	s_registration.inputs.winsorize_upper_quantile = 0.95
+	s_registration.inputs.winsorize_lower_quantile = 0.005
+	s_registration.inputs.winsorize_upper_quantile = 0.995
 	s_registration.inputs.args = '--float'
 	if structural_mask:
 		s_registration.inputs.fixed_image_masks = [path.abspath(path.expanduser(structural_mask))]

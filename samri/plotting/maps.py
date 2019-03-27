@@ -38,10 +38,10 @@ def _draw_colorbar(stat_map_img, axes,
 	aspect=40,
 	fraction=0.025,
 	anchor=(10.0,0.5),
-	cut_coords = [Non
+	cut_coords = None,
 	positive_only = False,
 	negative_only = False,
-	cmap = None
+	cmap = None,
 	):
 	if isinstance(stat_map_img, str):
 		stat_map_img = path.abspath(path.expanduser(stat_map_img))

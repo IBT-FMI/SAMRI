@@ -654,7 +654,6 @@ def common_select(bids_base, out_base, workflow_name, template, registration_mas
 		out_base = path.abspath(path.expanduser(out_base))
 	out_dir = path.join(out_base,workflow_name)
 
-
 	data_selection = bids_data_selection(bids_base, structural_match, functional_match, subjects, sessions)
 	workdir = out_dir + '_work'
 	if not os.path.exists(workdir):

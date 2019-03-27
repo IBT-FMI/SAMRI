@@ -170,12 +170,19 @@ def bids_data_selection(base, structural_match, functional_match, subjects, sess
 				print("Detected!")
 	layout = BIDSLayout(base)
 	df = layout.as_data_frame()
+
+	# Run is for some reason recorded as float
+	df.loc[df['run'].notnull(),'run'] = df.loc[df['run'].notnull(),'run'].apply(int)
+
 	# drop event files
 	df = df[df.type != 'events']
+
 	# rm .json
 	df = df.loc[df.path.str.contains('.nii')]
+
 	# generate scan types for later
 	df['scan_type'] = ""
+
 	#print(df.path.str.startswith('task', beg=0,end=len('task')))
 	beg = df.path.str.find('task-')
 	end = df.path.str.find('.')

@@ -8,7 +8,7 @@ from bids.grabbids import BIDSValidator
 from copy import deepcopy
 
 GENERIC_PHASES = {
-	"f_rigid":{
+	"f_translation":{
 		"transforms":"Translation",
 		"transform_parameters":(0.1,),
 		"number_of_iterations":[400,200],
@@ -25,7 +25,7 @@ GENERIC_PHASES = {
 		"use_estimate_learning_rate_once":False,
 		"use_histogram_matching":True,
 		},
-	"s_rigid":{
+	"s_translation":{
 		"transforms":"Translation",
 		"transform_parameters":(0.1,),
 		"number_of_iterations":[1000,500,500],
@@ -45,17 +45,17 @@ GENERIC_PHASES = {
 	"similarity":{
 		"transforms":"Similarity",
 		"transform_parameters":(0.1,),
-		"number_of_iterations":[1000],
+		"number_of_iterations":[750,750],
 		"metric":"MI",
 		"metric_weight":1,
 		"radius_or_number_of_bins":32,
 		"sampling_strategy":'Regular',
-		"sampling_percentage":0.75,
+		"sampling_percentage":0.66,
 		"convergence_threshold":1.e-16,
 		"convergence_window_size":10,
-		"smoothing_sigmas":[0],
+		"smoothing_sigmas":[1,0],
 		"sigma_units":"vox",
-		"shrink_factors":[1],
+		"shrink_factors":[2,1],
 		"use_estimate_learning_rate_once":False,
 		"use_histogram_matching":True,
 		},
@@ -67,7 +67,7 @@ GENERIC_PHASES = {
 		"metric_weight":1,
 		"radius_or_number_of_bins":32,
 		"sampling_strategy":'Regular',
-		"sampling_percentage":0.6,
+		"sampling_percentage":0.66,
 		"convergence_threshold":1.e-8,
 		"convergence_window_size":10,
 		"smoothing_sigmas":[0],
@@ -90,7 +90,7 @@ GENERIC_PHASES = {
 		#"radius_or_number_of_bins":4,
 		"sampling_strategy":['Regular','Regular'],
 		#"sampling_strategy":'Regular',
-		"sampling_percentage":[0.75,0.75],
+		"sampling_percentage":[0.8,0.8],
 		#"sampling_percentage":0.8,
 		"convergence_threshold":1.e-8,
 		"convergence_window_size":10,

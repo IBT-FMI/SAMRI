@@ -74,8 +74,8 @@ def generic_registration(template,
 	functional_mask='',
 	num_threads=4,
 	phase_dictionary=GENERIC_PHASES,
-	s_phases=['s_rigid','similarity','affine','syn'],
-	f_phases=["f_rigid",],
+	s_phases=['s_translation','similarity','affine','syn'],
+	f_phases=['f_translation',],
 	):
 
 	s_phases = [phase for phase in s_phases if phase in phase_dictionary]

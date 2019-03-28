@@ -172,7 +172,8 @@ def bids_data_selection(base, structural_match, functional_match, subjects, sess
 	df = layout.as_data_frame()
 
 	# Run is for some reason recorded as float
-	df.loc[df['run'].notnull(),'run'] = df.loc[df['run'].notnull(),'run'].apply(int)
+	df.loc[df['run'].notna(),'run'] = df.loc[df['run'].notnull(),'run'].apply(int).apply(str)
+	#df['run'] = df['run'].astype(int)
 
 	# drop event files
 	df = df[df.type != 'events']

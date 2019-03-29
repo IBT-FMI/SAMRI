@@ -3,7 +3,7 @@
 
 EAPI=7
 
-PYTHON_COMPAT=( python{2_7,3_4,3_5,3_6} )
+PYTHON_COMPAT=( python{3_5,3_6} )
 
 inherit distutils-r1
 
@@ -12,7 +12,7 @@ HOMEPAGE="https://github.com/IBT-FMI/SAMRI"
 
 LICENSE="GPL-3"
 SLOT="0"
-IUSE="+atlases labbookdb test"
+IUSE="+atlases labbookdb test devmode"
 KEYWORDS=""
 
 DEPEND="
@@ -30,6 +30,7 @@ RDEPEND="
 	dev-python/pandas[${PYTHON_USEDEP}]
 	dev-python/seaborn[${PYTHON_USEDEP}]
 	dev-python/statsmodels[${PYTHON_USEDEP}]
+	media-gfx/blender[${PYTHON_USEDEP}]
 	>=sci-biology/fsl-5.0.9
 	sci-biology/bru2nii
 	atlases? ( sci-biology/mouse-brain-atlases )

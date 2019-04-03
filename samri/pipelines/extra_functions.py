@@ -563,11 +563,11 @@ def assign_modality(scan_type, record):
 def match_exclude_ss(entry, match, exclude, record, key):
 	"""Return true if an entry is to be accepted based on the match and exclude criteria."""
 	try:
-		exclude_list = exclude[key]
+		exclude_list = exclude[key] + [str(i) for i in exclude[key]]
 	except KeyError:
 		exclude_list = []
 	try:
-		match_list = match[key]
+		match_list = match[key] + [str(i) for i in match[key]]
 	except KeyError:
 		match_list = []
 	if entry not in exclude_list:

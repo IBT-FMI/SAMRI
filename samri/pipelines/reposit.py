@@ -10,8 +10,8 @@ import shutil
 import time
 
 import nipype.interfaces.io as nio
-import nipype.interfaces.utility as util		# utility
-import nipype.pipeline.engine as pe				# pypeline engine
+import nipype.interfaces.utility as util
+import nipype.pipeline.engine as pe
 import pandas as pd
 #from nipype.interfaces.bru2nii import Bru2
 

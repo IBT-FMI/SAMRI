@@ -1031,8 +1031,10 @@ def contour_slices(bg_image, file_template,
 		save_as = save_as.format(**substitutions[0])
 		save_as = path.abspath(path.expanduser(save_as))
 		save_dir,_ = os.path.split(save_as)
-		if not os.path.exists(save_dir):
+		try:
 			os.makedirs(save_dir)
+		except FileExistsError:
+			pass
 		plt.savefig(save_as,
 			#facecolor=fig.get_facecolor(),
 			)

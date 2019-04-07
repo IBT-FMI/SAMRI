@@ -86,6 +86,9 @@ def l1(preprocessing_dir,
 	out_base = path.abspath(path.expanduser(out_base))
 
 	data_selection = bids_data_selection(preprocessing_dir, structural_match=False, functional_match=match, subjects=False, sessions=False)
+	if exclude:
+		for key in exclude:
+			data_selection = data_selection[~data_selection[key].isin(exclude[key])]
 	ind = data_selection.index.tolist()
 
 	out_dir = path.join(out_base,workflow_name)

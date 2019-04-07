@@ -756,6 +756,7 @@ def select_from_datafind_df(df,
 				df=df[df[key].isin(bids_dictionary[key])]
 	if bids_dictionary_override:
 		for key in bids_dictionary_override:
+			if bids_dictionary_override[key] != '':
 				df=df[df[key]==bids_dictionary_override[key]]
 
 	if list_output:

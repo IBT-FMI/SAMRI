@@ -100,6 +100,9 @@ def create_mesh(stat_map,threshold,
 	##TODO: stat_map also possibly already a Nifit1Image, adjust
 	img= nibabel.load(stat_map)
 	img_data = img.get_fdata()
+	if numpy.max(numpy.isinf(img_data)):
+		print("Warning: Infinite values detected; plotting at 0.")
+	img_data = numpy.nan_to_num(img_data)
 	neg = False
 
 	if negative_only:

@@ -537,7 +537,7 @@ def sessions_file(out_dir, df,
 			for ses_dir in os.listdir(sub_path):
 				d={}
 				if os.path.isdir(os.path.join(out_dir,sub_dir,ses_dir)) and ses_dir[:4] == 'ses-':
-					acq_time = df.loc[(df['subject'] == sub_dir[4:]) & (df['session'] == ses_dir[4:]),'measurement'][0]
+					acq_time = df.loc[(df['subject'] == sub_dir[4:]) & (df['session'] == ses_dir[4:]),'measurement'].tolist()[0]
 					acq_time = os.path.basename(acq_time)
 					acq_time = acq_time.split('_')[:2]
 					acq_time = '_'.join(acq_time)

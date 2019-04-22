@@ -729,7 +729,10 @@ def get_data_selection(workflow_base,
 				print('Could not open {}'.format(os.path.join(workflow_base,sub_dir,"subject")))
 				pass
 	data_selection = pd.DataFrame(selected_measurements)
-	shutil.rmtree(bids_temppath)
+	try:
+		shutil.rmtree(bids_temppath)
+	except PermissionError:
+		pass
 	return data_selection
 
 def select_from_datafind_df(df,

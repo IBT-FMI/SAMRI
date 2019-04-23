@@ -1,11 +1,13 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import print_function, division, unicode_literals, absolute_import
+import csv
 import os
 import pandas as pd
 from bids.grabbids import BIDSLayout
 from bids.grabbids import BIDSValidator
 from copy import deepcopy
+from datetime import datetime
 
 GENERIC_PHASES = {
 	"f_rigid":{
@@ -511,3 +513,40 @@ def select_template(template, registration_mask):
 		return -1
 
 	return template, registration_mask
+
+def sessions_file(out_dir, df,
+	):
+	"""Create new sessions file for a particular subject, given the BIDS guidelines.
+	https://bids-specification.readthedocs.io/en/latest/05-longitudinal-and-multi-site-studies.html#sessions-file
+
+	Parameters
+	----------
+
+	out_dir : str
+		Path to output root.
+	df : pandas.DataFrame
+		Pandas Dataframe containing columns including 'measurement', 'session', and 'subject'.
+	"""
+
+	for sub_dir in os.listdir(out_dir):
+		sub_path = os.path.join(out_dir,sub_dir)
+		if os.path.isdir(sub_path) and sub_dir[:4] == 'sub-':
+			if os.path.isfile(os.path.join(sub_path,'{}_sessions.tsv'.format(sub_dir))):
+				continue
+			sessions_data=[]
+			for ses_dir in os.listdir(sub_path):
+				d={}
+				if os.path.isdir(os.path.join(out_dir,sub_dir,ses_dir)) and ses_dir[:4] == 'ses-':
+					acq_time = df.loc[(df['subject'] == sub_dir[4:]) & (df['session'] == ses_dir[4:]),'measurement'].tolist()[0]
+					acq_time = os.path.basename(acq_time)
+					acq_time = acq_time.split('_')[:2]
+					acq_time = '_'.join(acq_time)
+					acq_time = datetime.strptime(acq_time, '%Y%m%d_%H%M%S')
+					d['session_id'] = ses_dir
+					d['acq_time'] = acq_time.isoformat()
+					sessions_data.append(d)
+			keys = sessions_data[0].keys()
+			with open(os.path.join(sub_path,'{}_sessions.tsv'.format(sub_dir)), "w+") as f:
+				dict_writer = csv.DictWriter(f, keys, delimiter='\t')
+				dict_writer.writeheader()
+				dict_writer.writerows(sessions_data)

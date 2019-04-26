@@ -551,6 +551,7 @@ def l2_common_effect(l1_dir,
 	workflow_name="generic",
 	debug=False,
 	target_set=[],
+	run_mode='flame12'
 	):
 	"""Determine the common effect in a sample of 3D feature maps.
 
@@ -559,6 +560,8 @@ def l2_common_effect(l1_dir,
 
 	n_jobs_percentage : float, optional
 		Percentage of the cores present on the machine which to maximally use for deploying jobs in parallel.
+	run_mode : {'ols', 'fe', 'flame1', 'flame12'}, optional
+		Estimation model.
 	"""
 
 	from samri.pipelines.utils import bids_data_selection

@@ -9,7 +9,6 @@ def test_generic():
 		registration_mask="/usr/share/mouse-brain-atlases/dsurqec_200micron_mask.nii",
 		functional_match={'acquisition':['EPIlowcov'],},
 		structural_match={'acquisition':['TurboRARElowcov'],},
-		actual_size=True,
 		out_base='/tmp/samri_testing/pytest/',
 		workflow_name='preprocessed',
 		)

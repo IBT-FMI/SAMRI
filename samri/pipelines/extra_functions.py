@@ -693,7 +693,7 @@ def get_data_selection(workflow_base,
 											line_considered = True
 											if scan_subdir_resolved:
 												break
-											if re.match(r'^(?!/)<[a-zA-Z0-9-_]+?>[\r\n]+', line):
+											if 'acq-' in line:
 												if fail_suffix and re.match(r'^.+?{}$'.format(fail_suffix), line):
 													continue
 												number = sub_sub_dir
@@ -729,7 +729,10 @@ def get_data_selection(workflow_base,
 				print('Could not open {}'.format(os.path.join(workflow_base,sub_dir,"subject")))
 				pass
 	data_selection = pd.DataFrame(selected_measurements)
-	shutil.rmtree(bids_temppath)
+	try:
+		shutil.rmtree(bids_temppath)
+	except PermissionError:
+		pass
 	return data_selection
 
 def select_from_datafind_df(df,
@@ -756,6 +759,7 @@ def select_from_datafind_df(df,
 				df=df[df[key].isin(bids_dictionary[key])]
 	if bids_dictionary_override:
 		for key in bids_dictionary_override:
+			if bids_dictionary_override[key] != '':
 				df=df[df[key]==bids_dictionary_override[key]]
 
 	if list_output:

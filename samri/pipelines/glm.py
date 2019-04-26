@@ -86,6 +86,9 @@ def l1(preprocessing_dir,
 	out_base = path.abspath(path.expanduser(out_base))
 
 	data_selection = bids_data_selection(preprocessing_dir, structural_match=False, functional_match=match, subjects=False, sessions=False)
+	if exclude:
+		for key in exclude:
+			data_selection = data_selection[~data_selection[key].isin(exclude[key])]
 	ind = data_selection.index.tolist()
 
 	out_dir = path.join(out_base,workflow_name)
@@ -548,6 +551,7 @@ def l2_common_effect(l1_dir,
 	workflow_name="generic",
 	debug=False,
 	target_set=[],
+	run_mode='flame12'
 	):
 	"""Determine the common effect in a sample of 3D feature maps.
 
@@ -556,6 +560,8 @@ def l2_common_effect(l1_dir,
 
 	n_jobs_percentage : float, optional
 		Percentage of the cores present on the machine which to maximally use for deploying jobs in parallel.
+	run_mode : {'ols', 'fe', 'flame1', 'flame12'}, optional
+		Estimation model.
 	"""
 
 	from samri.pipelines.utils import bids_data_selection
@@ -602,7 +608,11 @@ def l2_common_effect(l1_dir,
 	datasink_substitutions = [('_iterable_', '')]
 
 	if groupby == "subject_set":
-		datasink_substitutions.extend([('subject', 'sub-')])
+		datasink_substitutions.extend([('alias', 'alias-')])
+		for target in target_set:
+			mylist = '.'.join(target['subject'])
+			mymatch = 'subject{}.'.format(mylist)
+			datasink_substitutions.extend([(mymatch, '')])
 		common_fields = ''
 		common_fields += 'acq-'+data_selection.acq.drop_duplicates().item()
 		try:
@@ -614,12 +624,12 @@ def l2_common_effect(l1_dir,
 		infosource.iterables = [('iterable', target_set)]
 
 		copes = pe.Node(name='copes', interface=util.Function(function=select_from_datafind_df, input_names=inspect.getargspec(select_from_datafind_df)[0], output_names=['selection']))
-		copes.inputs.bids_dictionary_override = {'modality':'cope'}
+		copes.inputs.bids_dictionary_override = {'modality':'cope', 'alias':''}
 		copes.inputs.df = data_selection
 		copes.inputs.list_output = True
 
 		varcopes = pe.Node(name='varcopes', interface=util.Function(function=select_from_datafind_df, input_names=inspect.getargspec(select_from_datafind_df)[0], output_names=['selection']))
-		varcopes.inputs.bids_dictionary_override = {'modality':'varcb'}
+		varcopes.inputs.bids_dictionary_override = {'modality':'varcb', 'alias':''}
 		varcopes.inputs.df = data_selection
 		varcopes.inputs.list_output = True
 
@@ -798,7 +808,7 @@ def l2_common_effect(l1_dir,
 	datasink_substitutions.extend([('cope1.nii.gz', common_fields+'_'+'cope.nii.gz')])
 	datasink_substitutions.extend([('tstat1.nii.gz', common_fields+'_'+'tstat.nii.gz')])
 	datasink_substitutions.extend([('zstat1.nii.gz', common_fields+'_'+'zstat.nii.gz')])
-	datasink.inputs.substitutions = datasink_substitutions
+	datasink.inputs.regexp_substitutions = datasink_substitutions
 
 	workflow_connections.extend([
 		(copes, copemerge, [('selection', 'in_files')]),

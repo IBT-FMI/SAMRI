@@ -63,7 +63,6 @@ def test_bids_naming():
 #		debug=False,
 #		functional_match={'task':['JogB','CogB','CogB2m'],},
 #		structural_match={'acquisition':['TurboRARE', 'TurboRARElowcov']},
-#		actual_size=True,
 #		keep_work=False,
 #		)
 

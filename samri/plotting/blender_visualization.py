@@ -5,7 +5,7 @@ import sys
 import argparse
 
 ## Example call from commandline: blender -b -P decimate_mesh_blender.py -- -f mesh.obj -o mesh_dec.obj -r 0.5 -i 2 -n 4 -l 0.5
-## Blender will ignore all options after -- so parameters can be passed to python script. 
+## Blender will ignore all options after -- so parameters can be passed to python script.
 
 # get the args passed to blender after "--", all of which are ignored by
 # blender so scripts may receive their own arguments
@@ -57,7 +57,7 @@ def deselect():
 ##File path
 #path = os.path.abspath('.')
 #path = os.path.abspath('.')
-path =  "/var/tmp/"
+path = "/tmp/"
 
 
 ## Set Basic Scene: Import reference atlas mesh and desired gene expression/connectivity meshed
@@ -169,14 +169,14 @@ else:
     Atlas.data.materials.append(MatAtlas)
 
 i = 0
-for stat_map in args.stat_map_path:   
+for stat_map in args.stat_map_path:
     if GeneData[i].data.materials:
         # assign to 1st material slot
         GeneData[i].data.materials[0] = MatGenes[i]
     else:
         # no slots
         GeneData[i].data.materials.append(MatGenes[i])
-    i += 1 
+    i += 1
 
 
 #Try to rotate camera around the brain and render different angles.
@@ -228,7 +228,7 @@ def TakePic_Loc(FileName,loc):
     bpy.context.scene.render.resolution_y = 5250
     bpy.data.scenes["Scene"].render.filepath = path + "/" + FileName
     bpy.ops.render.render( write_still=True )
-    
+
 #render and save image
 def TakePic(FileName):
     deselect()
@@ -244,7 +244,7 @@ def TakePic(FileName):
     bpy.context.scene.render.image_settings.color_depth = '16'
     bpy.data.scenes["Scene"].render.filepath = path + "/" + FileName
     bpy.ops.render.render( write_still=True )
-    
+
 #Rotate mesh to view
 deselect()
 Atlas.select=True

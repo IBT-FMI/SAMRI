@@ -117,7 +117,7 @@ def create_mesh(stat_map,threshold,
 	#save mesh as .obj
 	filename = os.path.basename(stat_map)
 	filename_prefix = filename.split(".")[0]
-	path = "/var/tmp/"
+	path = "/tmp/"
 	output_file = filename_prefix + "_pos_mesh.obj"
 	if neg: output_file = filename_prefix + "_neg_mesh.obj"
 	output_path = os.path.join(path,output_file)

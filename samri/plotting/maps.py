@@ -38,10 +38,10 @@ def _draw_colorbar(stat_map_img, axes,
 	aspect=40,
 	fraction=0.025,
 	anchor=(10.0,0.5),
-	cut_coords = None,
-	positive_only = False,
-	negative_only = False,
-	cmap = None,
+	cut_coords=None,
+	positive_only=False,
+	negative_only=False,
+	cmap=None,
 	):
 	if isinstance(stat_map_img, str):
 		stat_map_img = path.abspath(path.expanduser(stat_map_img))
@@ -150,8 +150,8 @@ def scaled_plot(template,
 	positive_only=False,
 	negative_only=False,
 	vmin=None,
-	vmax = None,
-	stat_cmap = None,
+	vmax=None,
+	stat_cmap=None,
 	):
 	"""A wrapper for nilearn's plot_stat_map which allows scaling of crosshairs, titles and annotations.
 
@@ -260,8 +260,8 @@ def stat(stat_maps,
 	ax=None,
 	anat_cmap='binary',
 	display_mode='ortho',
-	positive_only = False,
-	negative_only = False
+	positive_only=False,
+	negative_only=False
 	):
 
 	"""Plot a list of statistical maps.
@@ -475,13 +475,13 @@ def stat(stat_maps,
 	return display,vmin,vmax
 
 def _create_3Dplot(stat_maps,
-	template_mesh = '/usr/share/mouse-brain-atlases/ambmc2dsurqec_15micron_masked.obj',
-	threshold = 3,
-	positive_only = False,
-	negative_only = False,
-	vmin = None,
-	vmax = None,
-	cmap = None,
+	template_mesh='/usr/share/mouse-brain-atlases/ambmc2dsurqec_15micron_masked.obj',
+	threshold=3,
+	positive_only=False,
+	negative_only=False,
+	vmin=None,
+	vmax=None,
+	cmap=None,
 	):
 
 	"""Internal function to create the 3D plot.
@@ -637,9 +637,9 @@ def stat3D(stat_maps,
 	shape="portrait",
 	draw_colorbar=True,
 	ax=None,
-	positive_only = False,
-	negative_only = False,
-	threshold_mesh = None,
+	positive_only=False,
+	negative_only=False,
+	threshold_mesh=None,
 	template_mesh='/usr/share/mouse-brain-atlases/ambmc2dsurqec_15micron_masked.obj'
 	):
 
@@ -694,7 +694,7 @@ def stat3D(stat_maps,
 	Identical consequitive statistical maps are auto-detected and share a colorbar.
 	To avoid starting a shared colorbar at the end of a column, please ensure that the length of statistical maps to be plotted is divisible both by the group size and the number of columns.
 	"""
-  
+
 	cut_coords=[cut_coords]
 
 	if isinstance(stat_maps, str):

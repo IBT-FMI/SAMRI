@@ -693,7 +693,7 @@ def get_data_selection(workflow_base,
 											line_considered = True
 											if scan_subdir_resolved:
 												break
-											if 'acq-' in line:
+											if re.match(r'^(?!/)<[a-zA-Z0-9-_]+?-[a-zA-Z0-9-_]+?>[\r\n]+', line):
 												if fail_suffix and re.match(r'^.+?{}$'.format(fail_suffix), line):
 													continue
 												number = sub_sub_dir

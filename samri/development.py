@@ -130,7 +130,7 @@ def reg_gc():
 		group={"sub":"Subject"},
 		repeat={"ses":"Session"},
 		show=False,
-		save_as="/tmp/f_reg_gc.png",
+		save_as='/tmp/f_reg_gc.png',
 		)
 
 	subject_effect = inline_anova(anova_summary,"C(Subject)",style="python")

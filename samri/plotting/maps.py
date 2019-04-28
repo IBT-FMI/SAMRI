@@ -552,7 +552,7 @@ def _create_3Dplot(stat_maps,
 	#python script cannot be run directly, need to start blender in background via command line, then run script.
 	subprocess.run(cli,check=True,stdout=open(os.devnull,'wb'))
 
-	mesh = plt.imread("/tmp/3Dplot.png")
+	mesh = plt.imread('/tmp/3Dplot.png')
 
 	#assure best fit into existing plot, trim img data matrix
 	dims = np.shape(mesh)
@@ -596,7 +596,7 @@ def _plots_overlay(display,display_3Dplot):
 	fh.canvas.draw()
 
 	# Hackish fix for 3D image displacement on zenhost configuration !!!
-	plt.savefig("/tmp/tmp.png")
+	plt.savefig('/tmp/tmp.png')
 
 	#Determine correct location to put the plot in relation to existing figure axes
 	box = [max(display.axes['x'].ax.get_position().x0,display.axes['y'].ax.get_position().x0,display.axes['z'].ax.get_position().x0),min(display.axes['x'].ax.get_position().y0,display.axes['y'].ax.get_position().y0,display.axes['z'].ax.get_position().y0),display.axes['x'].ax.get_position().bounds[2],display.axes['z'].ax.get_position().bounds[3]]

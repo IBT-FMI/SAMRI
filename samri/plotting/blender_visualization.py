@@ -57,7 +57,7 @@ def deselect():
 ##File path
 #path = os.path.abspath('.')
 #path = os.path.abspath('.')
-path = "/tmp/"
+path = '/tmp/'
 
 
 ## Set Basic Scene: Import reference atlas mesh and desired gene expression/connectivity meshed

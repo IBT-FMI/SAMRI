@@ -18,6 +18,7 @@ from nipype.interfaces.fsl.model import Level1Design
 from samri.pipelines.extra_interfaces import SpecifyModel
 from samri.pipelines.extra_functions import select_from_datafind_df, corresponding_eventfile, get_bids_scan, eventfile_add_habituation
 from samri.pipelines.utils import bids_dict_to_source, ss_to_path, iterfield_selector, datasource_exclude, bids_dict_to_dir
+from samri.report.roi import ts
 from samri.utilities import N_PROCS
 
 N_PROCS=max(N_PROCS-2, 1)
@@ -299,19 +300,20 @@ def l1(preprocessing_dir,
 		shutil.rmtree(path.join(out_base,workdir_name))
 
 def seed_fc(preprocessing_dir,
+	debug=False,
 	exclude={},
-	habituation='confound',
 	highpass_sigma=225,
 	lowpass_sigma=False,
 	include={},
 	keep_work=False,
-	out_dir="",
+	out_base="",
 	mask="",
-	match_regex='sub-(?P<sub>[a-zA-Z0-9]+)/ses-(?P<ses>[a-zA-Z0-9]+)/func/.*?_task-(?P<task>[a-zA-Z0-9]+)_acq-(?P<acq>[a-zA-Z0-9]+)_(?P<mod>[a-zA-Z0-9]+)\.(?:tsv|nii|nii\.gz)',
-	nprocs=N_PROCS,
+	match={},
 	tr=1,
 	workflow_name="generic",
 	modality="cbv",
+	n_jobs_percentage=1,
+	invert=False,
 	):
 	"""Calculate subject level seed-based functional connectivity via the `fsl_glm` command.
 
@@ -321,140 +323,132 @@ def seed_fc(preprocessing_dir,
 	exclude : dict
 		A dictionary with any combination of "sessions", "subjects", "tasks" as keys and corresponding identifiers as values.
 		If this is specified matching entries will be excluded in the analysis.
-	habituation : {"", "confound", "separate_contrast", "in_main_contrast"}, optional
-		How the habituation regressor should be handled.
-		Anything which evaluates as False (though we recommend "") means no habituation regressor will be introduced.
+	debug : bool, optional
+		Whether to enable nipype debug mode.
+		This increases logging.
 	highpass_sigma : int, optional
 		Highpass threshold (in seconds).
 	include : dict
 		A dictionary with any combination of "sessions", "subjects", "tasks" as keys and corresponding identifiers as values.
 		If this is specified only matching entries will be included in the analysis.
+	invert : bool
+		If true the values will be inverted with respect to zero.
+		This is commonly used for iron nano-particle Cerebral Blood Volume (CBV) measurements.
 	keep_work : bool, optional
 		Whether to keep the work directory (containing all the intermediary workflow steps, as managed by nipypye).
 		This is useful for debugging and quality control.
-	out_dir : str, optional
+	out_base : str, optional
 		Path to the directory inside which both the working directory and the output directory will be created.
 	mask : str, optional
 		Path to the brain mask which shall be used to define the brain volume in the analysis.
 		This has to point to an existing NIfTI file containing zero and one values only.
-	match_regex : str, optional
-		Regex matching pattern by which to select input files. Has to contain groups named "sub", "ses", "acq", "task", and "mod".
-	n_procs : int, optional
-		Maximum number of processes which to simultaneously spawn for the workflow.
-		If not explicitly defined, this is automatically calculated from the number of available cores and under the assumption that the workflow will be the main process running for the duration that it is running.
+	n_jobs_percentage : float, optional
+		Percentage of the cores present on the machine which to maximally use for deploying jobs in parallel.
 	tr : int, optional
 		Repetition time, in seconds.
 	workflow_name : str, optional
 		Name of the workflow; this will also be the name of the final output directory produced under `out_dir`.
 	"""
 
-	preprocessing_dir = path.abspath(path.expanduser(preprocessing_dir))
-	if not out_dir:
-		out_dir = path.join(bids_base,'l1')
-	else:
-		out_dir = path.abspath(path.expanduser(out_dir))
+	from samri.pipelines.utils import bids_data_selection
 
-	datafind = nio.DataFinder()
-	datafind.inputs.root_paths = preprocessing_dir
-	datafind.inputs.match_regex = match_regex
-	datafind_res = datafind.run()
-	out_paths = [path.abspath(path.expanduser(i)) for i in datafind_res.outputs.out_paths]
-	data_selection = zip(*[datafind_res.outputs.sub, datafind_res.outputs.ses, datafind_res.outputs.acq, datafind_res.outputs.task, datafind_res.outputs.mod, out_paths])
-	data_selection = [list(i) for i in data_selection]
-	data_selection = pd.DataFrame(data_selection,columns=('subject','session','acquisition','task','modality','path'))
+	preprocessing_dir = path.abspath(path.expanduser(preprocessing_dir))
+	out_base = path.abspath(path.expanduser(out_base))
+
+	data_selection = bids_data_selection(preprocessing_dir, structural_match=False, functional_match=match, subjects=False, sessions=False)
 	if exclude:
 		for key in exclude:
 			data_selection = data_selection[~data_selection[key].isin(exclude[key])]
-	if include:
-		for key in include:
-			data_selection = data_selection[data_selection[key].isin(include[key])]
-	if not os.path.exists(out_dir):
-		os.makedirs(out_dir)
-	data_selection.to_csv(path.join(out_dir,'data_selection.csv'))
-	bids_dictionary = data_selection[data_selection['modality']==modality].drop_duplicates().T.to_dict().values()
+	ind = data_selection.index.tolist()
 
-	infosource = pe.Node(interface=util.IdentityInterface(fields=['bids_dictionary']), name="infosource")
-	infosource.iterables = [('bids_dictionary', bids_dictionary)]
+	out_dir = path.join(out_base,workflow_name)
+	workdir_name = workflow_name+'_work'
+	workdir = path.join(out_base,workdir_name)
+	if not os.path.exists(workdir):
+		os.makedirs(workdir)
+	data_selection.to_csv(path.join(workdir,'data_selection.csv'))
 
-	datafile_source = pe.Node(name='datafile_source', interface=util.Function(function=select_from_datafind_df, input_names=inspect.getargspec(select_from_datafind_df)[0], output_names=['out_file']))
-	datafile_source.inputs.bids_dictionary_override = {'modality':modality}
-	datafile_source.inputs.df = data_selection
+	get_scan = pe.Node(name='get_scan', interface=util.Function(function=get_bids_scan,input_names=inspect.getargspec(get_bids_scan)[0], output_names=['scan_path','scan_type','task', 'nii_path', 'nii_name', 'events_name', 'subject_session', 'metadata_filename', 'dict_slice']))
+	get_scan.inputs.ignore_exception = True
+	get_scan.inputs.data_selection = data_selection
+	get_scan.inputs.bids_base = preprocessing_dir
+	get_scan.iterables = ("ind_type", ind)
 
-	seed_timecourse = pe.Node(name='seed_timecourse', interface=util.Function(function=select_from_datafind_df, input_names=inspect.getargspec(select_from_datafind_df)[0], output_names=['out_file']))
+	compute_seed = pe.Node(name='compute_seed', interface=util.Function(function=ts,input_names=inspect.getargspec(ts)[0], output_names=['means',medians]))
+
+	if invert:
+		invert = pe.Node(interface=fsl.ImageMaths(), name="invert")
+		invert.inputs.op_string = '-mul -1'
 
 	specify_model = pe.Node(interface=SpecifyModel(), name="specify_model")
 	specify_model.inputs.input_units = 'secs'
 	specify_model.inputs.time_repetition = tr
 	specify_model.inputs.high_pass_filter_cutoff = highpass_sigma
-	specify_model.inputs.habituation_regressor = bool(habituation)
 
 	level1design = pe.Node(interface=Level1Design(), name="level1design")
 	level1design.inputs.interscan_interval = tr
-	if bf_path:
-		bf_path = path.abspath(path.expanduser(bf_path))
-		level1design.inputs.bases = {"custom": {"bfcustompath":bf_path}}
-	# level1design.inputs.bases = {'gamma': {'derivs':False, 'gammasigma':10, 'gammadelay':5}}
-	level1design.inputs.orthogonalization = {1: {0:0,1:0,2:0}, 2: {0:1,1:1,2:0}}
+	level1design.inputs.bases = {'none': None}
 	level1design.inputs.model_serial_correlations = True
-	if habituation=="separate_contrast":
-		level1design.inputs.contrasts = [('allStim','T', ["e0"],[1]),('allStim','T', ["e1"],[1])] #condition names as defined in specify_model
-	elif habituation=="in_main_contrast":
-		level1design.inputs.contrasts = [('allStim','T', ["e0", "e1"],[1,1])] #condition names as defined in specify_model
-	elif habituation=="confound" or not habituation:
-		level1design.inputs.contrasts = [('allStim','T', ["e0"],[1])] #condition names as defined in specify_model
-	else:
-		raise ValueError('The value you have provided for the `habituation` parameter, namely "{}", is invalid. Please choose one of: {"confound","in_main_contrast","separate_contrast"}'.format(habituation))
+	level1design.inputs.contrasts = [('allStim','T', ['ev0'],[1])]
 
 	modelgen = pe.Node(interface=fsl.FEATModel(), name='modelgen')
-	modelgen.inputs.ignore_exception = True
 
 	glm = pe.Node(interface=fsl.GLM(), name='glm', iterfield='design')
-	glm.inputs.out_cope = "cope.nii.gz"
-	glm.inputs.out_varcb_name = "varcb.nii.gz"
-	#not setting a betas output file might lead to beta export in lieu of COPEs
-	glm.inputs.out_file = "betas.nii.gz"
-	glm.inputs.out_t_name = "t_stat.nii.gz"
-	glm.inputs.out_p_name = "p_stat.nii.gz"
-	if mask:
+#	glm.inputs.out_cope = "cope.nii.gz"
+#	glm.inputs.out_varcb_name = "varcb.nii.gz"
+#	#not setting a betas output file might lead to beta export in lieu of COPEs
+#	glm.inputs.out_file = "betas.nii.gz"
+#	glm.inputs.out_t_name = "t_stat.nii.gz"
+#	glm.inputs.out_p_name = "p_stat.nii.gz"
+	if mask == 'mouse':
+		mask = '/usr/share/mouse-brain-atlases/dsurqec_200micron_mask.nii'
 		glm.inputs.mask = path.abspath(path.expanduser(mask))
-	glm.inputs.ignore_exception = True
+	else:
+		glm.inputs.mask = path.abspath(path.expanduser(mask))
+	glm.interface.mem_gb = 6
+
+	out_file_name_base = 'sub-{{subject}}_ses-{{session}}_task-{{task}}_acq-{{acquisition}}_run-{{run}}_{{modality}}_{}.{}'
 
 	betas_filename = pe.Node(name='betas_filename', interface=util.Function(function=bids_dict_to_source,input_names=inspect.getargspec(bids_dict_to_source)[0], output_names=['filename']))
-	betas_filename.inputs.source_format = "sub-{subject}_ses-{session}_task-{task}_acq-{acquisition}_{modality}_betas.nii.gz"
+	betas_filename.inputs.source_format = out_file_name_base.format('betas','nii.gz')
 	cope_filename = pe.Node(name='cope_filename', interface=util.Function(function=bids_dict_to_source,input_names=inspect.getargspec(bids_dict_to_source)[0], output_names=['filename']))
-	cope_filename.inputs.source_format = "sub-{subject}_ses-{session}_task-{task}_acq-{acquisition}_{modality}_cope.nii.gz"
+	cope_filename.inputs.source_format = out_file_name_base.format('cope','nii.gz')
 	varcb_filename = pe.Node(name='varcb_filename', interface=util.Function(function=bids_dict_to_source,input_names=inspect.getargspec(bids_dict_to_source)[0], output_names=['filename']))
-	varcb_filename.inputs.source_format = "sub-{subject}_ses-{session}_task-{task}_acq-{acquisition}_{modality}_varcb.nii.gz"
+	varcb_filename.inputs.source_format = out_file_name_base.format('varcb','nii.gz')
 	tstat_filename = pe.Node(name='tstat_filename', interface=util.Function(function=bids_dict_to_source,input_names=inspect.getargspec(bids_dict_to_source)[0], output_names=['filename']))
-	tstat_filename.inputs.source_format = "sub-{subject}_ses-{session}_task-{task}_acq-{acquisition}_{modality}_tstat.nii.gz"
+	tstat_filename.inputs.source_format = out_file_name_base.format('tstat','nii.gz')
 	zstat_filename = pe.Node(name='zstat_filename', interface=util.Function(function=bids_dict_to_source,input_names=inspect.getargspec(bids_dict_to_source)[0], output_names=['filename']))
-	zstat_filename.inputs.source_format = "sub-{subject}_ses-{session}_task-{task}_acq-{acquisition}_{modality}_zstat.nii.gz"
+	zstat_filename.inputs.source_format = out_file_name_base.format('zstat','nii.gz')
 	pstat_filename = pe.Node(name='pstat_filename', interface=util.Function(function=bids_dict_to_source,input_names=inspect.getargspec(bids_dict_to_source)[0], output_names=['filename']))
-	pstat_filename.inputs.source_format = "sub-{subject}_ses-{session}_task-{task}_acq-{acquisition}_{modality}_pstat.nii.gz"
+	pstat_filename.inputs.source_format = out_file_name_base.format('pstat','nii.gz')
 	pfstat_filename = pe.Node(name='pfstat_filename', interface=util.Function(function=bids_dict_to_source,input_names=inspect.getargspec(bids_dict_to_source)[0], output_names=['filename']))
-	pfstat_filename.inputs.source_format = "sub-{subject}_ses-{session}_task-{task}_acq-{acquisition}_{modality}_pfstat.nii.gz"
+	pfstat_filename.inputs.source_format = out_file_name_base.format('pfstat','nii.gz')
+	design_filename = pe.Node(name='design', interface=util.Function(function=bids_dict_to_source,input_names=inspect.getargspec(bids_dict_to_source)[0], output_names=['filename']))
+	design_filename.inputs.source_format = out_file_name_base.format('design','mat')
+
+	design_rename = pe.Node(interface=util.Rename(), name='design_rename')
 
 	datasink = pe.Node(nio.DataSink(), name='datasink')
-	datasink.inputs.base_directory = path.join(out_dir,workflow_name)
+	datasink.inputs.base_directory = path.join(out_base,workflow_name)
 	datasink.inputs.parameterization = False
 
 	workflow_connections = [
-		(infosource, datafile_source, [('bids_dictionary', 'bids_dictionary')]),
-		(infosource, eventfile_source, [('bids_dictionary', 'bids_dictionary')]),
-		(eventfile_source, specify_model, [('out_file', 'bids_event_files')]),
+		(get_scan, eventfile, [('nii_path', 'timecourse_file')]),
+		(eventfile, specify_model, [('eventfile', 'bids_event_file')]),
 		(specify_model, level1design, [('session_info', 'session_info')]),
 		(level1design, modelgen, [('ev_files', 'ev_files')]),
 		(level1design, modelgen, [('fsf_files', 'fsf_file')]),
 		(modelgen, glm, [('design_file', 'design')]),
 		(modelgen, glm, [('con_file', 'contrasts')]),
-		(infosource, datasink, [(('bids_dictionary',bids_dict_to_dir), 'container')]),
-		(infosource, betas_filename, [('bids_dictionary', 'bids_dictionary')]),
-		(infosource, cope_filename, [('bids_dictionary', 'bids_dictionary')]),
-		(infosource, varcb_filename, [('bids_dictionary', 'bids_dictionary')]),
-		(infosource, tstat_filename, [('bids_dictionary', 'bids_dictionary')]),
-		(infosource, zstat_filename, [('bids_dictionary', 'bids_dictionary')]),
-		(infosource, pstat_filename, [('bids_dictionary', 'bids_dictionary')]),
-		(infosource, pfstat_filename, [('bids_dictionary', 'bids_dictionary')]),
+		(get_scan, datasink, [(('dict_slice',bids_dict_to_dir), 'container')]),
+		(get_scan, betas_filename, [('dict_slice', 'bids_dictionary')]),
+		(get_scan, cope_filename, [('dict_slice', 'bids_dictionary')]),
+		(get_scan, varcb_filename, [('dict_slice', 'bids_dictionary')]),
+		(get_scan, tstat_filename, [('dict_slice', 'bids_dictionary')]),
+		(get_scan, zstat_filename, [('dict_slice', 'bids_dictionary')]),
+		(get_scan, pstat_filename, [('dict_slice', 'bids_dictionary')]),
+		(get_scan, pfstat_filename, [('dict_slice', 'bids_dictionary')]),
+		(get_scan, design_filename, [('dict_slice', 'bids_dictionary')]),
 		(betas_filename, glm, [('filename', 'out_file')]),
 		(cope_filename, glm, [('filename', 'out_cope')]),
 		(varcb_filename, glm, [('filename', 'out_varcb_name')]),
@@ -462,6 +456,8 @@ def seed_fc(preprocessing_dir,
 		(zstat_filename, glm, [('filename', 'out_z_name')]),
 		(pstat_filename, glm, [('filename', 'out_p_name')]),
 		(pfstat_filename, glm, [('filename', 'out_pf_name')]),
+		(modelgen, design_rename, [('design_file', 'in_file')]),
+		(design_filename, design_rename, [('filename', 'format_string')]),
 		(glm, datasink, [('out_pf', '@pfstat')]),
 		(glm, datasink, [('out_p', '@pstat')]),
 		(glm, datasink, [('out_z', '@zstat')]),
@@ -469,40 +465,58 @@ def seed_fc(preprocessing_dir,
 		(glm, datasink, [('out_cope', '@cope')]),
 		(glm, datasink, [('out_varcb', '@varcb')]),
 		(glm, datasink, [('out_file', '@betas')]),
+		(design_rename, datasink, [('out_file', '@design')]),
 		]
 
 	if highpass_sigma or lowpass_sigma:
 		bandpass = pe.Node(interface=fsl.maths.TemporalFilter(), name="bandpass")
 		bandpass.inputs.highpass_sigma = highpass_sigma
+		bandpass.interface.mem_gb = 16
 		if lowpass_sigma:
 			bandpass.inputs.lowpass_sigma = lowpass_sigma
 		else:
 			bandpass.inputs.lowpass_sigma = tr
 		workflow_connections.extend([
-			(datafile_source, bandpass, [('out_file', 'in_file')]),
+			(get_scan, bandpass, [('nii_path', 'in_file')]),
 			(bandpass, specify_model, [('out_file', 'functional_runs')]),
+			(bandpass, compute_seed, [('out_file', 'in_file')]),
 			(bandpass, glm, [('out_file', 'in_file')]),
+			(bandpass, datasink, [('out_file', '@ts_file')]),
+			(get_scan, bandpass, [('nii_name', 'out_file')]),
 			])
 	else:
 		workflow_connections.extend([
-			(datafile_source, specify_model, [('out_file', 'functional_runs')]),
-			(datafile_source, glm, [('out_file', 'in_file')]),
+			(get_scan, specify_model, [('nii_path', 'functional_runs')]),
+			(get_scan, compute_seed, [('nii_path', 'in_file')]),
+			(get_scan, glm, [('nii_path', 'in_file')]),
+			(get_scan, datasink, [('nii_path', '@ts_file')]),
 			])
 
 
-	workdir_name = workflow_name+"_work"
+	workflow_config = {'execution': {'crashdump_dir': path.join(out_base,'crashdump'),}}
+	if debug:
+		workflow_config['logging'] = {
+			'workflow_level':'DEBUG',
+			'utils_level':'DEBUG',
+			'interface_level':'DEBUG',
+			'filemanip_level':'DEBUG',
+			'log_to_file':'true',
+			}
+
 	workflow = pe.Workflow(name=workdir_name)
 	workflow.connect(workflow_connections)
-	workflow.base_dir = out_dir
-	workflow.config = {"execution": {"crashdump_dir": path.join(out_dir,"crashdump")}}
+	workflow.base_dir = out_base
+	workflow.config = workflow_config
 	try:
 		workflow.write_graph(dotfilename=path.join(workflow.base_dir,workdir_name,"graph.dot"), graph2use="hierarchical", format="png")
 	except OSError:
 		print('We could not write the DOT file for visualization (`dot` function from the graphviz package). This is non-critical to the processing, but you should get this fixed.')
 
-	workflow.run(plugin="MultiProc", plugin_args={'n_procs' : nprocs})
+	n_jobs = max(int(round(mp.cpu_count()*n_jobs_percentage)),2)
+	workflow.run(plugin="MultiProc", plugin_args={'n_procs' : n_jobs})
 	if not keep_work:
-		shutil.rmtree(path.join(out_dir,workdir_name))
+		shutil.rmtree(path.join(out_base,workdir_name))
+
 
 def getlen(a):
 	return len(a)

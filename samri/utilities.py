@@ -42,7 +42,7 @@ def bids_autofind_df(bids_dir,
 
 def bids_autofind(bids_dir,
 	typ='',
-	path_template="sub-{{subject}}/ses-{{session}}/{typ}/sub-{{subject}}_ses-{{session}}_task-{{task}}_acq-{{acquisition}}.nii.gz",
+	path_template="sub-{{subject}}/ses-{{session}}/{typ}/sub-{{subject}}_ses-{{session}}_task-{{task}}_acq-{{acquisition}}_run-{{run}}.nii.gz",
 	match_regex='',
 	):
 	"""Automatically generate a BIDS path template and a substitution iterator (list of dicts, as produced by `samri.utilities.bids_substitution_iterator`, and used as a standard input SAMRI function input) from a BIDS-respecting directory.
@@ -69,7 +69,7 @@ def bids_autofind(bids_dir,
 	elif typ in ("func","dwi"):
 	       match_regex = '.+/sub-(?P<sub>.+)/ses-(?P<ses>.+)/'+typ+'/.*?_task-(?P<task>.+).*?_acq-(?P<acquisition>.+)\.nii.gz'
 	elif typ == "":
-	       match_regex = '.+/sub-(?P<sub>.+)/ses-(?P<ses>.+)/.*?_task-(?P<task>.+).*?_acq-(?P<acquisition>.+).*?\.nii.gz'
+	       match_regex = '.+/sub-(?P<sub>.+)/ses-(?P<ses>.+)/.*?_task-(?P<task>.+).*?_acq-(?P<acquisition>.+).*?_run-(?P<run>[0-9]+).*?\.nii.gz'
 	elif typ == "anat":
 	       match_regex = '.+/sub-(?P<sub>.+)/ses-(?P<ses>.+)/anat/.*?_(?P<task>.+).*?_acq-(?P<acquisition>.+)\.nii.gz'
 
@@ -94,9 +94,11 @@ def bids_autofind(bids_dir,
 			substitution["modality"] = datafind_res.outputs.modality[ix]
 		except AttributeError:
 			pass
-		if path_template.format(**substitution) != i:
-			print("Original DataFinder path: "+i)
-			print("Reconstructed path:       "+path_template.format(**substitution))
+		reconstructed_path = path.abspath(path.expanduser(path_template.format(**substitution)))
+		original_path = path.abspath(path.expanduser(i))
+		if reconstructed_path != original_path:
+			print("Original DataFinder path: "+original_path)
+			print("Reconstructed path:       "+reconstructed_path)
 			raise ValueError("The reconstructed file path based on the substitution dictionary and the path template, is not identical to the corresponding path, found by `nipype.interfaces.io.DataFinder`. See string values above.")
 		substitutions.append(substitution)
 

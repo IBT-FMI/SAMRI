@@ -230,7 +230,6 @@ def l1(preprocessing_dir,
 	elif habituation=="confound":
 		level1design.inputs.contrasts = [('stim','T', ["1stim", "2habituation"],[1,0])]
 	else:
-		print(habituation)
 		raise ValueError('The value you have provided for the `habituation` parameter, namely "{}", is invalid. Please choose one of: {{None, False,"","confound","in_main_contrast","separate_contrast"}}'.format(habituation))
 
 	if highpass_sigma or lowpass_sigma:

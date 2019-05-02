@@ -12,7 +12,8 @@ import multiprocessing as mp
 import pandas as pd
 
 
-def ts(img_path, mask,
+def ts(img_path,
+	mask=False,
 	substitution={},
 	):
 	"""
@@ -23,7 +24,7 @@ def ts(img_path, mask,
 
 	img_path : str
 		Path to NIfTI file from which the ROI is to be extracted.
-	maks : nilearn.NiftiMasker or str
+	maks : nilearn.NiftiMasker or str, optional
 		Nilearn `nifti1.Nifti1Image` object to use for masking the desired ROI, or a string specifying the path of a maskfile.
 	substitution : dict, optional
 		A dictionary with keys which include 'subject' and 'session'.

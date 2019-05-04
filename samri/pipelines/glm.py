@@ -24,7 +24,8 @@ from samri.utilities import N_PROCS
 N_PROCS=max(N_PROCS-2, 1)
 
 def l1(preprocessing_dir,
-	bf_path = '~/ni_data/irfs/chr_beta1.txt',
+	bf_path='~/ni_data/irfs/chr_beta1.txt',
+	convolution='gamma',
 	debug=False,
 	exclude={},
 	habituation='confound',
@@ -48,6 +49,8 @@ def l1(preprocessing_dir,
 
 	bf_path : str, optional
 		Basis set path. It should point to a text file in the so-called FEAT/FSL "#2" format (1 entry per volume).
+	convolution : str or dict, optional
+		Select convolution method.
 	exclude : dict
 		A dictionary with any combination of "sessions", "subjects", "tasks" as keys and corresponding identifiers as values.
 		If this is specified matching entries will be excluded in the analysis.
@@ -118,13 +121,21 @@ def l1(preprocessing_dir,
 
 	level1design = pe.Node(interface=Level1Design(), name="level1design")
 	level1design.inputs.interscan_interval = tr
-	if bf_path:
+	if convolution == 'custom':
 		bf_path = path.abspath(path.expanduser(bf_path))
 		level1design.inputs.bases = {"custom": {"bfcustompath":bf_path}}
-	else:
+	elif convolution == 'gamma':
 		# We are not adding derivatives here, as these conflict with the habituation option.
 		# !!! This is not difficult to solve, and would only require the addition of an elif condition to the habituator definition, which would add multiple column copies for each of the derivs.
 		level1design.inputs.bases = {'gamma': {'derivs':True, 'gammasigma':30, 'gammadelay':10}}
+	elif convolution == 'dgamma':
+		# We are not adding derivatives here, as these conflict with the habituation option.
+		# !!! This is not difficult to solve, and would only require the addition of an elif condition to the habituator definition, which would add multiple column copies for each of the derivs.
+		level1design.inputs.bases = {'dgamma': {'derivs':True,}}
+	elif isinstance(convolution, dict):
+		level1design.inputs.bases = convolution
+	else:
+		raise ValueError('You have specified an invalid value for the "convoltion" parameter of.')
 	level1design.inputs.model_serial_correlations = True
 
 	modelgen = pe.Node(interface=fsl.FEATModel(), name='modelgen')
@@ -299,7 +310,7 @@ def l1(preprocessing_dir,
 	if not keep_work:
 		shutil.rmtree(path.join(out_base,workdir_name))
 
-def seed_fc(preprocessing_dir,
+def seed_fc(preprocessing_dir, seed_mask,
 	debug=False,
 	exclude={},
 	highpass_sigma=225,
@@ -374,7 +385,8 @@ def seed_fc(preprocessing_dir,
 	get_scan.inputs.bids_base = preprocessing_dir
 	get_scan.iterables = ("ind_type", ind)
 
-	compute_seed = pe.Node(name='compute_seed', interface=util.Function(function=ts,input_names=inspect.getargspec(ts)[0], output_names=['means',medians]))
+	compute_seed = pe.Node(name='compute_seed', interface=util.Function(function=ts,input_names=inspect.getargspec(ts)[0], output_names=['means','medians']))
+	compute_seed.inputs.mask = seed_mask
 
 	if invert:
 		invert = pe.Node(interface=fsl.ImageMaths(), name="invert")
@@ -479,7 +491,7 @@ def seed_fc(preprocessing_dir,
 		workflow_connections.extend([
 			(get_scan, bandpass, [('nii_path', 'in_file')]),
 			(bandpass, specify_model, [('out_file', 'functional_runs')]),
-			(bandpass, compute_seed, [('out_file', 'in_file')]),
+			(bandpass, compute_seed, [('out_file', 'img_path')]),
 			(bandpass, glm, [('out_file', 'in_file')]),
 			(bandpass, datasink, [('out_file', '@ts_file')]),
 			(get_scan, bandpass, [('nii_name', 'out_file')]),
@@ -487,7 +499,7 @@ def seed_fc(preprocessing_dir,
 	else:
 		workflow_connections.extend([
 			(get_scan, specify_model, [('nii_path', 'functional_runs')]),
-			(get_scan, compute_seed, [('nii_path', 'in_file')]),
+			(get_scan, compute_seed, [('nii_path', 'img_path')]),
 			(get_scan, glm, [('nii_path', 'in_file')]),
 			(get_scan, datasink, [('nii_path', '@ts_file')]),
 			])

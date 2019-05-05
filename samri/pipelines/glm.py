@@ -391,6 +391,10 @@ def seed(preprocessing_dir, seed_mask,
 	compute_seed = pe.Node(name='compute_seed', interface=util.Function(function=ts,input_names=inspect.getargspec(ts)[0], output_names=['means','medians']))
 	compute_seed.inputs.mask = seed_mask
 
+	make_regressor = pe.Node(name='make_regressor', interface=util.Function(function=regressor,input_names=inspect.getargspec(regressor)[0], output_names=['outputs']))
+	make_regressor.inputs.hpf = highpass_sigma
+	make_regressor.inputs.name = 'seed'
+
 	if invert:
 		invert = pe.Node(interface=fsl.ImageMaths(), name="invert")
 		invert.inputs.op_string = '-mul -1'
@@ -402,9 +406,8 @@ def seed(preprocessing_dir, seed_mask,
 
 	level1design = pe.Node(interface=Level1Design(), name="level1design")
 	level1design.inputs.interscan_interval = tr
-	level1design.inputs.bases = {'none': None}
+	level1design.inputs.bases = {'none': {}}
 	level1design.inputs.model_serial_correlations = True
-	level1design.inputs.contrasts = [('allStim','T', ['ev0'],[1])]
 
 	modelgen = pe.Node(interface=fsl.FEATModel(), name='modelgen')
 
@@ -450,7 +453,8 @@ def seed(preprocessing_dir, seed_mask,
 	workflow_connections = [
 		(get_scan, eventfile, [('nii_path', 'timecourse_file')]),
 		(eventfile, specify_model, [('eventfile', 'bids_event_file')]),
-		(specify_model, level1design, [('session_info', 'session_info')]),
+		(compute_seed, make_regressor, [('timecourse', 'timecourse')]),
+		(make_regressor, level1design, [('output', 'session_info')]),
 		(level1design, modelgen, [('ev_files', 'ev_files')]),
 		(level1design, modelgen, [('fsf_files', 'fsf_file')]),
 		(modelgen, glm, [('design_file', 'design')]),
@@ -495,6 +499,7 @@ def seed(preprocessing_dir, seed_mask,
 			(get_scan, bandpass, [('nii_path', 'in_file')]),
 			(bandpass, specify_model, [('out_file', 'functional_runs')]),
 			(bandpass, compute_seed, [('out_file', 'img_path')]),
+			(bandpass, make_regressor, [('out_file', 'scan_path')]),
 			(bandpass, glm, [('out_file', 'in_file')]),
 			(bandpass, datasink, [('out_file', '@ts_file')]),
 			(get_scan, bandpass, [('nii_name', 'out_file')]),
@@ -503,6 +508,7 @@ def seed(preprocessing_dir, seed_mask,
 		workflow_connections.extend([
 			(get_scan, specify_model, [('nii_path', 'functional_runs')]),
 			(get_scan, compute_seed, [('nii_path', 'img_path')]),
+			(get_scan, make_regressor, [('nii_path', 'scan_path')]),
 			(get_scan, glm, [('nii_path', 'in_file')]),
 			(get_scan, datasink, [('nii_path', '@ts_file')]),
 			])

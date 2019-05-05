@@ -773,7 +773,7 @@ def select_from_datafind_df(df,
 
 def regressor(timecourse,
 	scan_path='',
-	name='regressor'
+	name='regressor',
 	hpf=225,
 	):
 	"""
@@ -796,7 +796,7 @@ def regressor(timecourse,
 	regressors = [regressor]
 	my_dict = {}
 	my_dict['cond'] = []
-	my_dict['hpf']
+	my_dict['hpf'] = hpf
 	my_dict['regress'] = regressors
 	my_dict['scans'] = scan_path
 

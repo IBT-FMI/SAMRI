@@ -800,4 +800,5 @@ def regressor(timecourse,
 	my_dict['regress'] = regressors
 	my_dict['scans'] = scan_path
 
-	return [my_dict]
+	output = [my_dict]
+	return output

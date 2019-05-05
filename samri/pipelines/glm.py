@@ -313,7 +313,7 @@ def l1(preprocessing_dir,
 	if not keep_work:
 		shutil.rmtree(path.join(out_base,workdir_name))
 
-def seed_fc(preprocessing_dir, seed_mask,
+def seed(preprocessing_dir, seed_mask,
 	debug=False,
 	exclude={},
 	highpass_sigma=225,
@@ -321,7 +321,7 @@ def seed_fc(preprocessing_dir, seed_mask,
 	include={},
 	keep_work=False,
 	out_base="",
-	mask="",
+	mask='mouse',
 	match={},
 	tr=1,
 	workflow_name="generic",

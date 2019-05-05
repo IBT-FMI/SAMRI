@@ -16,7 +16,7 @@ from nipype.interfaces.fsl.model import Level1Design
 #from nipype.algorithms.modelgen import SpecifyModel
 
 from samri.pipelines.extra_interfaces import SpecifyModel
-from samri.pipelines.extra_functions import select_from_datafind_df, corresponding_eventfile, get_bids_scan, eventfile_add_habituation
+from samri.pipelines.extra_functions import select_from_datafind_df, corresponding_eventfile, get_bids_scan, eventfile_add_habituation, regressor
 from samri.pipelines.utils import bids_dict_to_source, ss_to_path, iterfield_selector, datasource_exclude, bids_dict_to_dir
 from samri.report.roi import ts
 from samri.utilities import N_PROCS
@@ -391,7 +391,7 @@ def seed(preprocessing_dir, seed_mask,
 	compute_seed = pe.Node(name='compute_seed', interface=util.Function(function=ts,input_names=inspect.getargspec(ts)[0], output_names=['means','medians']))
 	compute_seed.inputs.mask = seed_mask
 
-	make_regressor = pe.Node(name='make_regressor', interface=util.Function(function=regressor,input_names=inspect.getargspec(regressor)[0], output_names=['outputs']))
+	make_regressor = pe.Node(name='make_regressor', interface=util.Function(function=regressor,input_names=inspect.getargspec(regressor)[0], output_names=['output']))
 	make_regressor.inputs.hpf = highpass_sigma
 	make_regressor.inputs.name = 'seed'
 
@@ -399,15 +399,11 @@ def seed(preprocessing_dir, seed_mask,
 		invert = pe.Node(interface=fsl.ImageMaths(), name="invert")
 		invert.inputs.op_string = '-mul -1'
 
-	specify_model = pe.Node(interface=SpecifyModel(), name="specify_model")
-	specify_model.inputs.input_units = 'secs'
-	specify_model.inputs.time_repetition = tr
-	specify_model.inputs.high_pass_filter_cutoff = highpass_sigma
-
 	level1design = pe.Node(interface=Level1Design(), name="level1design")
 	level1design.inputs.interscan_interval = tr
 	level1design.inputs.bases = {'none': {}}
 	level1design.inputs.model_serial_correlations = True
+	level1design.inputs.contrasts = [('stim','T', ['seed'],[1])]
 
 	modelgen = pe.Node(interface=fsl.FEATModel(), name='modelgen')
 
@@ -451,9 +447,7 @@ def seed(preprocessing_dir, seed_mask,
 	datasink.inputs.parameterization = False
 
 	workflow_connections = [
-		(get_scan, eventfile, [('nii_path', 'timecourse_file')]),
-		(eventfile, specify_model, [('eventfile', 'bids_event_file')]),
-		(compute_seed, make_regressor, [('timecourse', 'timecourse')]),
+		(compute_seed, make_regressor, [('means', 'timecourse')]),
 		(make_regressor, level1design, [('output', 'session_info')]),
 		(level1design, modelgen, [('ev_files', 'ev_files')]),
 		(level1design, modelgen, [('fsf_files', 'fsf_file')]),
@@ -497,7 +491,6 @@ def seed(preprocessing_dir, seed_mask,
 			bandpass.inputs.lowpass_sigma = tr
 		workflow_connections.extend([
 			(get_scan, bandpass, [('nii_path', 'in_file')]),
-			(bandpass, specify_model, [('out_file', 'functional_runs')]),
 			(bandpass, compute_seed, [('out_file', 'img_path')]),
 			(bandpass, make_regressor, [('out_file', 'scan_path')]),
 			(bandpass, glm, [('out_file', 'in_file')]),
@@ -506,7 +499,6 @@ def seed(preprocessing_dir, seed_mask,
 			])
 	else:
 		workflow_connections.extend([
-			(get_scan, specify_model, [('nii_path', 'functional_runs')]),
 			(get_scan, compute_seed, [('nii_path', 'img_path')]),
 			(get_scan, make_regressor, [('nii_path', 'scan_path')]),
 			(get_scan, glm, [('nii_path', 'in_file')]),

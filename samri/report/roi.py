@@ -29,6 +29,12 @@ def ts(img_path,
 	substitution : dict, optional
 		A dictionary with keys which include 'subject' and 'session'.
 	"""
+	# Imports are needed for usage as nipype nodes.
+	import nibabel as nib
+	import numpy as np
+	from nilearn.input_data import NiftiMasker
+	from os import path
+
 	if substitution:
 		img_path = img_path.format(**substitution)
 	img_path = path.abspath(path.expanduser(img_path))

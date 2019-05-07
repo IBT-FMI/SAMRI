@@ -270,6 +270,8 @@ def significant_signal(data_path,
 		nonzero = full_data[np.nonzero(full_data)]
 		data_min = np.min(nonzero)
 		data_min = data_min*0.49
+		if data_min <= 6.8663624751916035e-46:
+			data_min *=2
 		data[data == 0] = data_min
 	if exclude_ones:
 		data = data[data!=1]

@@ -8,6 +8,7 @@ from copy import deepcopy
 from joblib import Parallel, delayed
 from nilearn.input_data import NiftiMasker
 from samri.utilities import collapse
+from samri.report.utilities import roi_data
 
 try:
 	FileNotFoundError
@@ -264,10 +265,12 @@ def significant_signal(data_path,
 		data = img.get_data()
 		data = data[~np.isnan(data)]
 	# We interpret zero as the lowest p-value, and conservatively estimate it to be equal to just under half of the smallest value in the defined range
-	nonzero = data[np.nonzero(data)]
-	data_min = np.min(nonzero)
-	data_min = data_min*0.49
-	data[data == 0] = data_min
+	if 0 in data:
+		full_data = img.get_data()
+		nonzero = full_data[np.nonzero(full_data)]
+		data_min = np.min(nonzero)
+		data_min = data_min*0.49
+		data[data == 0] = data_min
 	if exclude_ones:
 		data = data[data!=1]
 	data = -np.log10(data)
@@ -277,63 +280,6 @@ def significant_signal(data_path,
 	mean = np.mean(data)
 
 	return mean, median
-
-def df_significant_signal(df,
-	mask_path='',
-	exclude_ones=False,
-	save_as='',
-	n_jobs=False,
-	n_jobs_percentage=0.8,
-	column_string='Significance'
-	):
-	"""
-	Create a `pandas.DataFrame` (optionally savable as `.csv`), containing the means and medians of a number of p-value maps specified by a file template supporting substitution and a substitution list of dictionaries.
-	This function is a Pandas DataFrame based iteration wrapper of `samri.report.snr.significant_signal()` using the SAMRI file_template/substitution model.
-
-	Parameters
-	----------
-
-	df : pandas.DataFrame
-		A BIDS-Information Pandas DataFrame which includes columns named 'path' and named according to all the keys (if any) in the dictionary passed to `inverted_data`.
-	mask_path : str, optional
-		Path to a mask in the same coordinate space as the p-value maps.
-	save_as : str, optional
-		Path to which to save the Pandas DataFrame.
-	column_string : str, optional
-		String to append after 'Mean' and 'Median' to construct the name of the mean and median columns.
-
-	Returns
-	-------
-
-	pandas.DataFrame
-		Pandas DataFrame object containing a row for each analyzed file and columns named 'Mean', 'Median', and (provided the respective key is present in the `sustitutions` variable) 'subject', 'session', 'task', and 'acquisition'.
-	"""
-
-	#Do not overwrite the input object
-	df = deepcopy(df)
-
-	in_files = df['path'].tolist()
-	iter_length = len(in_files)
-
-	# This is an easy jop CPU-wise, but not memory-wise.
-	if not n_jobs:
-		n_jobs = max(int(round(mp.cpu_count()*n_jobs_percentage)),2)
-	iter_data = Parallel(n_jobs=n_jobs, verbose=0, backend="threading")(map(delayed(significant_signal),
-		in_files,
-		[None]*iter_length,
-		[mask_path]*iter_length,
-		[exclude_ones]*iter_length,
-		))
-	df['Mean '+column_string] = [i[0] for i in iter_data]
-	df['Median '+column_string] = [i[1] for i in iter_data]
-
-	if save_as:
-		save_as = path.abspath(path.expanduser(save_as))
-		if save_as.lower().endswith('.csv'):
-			df.to_csv(save_as)
-		else:
-			raise ValueError("Please specify an output path ending in any one of "+",".join((".csv",))+".")
-	return df
 
 def iter_significant_signal(file_template, substitutions,
 	mask_path='',
@@ -381,6 +327,136 @@ def iter_significant_signal(file_template, substitutions,
 			df[field] = [i[field] for i in substitutions]
 		except KeyError:
 			pass
+	if save_as:
+		save_as = path.abspath(path.expanduser(save_as))
+		if save_as.lower().endswith('.csv'):
+			df.to_csv(save_as)
+		else:
+			raise ValueError("Please specify an output path ending in any one of "+",".join((".csv",))+".")
+	return df
+
+def df_significant_signal(df,
+	mask_path='',
+	exclude_ones=False,
+	save_as='',
+	n_jobs=False,
+	n_jobs_percentage=0.8,
+	column_string='Significance',
+	path_column='path',
+	):
+	"""
+	Create a `pandas.DataFrame` (optionally savable as `.csv`), containing the means and medians of a number of p-value maps specified by a file template supporting substitution and a substitution list of dictionaries.
+	This function is a Pandas DataFrame based iteration wrapper of `samri.report.snr.significant_signal()` using the SAMRI file_template/substitution model.
+
+	Parameters
+	----------
+
+	df : pandas.DataFrame
+		A BIDS-Information Pandas DataFrame which includes columns named 'path' and named according to all the keys (if any) in the dictionary passed to `inverted_data`.
+	mask_path : str, optional
+		Path to a mask in the same coordinate space as the p-value maps.
+	save_as : str, optional
+		Path to which to save the Pandas DataFrame.
+	column_string : str, optional
+		String to append after 'Mean' and 'Median' to construct the name of the mean and median columns.
+	path_column : str, optional
+		Column name which identifies the path of the data to analyze.
+
+	Returns
+	-------
+
+	pandas.DataFrame
+		Pandas DataFrame object containing a row for each analyzed file and columns named 'Mean', 'Median', and (provided the respective key is present in the `sustitutions` variable) 'subject', 'session', 'task', and 'acquisition'.
+	"""
+
+	#Do not overwrite the input object
+	df = deepcopy(df)
+
+	in_files = df[path_column].tolist()
+	iter_length = len(in_files)
+
+	# This is an easy jop CPU-wise, but not memory-wise.
+	if not n_jobs:
+		n_jobs = max(int(round(mp.cpu_count()*n_jobs_percentage)),2)
+	iter_data = Parallel(n_jobs=n_jobs, verbose=0, backend="threading")(map(delayed(significant_signal),
+		in_files,
+		[None]*iter_length,
+		[mask_path]*iter_length,
+		[exclude_ones]*iter_length,
+		))
+	df['Mean '+column_string] = [i[0] for i in iter_data]
+	df['Median '+column_string] = [i[1] for i in iter_data]
+
+	if save_as:
+		save_as = path.abspath(path.expanduser(save_as))
+		if save_as.lower().endswith('.csv'):
+			df.to_csv(save_as)
+		else:
+			raise ValueError("Please specify an output path ending in any one of "+",".join((".csv",))+".")
+	return df
+
+def df_roi_data(df,
+	mask_path='',
+	save_as='',
+	n_jobs=False,
+	n_jobs_percentage=0.8,
+	column_string='ROI Value',
+	exclude_zero=False,
+	path_column='path',
+	zero_threshold=0.1,
+	):
+	"""
+	Create a `pandas.DataFrame` (optionally savable as `.csv`), containing new means and medians columns of the values located within a roi in the files specified by the path column of an input DataFrame.
+	This function is a Pandas DataFrame based iteration wrapper of `samri.report.utils.roi_data()`.
+
+	Parameters
+	----------
+
+	df : pandas.DataFrame
+		A BIDS-Information Pandas DataFrame which includes a column named 'path'.
+	exclude_zero : bool, optional
+		Whether to filter out zero values.
+	mask_path : str, optional
+		Path to a mask in the same coordinate space as the p-value maps.
+	save_as : str, optional
+		Path to which to save the Pandas DataFrame.
+	column_string : str, optional
+		String to append after 'Mean' and 'Median' to construct the name of the mean and median columns.
+	path_column : str, optional
+		Column name which identifies the path of the data to analyze.
+	zero_threshold : float, optional
+		Absolute value below which values are to be considered zero.
+
+	Returns
+	-------
+
+	pandas.DataFrame
+		Pandas DataFrame object containing a row for each analyzed file and columns named 'Mean', 'Median', and (provided the respective key is present in the `sustitutions` variable) 'subject', 'session', 'task', and 'acquisition'.
+	"""
+
+	#Do not overwrite the input object
+	df = deepcopy(df)
+
+	in_files = df[path_column].tolist()
+	iter_length = len(in_files)
+
+	# Convert mask path to masker
+	mask_path = path.abspath(path.expanduser(mask_path))
+	mask = NiftiMasker(mask_img=mask_path)
+
+	# This is an easy jop CPU-wise, but not memory-wise.
+	if not n_jobs:
+		n_jobs = max(int(round(mp.cpu_count()*n_jobs_percentage)),2)
+	iter_data = Parallel(n_jobs=n_jobs, verbose=0, backend="threading")(map(delayed(roi_data),
+		in_files,
+		[mask]*iter_length,
+		[None]*iter_length,
+		[exclude_zero]*iter_length,
+		[zero_threshold]*iter_length,
+		))
+	df['Mean '+column_string] = [i[0] for i in iter_data]
+	df['Median '+column_string] = [i[1] for i in iter_data]
+
 	if save_as:
 		save_as = path.abspath(path.expanduser(save_as))
 		if save_as.lower().endswith('.csv'):

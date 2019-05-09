@@ -223,3 +223,41 @@ def collapse(img,
 	data = np.mean(data,axis=(ndim-1))
 	img = nib.nifti1.Nifti1Image(data, img.affine, img.header)
 	return img
+
+def session_irregularity_filter(bids_path, exclude_irregularities):
+	"""
+	Create a Pandas Dataframe recording which session-animal combinations should be excluded, based on an irregularity criterion.
+
+	Parameters
+	----------
+
+	bids_path: str
+		Path to the root of the BIDS directory containing `_sessions.tsv` files.
+	exclude_irregularities: list of str
+		Irregularity strings which will disqualify a scan.
+		The logic for the exclusion is "any", if even one of the irregularities is present, the scan will be disqualified.
+	"""
+
+	bids_path = os.path.abspath(os.path.expanduser(bids_path))
+
+	sessions = []
+	for sub_dir in os.listdir(bids_path):
+		sub_path = os.path.join(bids_path,sub_dir)
+		if os.path.isdir(sub_path) and sub_dir[:4] == 'sub-':
+			session_file = os.path.join(sub_path,'{}_sessions.tsv'.format(sub_dir))
+			if os.path.isfile(session_file):
+				_df = pd.read_csv(session_file, sep='\t')
+				subject = sub_dir[4:]
+				for ix, row in _df.iterrows():
+					ses_entry = {}
+					session = row['session_id'][4:]
+					irregularities = row['irregularities']
+					ses_entry['subject'] = subject
+					ses_entry['session'] = session
+					ses_entry['irregularities'] = irregularities
+					try:
+						ses_entry['exclude'] = any(i in irregularities for i in exclude_irregularities)
+					except TypeError:
+						ses_entry['exclude'] = False
+					sessions.append(ses_entry)
+	return pd.DataFrame(sessions)

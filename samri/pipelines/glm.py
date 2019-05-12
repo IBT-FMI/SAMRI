@@ -411,12 +411,7 @@ def seed(preprocessing_dir, seed_mask,
 	modelgen = pe.Node(interface=fsl.FEATModel(), name='modelgen')
 
 	glm = pe.Node(interface=fsl.GLM(), name='glm', iterfield='design')
-#	glm.inputs.out_cope = "cope.nii.gz"
-#	glm.inputs.out_varcb_name = "varcb.nii.gz"
-#	#not setting a betas output file might lead to beta export in lieu of COPEs
-#	glm.inputs.out_file = "betas.nii.gz"
-#	glm.inputs.out_t_name = "t_stat.nii.gz"
-#	glm.inputs.out_p_name = "p_stat.nii.gz"
+
 	if mask == 'mouse':
 		mask = '/usr/share/mouse-brain-atlases/dsurqec_200micron_mask.nii'
 		glm.inputs.mask = path.abspath(path.expanduser(mask))

@@ -123,7 +123,7 @@ def l1(preprocessing_dir,
 	level1design = pe.Node(interface=Level1Design(), name="level1design")
 	level1design.inputs.interscan_interval = tr
 	if bf_path:
-		convolution == 'custom'
+		convolution = 'custom'
 	if convolution == 'custom':
 		bf_path = path.abspath(path.expanduser(bf_path))
 		level1design.inputs.bases = {"custom": {"bfcustompath":bf_path}}
@@ -233,7 +233,10 @@ def l1(preprocessing_dir,
 			])
 	if not habituation:
 		specify_model.inputs.bids_condition_column = ''
-		level1design.inputs.contrasts = [('allStim','T', ['ev0'],[1])]
+		if convolution == 'custom':
+			level1design.inputs.contrasts = [('allStim','T', ['ev0'],[1])]
+		elif convolution in ['gamma','dgamma']:
+			level1design.inputs.contrasts = [('allStim','T', ['ev0','ev1'],[1,1])]
 		workflow_connections.extend([
 			(eventfile, specify_model, [('eventfile', 'bids_event_file')]),
 			])

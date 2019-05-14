@@ -24,7 +24,7 @@ from samri.utilities import N_PROCS
 N_PROCS=max(N_PROCS-2, 1)
 
 def l1(preprocessing_dir,
-	bf_path = '~/ni_data/irfs/chr_beta1.txt',
+	bf_path='~/ni_data/irfs/chr_beta1.txt',
 	debug=False,
 	exclude={},
 	habituation='confound',

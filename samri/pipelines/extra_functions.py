@@ -771,3 +771,34 @@ def select_from_datafind_df(df,
 
 	return selection
 
+def regressor(timecourse,
+	scan_path='',
+	name='regressor',
+	hpf=225,
+	):
+	"""
+	Create a regressor dictionary appropriate for usage as a `nipype.interfaces.fsl.model.Level1Design()` input value for the `session_info` parameter.
+
+	Parameters
+	----------
+	timecourse : list or numpy.ndarray
+		List or NumPy array containing the extracted regressor timecourse.
+	scan_path : str, opional
+		Path to the prospective scan to be analyzed, should have a temporal (4th NIfTI) dimension equal to the length of the timecourse parameter.
+	name : str, optional
+		Name for the regressor.
+	hpf : high-pass filter used for the model
+	"""
+
+	regressor = {}
+	regressor['name'] = name
+	regressor['val'] = timecourse
+	regressors = [regressor]
+	my_dict = {}
+	my_dict['cond'] = []
+	my_dict['hpf'] = hpf
+	my_dict['regress'] = regressors
+	my_dict['scans'] = scan_path
+
+	output = [my_dict]
+	return output

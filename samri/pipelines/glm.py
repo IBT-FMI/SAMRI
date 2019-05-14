@@ -16,7 +16,7 @@ from nipype.interfaces.fsl.model import Level1Design
 #from nipype.algorithms.modelgen import SpecifyModel
 
 from samri.pipelines.extra_interfaces import SpecifyModel
-from samri.pipelines.extra_functions import select_from_datafind_df, corresponding_eventfile, get_bids_scan, eventfile_add_habituation
+from samri.pipelines.extra_functions import select_from_datafind_df, corresponding_eventfile, get_bids_scan, eventfile_add_habituation, regressor
 from samri.pipelines.utils import bids_dict_to_source, ss_to_path, iterfield_selector, datasource_exclude, bids_dict_to_dir
 from samri.report.roi import ts
 from samri.utilities import N_PROCS
@@ -24,7 +24,8 @@ from samri.utilities import N_PROCS
 N_PROCS=max(N_PROCS-2, 1)
 
 def l1(preprocessing_dir,
-	bf_path='~/ni_data/irfs/chr_beta1.txt',
+	bf_path='',
+	convolution='gamma',
 	debug=False,
 	exclude={},
 	habituation='confound',
@@ -48,6 +49,9 @@ def l1(preprocessing_dir,
 
 	bf_path : str, optional
 		Basis set path. It should point to a text file in the so-called FEAT/FSL "#2" format (1 entry per volume).
+		If selected, this overrides the `convolution` option and sets it to "custom".
+	convolution : str or dict, optional
+		Select convolution method.
 	exclude : dict
 		A dictionary with any combination of "sessions", "subjects", "tasks" as keys and corresponding identifiers as values.
 		If this is specified matching entries will be excluded in the analysis.
@@ -119,12 +123,22 @@ def l1(preprocessing_dir,
 	level1design = pe.Node(interface=Level1Design(), name="level1design")
 	level1design.inputs.interscan_interval = tr
 	if bf_path:
+		convolution = 'custom'
+	if convolution == 'custom':
 		bf_path = path.abspath(path.expanduser(bf_path))
 		level1design.inputs.bases = {"custom": {"bfcustompath":bf_path}}
-	else:
+	elif convolution == 'gamma':
 		# We are not adding derivatives here, as these conflict with the habituation option.
 		# !!! This is not difficult to solve, and would only require the addition of an elif condition to the habituator definition, which would add multiple column copies for each of the derivs.
 		level1design.inputs.bases = {'gamma': {'derivs':True, 'gammasigma':30, 'gammadelay':10}}
+	elif convolution == 'dgamma':
+		# We are not adding derivatives here, as these conflict with the habituation option.
+		# !!! This is not difficult to solve, and would only require the addition of an elif condition to the habituator definition, which would add multiple column copies for each of the derivs.
+		level1design.inputs.bases = {'dgamma': {'derivs':True,}}
+	elif isinstance(convolution, dict):
+		level1design.inputs.bases = convolution
+	else:
+		raise ValueError('You have specified an invalid value for the "convoltion" parameter of.')
 	level1design.inputs.model_serial_correlations = True
 
 	modelgen = pe.Node(interface=fsl.FEATModel(), name='modelgen')
@@ -219,7 +233,10 @@ def l1(preprocessing_dir,
 			])
 	if not habituation:
 		specify_model.inputs.bids_condition_column = ''
-		level1design.inputs.contrasts = [('allStim','T', ['ev0'],[1])]
+		if convolution == 'custom':
+			level1design.inputs.contrasts = [('allStim','T', ['ev0'],[1])]
+		elif convolution in ['gamma','dgamma']:
+			level1design.inputs.contrasts = [('allStim','T', ['ev0','ev1'],[1,1])]
 		workflow_connections.extend([
 			(eventfile, specify_model, [('eventfile', 'bids_event_file')]),
 			])
@@ -299,7 +316,7 @@ def l1(preprocessing_dir,
 	if not keep_work:
 		shutil.rmtree(path.join(out_base,workdir_name))
 
-def seed_fc(preprocessing_dir,
+def seed(preprocessing_dir, seed_mask,
 	debug=False,
 	exclude={},
 	highpass_sigma=225,
@@ -307,7 +324,7 @@ def seed_fc(preprocessing_dir,
 	include={},
 	keep_work=False,
 	out_base="",
-	mask="",
+	mask='mouse',
 	match={},
 	tr=1,
 	workflow_name="generic",
@@ -374,32 +391,27 @@ def seed_fc(preprocessing_dir,
 	get_scan.inputs.bids_base = preprocessing_dir
 	get_scan.iterables = ("ind_type", ind)
 
-	compute_seed = pe.Node(name='compute_seed', interface=util.Function(function=ts,input_names=inspect.getargspec(ts)[0], output_names=['means',medians]))
+	compute_seed = pe.Node(name='compute_seed', interface=util.Function(function=ts,input_names=inspect.getargspec(ts)[0], output_names=['means','medians']))
+	compute_seed.inputs.mask = seed_mask
+
+	make_regressor = pe.Node(name='make_regressor', interface=util.Function(function=regressor,input_names=inspect.getargspec(regressor)[0], output_names=['output']))
+	make_regressor.inputs.hpf = highpass_sigma
+	make_regressor.inputs.name = 'seed'
 
 	if invert:
 		invert = pe.Node(interface=fsl.ImageMaths(), name="invert")
 		invert.inputs.op_string = '-mul -1'
 
-	specify_model = pe.Node(interface=SpecifyModel(), name="specify_model")
-	specify_model.inputs.input_units = 'secs'
-	specify_model.inputs.time_repetition = tr
-	specify_model.inputs.high_pass_filter_cutoff = highpass_sigma
-
 	level1design = pe.Node(interface=Level1Design(), name="level1design")
 	level1design.inputs.interscan_interval = tr
-	level1design.inputs.bases = {'none': None}
+	level1design.inputs.bases = {'none': {}}
 	level1design.inputs.model_serial_correlations = True
-	level1design.inputs.contrasts = [('allStim','T', ['ev0'],[1])]
+	level1design.inputs.contrasts = [('stim','T', ['seed'],[1])]
 
 	modelgen = pe.Node(interface=fsl.FEATModel(), name='modelgen')
 
 	glm = pe.Node(interface=fsl.GLM(), name='glm', iterfield='design')
-#	glm.inputs.out_cope = "cope.nii.gz"
-#	glm.inputs.out_varcb_name = "varcb.nii.gz"
-#	#not setting a betas output file might lead to beta export in lieu of COPEs
-#	glm.inputs.out_file = "betas.nii.gz"
-#	glm.inputs.out_t_name = "t_stat.nii.gz"
-#	glm.inputs.out_p_name = "p_stat.nii.gz"
+
 	if mask == 'mouse':
 		mask = '/usr/share/mouse-brain-atlases/dsurqec_200micron_mask.nii'
 		glm.inputs.mask = path.abspath(path.expanduser(mask))
@@ -433,9 +445,8 @@ def seed_fc(preprocessing_dir,
 	datasink.inputs.parameterization = False
 
 	workflow_connections = [
-		(get_scan, eventfile, [('nii_path', 'timecourse_file')]),
-		(eventfile, specify_model, [('eventfile', 'bids_event_file')]),
-		(specify_model, level1design, [('session_info', 'session_info')]),
+		(compute_seed, make_regressor, [('means', 'timecourse')]),
+		(make_regressor, level1design, [('output', 'session_info')]),
 		(level1design, modelgen, [('ev_files', 'ev_files')]),
 		(level1design, modelgen, [('fsf_files', 'fsf_file')]),
 		(modelgen, glm, [('design_file', 'design')]),
@@ -478,16 +489,16 @@ def seed_fc(preprocessing_dir,
 			bandpass.inputs.lowpass_sigma = tr
 		workflow_connections.extend([
 			(get_scan, bandpass, [('nii_path', 'in_file')]),
-			(bandpass, specify_model, [('out_file', 'functional_runs')]),
-			(bandpass, compute_seed, [('out_file', 'in_file')]),
+			(bandpass, compute_seed, [('out_file', 'img_path')]),
+			(bandpass, make_regressor, [('out_file', 'scan_path')]),
 			(bandpass, glm, [('out_file', 'in_file')]),
 			(bandpass, datasink, [('out_file', '@ts_file')]),
 			(get_scan, bandpass, [('nii_name', 'out_file')]),
 			])
 	else:
 		workflow_connections.extend([
-			(get_scan, specify_model, [('nii_path', 'functional_runs')]),
-			(get_scan, compute_seed, [('nii_path', 'in_file')]),
+			(get_scan, compute_seed, [('nii_path', 'img_path')]),
+			(get_scan, make_regressor, [('nii_path', 'scan_path')]),
 			(get_scan, glm, [('nii_path', 'in_file')]),
 			(get_scan, datasink, [('nii_path', '@ts_file')]),
 			])

@@ -36,6 +36,7 @@ def l1(preprocessing_dir,
 	out_base="",
 	mask="",
 	match={},
+	temporal_derivatives=True,
 	tr=1,
 	workflow_name="generic",
 	modality="cbv",
@@ -79,6 +80,8 @@ def l1(preprocessing_dir,
 		This has to point to an existing NIfTI file containing zero and one values only.
 	n_jobs_percentage : float, optional
 		Percentage of the cores present on the machine which to maximally use for deploying jobs in parallel.
+	temporal_derivatives : int, optional
+		Whether to add temporal derivatives of the main regressors in the model. This only applies if the convolution parameter is set to 'dgamma' or 'gamma'.
 	tr : int, optional
 		Repetition time, in seconds.
 	workflow_name : str, optional
@@ -130,11 +133,11 @@ def l1(preprocessing_dir,
 	elif convolution == 'gamma':
 		# We are not adding derivatives here, as these conflict with the habituation option.
 		# !!! This is not difficult to solve, and would only require the addition of an elif condition to the habituator definition, which would add multiple column copies for each of the derivs.
-		level1design.inputs.bases = {'gamma': {'derivs':True, 'gammasigma':30, 'gammadelay':10}}
+		level1design.inputs.bases = {'gamma': {'derivs':temporal_derivatives, 'gammasigma':30, 'gammadelay':10}}
 	elif convolution == 'dgamma':
 		# We are not adding derivatives here, as these conflict with the habituation option.
 		# !!! This is not difficult to solve, and would only require the addition of an elif condition to the habituator definition, which would add multiple column copies for each of the derivs.
-		level1design.inputs.bases = {'dgamma': {'derivs':True,}}
+		level1design.inputs.bases = {'dgamma': {'derivs':temporal_derivatives,}}
 	elif isinstance(convolution, dict):
 		level1design.inputs.bases = convolution
 	else:
@@ -175,10 +178,13 @@ def l1(preprocessing_dir,
 	pstat_filename.inputs.source_format = out_file_name_base.format('pstat','nii.gz')
 	pfstat_filename = pe.Node(name='pfstat_filename', interface=util.Function(function=bids_dict_to_source,input_names=inspect.getargspec(bids_dict_to_source)[0], output_names=['filename']))
 	pfstat_filename.inputs.source_format = out_file_name_base.format('pfstat','nii.gz')
-	design_filename = pe.Node(name='design', interface=util.Function(function=bids_dict_to_source,input_names=inspect.getargspec(bids_dict_to_source)[0], output_names=['filename']))
+	design_filename = pe.Node(name='design_filename', interface=util.Function(function=bids_dict_to_source,input_names=inspect.getargspec(bids_dict_to_source)[0], output_names=['filename']))
 	design_filename.inputs.source_format = out_file_name_base.format('design','mat')
+	designimage_filename = pe.Node(name='designimage_filename', interface=util.Function(function=bids_dict_to_source,input_names=inspect.getargspec(bids_dict_to_source)[0], output_names=['filename']))
+	designimage_filename.inputs.source_format = out_file_name_base.format('design','png')
 
 	design_rename = pe.Node(interface=util.Rename(), name='design_rename')
+	designimage_rename = pe.Node(interface=util.Rename(), name='designimage_rename')
 
 	datasink = pe.Node(nio.DataSink(), name='datasink')
 	datasink.inputs.base_directory = path.join(out_base,workflow_name)
@@ -200,6 +206,7 @@ def l1(preprocessing_dir,
 		(get_scan, pstat_filename, [('dict_slice', 'bids_dictionary')]),
 		(get_scan, pfstat_filename, [('dict_slice', 'bids_dictionary')]),
 		(get_scan, design_filename, [('dict_slice', 'bids_dictionary')]),
+		(get_scan, designimage_filename, [('dict_slice', 'bids_dictionary')]),
 		(betas_filename, glm, [('filename', 'out_file')]),
 		(cope_filename, glm, [('filename', 'out_cope')]),
 		(varcb_filename, glm, [('filename', 'out_varcb_name')]),
@@ -208,7 +215,9 @@ def l1(preprocessing_dir,
 		(pstat_filename, glm, [('filename', 'out_p_name')]),
 		(pfstat_filename, glm, [('filename', 'out_pf_name')]),
 		(modelgen, design_rename, [('design_file', 'in_file')]),
+		(modelgen, designimage_rename, [('design_image', 'in_file')]),
 		(design_filename, design_rename, [('filename', 'format_string')]),
+		(designimage_filename, designimage_rename, [('filename', 'format_string')]),
 		(glm, datasink, [('out_pf', '@pfstat')]),
 		(glm, datasink, [('out_p', '@pstat')]),
 		(glm, datasink, [('out_z', '@zstat')]),
@@ -217,6 +226,7 @@ def l1(preprocessing_dir,
 		(glm, datasink, [('out_varcb', '@varcb')]),
 		(glm, datasink, [('out_file', '@betas')]),
 		(design_rename, datasink, [('out_file', '@design')]),
+		(designimage_rename, datasink, [('out_file', '@designimage')]),
 		]
 
 	if habituation:

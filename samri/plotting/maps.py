@@ -7,6 +7,7 @@ import subprocess
 import sys
 import io
 import os
+import hashlib
 
 #Here we import internal nilearn functions, YOLO!
 from nilearn._utils.niimg import _safe_get_data
@@ -549,10 +550,19 @@ def _create_3Dplot(stat_maps,
 				cli.append('-c'),
 				cli.append(col_plus)
 
+	s = ""
+	for path in obj_paths:
+		if not path is None:
+			s = s + hashlib.md5(open(path,'rb').read()).hexdigest()
+	filename_3Dplot = "3Dplot_{}.png".format(s)
+	cli.append('-n')
+	cli.append(filename_3Dplot)
+
 	#python script cannot be run directly, need to start blender in background via command line, then run script.
 	subprocess.run(cli,check=True,stdout=open(os.devnull,'wb'))
 
-	mesh = plt.imread('/tmp/3Dplot.png')
+	path_3Dplot = "/tmp/{}".format(filename_3Dplot)
+	mesh = plt.imread(path_3Dplot)
 
 	#assure best fit into existing plot, trim img data matrix
 	dims = np.shape(mesh)
@@ -569,10 +579,13 @@ def _create_3Dplot(stat_maps,
 		bbox.append([idx_i[0]+1, idx_i[1]+1])
 	mesh_trimmed = mesh[bbox[0][0] : bbox[0][1] ,bbox[1][0] : bbox[1][1] , :]
 
-	#delete obj files:
+	#delete temp files:
 	for path in obj_paths:
 		if not path is None:
-			if os.path.exists(path):os.remove(path)
+			if os.path.exists(path):
+				os.remove(path)
+	if os.path.exists(path_3Dplot):
+		os.remove(path_3Dplot)
 
 	return mesh_trimmed
 

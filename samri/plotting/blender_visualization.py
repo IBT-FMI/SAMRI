@@ -23,6 +23,7 @@ parser.add_argument('--template_path','-t',type=str,default="")
 parser.add_argument('--output_path','-o',type=str,default="")
 parser.add_argument('--stat_map_path','-s',action='append',type=str)
 parser.add_argument('--stat_map_color','-c',action='append',type=str)#Should be a list
+parser.add_argument('--filename','-n',type=str)
 
 
 args = parser.parse_args(argv)
@@ -268,5 +269,6 @@ Camera.scale[0]= 1
 Camera.scale[1]= 1
 Camera.scale[2]= 1
 
-take_pic("3Dplot")
+take_pic(args.filename)
+
 

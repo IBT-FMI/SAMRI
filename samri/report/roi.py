@@ -11,6 +11,44 @@ import statsmodels.formula.api as smf
 import multiprocessing as mp
 import pandas as pd
 
+
+def ts(img_path,
+	mask=False,
+	substitution={},
+	):
+	"""
+	Return the mean and median of a Region of Interest (ROI) time course.
+
+	Parameters
+	----------
+
+	img_path : str
+		Path to NIfTI file from which the ROI is to be extracted.
+	maks : nilearn.NiftiMasker or str, optional
+		Nilearn `nifti1.Nifti1Image` object to use for masking the desired ROI, or a string specifying the path of a maskfile.
+	substitution : dict, optional
+		A dictionary with keys which include 'subject' and 'session'.
+	"""
+	# Imports are needed for usage as nipype nodes.
+	import nibabel as nib
+	import numpy as np
+	from nilearn.input_data import NiftiMasker
+	from os import path
+
+	if substitution:
+		img_path = img_path.format(**substitution)
+	img_path = path.abspath(path.expanduser(img_path))
+	img = nib.load(img_path)
+	try:
+		masked_data = mask.fit_transform(img)
+	except:
+		mask = path.abspath(path.expanduser(mask))
+		mask = NiftiMasker(mask_img=mask)
+		masked_data = mask.fit_transform(img).T
+	ts_means = np.mean(masked_data, axis=0)
+	ts_medians = np.mean(masked_data, axis=0)
+	return ts_means, ts_medians
+
 def from_img_threshold(image, threshold,
 	two_tailed=False,
 	save_as='',

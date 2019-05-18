@@ -693,7 +693,7 @@ def get_data_selection(workflow_base,
 											line_considered = True
 											if scan_subdir_resolved:
 												break
-											if re.match(r'^(?!/)<[a-zA-Z0-9-_]+?>[\r\n]+', line):
+											if re.match(r'^(?!/)<[a-zA-Z0-9-_]+?-[a-zA-Z0-9-_]+?>[\r\n]+', line):
 												if fail_suffix and re.match(r'^.+?{}$'.format(fail_suffix), line):
 													continue
 												number = sub_sub_dir
@@ -729,7 +729,10 @@ def get_data_selection(workflow_base,
 				print('Could not open {}'.format(os.path.join(workflow_base,sub_dir,"subject")))
 				pass
 	data_selection = pd.DataFrame(selected_measurements)
-	shutil.rmtree(bids_temppath)
+	try:
+		shutil.rmtree(bids_temppath)
+	except PermissionError:
+		pass
 	return data_selection
 
 def select_from_datafind_df(df,
@@ -756,6 +759,7 @@ def select_from_datafind_df(df,
 				df=df[df[key].isin(bids_dictionary[key])]
 	if bids_dictionary_override:
 		for key in bids_dictionary_override:
+			if bids_dictionary_override[key] != '':
 				df=df[df[key]==bids_dictionary_override[key]]
 
 	if list_output:
@@ -767,3 +771,34 @@ def select_from_datafind_df(df,
 
 	return selection
 
+def regressor(timecourse,
+	scan_path='',
+	name='regressor',
+	hpf=225,
+	):
+	"""
+	Create a regressor dictionary appropriate for usage as a `nipype.interfaces.fsl.model.Level1Design()` input value for the `session_info` parameter.
+
+	Parameters
+	----------
+	timecourse : list or numpy.ndarray
+		List or NumPy array containing the extracted regressor timecourse.
+	scan_path : str, opional
+		Path to the prospective scan to be analyzed, should have a temporal (4th NIfTI) dimension equal to the length of the timecourse parameter.
+	name : str, optional
+		Name for the regressor.
+	hpf : high-pass filter used for the model
+	"""
+
+	regressor = {}
+	regressor['name'] = name
+	regressor['val'] = timecourse
+	regressors = [regressor]
+	my_dict = {}
+	my_dict['cond'] = []
+	my_dict['hpf'] = hpf
+	my_dict['regress'] = regressors
+	my_dict['scans'] = scan_path
+
+	output = [my_dict]
+	return output

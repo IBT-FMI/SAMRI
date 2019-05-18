@@ -100,6 +100,9 @@ def create_mesh(stat_map,threshold,
 	##TODO: stat_map also possibly already a Nifit1Image, adjust
 	img= nibabel.load(stat_map)
 	img_data = img.get_fdata()
+	if numpy.max(numpy.isinf(img_data)):
+		print("Warning: Infinite values detected; plotting at 0.")
+	img_data = numpy.nan_to_num(img_data)
 	neg = False
 
 	if negative_only:
@@ -114,9 +117,9 @@ def create_mesh(stat_map,threshold,
 	#save mesh as .obj
 	filename = os.path.basename(stat_map)
 	filename_prefix = filename.split(".")[0]
-	path = "/var/tmp/"
-	output_file = filename_prefix + "_pos_mesh.obj"
-	if neg: output_file = filename_prefix + "_neg_mesh.obj"
+	path = '/tmp/'
+	output_file = filename_prefix + '_pos_mesh.obj'
+	if neg: output_file = filename_prefix + '_neg_mesh.obj'
 	output_path = os.path.join(path,output_file)
 	write_obj(output_path,verts,faces,normals,values,affine = img.affine,one=one)
 

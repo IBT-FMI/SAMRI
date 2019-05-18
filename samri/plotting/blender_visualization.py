@@ -5,7 +5,7 @@ import sys
 import argparse
 
 ## Example call from commandline: blender -b -P decimate_mesh_blender.py -- -f mesh.obj -o mesh_dec.obj -r 0.5 -i 2 -n 4 -l 0.5
-## Blender will ignore all options after -- so parameters can be passed to python script. 
+## Blender will ignore all options after -- so parameters can be passed to python script.
 
 # get the args passed to blender after "--", all of which are ignored by
 # blender so scripts may receive their own arguments
@@ -29,36 +29,36 @@ parser.add_argument('--filename','-n',type=str)
 args = parser.parse_args(argv)
 
 def hex_to_rgb(value):
-    gamma = 2.2
-    value = value.lstrip('#')
-    lv = len(value)
-    fin = list(int(value[i:i + lv // 3], 16) for i in range(0, lv, lv // 3))
-    r = pow(fin[0] / 255, gamma)
-    g = pow(fin[1] / 255, gamma)
-    b = pow(fin[2] / 255, gamma)
-    fin.clear()
-    fin.append(r)
-    fin.append(g)
-    fin.append(b)
-    fin.append(1.0)
-    return tuple(fin)
+	gamma = 2.2
+	value = value.lstrip('#')
+	lv = len(value)
+	fin = list(int(value[i:i + lv // 3], 16) for i in range(0, lv, lv // 3))
+	r = pow(fin[0] / 255, gamma)
+	g = pow(fin[1] / 255, gamma)
+	b = pow(fin[2] / 255, gamma)
+	fin.clear()
+	fin.append(r)
+	fin.append(g)
+	fin.append(b)
+	fin.append(1.0)
+	return tuple(fin)
 
 
 color=[]
 for c in args.stat_map_color:
-    print(c)
-    color.append(hex_to_rgb(c))
+	print(c)
+	color.append(hex_to_rgb(c))
 
 
 ##Function to deselect all objects
 def deselect():
-    for obj in bpy.data.objects:
-        obj.select = False
+	for obj in bpy.data.objects:
+		obj.select = False
 
 ##File path
 #path = os.path.abspath('.')
 #path = os.path.abspath('.')
-path =  "/var/tmp/"
+path = '/tmp/'
 
 
 ## Set Basic Scene: Import reference atlas mesh and desired gene expression/connectivity meshed
@@ -66,7 +66,7 @@ path =  "/var/tmp/"
 
 #Get rid of blender default objects
 for obj in bpy.data.objects:
-    obj.select = True
+	obj.select = True
 bpy.ops.object.delete()
 
 #Import Reference Atlas
@@ -74,10 +74,10 @@ bpy.ops.import_scene.obj(filepath= args.template_path)
 Atlas = bpy.context.selected_objects[0]
 
 #Import Gene data
-GeneData = []
+gene_data = []
 for stat_map in args.stat_map_path:
-    bpy.ops.import_scene.obj(filepath= stat_map)
-    GeneData.append(bpy.context.selected_objects[0])
+	bpy.ops.import_scene.obj(filepath= stat_map)
+	gene_data.append(bpy.context.selected_objects[0])
 
 #Add a lamp, set location and rotation
 bpy.ops.object.lamp_add(type='SUN', radius=1, view_align=False, location=(0, -10, 10), layers=(True, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False))
@@ -158,32 +158,32 @@ MatGenes.append(bpy.data.materials.new(name="gene_material_2"))
 
 i = 0
 for col in color:
-    MatGenes[i].diffuse_color = (col[0],col[1],col[2])
-    i = i+1
+	MatGenes[i].diffuse_color = (col[0],col[1],col[2])
+	i = i+1
 
 #Apply colours
 if Atlas.data.materials:
-    # assign to 1st material slot
-    Atlas.data.materials[0] = MatAtlas
+	# assign to 1st material slot
+	Atlas.data.materials[0] = MatAtlas
 else:
-    # no slots
-    Atlas.data.materials.append(MatAtlas)
+	# no slots
+	Atlas.data.materials.append(MatAtlas)
 
 i = 0
-for stat_map in args.stat_map_path:   
-    if GeneData[i].data.materials:
-        # assign to 1st material slot
-        GeneData[i].data.materials[0] = MatGenes[i]
-    else:
-        # no slots
-        GeneData[i].data.materials.append(MatGenes[i])
-    i += 1 
+for stat_map in args.stat_map_path:
+	if gene_data[i].data.materials:
+		# assign to 1st material slot
+		gene_data[i].data.materials[0] = MatGenes[i]
+	else:
+		# no slots
+		gene_data[i].data.materials.append(MatGenes[i])
+	i += 1
 
 
 #Try to rotate camera around the brain and render different angles.
 
 #for step in range(0, step_count):
-#    origin.rotation_euler[2] = radians(step * (360.0 / step_count))
+#	origin.rotation_euler[2] = radians(step * (360.0 / step_count))
 #
 deselect()
 
@@ -194,72 +194,72 @@ bpy.data.scenes["Scene"].camera = Camera
 #bpy.ops.render.render( write_still=True )
 
 Atlas.select=True
-for Gene in GeneData:
-    Gene.select = True
+for Gene in gene_data:
+	Gene.select = True
 #bpy.ops.transform.rotate(value=1.21921, axis=(-0.00457997, 0.716912, -0.697148), constraint_axis=(False, False, False), constraint_orientation='GLOBAL', mirror=False, proportional='DISABLED', proportional_edit_falloff='SMOOTH', proportional_size=1)
 
 
 ## Set camera to point to Atlas
 def look_at(obj_camera, point):
-    loc_camera = Camera.location
+	loc_camera = Camera.location
 
-    direction = point - loc_camera
-    # point the cameras '-Z' and use its 'Y' as up
-    rot_quat = direction.to_track_quat('-Z', 'Y')
+	direction = point - loc_camera
+	# point the cameras '-Z' and use its 'Y' as up
+	rot_quat = direction.to_track_quat('-Z', 'Y')
 
-    # assume we're using euler rotation
-    obj_camera.rotation_euler = rot_quat.to_euler()
+	# assume we're using euler rotation
+	obj_camera.rotation_euler = rot_quat.to_euler()
 
 
 #Set camera to a specific location, render and save image
-def TakePic_Loc(FileName,loc):
-    Camera.location = loc
-    deselect()
-    Camera.select= True
-    bpy.context.object.rotation_mode = 'XYZ'
-    look_at(Camera,Atlas.location)
-    #bpy.ops.transform.rotate(value=-3.14, constraint_axis=(True, False, False), constraint_orientation='LOCAL', mirror=False, proportional='DISABLED', proportional_edit_falloff='SMOOTH', proportional_size=1)
-    #bpy.ops.transform.rotate(value=3.14, axis=(0, 0, -1), constraint_axis=(False, False, False), constraint_orientation='GLOBAL', mirror=False, proportional='DISABLED', proportional_edit_falloff='SMOOTH', proportional_size=1)
-    bpy.context.scene.render.alpha_mode = 'TRANSPARENT'
-    bpy.context.scene.render.layers["RenderLayer"].use_sky = False
-    bpy.context.scene.render.image_settings.file_format = 'PNG'
-    bpy.context.scene.render.image_settings.color_depth = '16'
-    bpy.context.scene.render.image_settings.color_mode = 'RGBA'
-    bpy.context.scene.render.resolution_x = 3000
-    bpy.context.scene.render.resolution_y = 5250
-    bpy.data.scenes["Scene"].render.filepath = path + "/" + FileName
-    bpy.ops.render.render( write_still=True )
-    
+def take_pic_Loc(file_name,loc):
+	Camera.location = loc
+	deselect()
+	Camera.select= True
+	bpy.context.object.rotation_mode = 'XYZ'
+	look_at(Camera,Atlas.location)
+	#bpy.ops.transform.rotate(value=-3.14, constraint_axis=(True, False, False), constraint_orientation='LOCAL', mirror=False, proportional='DISABLED', proportional_edit_falloff='SMOOTH', proportional_size=1)
+	#bpy.ops.transform.rotate(value=3.14, axis=(0, 0, -1), constraint_axis=(False, False, False), constraint_orientation='GLOBAL', mirror=False, proportional='DISABLED', proportional_edit_falloff='SMOOTH', proportional_size=1)
+	bpy.context.scene.render.alpha_mode = 'TRANSPARENT'
+	bpy.context.scene.render.layers["RenderLayer"].use_sky = False
+	bpy.context.scene.render.image_settings.file_format = 'PNG'
+	bpy.context.scene.render.image_settings.color_depth = '16'
+	bpy.context.scene.render.image_settings.color_mode = 'RGBA'
+	bpy.context.scene.render.resolution_x = 3000
+	bpy.context.scene.render.resolution_y = 5250
+	bpy.data.scenes["Scene"].render.filepath = path + "/" + file_name
+	bpy.ops.render.render( write_still=True )
+
 #render and save image
-def TakePic(FileName):
-    deselect()
-    Camera.select= True
-    #bpy.ops.transform.rotate(value=-3.14, constraint_axis=(True, False, False), constraint_orientation='LOCAL', mirror=False, proportional='DISABLED', proportional_edit_falloff='SMOOTH', proportional_size=1)
-    #bpy.ops.transform.rotate(value=3.14, axis=(0, 0, -1), constraint_axis=(False, False, False), constraint_orientation='GLOBAL', mirror=False, proportional='DISABLED', proportional_edit_falloff='SMOOTH', proportional_size=1)
-    bpy.context.scene.render.alpha_mode = 'TRANSPARENT'
-    bpy.context.scene.render.layers["RenderLayer"].use_sky = False
-    bpy.context.scene.render.resolution_x = 4500
-    bpy.context.scene.render.resolution_y = 5250
-    bpy.context.scene.render.image_settings.file_format = 'PNG'
-    bpy.context.scene.render.image_settings.color_mode = 'RGBA'
-    bpy.context.scene.render.image_settings.color_depth = '16'
-    bpy.data.scenes["Scene"].render.filepath = path + "/" + FileName
-    bpy.ops.render.render( write_still=True )
-    
+def take_pic(file_name):
+	deselect()
+	Camera.select= True
+	#bpy.ops.transform.rotate(value=-3.14, constraint_axis=(True, False, False), constraint_orientation='LOCAL', mirror=False, proportional='DISABLED', proportional_edit_falloff='SMOOTH', proportional_size=1)
+	#bpy.ops.transform.rotate(value=3.14, axis=(0, 0, -1), constraint_axis=(False, False, False), constraint_orientation='GLOBAL', mirror=False, proportional='DISABLED', proportional_edit_falloff='SMOOTH', proportional_size=1)
+	bpy.context.scene.render.alpha_mode = 'TRANSPARENT'
+	bpy.context.scene.render.layers["RenderLayer"].use_sky = False
+	bpy.context.scene.render.resolution_x = 4500
+	bpy.context.scene.render.resolution_y = 5250
+	bpy.context.scene.render.image_settings.file_format = 'PNG'
+	bpy.context.scene.render.image_settings.color_mode = 'RGBA'
+	bpy.context.scene.render.image_settings.color_depth = '16'
+	bpy.data.scenes["Scene"].render.filepath = path + "/" + file_name
+	bpy.ops.render.render( write_still=True )
+
 #Rotate mesh to view
 deselect()
 Atlas.select=True
-for Gene in GeneData:
-    Gene.select = True
+for Gene in gene_data:
+	Gene.select = True
 
 Atlas.rotation_euler[0] = 1.8326
 Atlas.rotation_euler[1] = 2.96706
 Atlas.rotation_euler[2] = 0.698132
 
-for Gene in GeneData:
-    Gene.rotation_euler[0] = 1.8326
-    Gene.rotation_euler[1] = 2.96706
-    Gene.rotation_euler[2] = 0.698132
+for Gene in gene_data:
+	Gene.rotation_euler[0] = 1.8326
+	Gene.rotation_euler[1] = 2.96706
+	Gene.rotation_euler[2] = 0.698132
 
 Camera.location = (0,-25,0)
 Camera.rotation_euler[0] = 1.5708
@@ -269,5 +269,6 @@ Camera.scale[0]= 1
 Camera.scale[1]= 1
 Camera.scale[2]= 1
 
-TakePic(args.filename)
+take_pic(args.filename)
+
 

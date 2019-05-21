@@ -147,6 +147,37 @@ def mean(img_path, mask_path):
 		masker = NiftiMasker(mask_img=mask)
 		roi_df(img_path,masker)
 
+def atlas_assign(d, a, mapping):
+	"""
+	Assign each data point d to an atlas label based on the corresponding atlas value a and the mapping.
+
+	Parameters
+	----------
+
+	d : float
+		Data point.
+	a : float
+		Atlas value.
+	mapping : pandas.DataFrame
+		Pandas Dataframe specifying the mapping, which needs to contain columns named 'right label' and 'left label'.
+	"""
+	if a == null_label:
+		return
+	if lateralized:
+		raise ValueError('Lateralization parameter not yet supported')
+		#!!!this still needs to be implemented
+	else:
+		my_slice = mapping[mapping['right label']==a]
+		if my_slice.empty:
+			my_slice = mapping[mapping['left label']==a]
+		if my_slice.empty:
+			continue
+		my_slice = deepcopy(my_slice)
+		my_slice['value'] = d
+		if verbose:
+			print(my_slice)
+		slices.append(my_slice)
+
 def atlasassignment(data_path='~/ni_data/ofM.dr/bids/l2/anova/anova_zfstat.nii.gz',
 	null_label=0.0,
 	verbose=False,

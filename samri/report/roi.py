@@ -171,7 +171,7 @@ def atlas_assign(d, a, mapping):
 		if my_slice.empty:
 			my_slice = mapping[mapping['left label']==a]
 		if my_slice.empty:
-			continue
+			return
 		my_slice = deepcopy(my_slice)
 		my_slice['value'] = d
 		if verbose:

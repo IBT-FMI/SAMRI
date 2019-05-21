@@ -627,7 +627,7 @@ def _plots_overlay(display,display_3Dplot):
 	ax_mesh.spines["left"].set_visible(False)
 
 	plt.gca()
-	img_mesh = plt.imshow(display_3Dplot)
+	img_mesh = plt.imshow(display_3Dplot,aspect="equal")
 	return fh
 
 def stat3D(stat_maps,

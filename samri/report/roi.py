@@ -151,24 +151,43 @@ def atlasassignment(data_path='~/ni_data/ofM.dr/bids/l2/anova/anova_zfstat.nii.g
 	null_label=0.0,
 	verbose=False,
 	lateralized=False,
+	save_as='',
 	):
-	'''
+	"""
 	Create CSV file containing a tabular summary of mean image intensity per DSURQE region of interest.
-	'''
+
+	Parameters
+	----------
+	data_path : str
+		Path to data file, the values of which are to be indexed according to the DSURQEC atlas.
+	null_label : float, optional
+		Values of the atlas which to exclude a priori.
+	verbose : bool, optional
+		Whether to print output regarding the processing (activates warnings if the data is reformatted, as well as reports for each value).
+	lateralized : bool , optional
+		Whether to differentiate between left and right labels (currently unimplemented).
+	save_as : str, optional
+		Path under which to save the atlas assignment file.
+	"""
 
 	from copy import deepcopy
 
 	atlas_filename = '/usr/share/mouse-brain-atlases/dsurqec_40micron_labels.nii'
-	mapping = '/usr/share/mouse-brain-atlases/dsurqec_labels.csv'
+	mapping = '/usr/share/mouse-brain-atlases/dsurqe_labels.csv'
 	atlas_filename = path.abspath(path.expanduser(atlas_filename))
 	mapping = path.abspath(path.expanduser(mapping))
 	data_path = path.abspath(path.expanduser(data_path))
 
 	data = nib.load(data_path)
 	atlas = nib.load(atlas_filename)
-	if not np.array_equal(data.affine,atlas.affine):
-		print('The affines of these atlas and data file are not identical. In order to perform this sensitive operation we need to know that there is perfect correspondence between the voxels of input data and atlas.')
-		return
+	if not np.array_equal(data.affine,atlas.affine) and verbose:
+		print(data.affine,'\n',atlas.affine)
+		print(np.shape(data),'\n',np.shape(atlas))
+		print('The affines of these atlas and data file are not identical. In order to perform this sensitive operation we need to know that there is perfect correspondence between the voxels of input data and atlas. Attempting to recast affines.')
+		from nibabel import processing
+		data = processing.resample_from_to(data, atlas)
+		print(data.affine,'\n',atlas.affine)
+		print(np.shape(data),'\n',np.shape(atlas))
 	mapping = pd.read_csv(mapping)
 	data = data.get_data().flatten()
 	atlas = atlas.get_data().flatten()
@@ -191,10 +210,12 @@ def atlasassignment(data_path='~/ni_data/ofM.dr/bids/l2/anova/anova_zfstat.nii.g
 				print(my_slice)
 			slices.append(my_slice)
 	df = pd.concat(slices)
-	save_as = path.splitext(data_path)[0]
-	if save_as[-4:] == '.nii':
-		save_as = save_as[:-4]
-	save_as += '_atlasassignment.csv'
+	if not save_as:
+		save_as = path.splitext(data_path)[0]
+		if save_as[-4:] == '.nii':
+			save_as = save_as[:-4]
+		save_as += '_atlasassignment.csv'
+	print(save_as)
 	df.to_csv(save_as)
 	return
 

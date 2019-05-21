@@ -17,3 +17,14 @@ def test_ts():
 	assert medians_start_rmse <= 10**-10
 	medians_end_rmse = (np.mean((medians[-10:] - np.array([88.62766323, 87.29243884, 86.79143292, 86.55561678, 87.28995264, 86.94760042, 87.46978338, 87.23758544, 87.56910308, 86.37714772]))**2))*(1/2.)
 	assert medians_end_rmse <= 10**-10
+
+
+def test_atlasassignment():
+	from samri.report.roi import atlasassignment
+
+	atlasassignment(data_path='/usr/share/mouse-brain-atlases/dsurqec_200micron_roi-dr.nii',
+		null_label=0.0,
+		verbose=False,
+		lateralized=False,
+		save_as='/var/tmp/samri_testing/pytest/atlasassignment.csv',
+		)

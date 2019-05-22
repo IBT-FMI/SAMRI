@@ -25,6 +25,12 @@ def test_atlasassignment():
 	atlasassignment(data_path='/usr/share/mouse-brain-atlases/dsurqec_200micron_roi-dr.nii',
 		null_label=0.0,
 		verbose=False,
+		lateralized=True,
+		save_as='/var/tmp/samri_testing/pytest/atlasassignment_lateralized.csv',
+		)
+	atlasassignment(data_path='/usr/share/mouse-brain-atlases/dsurqec_200micron_roi-dr.nii',
+		null_label=0.0,
+		verbose=False,
 		lateralized=False,
 		save_as='/var/tmp/samri_testing/pytest/atlasassignment.csv',
 		)

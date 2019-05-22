@@ -147,37 +147,6 @@ def mean(img_path, mask_path):
 		masker = NiftiMasker(mask_img=mask)
 		roi_df(img_path,masker)
 
-def atlas_assign(d, a, mapping):
-	"""
-	Assign each data point d to an atlas label based on the corresponding atlas value a and the mapping.
-
-	Parameters
-	----------
-
-	d : float
-		Data point.
-	a : float
-		Atlas value.
-	mapping : pandas.DataFrame
-		Pandas Dataframe specifying the mapping, which needs to contain columns named 'right label' and 'left label'.
-	"""
-	if a == null_label:
-		return
-	if lateralized:
-		raise ValueError('Lateralization parameter not yet supported')
-		#!!!this still needs to be implemented
-	else:
-		my_slice = mapping[mapping['right label']==a]
-		if my_slice.empty:
-			my_slice = mapping[mapping['left label']==a]
-		if my_slice.empty:
-			return
-		my_slice = deepcopy(my_slice)
-		my_slice['value'] = d
-		if verbose:
-			print(my_slice)
-		slices.append(my_slice)
-
 def atlasassignment(data_path='~/ni_data/ofM.dr/bids/l2/anova/anova_zfstat.nii.gz',
 	null_label=0.0,
 	verbose=False,
@@ -199,6 +168,11 @@ def atlasassignment(data_path='~/ni_data/ofM.dr/bids/l2/anova/anova_zfstat.nii.g
 		Whether to differentiate between left and right labels (currently unimplemented).
 	save_as : str, optional
 		Path under which to save the atlas assignment file.
+
+	Returns
+	-------
+	pandas.DataFrame
+		Pandas Dataframe with columns including 'Structure', and 'right values', 'left values', or simply 'values'.
 	"""
 
 	from copy import deepcopy
@@ -211,44 +185,50 @@ def atlasassignment(data_path='~/ni_data/ofM.dr/bids/l2/anova/anova_zfstat.nii.g
 
 	data = nib.load(data_path)
 	atlas = nib.load(atlas_filename)
-	if not np.array_equal(data.affine,atlas.affine) and verbose:
-		print(data.affine,'\n',atlas.affine)
-		print(np.shape(data),'\n',np.shape(atlas))
-		print('The affines of these atlas and data file are not identical. In order to perform this sensitive operation we need to know that there is perfect correspondence between the voxels of input data and atlas. Attempting to recast affines.')
+	if not np.array_equal(data.affine,atlas.affine):
+		if verbose:
+			print(data.affine,'\n',atlas.affine)
+			print(np.shape(data),'\n',np.shape(atlas))
+			print('The affines of these atlas and data file are not identical. In order to perform this sensitive operation we need to know that there is perfect correspondence between the voxels of input data and atlas. Attempting to recast affines.')
 		from nibabel import processing
 		data = processing.resample_from_to(data, atlas)
-		print(data.affine,'\n',atlas.affine)
-		print(np.shape(data),'\n',np.shape(atlas))
+		if verbose:
+			print(data.affine,'\n',atlas.affine)
+			print(np.shape(data),'\n',np.shape(atlas))
 	mapping = pd.read_csv(mapping)
-	data = data.get_data().flatten()
 	atlas = atlas.get_data().flatten()
-	slices = []
-	for d, a in zip(data, atlas):
-		if a == null_label:
-			continue
+	data = data.get_data().flatten()
+	nonull_map = atlas != null_label
+	atlas = atlas[nonull_map]
+	data = data[nonull_map]
+	structures = mapping['Structure'].unique()
+	results = deepcopy(mapping)
+	for structure in structures:
+		right_label = mapping[mapping['Structure'] == structure]['right label'].item()
+		left_label = mapping[mapping['Structure'] == structure]['left label'].item()
 		if lateralized:
-			pass
-			#!!!this still needs to be implemented
+			results['right values'] = ''
+			results['left values'] = ''
+			right_mask = atlas == right_label
+			left_mask = atlas == left_label
+			right_values = data[right_mask]
+			left_values = data[left_mask]
+			right_values = ', '.join([str(i) for i in list(right_values)])
+			left_values = ', '.join([str(i) for i in list(left_values)])
+			results['Structure' == structure, 'right values'] = right_values
+			results['Structure' == structure, 'left values'] = left_values
 		else:
-			my_slice = mapping[mapping['right label']==a]
-			if my_slice.empty:
-				my_slice = mapping[mapping['left label']==a]
-			if my_slice.empty:
-				continue
-			my_slice = deepcopy(my_slice)
-			my_slice['value'] = d
-			if verbose:
-				print(my_slice)
-			slices.append(my_slice)
-	df = pd.concat(slices)
-	if not save_as:
-		save_as = path.splitext(data_path)[0]
-		if save_as[-4:] == '.nii':
-			save_as = save_as[:-4]
-		save_as += '_atlasassignment.csv'
-	print(save_as)
-	df.to_csv(save_as)
-	return
+			results['values'] = ''
+			labels = [right_label, left_label]
+			mask = np.isin(atlas, labels)
+			values = data[mask]
+			values = list(values)
+			values = [str(i) for i in values]
+			values = ', '.join(values)
+			results['Structure' == structure, 'values'] = values
+	if save_as:
+		results.to_csv(save_as)
+	return results
 
 def analytic_pattern_per_session(substitutions, analytic_pattern,
 	t_file_template="~/ni_data/ofM.dr/l1/{l1_dir}/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_task-{scan}_tstat.nii.gz",

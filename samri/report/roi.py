@@ -203,29 +203,31 @@ def atlasassignment(data_path='~/ni_data/ofM.dr/bids/l2/anova/anova_zfstat.nii.g
 	data = data[nonull_map]
 	structures = mapping['Structure'].unique()
 	results = deepcopy(mapping)
+	if lateralized:
+		results['right values'] = ''
+		results['left values'] = ''
+	else:
+		results['values'] = ''
 	for structure in structures:
 		right_label = mapping[mapping['Structure'] == structure]['right label'].item()
 		left_label = mapping[mapping['Structure'] == structure]['left label'].item()
 		if lateralized:
-			results['right values'] = ''
-			results['left values'] = ''
 			right_mask = atlas == right_label
 			left_mask = atlas == left_label
 			right_values = data[right_mask]
 			left_values = data[left_mask]
 			right_values = ', '.join([str(i) for i in list(right_values)])
 			left_values = ', '.join([str(i) for i in list(left_values)])
-			results['Structure' == structure, 'right values'] = right_values
-			results['Structure' == structure, 'left values'] = left_values
+			results.loc[results['Structure'] == structure, 'right values'] = right_values
+			results.loc[results['Structure'] == structure, 'left values'] = left_values
 		else:
-			results['values'] = ''
 			labels = [right_label, left_label]
 			mask = np.isin(atlas, labels)
 			values = data[mask]
 			values = list(values)
 			values = [str(i) for i in values]
 			values = ', '.join(values)
-			results['Structure' == structure, 'values'] = values
+			results.loc[results['Structure'] == structure, 'values'] = values
 	if save_as:
 		results.to_csv(save_as)
 	return results

@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+import numpy as np
 
 def test_ts():
 	from samri.report.roi import ts
-	import numpy as np
 
 	means, medians = ts('/usr/share/samri_bidsdata/preprocessing/sub-{subject}/ses-ofM/func/sub-{subject}_ses-ofM_task-JogB_acq-EPIlowcov_run-1_cbv.nii.gz',
 		'/usr/share/mouse-brain-atlases/dsurqec_200micron_roi-dr.nii',
@@ -34,3 +34,18 @@ def test_atlasassignment():
 		lateralized=False,
 		save_as='/var/tmp/samri_testing/pytest/atlasassignment.csv',
 		)
+
+def test_erode():
+	from samri.report.roi import erode
+
+	my_mask = erode('/usr/share/mouse-brain-atlases/dsurqec_200micron_roi-dr.nii',
+		iterations=1,
+		)
+	data = my_mask.get_data()
+	assert np.sum(data) == 26
+
+	my_mask = erode('/usr/share/mouse-brain-atlases/dsurqec_200micron_roi-dr.nii',
+		iterations=2,
+		)
+	data = my_mask.get_data()
+	assert np.sum(data) == 2

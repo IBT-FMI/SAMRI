@@ -11,6 +11,37 @@ import statsmodels.formula.api as smf
 import multiprocessing as mp
 import pandas as pd
 
+def erode(mask,
+	iterations=1,
+	save_as='',
+	):
+	"""
+	Erode binary mask by one cell increments along all axes, for a give number of iterations.
+
+	Parameters
+	----------
+
+	mask : str
+		Path to binary mask file.
+	iterations : int, optional
+		The number of times the one-cell-increment erosion will be applied.
+	save_as : str, optional
+		Path under which to save the eroded mask.
+		If no value is specified the image object will only be returned.
+
+	Returns
+	-------
+	nibabel.nifti1.Nifti1Image
+		Eroded mask image.
+	"""
+	from scipy import ndimage
+	mask_img = nib.load(mask)
+	mask_data = mask_img.get_data()
+	mask_data = ndimage.morphology.binary_erosion(mask_data, iterations=iterations)
+	new_mask = nib.nifti1.Nifti1Image(mask_data, mask_img.affine, mask_img.header)
+	if save_as:
+		nib.save(new_mask, save_as)
+	return new_mask
 
 def ts(img_path,
 	mask=False,

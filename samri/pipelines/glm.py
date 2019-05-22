@@ -322,6 +322,7 @@ def l1(preprocessing_dir,
 
 def seed(preprocessing_dir, seed_mask,
 	debug=False,
+	erode_iterations=1,
 	exclude={},
 	highpass_sigma=225,
 	lowpass_sigma=False,
@@ -396,7 +397,12 @@ def seed(preprocessing_dir, seed_mask,
 	get_scan.iterables = ("ind_type", ind)
 
 	compute_seed = pe.Node(name='compute_seed', interface=util.Function(function=ts,input_names=inspect.getargspec(ts)[0], output_names=['means','medians']))
-	compute_seed.inputs.mask = seed_mask
+	if erode_iterations:
+		from samri.report.roi import erode
+		seed_mask = erode(path.abspath(path.expanduser(seed_mask)), iterations=erode_iterations)
+		compute_seed.inputs.mask = seed_mask
+	else:
+		compute_seed.inputs.mask = path.abspath(path.expanduser(seed_mask))
 
 	make_regressor = pe.Node(name='make_regressor', interface=util.Function(function=regressor,input_names=inspect.getargspec(regressor)[0], output_names=['output']))
 	make_regressor.inputs.hpf = highpass_sigma

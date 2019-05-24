@@ -213,7 +213,7 @@ def bru2bids(measurements_base,
 		workflow.base_dir = path.join(out_base)
 		workflow.config = workflow_config
 		try:
-			workflow.write_graph(dotfilename=path.join(workflow.base_dir,workdir_name,"graph_structural.dot"), graph2use="hierarchical", format="png")
+			workflow.write_graph(dotfilename=path.join(workflow.base_dir,workdir_name,"graph_functional.dot"), graph2use="hierarchical", format="png")
 		except OSError:
 			print('We could not write the DOT file for visualization (`dot` function from the graphviz package). This is non-critical to the processing, but you should get this fixed.')
 

@@ -49,7 +49,7 @@ SAMRI generic-prep -m '/usr/share/mouse-brain-atlases/dsurqec_200micron_mask.nii
 Depending on your preferred package manager you may choose one of the following methods:
 
 #### Portage (e.g. on Gentoo Linux):
-SAMRI is available via Portage (the package manager of Gentoo Linux, derivative distributions, and installable on [any other Linux distribution](https://wiki.gentoo.org/wiki/Project:Prefix), or BSD) via the [Chymeric Overlay](https://github.com/TheChymera/overlay).
+SAMRI is available via Portage (the package manager of Gentoo Linux, derivative distributions, and installable on [any other Linux distribution](https://wiki.gentoo.org/wiki/Project:Prefix), or BSD) via the [Science Overlay](https://github.com/gentoo/sci).
 Upon enabling the overlay, the package can be emerged:
 
 ````

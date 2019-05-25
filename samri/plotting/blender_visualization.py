@@ -64,10 +64,14 @@ path = '/tmp/'
 ## Set Basic Scene: Import reference atlas mesh and desired gene expression/connectivity meshed
 ##, add a basic lamp and camera set to predefined location and rotation
 
+#Reset factory settings
+bpy.ops.wm.read_factory_settings()
+
 #Get rid of blender default objects
 for obj in bpy.data.objects:
 	obj.select = True
 bpy.ops.object.delete()
+
 
 #Import Reference Atlas
 bpy.ops.import_scene.obj(filepath= args.template_path)
@@ -246,6 +250,7 @@ def take_pic(file_name):
 	bpy.data.scenes["Scene"].render.filepath = path + "/" + file_name
 	bpy.ops.render.render( write_still=True )
 
+
 #Rotate mesh to view
 deselect()
 Atlas.select=True
@@ -270,5 +275,3 @@ Camera.scale[1]= 1
 Camera.scale[2]= 1
 
 take_pic(args.filename)
-
-

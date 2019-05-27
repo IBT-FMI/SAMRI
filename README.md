@@ -49,7 +49,7 @@ SAMRI generic-prep -m '/usr/share/mouse-brain-atlases/dsurqec_200micron_mask.nii
 Depending on your preferred package manager you may choose one of the following methods:
 
 #### Portage (e.g. on Gentoo Linux):
-SAMRI is available via Portage (the package manager of Gentoo Linux, derivative distributions, and installable on [any other Linux distribution](https://wiki.gentoo.org/wiki/Project:Prefix), or BSD) via the [Chymeric Overlay](https://github.com/TheChymera/overlay).
+SAMRI is available via Portage (the package manager of Gentoo Linux, derivative distributions, and installable on [any other Linux distribution](https://wiki.gentoo.org/wiki/Project:Prefix), or BSD) via the [Science Overlay](https://github.com/gentoo/sci).
 Upon enabling the overlay, the package can be emerged:
 
 ````
@@ -123,7 +123,7 @@ For manual dependency management and overview you may use the following list:
 * [Bru2Nii](https://github.com/neurolabusc/Bru2Nii)
 * [nibabel](https://github.com/nipy/nibabel)
 * [nipy](https://github.com/nipy/nipy) (>=`0.4.1`)
-* [nipype](https://github.com/nipy/nipype) (>=`1.0.0`)
+* [Nipype](https://github.com/nipy/nipype) (>=`1.0.0`)
 * [SciPy](https://www.scipy.org)
 * [PyBIDS](https://github.com/INCF/pybids) (<=`0.6.5`)
 * [ANTs](https://github.com/ANTsX/ANTs/)

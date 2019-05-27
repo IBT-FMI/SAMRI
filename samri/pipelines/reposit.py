@@ -32,16 +32,16 @@ N_PROCS=max(N_PROCS-4, 2)
 @argh.arg('-s','--structural-match', type=json.loads)
 @argh.arg('-m','--measurements', nargs='*', type=str)
 def bru2bids(measurements_base,
-	measurements=[],
-	inflated_size=False,
 	bids_extra=['acq','run'],
 	dataset_name=False,
 	debug=False,
 	diffusion_match={},
 	exclude={},
 	functional_match={},
+	inflated_size=False,
 	keep_crashdump=False,
 	keep_work=False,
+	measurements=[],
 	n_procs=N_PROCS,
 	out_base=None,
 	structural_match={},
@@ -55,14 +55,10 @@ def bru2bids(measurements_base,
 	----------
 
 	measurements_base : str
-		Path of the top level directory containing all the Bruker scan directories to be converted and reformatted.
+		Path of the top level directory containing all the Bruker ParaVision scan directories to be converted and reformatted.
 	bids_extra : list, optional
 		List of strings denoting optional BIDS fields to include in the resulting file names.
 		Accepted items are 'acq' and 'run'.
-	inflated_size : bool, optional
-		Whether to inflate the voxel size reported by the scanner when converting the data to NIfTI.
-		Setting this to `True` multiplies the voxel edge lengths by 10 (i.e. the volume by 1000); this is occasionally done in some small animal pipelines, which use routines designed exclusively for human data.
-		Unless you are looking to reproduce such a workflow, this should be set to `True`.
 	dataset_name : string, optional
 		A dataset name that will be written into the BIDS metadata file.
 		Generally not needed, as by default we use the dataset path to satisfy this BIDS requirement.
@@ -78,12 +74,18 @@ def bru2bids(measurements_base,
 	functional_match : dict, optional
 		A dictionary with any combination of "session", "subject", "task", and "acquisition" as keys and corresponding lists of identifiers as values.
 		Only Functional scans matching all identifiers will be included - i.e. this is a whitelist.
-	keep_work : bool, optional
-		Whether to keep the work directory (containing all the intermediary workflow steps, as managed by nipypye).
-		This is useful for debugging and quality control.
+	inflated_size : bool, optional
+		Whether to inflate the voxel size reported by the scanner when converting the data to NIfTI.
+		Setting this to `True` multiplies the voxel edge lengths by 10 (i.e. the volume by 1000); this is occasionally done in some small animal pipelines, which use routines designed exclusively for human data.
+		Unless you are looking to reproduce such a workflow, this should be set to `True`.
 	keep_crashdump : bool, optional
 		Whether to keep the crashdump directory (containing all the crash reports for intermediary workflow steps, as managed by nipypye).
 		This is useful for debugging and quality control.
+	keep_work : bool, optional
+		Whether to keep the work directory (containing all the intermediary workflow steps, as managed by nipypye).
+		This is useful for debugging and quality control.
+	measurements : list, optional
+		Whitelist of Bruker ParaVision scan directories to consider.
 	n_procs : int, optional
 		Maximum number of processes which to simultaneously spawn for the workflow.
 		If not explicitly defined, this is automatically calculated from the number of available cores and under the assumption that the workflow will be the main process running for the duration that it is running.

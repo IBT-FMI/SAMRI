@@ -118,7 +118,7 @@ def bru2bids(measurements_base,
 		dataset_name = measurements_base
 	description = {
 		'Name':dataset_name,
-		'BIDSVersion':'1.0.2',
+		'BIDSVersion':'1.2.0',
 		}
 	with open(path.join(out_dir,'dataset_description.json'), 'w') as f:
 		json.dump(description, f)

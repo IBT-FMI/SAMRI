@@ -1,5 +1,6 @@
 from os import path, remove
 from samri.pipelines.extra_functions import get_data_selection, get_bids_scan, write_bids_metadata_file, write_bids_events_file, BIDS_METADATA_EXTRACTION_DICTS
+import os
 
 import argh
 import re
@@ -107,6 +108,24 @@ def bru2bids(measurements_base,
 	out_dir = path.join(out_base,workflow_name)
 	workdir_name = workflow_name+'_work'
 	workdir = path.join(out_base,workdir_name)
+
+
+
+	if not os.path.exists(out_dir):
+		    os.makedirs(out_dir)
+	# This is needed because BIDS does not yet support CBV
+	with open(path.join(out_dir,".bidsignore"), "w+") as f:
+		f.write('*_cbv.*')
+
+	# BIDS needs a descriptor file
+	if not dataset_name:
+		dataset_name = measurements_base
+	description = {
+		'Name':dataset_name,
+		'BIDSVersion':'1.2.0',
+		}
+	with open(path.join(out_dir,'dataset_description.json'), 'w') as f:
+		json.dump(description, f)
 
 	# define measurement directories to be processed, and populate the list either with the given include_measurements, or with an intelligent selection
 	functional_scan_types = diffusion_scan_types = structural_scan_types = []
@@ -376,20 +395,6 @@ def bru2bids(measurements_base,
 			except (FileNotFoundError, OSError):
 				pass
 
-	# This is needed because BIDS does not yet support CBV
-	with open(path.join(out_dir,".bidsignore"), "w+") as f:
-		f.write('*_cbv.*')
-
 	# Create essions files
 	sessions_file(out_dir, data_selection)
-
-	# BIDS needs a descriptor file
-	if not dataset_name:
-		dataset_name = measurements_base
-	description = {
-		'Name':dataset_name,
-		'BIDSVersion':'1.0.2',
-		}
-	with open(path.join(out_dir,'dataset_description.json'), 'w') as f:
-		json.dump(description, f)
 

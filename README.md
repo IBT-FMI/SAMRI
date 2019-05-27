@@ -123,7 +123,7 @@ For manual dependency management and overview you may use the following list:
 * [Bru2Nii](https://github.com/neurolabusc/Bru2Nii)
 * [nibabel](https://github.com/nipy/nibabel)
 * [nipy](https://github.com/nipy/nipy) (>=`0.4.1`)
-* [nipype](https://github.com/nipy/nipype) (>=`1.0.0`)
+* [Nipype](https://github.com/nipy/nipype) (>=`1.0.0`)
 * [SciPy](https://www.scipy.org)
 * [PyBIDS](https://github.com/INCF/pybids) (<=`0.6.5`)
 * [ANTs](https://github.com/ANTsX/ANTs/)

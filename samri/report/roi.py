@@ -46,6 +46,7 @@ def erode(mask,
 def ts(img_path,
 	mask=False,
 	substitution={},
+	top_voxel='',
 	):
 	"""
 	Return the mean and median of a Region of Interest (ROI) time course.
@@ -59,6 +60,9 @@ def ts(img_path,
 		Nilearn `nifti1.Nifti1Image` object to use for masking the desired ROI, or a string specifying the path of a maskfile.
 	substitution : dict, optional
 		A dictionary with keys which include 'subject' and 'session'.
+	top_voxel : str or list, optional
+		Path to NIfTI file or files based on the within-mask top-value voxel of which to create a sub-mask for time course extraction.
+		Note that this file *needs* to be in the exact same affine space as the mask file.
 	"""
 	# Imports are needed for usage as nipype nodes.
 	import nibabel as nib
@@ -70,12 +74,34 @@ def ts(img_path,
 		img_path = img_path.format(**substitution)
 	img_path = path.abspath(path.expanduser(img_path))
 	img = nib.load(img_path)
-	try:
-		masked_data = mask.fit_transform(img)
-	except:
-		mask = path.abspath(path.expanduser(mask))
-		mask = NiftiMasker(mask_img=mask)
-		masked_data = mask.fit_transform(img).T
+	if top_voxel:
+		top_voxel_path = path.abspath(path.expanduser(top_voxel_path))
+		top = nib.load(top_voxel_path)
+		try:
+			top = mask.fit_transform(top)
+		except:
+			mask = path.abspath(path.expanduser(mask))
+			mask = NiftiMasker(mask_img=mask)
+			top = mask.fit_transform(top)
+		header = top.header
+		affine = top.affine
+		shape = top.shape
+		top_data = top.get_data()
+		top_data = top_data.flatten()
+		top_mask = np.in1d(top_data,np.max(top_data))
+		top_mask = top_mask.astype(int)
+		top_mask = top_mask.reshape(shape)
+		top_mask_img = nib.Nifti1Image(mask, affine, header)
+		top_masker = NiftiMasker(mask_img=top_mask_image)
+		masked_data = top_masker.fit_transform(img).T
+	else:
+		try:
+			masked_data = mask.fit_transform(img).T
+		except:
+			mask = path.abspath(path.expanduser(mask))
+			mask = NiftiMasker(mask_img=mask)
+			masked_data = mask.fit_transform(img).T
+
 	ts_means = np.mean(masked_data, axis=0)
 	ts_medians = np.mean(masked_data, axis=0)
 	return ts_means, ts_medians

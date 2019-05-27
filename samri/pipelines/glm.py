@@ -322,7 +322,7 @@ def l1(preprocessing_dir,
 
 def seed(preprocessing_dir, seed_mask,
 	debug=False,
-	erode_iterations=1,
+	erode_iterations=False,
 	exclude={},
 	highpass_sigma=225,
 	lowpass_sigma=False,
@@ -336,6 +336,8 @@ def seed(preprocessing_dir, seed_mask,
 	modality="cbv",
 	n_jobs_percentage=1,
 	invert=False,
+	metric='mean',
+	top_voxel='',
 	):
 	"""Calculate subject level seed-based functional connectivity via the `fsl_glm` command.
 
@@ -370,6 +372,11 @@ def seed(preprocessing_dir, seed_mask,
 		Repetition time, in seconds.
 	workflow_name : str, optional
 		Name of the workflow; this will also be the name of the final output directory produced under `out_dir`.
+	metric : {'mean' or 'median'}, optional
+		Whether to use the volume-wise region of interest mean of median to compute the time course.
+	top_voxel : str or list, optional
+		Path to NIfTI file or files based on the within-mask top-value voxel of which to create a sub-mask for time course extraction.
+		Note that this file *needs* to be in the exact same affine space as the `seed_mask` file.
 	"""
 
 	from samri.pipelines.utils import bids_data_selection
@@ -399,10 +406,13 @@ def seed(preprocessing_dir, seed_mask,
 	compute_seed = pe.Node(name='compute_seed', interface=util.Function(function=ts,input_names=inspect.getargspec(ts)[0], output_names=['means','medians']))
 	if erode_iterations:
 		from samri.report.roi import erode
-		seed_mask = erode(path.abspath(path.expanduser(seed_mask)), iterations=erode_iterations)
-		compute_seed.inputs.mask = seed_mask
+		eroded_seed = '/var/tmp/samri_seed_eroded_{}.nii.gz'.format(erode_iterations)
+		erode(path.abspath(path.expanduser(seed_mask)), iterations=erode_iterations, save_as=eroded_seed)
+		compute_seed.inputs.mask = eroded_seed
 	else:
 		compute_seed.inputs.mask = path.abspath(path.expanduser(seed_mask))
+	if top_voxel:
+		compute_seed.inputs.top_voxel = top_voxel
 
 	make_regressor = pe.Node(name='make_regressor', interface=util.Function(function=regressor,input_names=inspect.getargspec(regressor)[0], output_names=['output']))
 	make_regressor.inputs.hpf = highpass_sigma
@@ -455,7 +465,6 @@ def seed(preprocessing_dir, seed_mask,
 	datasink.inputs.parameterization = False
 
 	workflow_connections = [
-		(compute_seed, make_regressor, [('means', 'timecourse')]),
 		(make_regressor, level1design, [('output', 'session_info')]),
 		(level1design, modelgen, [('ev_files', 'ev_files')]),
 		(level1design, modelgen, [('fsf_files', 'fsf_file')]),
@@ -488,6 +497,17 @@ def seed(preprocessing_dir, seed_mask,
 		(glm, datasink, [('out_file', '@betas')]),
 		(design_rename, datasink, [('out_file', '@design')]),
 		]
+
+	if metric == 'mean':
+		workflow_connections.extend([
+			(compute_seed, make_regressor, [('means', 'timecourse')]),
+			])
+	elif metric == 'median':
+		workflow_connections.extend([
+			(compute_seed, make_regressor, [('medians', 'timecourse')]),
+			])
+	else:
+		raise ValueError('Accepted values for the `metric` parameter are "mean" and "median". You specified {}'.format(metric))
 
 	if highpass_sigma or lowpass_sigma:
 		bandpass = pe.Node(interface=fsl.maths.TemporalFilter(), name="bandpass")

@@ -6,12 +6,11 @@
 Welcome to SAMRI's documentation!
 =================================
 
+.. include:: ../README.rst
+
 .. toctree::
    :maxdepth: 3
    :caption: Contents:
-
-   modules
-   objects
 
 .. automodule:: samri.pipelines.reposit
    :members:

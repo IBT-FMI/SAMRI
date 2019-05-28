@@ -675,7 +675,7 @@ def get_data_selection(workflow_base,
 											measurement_copy['scan_type'] = str(scan_type).strip(' ')
 											measurement_copy['scan'] = str(int(number))
 											measurement_copy['run'] = run_counter
-											scan_type, measurement_copy= assign_modality(scan_type, measurement_copy)
+											scan_type, measurement_copy = assign_modality(scan_type, measurement_copy)
 											measurement_copy.update(bids_keys)
 											run_counter += 1
 											selected_measurements.append(measurement_copy)

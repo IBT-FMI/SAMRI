@@ -57,7 +57,7 @@ def ts(img_path,
 	img_path : str
 		Path to NIfTI file from which the ROI is to be extracted.
 	maks : nilearn.NiftiMasker or str, optional
-		Nilearn `nifti1.Nifti1Image` object to use for masking the desired ROI, or a string specifying the path of a maskfile.
+		Nilearn `nifti1.Nifti1Image` object to use for masking the desired ROI, or string specifying the path of a mask file.
 	substitution : dict, optional
 		A dictionary with keys which include 'subject' and 'session'.
 	top_voxel : str or list, optional
@@ -72,28 +72,32 @@ def ts(img_path,
 
 	if substitution:
 		img_path = img_path.format(**substitution)
+		top_voxel= top_voxel.format(**substitution)
 	img_path = path.abspath(path.expanduser(img_path))
 	img = nib.load(img_path)
 	if top_voxel:
-		top_voxel_path = path.abspath(path.expanduser(top_voxel_path))
-		top = nib.load(top_voxel_path)
+		top_voxel_path = path.abspath(path.expanduser(top_voxel))
+		top_img = nib.load(top_voxel_path)
+		header = top_img.header
+		affine = top_img.affine
+		top_data = top_img.get_data()
+		shape = top_data.shape
+		top_data = top_data.flatten()
 		try:
-			top = mask.fit_transform(top)
+			mask_img = mask.mask_img_
 		except:
 			mask = path.abspath(path.expanduser(mask))
-			mask = NiftiMasker(mask_img=mask)
-			top = mask.fit_transform(top)
-		header = top.header
-		affine = top.affine
-		shape = top.shape
-		top_data = top.get_data()
-		top_data = top_data.flatten()
-		top_mask = np.in1d(top_data,np.max(top_data))
-		top_mask = top_mask.astype(int)
-		top_mask = top_mask.reshape(shape)
-		top_mask_img = nib.Nifti1Image(mask, affine, header)
-		top_masker = NiftiMasker(mask_img=top_mask_image)
-		masked_data = top_masker.fit_transform(img).T
+			mask_img = nib.load(mask)
+		mask_data = mask_img.get_data()
+		mask_data = mask_data.flatten()
+		mask_data = mask_data.astype(bool)
+		top_data[mask_data == False] = 0
+		voxel = np.in1d(top_data,np.max(top_data))
+		voxel = voxel.astype(int)
+		voxel = voxel.reshape(shape)
+		voxel_mask_img = nib.Nifti1Image(voxel, affine, header)
+		voxel_masker = NiftiMasker(mask_img=voxel_mask_img)
+		masked_data = voxel_masker.fit_transform(img).T
 	else:
 		try:
 			masked_data = mask.fit_transform(img).T

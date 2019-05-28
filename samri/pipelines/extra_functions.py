@@ -182,7 +182,7 @@ def get_tr(in_file,
 
 def write_bids_metadata_file(scan_dir, extraction_dicts,
 	out_file="bids_metadata.json",
-	task_name=False,
+	task='',
 	):
 	"""Create a sidecar JSON file according to the BIDS standard.
 
@@ -256,8 +256,8 @@ def write_bids_metadata_file(scan_dir, extraction_dicts,
 		adjustments_duration = adjustments_end - adjustments_start
 		metadata['DelayAfterTrigger'] = adjustments_duration.total_seconds()
 
-	if task_name:
-		metadata['TaskName'] = task_name
+	if task:
+		metadata['TaskName'] = task
 
 	with open(out_file, 'w') as out_file_writeable:
 		json.dump(metadata, out_file_writeable, indent=1)

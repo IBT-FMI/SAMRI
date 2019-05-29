@@ -423,7 +423,8 @@ def write_bids_events_file(scan_dir,
 			pass
 	mydf['onset'] = mydf['onset'] - delay
 
-	mydf.to_csv(out_file, sep=str('\t'), index=False)
+	# 'n/a' specifically required by BIDS, as a consequence of its infinite wisdom
+	mydf.to_csv(out_file, sep=str('\t'), na_rep='n/a', index=False)
 
 	return out_file
 

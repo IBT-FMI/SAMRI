@@ -634,7 +634,7 @@ def get_data_selection(workflow_base,
 				read_variables=0 #count variables so that breaking takes place after both have been read
 				while True:
 					current_line = state_file.readline()
-					if "##$SUBJECT_name_string=" in current_line:
+					if "##$SUBJECT_id=" in current_line:
 						entry=re.sub("[<>\n]", "", state_file.readline())
 						if not match_exclude_ss(entry, match, exclude, selected_measurement, 'subject'):
 							break

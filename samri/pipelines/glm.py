@@ -411,8 +411,6 @@ def seed(preprocessing_dir, seed_mask,
 		compute_seed.inputs.mask = eroded_seed
 	else:
 		compute_seed.inputs.mask = path.abspath(path.expanduser(seed_mask))
-	if top_voxel:
-		compute_seed.inputs.top_voxel = top_voxel
 
 	make_regressor = pe.Node(name='make_regressor', interface=util.Function(function=regressor,input_names=inspect.getargspec(regressor)[0], output_names=['output']))
 	make_regressor.inputs.hpf = highpass_sigma
@@ -497,6 +495,14 @@ def seed(preprocessing_dir, seed_mask,
 		(glm, datasink, [('out_file', '@betas')]),
 		(design_rename, datasink, [('out_file', '@design')]),
 		]
+
+	if top_voxel:
+		voxel_filename = pe.Node(name='voxel_filename', interface=util.Function(function=bids_dict_to_source,input_names=inspect.getargspec(bids_dict_to_source)[0], output_names=['filename']))
+		voxel_filename.inputs.source_format = top_voxel
+		workflow_connections.extend([
+			(get_scan, voxel_filename, [('dict_slice', 'bids_dictionary')]),
+			(voxel_filename, compute_seed, [('filename', 'top_voxel')]),
+			])
 
 	if metric == 'mean':
 		workflow_connections.extend([

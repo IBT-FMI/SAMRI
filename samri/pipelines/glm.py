@@ -622,6 +622,12 @@ def l2_common_effect(l1_dir,
 		Percentage of the cores present on the machine which to maximally use for deploying jobs in parallel.
 	run_mode : {'ols', 'fe', 'flame1', 'flame12'}, optional
 		Estimation model.
+	exclude : dict, optional
+		Dictionary containing keys which are BIDS field identifiers, and values which are lists of BIDS identifier values which the user wants to exclude from the matched selection (blacklist).
+	include : dict, optional
+		Dictionary containing keys which are BIDS field identifiers, and values which are lists of BIDS identifier values which the user wants to include from the matched selection (whitelist).
+	match : dict, optional
+		Dictionary containing keys which are BIDS field identifiers, and values which are lists of BIDS identifier values which the user wants to select.
 	"""
 
 	from samri.pipelines.utils import bids_data_selection
@@ -637,7 +643,6 @@ def l2_common_effect(l1_dir,
 		sessions=False,
 		verbose=True,
 		)
-	ind = data_selection.index.tolist()
 
 	out_dir = path.join(out_base,workflow_name)
 	workdir_name = workflow_name+'_work'
@@ -679,7 +684,6 @@ def l2_common_effect(l1_dir,
 			common_fields += '_run-'+data_selection.run.drop_duplicates().item()
 		except ValueError:
 			pass
-
 		infosource = pe.Node(interface=util.IdentityInterface(fields=['iterable']), name="infosource")
 		infosource.iterables = [('iterable', target_set)]
 
@@ -915,6 +919,167 @@ def l2_common_effect(l1_dir,
 				remove(path.join(getcwd(), f))
 	else:
 		workflow.run(plugin="MultiProc", plugin_args={'n_procs' : n_jobs})
+	if not keep_work:
+		shutil.rmtree(path.join(out_base,workdir_name))
+
+def l2_controlled_effect(l1_dir,
+	keep_work=False,
+	tr=1,
+	nprocs=6,
+	mask="/usr/share/mouse-brain-atlases/dsurqec_200micron_mask.nii",
+	match={},
+	control_match={},
+	n_jobs_percentage=1,
+	out_dir="",
+	out_base="",
+	subjects=[],
+	sessions=[],
+	tasks=[],
+	exclude={},
+	include={},
+	workflow_name="generic",
+	debug=False,
+	target_set=[],
+	run_mode='flame12'
+	):
+	"""Determine the common effect in a sample of 3D feature maps, as established against a specified control group.
+
+	Parameters
+	----------
+
+	n_jobs_percentage : float, optional
+		Percentage of the cores present on the machine which to maximally use for deploying jobs in parallel.
+	run_mode : {'ols', 'fe', 'flame1', 'flame12'}, optional
+		Estimation model.
+	exclude : dict, optional
+		Dictionary containing keys which are BIDS field identifiers, and values which are lists of BIDS identifier values which the user wants to exclude from the matched selection (blacklist).
+	include : dict, optional
+		Dictionary containing keys which are BIDS field identifiers, and values which are lists of BIDS identifier values which the user wants to include from the matched selection (whitelist).
+	match : dict, optional
+		Dictionary containing keys which are BIDS field identifiers, and values which are lists of BIDS identifier values which the user wants to select.
+	control_match : dict, optional
+		Dictionary containing keys which are BIDS field identifiers, and values which are lists of BIDS identifier values which the user wants to select the control group based on.
+	"""
+
+	from samri.pipelines.utils import bids_data_selection
+
+	l1_dir = path.abspath(path.expanduser(l1_dir))
+	out_base = path.abspath(path.expanduser(out_base))
+	out_dir = path.abspath(path.expanduser(out_dir))
+	mask=path.abspath(path.expanduser(mask))
+
+	data_selection = bids_data_selection(l1_dir,
+		structural_match=False,
+		functional_match=match,
+		subjects=False,
+		sessions=False,
+		verbose=True,
+		)
+	control_data_selection = bids_data_selection(l1_dir,
+		structural_match=False,
+		functional_match=control_match,
+		subjects=False,
+		sessions=False,
+		verbose=True,
+		)
+	data_selection['control'] = False
+	control_data_selection['control'] = True
+	data_selection = pd.concat([control_data_selection, data_selection])
+
+	if not out_dir:
+		out_dir = path.join(out_base,workflow_name)
+	workdir_name = workflow_name+'_work'
+	workdir = path.join(out_base,workdir_name)
+	if not os.path.exists(workdir):
+		os.makedirs(workdir)
+
+	data_selection = data_selection.sort_values(['session', 'subject'], ascending=[1, 1])
+	if exclude:
+		for key in exclude:
+			data_selection = data_selection[~data_selection[key].isin(exclude[key])]
+	if include:
+		for key in include:
+			data_selection = data_selection[data_selection[key].isin(include[key])]
+	data_selection.to_csv(path.join(workdir,'data_selection.csv'))
+
+	flameo = pe.Node(interface=fsl.FLAMEO(), name="flameo")
+	flameo.inputs.mask_file = mask
+	flameo.inputs.run_mode = "ols"
+
+	datasink = pe.Node(nio.DataSink(), name='datasink')
+	datasink.inputs.base_directory = out_dir
+	datasink_substitutions = [('_iterable_', '')]
+
+	common_fields = ''
+	common_fields += 'acq-'+data_selection.acq.drop_duplicates().item()
+	try:
+		common_fields += '_run-'+data_selection.run.drop_duplicates().item()
+	except ValueError:
+		pass
+
+	copeonly = data_selection[data_selection['modality']=='cope']
+	copes = copeonly['path'].tolist()
+	varcopes = data_selection[data_selection['modality']=='varcb']['path'].tolist()
+
+	copemerge = pe.Node(interface=fsl.Merge(dimension='t'),name="copemerge")
+	copemerge.inputs.in_files = copes
+	copemerge.inputs.merged_file = 'copes.nii.gz'
+
+	varcopemerge = pe.Node(interface=fsl.Merge(dimension='t'),name="varcopemerge")
+	varcopemerge.inputs.in_files = varcopes
+	varcopemerge.inputs.merged_file = 'varcopes.nii.gz'
+
+	feature = [~copeonly['control']][0]
+	control = [not i for i in feature]
+	feature = [int(i) for i in feature]
+	control = [int(i) for i in control]
+	regressors = {
+			'feature': feature,
+			'control': control
+			}
+
+	sessions = [['feature','T',['feature'], [1]]]
+	contrasts = deepcopy(sessions)
+	contrasts.append(['anova', 'F', sessions])
+
+	level2model = pe.Node(interface=fsl.MultipleRegressDesign(),name='level2model')
+	level2model.inputs.regressors = regressors
+	level2model.inputs.contrasts = contrasts
+
+	datasink_substitutions.extend([('cope1.nii.gz', '{}_cope.nii.gz'.format(common_fields))])
+	datasink_substitutions.extend([('tstat1.nii.gz','{}_tstat.nii.gz'.format(common_fields))])
+	datasink_substitutions.extend([('zstat1.nii.gz','{}_zstat.nii.gz'.format(common_fields))])
+	datasink_substitutions.extend([('fstat1.nii.gz','{}_fstat.nii.gz'.format(common_fields))])
+	datasink_substitutions.extend([('zfstat1.nii.gz','{}_zfstat.nii.gz'.format(common_fields))])
+	datasink.inputs.regexp_substitutions = datasink_substitutions
+
+	workflow_connections = [
+		(copemerge,flameo,[('merged_file','cope_file')]),
+		(varcopemerge,flameo,[('merged_file','var_cope_file')]),
+		(level2model,flameo, [('design_mat','design_file')]),
+		(level2model,flameo, [('design_grp','cov_split_file')]),
+		(level2model,flameo, [('design_fts','f_con_file')]),
+		(level2model,flameo, [('design_con','t_con_file')]),
+		(flameo, datasink, [('copes', '@copes')]),
+		(flameo, datasink, [('tstats', '@tstats')]),
+		(flameo, datasink, [('zstats', '@zstats')]),
+		(flameo, datasink, [('fstats', '@fstats')]),
+		(flameo, datasink, [('zfstats', '@zfstats')]),
+		]
+
+	workflow_config = {'execution': {'crashdump_dir': path.join(out_base,'crashdump'),}}
+
+	workflow = pe.Workflow(name=workdir_name)
+	workflow.connect(workflow_connections)
+	workflow.base_dir = out_base
+	workflow.config = workflow_config
+	try:
+		workflow.write_graph(dotfilename=path.join(workflow.base_dir,workdir_name,"graph.dot"), graph2use="hierarchical", format="png")
+	except RuntimeError:
+		pass
+
+	n_jobs = max(int(round(mp.cpu_count()*n_jobs_percentage)),2)
+	workflow.run(plugin="MultiProc", plugin_args={'n_procs' : n_jobs})
 	if not keep_work:
 		shutil.rmtree(path.join(out_base,workdir_name))
 

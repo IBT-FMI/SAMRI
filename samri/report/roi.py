@@ -247,16 +247,23 @@ def atlasassignment(data_path='~/ni_data/ofM.dr/bids/l2/anova/anova_zfstat.nii.g
 
 	data = nib.load(data_path)
 	atlas = nib.load(atlas_filename)
+	voxels_ratio = 1
 	if not np.array_equal(data.affine,atlas.affine):
+		voxels_data = np.prod(np.shape(data))
+		voxels_atlas = np.prod(np.shape(atlas))
+		voxels_ratio = np.min([np.floor(voxels_atlas / voxels_data),1])
 		if verbose:
 			print(data.affine,'\n',atlas.affine)
 			print(np.shape(data),'\n',np.shape(atlas))
 			print('The affines of these atlas and data file are not identical. In order to perform this sensitive operation we need to know that there is perfect correspondence between the voxels of input data and atlas. Attempting to recast affines.')
 		from nibabel import processing
-		data = processing.resample_from_to(data, atlas)
+		data = processing.resample_from_to(data, atlas, order=0)
 		if verbose:
 			print(data.affine,'\n',atlas.affine)
 			print(np.shape(data),'\n',np.shape(atlas))
+		reshaped = True
+	else:
+		reshaped = False
 	mapping = pd.read_csv(mapping)
 	atlas = atlas.get_data().flatten()
 	data = data.get_data().flatten()
@@ -277,6 +284,9 @@ def atlasassignment(data_path='~/ni_data/ofM.dr/bids/l2/anova/anova_zfstat.nii.g
 			left_mask = atlas == left_label
 			right_values = data[right_mask]
 			left_values = data[left_mask]
+			if voxels_ratio != 1:
+				right_values = right_values[::voxels_ratio]
+				left_values = left_values[::voxels_ratio]
 			right_values = ', '.join([str(i) for i in list(right_values)])
 			left_values = ', '.join([str(i) for i in list(left_values)])
 			results_right = deepcopy(results)
@@ -289,8 +299,9 @@ def atlasassignment(data_path='~/ni_data/ofM.dr/bids/l2/anova/anova_zfstat.nii.g
 			mask = np.isin(atlas, labels)
 			values = data[mask]
 			values = list(values)
-			values = [str(i) for i in values]
-			values = ', '.join(values)
+			if voxels_ratio != 1:
+				values = values[::voxels_ratio]
+			values = ', '.join([str(i) for i in values])
 			results.loc[results['Structure'] == structure, 'values'] = values
 	if lateralized:
 		results = results.append(results_right, ignore_index=True)

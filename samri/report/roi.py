@@ -1,5 +1,6 @@
 import nibabel as nib
 import numpy as np
+import os
 from os import path
 
 from nilearn.input_data import NiftiMasker
@@ -264,11 +265,10 @@ def atlasassignment(data_path='~/ni_data/ofM.dr/bids/l2/anova/anova_zfstat.nii.g
 	data = data[nonull_map]
 	structures = mapping['Structure'].unique()
 	results = deepcopy(mapping)
+	results['values'] = ''
 	if lateralized:
-		results['right values'] = ''
-		results['left values'] = ''
-	else:
-		results['values'] = ''
+		results['side'] = ''
+		results_right = deepcopy(results)
 	for structure in structures:
 		right_label = mapping[mapping['Structure'] == structure]['right label'].item()
 		left_label = mapping[mapping['Structure'] == structure]['left label'].item()
@@ -279,8 +279,11 @@ def atlasassignment(data_path='~/ni_data/ofM.dr/bids/l2/anova/anova_zfstat.nii.g
 			left_values = data[left_mask]
 			right_values = ', '.join([str(i) for i in list(right_values)])
 			left_values = ', '.join([str(i) for i in list(left_values)])
-			results.loc[results['Structure'] == structure, 'right values'] = right_values
-			results.loc[results['Structure'] == structure, 'left values'] = left_values
+			results_right = deepcopy(results)
+			results_right['side'] == 'right'
+			results_right.loc[results['Structure'] == structure, 'values'] = right_values
+			results['side'] == 'left'
+			results.loc[results['Structure'] == structure, 'values'] = left_values
 		else:
 			labels = [right_label, left_label]
 			mask = np.isin(atlas, labels)
@@ -289,7 +292,12 @@ def atlasassignment(data_path='~/ni_data/ofM.dr/bids/l2/anova/anova_zfstat.nii.g
 			values = [str(i) for i in values]
 			values = ', '.join(values)
 			results.loc[results['Structure'] == structure, 'values'] = values
+	if lateralized:
+		results = results.append(results_right, ignore_index=True)
 	if save_as:
+		save_path = path.dirname(save_as)
+		if not path.exists(save_path):
+			os.makedirs(save_path)
 		results.to_csv(save_as)
 	return results
 

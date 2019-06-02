@@ -125,6 +125,7 @@ def roi_distributions(df,
 	start=0.0,
 	stop=1.0,
 	text_side='left',
+	value_label='values',
 	xlim=None,
 	ylim=None,
 	bw=0.2,
@@ -174,21 +175,20 @@ def roi_distributions(df,
 		df = path.abspath(path.expanduser(df))
 		df = pd.read_csv(df_path)
 	if 'side' in df.columns:
-		df.loc[df['side']=='left','Structure'] = df.loc[df['side']=='left','Structure'] + '(L)'
-		df.loc[df['side']=='right','Structure'] = df.loc[df['side']=='right','Structure'] + '(R)'
-	df['value'] = ''
+		df.loc[(df['side']=='left'),'Structure'] = df.loc[(df['side']=='left'),'Structure'] + ' (L)'
+		df.loc[(df['side']=='right'),'Structure'] = df.loc[(df['side']=='right'),'Structure'] + ' (R)'
 	df = pd.DataFrame({
-		"Structure": row['Structure'],
-		"tissue type": row['tissue type'],
-		"value": float(value),
+		'Structure': row['Structure'],
+		'tissue type': row['tissue type'],
+		value_label: float(value),
 		}
-		for i, row in df.iterrows() for value in row['values'].split(', ')
+		for i, row in df.iterrows() for value in row[value_label].split(', ')
 		)
 	if small_roi_cutoff:
 		for i in list(df['Structure'].unique()):
 			if len(df[df['Structure']==i]) < small_roi_cutoff:
 				df = df[df['Structure'] != i]
-	df['mean'] = df.groupby('Structure')['value'].transform('mean')
+	df['mean'] = df.groupby('Structure')[value_label].transform('mean')
 	df = df.sort_values(['mean'],ascending=ascending)
 	if exclude_tissue_type:
 		df = df[~df['tissue type'].isin(exclude_tissue_type)]
@@ -218,8 +218,8 @@ def roi_distributions(df,
 
 	# Draw the densities in a few steps
 	lw = mpl.rcParams['lines.linewidth']
-	g.map(sns.kdeplot, 'value', clip_on=False, gridsize=500, shade=True, alpha=1, lw=lw/4.*3, bw=bw)
-	g.map(sns.kdeplot, 'value', clip_on=False, gridsize=500, color="w", lw=lw, bw=bw)
+	g.map(sns.kdeplot, value_label, clip_on=False, gridsize=500, shade=True, alpha=1, lw=lw/4.*3, bw=bw)
+	g.map(sns.kdeplot, value_label, clip_on=False, gridsize=500, color="w", lw=lw, bw=bw)
 	g.map(plt.axhline, y=0, lw=lw, clip_on=False)
 
 	# Define and use a simple function to label the plot in axes coordinates
@@ -243,10 +243,10 @@ def roi_distributions(df,
 				)
 		text.set_path_effects([path_effects.Stroke(linewidth=lw, foreground='w'),
                        path_effects.Normal()])
-	g.map(label, 'value')
+	g.map(label, value_label)
 
 	# Set the subplots to overlap
-	g.fig.subplots_adjust(hspace=-.25)
+	g.fig.subplots_adjust(hspace=-.33)
 
 	# Remove axes details that don't play will with overlap
 	g.set_titles("")

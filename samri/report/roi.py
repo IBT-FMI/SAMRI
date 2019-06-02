@@ -211,6 +211,7 @@ def mean(img_path, mask_path):
 
 def atlasassignment(data_path='~/ni_data/ofM.dr/bids/l2/anova/anova_zfstat.nii.gz',
 	null_label=0.0,
+	value_label='values',
 	verbose=False,
 	lateralized=False,
 	save_as='',
@@ -224,6 +225,8 @@ def atlasassignment(data_path='~/ni_data/ofM.dr/bids/l2/anova/anova_zfstat.nii.g
 		Path to data file, the values of which are to be indexed according to the DSURQEC atlas.
 	null_label : float, optional
 		Values of the atlas which to exclude a priori.
+	value_label : string, options
+		Label to apply to the value column.
 	verbose : bool, optional
 		Whether to print output regarding the processing (activates warnings if the data is reformatted, as well as reports for each value).
 	lateralized : bool , optional
@@ -272,7 +275,7 @@ def atlasassignment(data_path='~/ni_data/ofM.dr/bids/l2/anova/anova_zfstat.nii.g
 	data = data[nonull_map]
 	structures = mapping['Structure'].unique()
 	results = deepcopy(mapping)
-	results['values'] = ''
+	results[value_label] = ''
 	if lateralized:
 		results['side'] = ''
 		results_right = deepcopy(results)
@@ -290,10 +293,10 @@ def atlasassignment(data_path='~/ni_data/ofM.dr/bids/l2/anova/anova_zfstat.nii.g
 			right_values = ', '.join([str(i) for i in list(right_values)])
 			left_values = ', '.join([str(i) for i in list(left_values)])
 			results_right = deepcopy(results)
-			results_right['side'] == 'right'
-			results_right.loc[results['Structure'] == structure, 'values'] = right_values
-			results['side'] == 'left'
-			results.loc[results['Structure'] == structure, 'values'] = left_values
+			results_right['side'] = 'right'
+			results_right.loc[results['Structure'] == structure, value_label] = right_values
+			results['side'] = 'left'
+			results.loc[results['Structure'] == structure, value_label] = left_values
 		else:
 			labels = [right_label, left_label]
 			mask = np.isin(atlas, labels)
@@ -302,12 +305,12 @@ def atlasassignment(data_path='~/ni_data/ofM.dr/bids/l2/anova/anova_zfstat.nii.g
 			if voxels_ratio != 1:
 				values = values[::voxels_ratio]
 			values = ', '.join([str(i) for i in values])
-			results.loc[results['Structure'] == structure, 'values'] = values
+			results.loc[results['Structure'] == structure, value_label] = values
 	if lateralized:
 		results = results.append(results_right, ignore_index=True)
 	if save_as:
 		save_path = path.dirname(save_as)
-		if not path.exists(save_path):
+		if save_path and not path.exists(save_path):
 			os.makedirs(save_path)
 		results.to_csv(save_as)
 	return results

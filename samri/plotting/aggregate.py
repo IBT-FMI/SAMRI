@@ -115,7 +115,7 @@ def registration_qc(df,
 	if save_as:
 		plt.savefig(path.abspath(path.expanduser(save_as)), bbox_inches='tight')
 
-def roi_distributions(df_path,
+def roi_distributions(df,
 	ascending=False,
 	cmap='viridis',
 	exclude_tissue_type=[],
@@ -127,17 +127,20 @@ def roi_distributions(df_path,
 	text_side='left',
 	xlim=None,
 	ylim=None,
+	bw=0.2,
 	):
 	"""Plot the distributions of values inside 3D image regions of interest.
 
 	Parameters
 	----------
 
-	df_path : str
-		Path to a `pandas.DataFrame` object containing a 'value' a 'Structure', and a 'tissue type' column.
+	df : str or pandas.DataFrame
+		A Pandas Dataframe, or path to one, which contains a 'values' (or 'right values' and 'left values') a 'Structure', and a 'tissue type' column.
 	ascending : boolean, optional
 		Whether to plot the ROI distributions from lowest to highest mean
 		(if `False` the ROI distributions are plotted from highest to lowest mean).
+	bw : float, optional
+		Bandwidth scalar factor for the kernel size estimation.
 	cmap : string, optional
 		Name of matplotlib colormap which to color the plot array with.
 	exclude_tissue_type : list, optional
@@ -167,9 +170,20 @@ def roi_distributions(df_path,
 	mpl.rcParams["ytick.major.size"] = 0.0
 	mpl.rcParams["axes.facecolor"] = (0, 0, 0, 0)
 
-	df_path = path.abspath(path.expanduser(df_path))
-
-	df = pd.read_csv(df_path)
+	if isinstance(df,str):
+		df = path.abspath(path.expanduser(df))
+		df = pd.read_csv(df_path)
+	if 'side' in df.columns:
+		df.loc[df['side']=='left','Structure'] = df.loc[df['side']=='left','Structure'] + '(L)'
+		df.loc[df['side']=='right','Structure'] = df.loc[df['side']=='right','Structure'] + '(R)'
+	df['value'] = ''
+	df = pd.DataFrame({
+		"Structure": row['Structure'],
+		"tissue type": row['tissue type'],
+		"value": float(value),
+		}
+		for i, row in df.iterrows() for value in row['values'].split(', ')
+		)
 	if small_roi_cutoff:
 		for i in list(df['Structure'].unique()):
 			if len(df[df['Structure']==i]) < small_roi_cutoff:
@@ -204,8 +218,8 @@ def roi_distributions(df_path,
 
 	# Draw the densities in a few steps
 	lw = mpl.rcParams['lines.linewidth']
-	g.map(sns.kdeplot, 'value', clip_on=False, gridsize=500, shade=True, alpha=1, lw=lw/4.*3, bw=.2)
-	g.map(sns.kdeplot, 'value', clip_on=False, gridsize=500, color="w", lw=lw, bw=.2)
+	g.map(sns.kdeplot, 'value', clip_on=False, gridsize=500, shade=True, alpha=1, lw=lw/4.*3, bw=bw)
+	g.map(sns.kdeplot, 'value', clip_on=False, gridsize=500, color="w", lw=lw, bw=bw)
 	g.map(plt.axhline, y=0, lw=lw, clip_on=False)
 
 	# Define and use a simple function to label the plot in axes coordinates

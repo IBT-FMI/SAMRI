@@ -211,7 +211,7 @@ def roi_distributions(df,
 		row='Structure',
 		hue='Structure',
 		aspect=max_rois*ratio,
-		size=aspect[1]/max_rois,
+		height=aspect[1]/max_rois,
 		palette=pal,
 		xlim=xlim,
 		ylim=ylim,
@@ -247,7 +247,7 @@ def roi_distributions(df,
 	g.map(label, value_label)
 
 	# Set the subplots to overlap
-	g.fig.subplots_adjust(hspace=-.33)
+	g.fig.subplots_adjust(hspace=-.15)
 
 	# Remove axes details that don't play will with overlap
 	g.set_titles("")

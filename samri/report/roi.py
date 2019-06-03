@@ -278,25 +278,34 @@ def atlasassignment(data_path='~/ni_data/ofM.dr/bids/l2/anova/anova_zfstat.nii.g
 	results[value_label] = ''
 	if lateralized:
 		results['side'] = ''
-		results_right = deepcopy(results)
+		results_medial = results.loc[(results['right label'] == results['left label'])].copy()
+		results_left = results.loc[(results['right label'] != results['left label'])].copy()
+		results_right = deepcopy(results_left)
+		results_right['side'] = 'right'
+		results_left['side'] = 'left'
 	for structure in structures:
 		right_label = mapping[mapping['Structure'] == structure]['right label'].item()
 		left_label = mapping[mapping['Structure'] == structure]['left label'].item()
 		if lateralized:
-			right_mask = atlas == right_label
-			left_mask = atlas == left_label
-			right_values = data[right_mask]
-			left_values = data[left_mask]
-			if voxels_ratio != 1:
-				right_values = right_values[::voxels_ratio]
-				left_values = left_values[::voxels_ratio]
-			right_values = ', '.join([str(i) for i in list(right_values)])
-			left_values = ', '.join([str(i) for i in list(left_values)])
-			results_right = deepcopy(results)
-			results_right['side'] = 'right'
-			results_right.loc[results['Structure'] == structure, value_label] = right_values
-			results['side'] = 'left'
-			results.loc[results['Structure'] == structure, value_label] = left_values
+			if right_label == left_label:
+				mask = atlas == right_label
+				values = data[mask]
+				if voxels_ratio != 1:
+					values = values[::voxels_ratio]
+				values = ', '.join([str(i) for i in list(values)])
+				results_medial.loc[results['Structure'] == structure, value_label] = values
+			else:
+				right_mask = atlas == right_label
+				left_mask = atlas == left_label
+				right_values = data[right_mask]
+				left_values = data[left_mask]
+				if voxels_ratio != 1:
+					right_values = right_values[::voxels_ratio]
+					left_values = left_values[::voxels_ratio]
+				right_values = ', '.join([str(i) for i in list(right_values)])
+				left_values = ', '.join([str(i) for i in list(left_values)])
+				results_right.loc[results['Structure'] == structure, value_label] = right_values
+				results_left.loc[results['Structure'] == structure, value_label] = left_values
 		else:
 			labels = [right_label, left_label]
 			mask = np.isin(atlas, labels)
@@ -307,7 +316,7 @@ def atlasassignment(data_path='~/ni_data/ofM.dr/bids/l2/anova/anova_zfstat.nii.g
 			values = ', '.join([str(i) for i in values])
 			results.loc[results['Structure'] == structure, value_label] = values
 	if lateralized:
-		results = results.append(results_right, ignore_index=True)
+		results = pd.concat([results_left, results_medial, results_right], ignore_index=True)
 	if save_as:
 		save_path = path.dirname(save_as)
 		if save_path and not path.exists(save_path):

@@ -199,7 +199,8 @@ def roi_distributions(df,
 	structures = list(df['Structure'].unique())
 
 	# Define colors
-	cm_subsection = np.linspace(start, stop, len(structures))
+	## The colormap is applied inversely, so we go from stop to start.
+	cm_subsection = np.linspace(stop, start, len(structures))
 	cmap = plt.get_cmap(cmap)
 	pal = [ cmap(x) for x in cm_subsection ]
 

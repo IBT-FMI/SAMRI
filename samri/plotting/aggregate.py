@@ -136,7 +136,7 @@ def roi_distributions(df,
 	----------
 
 	df : str or pandas.DataFrame
-		A Pandas Dataframe, or path to one, which contains a 'values' (or 'right values' and 'left values') a 'Structure', and a 'tissue type' column.
+		A Pandas Dataframe, or path to one, which contains columns named 'Structure', 'tissue type', and the value of the `value_label` parameter (values by default).
 	ascending : boolean, optional
 		Whether to plot the ROI distributions from lowest to highest mean
 		(if `False` the ROI distributions are plotted from highest to lowest mean).

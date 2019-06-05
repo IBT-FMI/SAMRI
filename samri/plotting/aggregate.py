@@ -129,6 +129,7 @@ def roi_distributions(df,
 	xlim=None,
 	ylim=None,
 	bw=0.2,
+	hspace=-0.1,
 	):
 	"""Plot the distributions of values inside 3D image regions of interest.
 
@@ -165,11 +166,12 @@ def roi_distributions(df,
 		X-axis limits, passed to `seaborn.FacetGrid()`
 	ylim : list, optional
 		Y-axis limits, passed to `seaborn.FacetGrid()`
+	hspace : float, optional
+		How much (in percent of the axis height) to overlap the individual axes.
 	"""
 
 	mpl.rcParams["xtick.major.size"] = 0.0
 	mpl.rcParams["ytick.major.size"] = 0.0
-	mpl.rcParams["axes.facecolor"] = (0, 0, 0, 0)
 
 	if isinstance(df,str):
 		df = path.abspath(path.expanduser(df))
@@ -206,7 +208,7 @@ def roi_distributions(df,
 
 	# Initialize the FacetGrid object
 	aspect = mpl.rcParams['figure.figsize']
-	ratio = aspect[0]/float(aspect[1])
+	ratio = aspect[0]/aspect[1]
 	g = sns.FacetGrid(df,
 		row='Structure',
 		hue='Structure',
@@ -215,6 +217,7 @@ def roi_distributions(df,
 		palette=pal,
 		xlim=xlim,
 		ylim=ylim,
+		despine=True,
 		)
 
 	# Draw the densities in a few steps
@@ -224,7 +227,7 @@ def roi_distributions(df,
 	g.map(plt.axhline, y=0, lw=lw, clip_on=False)
 
 	# Define and use a simple function to label the plot in axes coordinates
-	def label(x, color, label):
+	def apply_label(x, color, label):
 		ax = plt.gca()
 		if text_side == 'left':
 			text = ax.text(0, .04, label,
@@ -244,15 +247,22 @@ def roi_distributions(df,
 				)
 		text.set_path_effects([path_effects.Stroke(linewidth=lw, foreground='w'),
                        path_effects.Normal()])
-	g.map(label, value_label)
+	g.map(apply_label, value_label)
 
-	# Set the subplots to overlap
-	g.fig.subplots_adjust(hspace=-.15)
+	# Set the subplots to overlap and apply the margins which for some reason otherwise get reset here
+	lw = mpl.rcParams['lines.linewidth']
+	g.fig.subplots_adjust(
+		mpl.rcParams['figure.subplot.left'],
+		mpl.rcParams['figure.subplot.bottom'],
+		mpl.rcParams['figure.subplot.right'],
+		mpl.rcParams['figure.subplot.top'],
+		wspace=0.0,
+		hspace=hspace,
+		)
 
 	# Remove axes details that don't play will with overlap
 	g.set_titles("")
 	g.set(yticks=[])
-	g.despine(bottom=True, left=True)
 
 	if save_as:
 		save_as = path.abspath(path.expanduser(save_as))

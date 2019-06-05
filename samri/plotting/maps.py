@@ -7,7 +7,6 @@ import subprocess
 import sys
 import io
 import os
-import hashlib
 
 #Here we import internal nilearn functions, YOLO!
 from nilearn._utils.niimg import _safe_get_data
@@ -512,6 +511,7 @@ def _create_3Dplot(stat_maps,
 	obj_paths = []
 	for stat_map in stat_maps:
 		obj_paths.extend(create_mesh(stat_map,threshold,one=True,positive_only=positive_only,negative_only=negative_only))
+	print(obj_paths)
 
 	##Find matching color of used threshold in colorbar, needed to determine color for blender
 	if vmax == 0:
@@ -553,10 +553,12 @@ def _create_3Dplot(stat_maps,
 	s = ""
 	for path in obj_paths:
 		if not path is None:
-			s = s + hashlib.md5(open(path,'rb').read()).hexdigest()
+			s = os.path.splitext(os.path.basename(path))[0].split('_')[0]
 	filename_3Dplot = "3Dplot_{}.png".format(s)
 	cli.append('-n')
 	cli.append(filename_3Dplot)
+	print(filename_3Dplot)
+	print(cli)
 
 	#python script cannot be run directly, need to start blender in background via command line, then run script.
 	subprocess.run(cli,check=True,stdout=open(os.devnull,'wb'))

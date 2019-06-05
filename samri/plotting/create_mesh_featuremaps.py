@@ -115,8 +115,8 @@ def create_mesh(stat_map,threshold,
 	verts, faces, normals, values = measure.marching_cubes_lewiner(img_data,threshold)
 
 	#save mesh as .obj
-	filename = os.path.basename(stat_map)
-	filename_prefix = filename.split(".")[0]
+	filename_prefix = str(hash(str(verts)) + hash(str(faces)) + hash(str(normals)) + hash(str(values)))
+
 	path = '/tmp/'
 	output_file = filename_prefix + '_pos_mesh.obj'
 	if neg: output_file = filename_prefix + '_neg_mesh.obj'

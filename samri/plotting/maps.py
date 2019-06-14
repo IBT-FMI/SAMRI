@@ -753,9 +753,18 @@ def atlas_label(atlas,
 	subplot_titles=[],
 	scale=1.,
 	dim=0,
+	anat_cmap='binary',
+	display_mode='yx',
 	**kwargs
 	):
-	"""Plot a region of interest based on an atlas and a label."""
+	"""Plot a region of interest based on an atlas and a label.
+
+	Parameters
+	----------
+
+	display_mode : {‘ortho’, ‘tiled’, ‘x’, ‘y’, ‘z’, ‘yx’, ‘xz’, ‘yz’}
+		Which slides to display, parameter passed to `nilearn.plotting.plt_roi()`
+	"""
 
 	from matplotlib.colors import LinearSegmentedColormap, ListedColormap
 
@@ -770,17 +779,30 @@ def atlas_label(atlas,
 		roi = atlas
 
 	cm = ListedColormap([color], name="my_atlas_label_cmap", N=None)
+	cut = nilearn.plotting.plot_stat_map(roi,anat,threshold=threshold,colorbar=False).cut_coords
+	plt.close()
+	# more of these will need to be added
+	if display_mode == 'yx':
+		cut = cut[:2]
 
-	display = nilearn.plotting.plot_roi(roi,
+	display = nilearn.plotting.plot_img(anat,
 		alpha=alpha,
-		annotate=False,
 		axes=ax,
-		bg_img=anat,
-		black_bg=black_bg,
-		draw_cross=False,
-		cmap=cm,
-		dim=dim,
+		threshold=threshold,
 		figure=fig,
+		cmap=anat_cmap,
+		#interpolation=interpolation,
+		title=None,
+		annotate=False,
+		draw_cross=False,
+		black_bg=black_bg,
+		colorbar=False,
+		display_mode=display_mode,
+		cut_coords=cut,
+		)
+	display.add_overlay(roi,
+		colorbar=False,
+		cmap=cm,
 		)
 	if draw_cross:
 		display.draw_cross(linewidth=scale*1.6, alpha=0.4)

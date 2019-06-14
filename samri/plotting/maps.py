@@ -738,7 +738,7 @@ def stat3D(stat_maps,
 	return fh
 
 def atlas_label(atlas,
-	alpha=0.7,
+	alpha=1,
 	anat="/usr/share/mouse-brain-atlases/dsurqec_40micron_masked.nii",
 	ax=None,
 	color="#E69F00",
@@ -748,7 +748,7 @@ def atlas_label(atlas,
 	annotate=True,
 	black_bg=False,
 	draw_cross=True,
-	threshold=None,
+	threshold=1,
 	roi=False,
 	subplot_titles=[],
 	scale=1.,
@@ -779,14 +779,15 @@ def atlas_label(atlas,
 		roi = atlas
 
 	cm = ListedColormap([color], name="my_atlas_label_cmap", N=None)
-	cut = nilearn.plotting.plot_stat_map(roi,anat,threshold=threshold,colorbar=False).cut_coords
+	cut = nilearn.plotting.plot_stat_map(roi,anat,threshold=None,colorbar=False).cut_coords
 	plt.close()
 	# more of these will need to be added
 	if display_mode == 'yx':
 		cut = cut[:2]
 
-	display = nilearn.plotting.plot_img(anat,
+	display = nilearn.plotting.plot_anat(anat,
 		alpha=alpha,
+		dim=dim,
 		axes=ax,
 		threshold=threshold,
 		figure=fig,

@@ -69,3 +69,89 @@ def drp_seed_fc():
 		n_procs=N_PROCS,
 		cachedir='/mnt/data/joblib')
 
+def segmentation():
+	import matplotlib.pyplot as plt
+	import matplotlib as mpl
+	import numpy as np
+
+	from sklearn import datasets
+	from sklearn.cross_validation import StratifiedKFold
+	from samri.analysis.segmentation import assign_gaussian
+
+	def make_ellipses(gmm, ax,
+		colors='rgb',
+		):
+		for n, color in enumerate(colors):
+			#print(gmm._get_covars()[n])
+			#print(gmm._get_covars()[n][:2, :2])
+			v, w = np.linalg.eigh(gmm._get_covars()[n][:2, :2])
+			u = w[0] / np.linalg.norm(w[0])
+			angle = np.arctan2(u[1], u[0])
+			angle = 180 * angle / np.pi  # convert to degrees
+			v *= 9
+			ell = mpl.patches.Ellipse(gmm.means_[n, :2], v[0], v[1],
+									  180 + angle, color=color)
+			ell.set_clip_box(ax.bbox)
+			ell.set_alpha(0.5)
+			ax.add_artist(ell)
+
+	iris = datasets.load_iris()
+	iris_data = iris.data[:,:3]
+
+	skf = StratifiedKFold(iris.target, n_folds=5, shuffle=False)
+	train_index, test_index = next(iter(skf))
+
+	X_train = iris_data[train_index]
+	X_test = iris_data[test_index]
+
+	covariances = ['spherical', 'diag', 'tied', 'full']
+	n_covariances = len(covariances)
+
+	n_components = 4
+	plt.figure(figsize=(3 * n_covariances / 2, 6))
+
+	for index, covariance in enumerate(covariances):
+		h = plt.subplot(2, n_covariances / 2, index + 1)
+
+		assignments, classifier = assign_gaussian(X_train, n_components, covariance)
+
+		weights = classifier.weights_
+		mysort = np.argsort(weights)
+		print(weights)
+		weights = weights[mysort]
+		print(weights)
+		labels = np.array(list(set(assignments)))
+		labels_ = labels[mysort]
+		convert = dict(zip(labels, labels_))
+		u,inv = np.unique(assignments,return_inverse = True)
+		assignments = np.array([convert[x] for x in u])[inv].reshape(assignments.shape)
+
+		for n, color in enumerate('rgby'):
+			data = X_train[assignments == n]
+			plt.plot(data[:, 0], data[:, 1], 'x', color=color,
+						label=list(set(assignments))[n])
+		assignments_, classifier_ = assign_gaussian(X_train, n_components, covariance)
+
+		weights = classifier_.weights_
+		mysort = np.argsort(weights)
+		weights = weights[mysort]
+		labels = np.array(list(set(assignments_)))
+		labels_ = labels[mysort]
+		convert = dict(zip(labels, labels_))
+		u,inv = np.unique(assignments_,return_inverse = True)
+		assignments_ = np.array([convert[x] for x in u])[inv].reshape(assignments_.shape)
+
+		for n, color in enumerate('rgby'):
+			data = X_train[assignments_ == n]
+			plt.plot(data[:, 0], data[:, 1], 'o', color=color)
+		test_accuracy = np.mean(assignments_.ravel() == assignments.ravel()) * 100
+		plt.text(0.05, 0.9, 'Test accuracy: %.1f' % test_accuracy,
+				 transform=h.transAxes)
+
+		make_ellipses(classifier, h, colors='rgby')
+		plt.xticks(())
+		plt.yticks(())
+		plt.title(covariance)
+
+	plt.legend()
+	plt.savefig('segmentation.pdf')

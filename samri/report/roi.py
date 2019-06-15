@@ -93,7 +93,8 @@ def ts(img_path,
 		mask_data = mask_data.flatten()
 		mask_data = mask_data.astype(bool)
 		top_data[mask_data == False] = 0
-		voxel = np.in1d(top_data,np.max(top_data))
+		top_data_ = top_data[~np.isnan(top_data)]
+		voxel = np.in1d(top_data,np.max(top_data_))
 		voxel = voxel.astype(int)
 		voxel = voxel.reshape(shape)
 		voxel_mask_img = nib.Nifti1Image(voxel, affine, header)

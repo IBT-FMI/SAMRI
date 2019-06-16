@@ -426,7 +426,7 @@ def df_roi_data(df,
 		String to append after 'Mean' and 'Median' to construct the name of the mean and median columns.
 	path_column : str, optional
 		Column name which identifies the path of the data to analyze.
-	zero_threshold : float, optional
+		zero_threshold : float, optional
 		Absolute value below which values are to be considered zero.
 
 	Returns

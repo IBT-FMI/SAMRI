@@ -85,15 +85,24 @@ def bids_autofind(bids_dir,
 	substitutions = []
 	for ix, i in enumerate(datafind_res.outputs.out_paths):
 		substitution = {}
-		substitution["acquisition"] = datafind_res.outputs.acquisition[ix]
-		substitution["subject"] = datafind_res.outputs.sub[ix]
-		substitution["session"] = datafind_res.outputs.ses[ix]
-		substitution["task"] = datafind_res.outputs.task[ix]
-		substitution["run"] = datafind_res.outputs.run[ix]
+		try:
+			substitution["acquisition"] = datafind_res.outputs.acquisition[ix]
+		except AttributeError: pass
+		try:
+			substitution["subject"] = datafind_res.outputs.sub[ix]
+		except AttributeError: pass
+		try:
+			substitution["session"] = datafind_res.outputs.ses[ix]
+		except AttributeError: pass
+		try:
+			substitution["task"] = datafind_res.outputs.task[ix]
+		except AttributeError: pass
+		try:
+			substitution["run"] = datafind_res.outputs.run[ix]
+		except AttributeError: pass
 		try:
 			substitution["modality"] = datafind_res.outputs.modality[ix]
-		except AttributeError:
-			pass
+		except AttributeError: pass
 		reconstructed_path = path.abspath(path.expanduser(path_template.format(**substitution)))
 		original_path = path.abspath(path.expanduser(i))
 		if reconstructed_path != original_path:

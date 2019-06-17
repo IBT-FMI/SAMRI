@@ -135,6 +135,7 @@ def scaled_plot(template,
 	ax=None,
 	black_bg=False,
 	stat_map=None,
+	stat_map_alpha=1.0,
 	overlay=None,
 	title=None,
 	threshold=None,
@@ -151,7 +152,7 @@ def scaled_plot(template,
 	negative_only=False,
 	vmin=None,
 	vmax=None,
-	stat_cmap=None,
+	#stat_cmap=None,
 	):
 	"""A wrapper for nilearn's plot_stat_map which allows scaling of crosshairs, titles and annotations.
 
@@ -185,8 +186,8 @@ def scaled_plot(template,
 	except (AttributeError, TypeError):
 		pass
 
-	if stat_cmap:
-		cmap=stat_cmap
+	#if stat_cmap:
+	#	cmap=stat_cmap
 
 	if positive_only:
 		stat_map=make_pos(stat_map)
@@ -195,11 +196,15 @@ def scaled_plot(template,
 
 	if stat_map and cut is None:
 		#If cut is not specified, use cut_coords as determined by nilearns plot_stat_map()
-		cut = nilearn.plotting.plot_stat_map(stat_map,template,threshold=threshold,colorbar=False).cut_coords
+		cut = nilearn.plotting.plot_stat_map(stat_map,template,
+				display_mode=display_mode,
+				threshold=threshold,
+				colorbar=False,
+				).cut_coords
 		plt.close()
 
 	display = nilearn.plotting.plot_img(template,
-		threshold=threshold,
+		#threshold=threshold,
 		figure=fig,
 		axes=ax,
 		cmap=anat_cmap,
@@ -216,6 +221,7 @@ def scaled_plot(template,
 		display.add_overlay(stat_map,
 			threshold=threshold,
 			cmap=cmap, vmin = vmin,vmax = vmax, colorbar=False,
+			alpha=stat_map_alpha,
 			)
 
 	if draw_cross:
@@ -238,6 +244,7 @@ def scaled_plot(template,
 	return display
 
 def stat(stat_maps,
+	alpha=1.0,
 	overlays=[],
 	figure_title="",
 	interpolation="hermite",
@@ -313,7 +320,11 @@ def stat(stat_maps,
 	if len(stat_maps) == 1:
 		#determine optimal cut coords for stat_map if none are given
 		if not cut_coords:
-			cut_coords = nilearn.plotting.plot_stat_map(stat_map,template,threshold=threshold,colorbar=False).cut_coords
+			cut_coords = nilearn.plotting.plot_stat_map(stat_map,template,
+				threshold=threshold,
+				display_mode=display_mode,
+				colorbar=False,
+				).cut_coords
 		if not ax:
 			fig, ax = plt.subplots(facecolor='#eeeeee')
 		else:
@@ -328,7 +339,7 @@ def stat(stat_maps,
 			title=None
 
 		if draw_colorbar:
-			cax, kw,vmin,vmax,stat_cmap = _draw_colorbar(stat_maps[0],ax,
+			cax, kw,vmin,vmax,cmap = _draw_colorbar(stat_maps[0],ax,
 				threshold=threshold,
 				aspect=30,
 				fraction=0.05,
@@ -346,6 +357,7 @@ def stat(stat_maps,
 			stat_map=stat_maps[0],
 			overlay=my_overlay,
 			title=title,
+			stat_map_alpha=alpha,
 			threshold=threshold,
 			cut=cut_coords[0],
 			interpolation=interpolation,
@@ -358,27 +370,28 @@ def stat(stat_maps,
 			anat_cmap=anat_cmap,
 			display_mode=display_mode,
 			positive_only=positive_only,
-			negative_only = negative_only,
+			negative_only=negative_only,
 			vmin=vmin,
-			vmax = vmax,
-			stat_cmap = stat_cmap,
+			vmax=vmax,
+			#stat_cmap=stat_cmap,
 			)
 	else:
 		try:
 			nrows, ncols = stat_maps.shape
 			#scale = scale/float(min(nrows, ncols))
 		except AttributeError:
-			if shape == "portrait":
+			if shape == "landscape":
 				ncols = 2
 				#we use inverse floor division to get the ceiling
 				nrows = -(-len(stat_maps)//2)
 				#scale = scale/float(ncols)
-			elif shape == "landscape":
+			elif shape == "portrait":
 				nrows = 2
 				#we use inverse floor division to get the ceiling
 				ncols = -(-len(stat_maps)//2)
 				#scale = scale/float(nrows)
-		fig, ax = plt.subplots(figsize=(6*ncols,2.5*nrows), facecolor='#eeeeee', nrows=nrows, ncols=ncols)
+		fig, ax = plt.subplots(facecolor='#eeeeee', nrows=nrows, ncols=ncols)
+		#fig, ax = plt.subplots(figsize=(6*ncols,2.5*nrows), facecolor='#eeeeee', nrows=nrows, ncols=ncols)
 		if figure_title:
 			fig.suptitle(figure_title, fontsize=scale*35, fontweight='bold')
 		conserve_colorbar_steps = 0
@@ -431,18 +444,27 @@ def stat(stat_maps,
 					title = None
 			else:
 				title = None
+			try:
+				if isinstance(display_mode[ix],str) and not isinstance(display_mode,str):
+					display_mode_ = display_mode[ix]
+				else:
+					display_mode_ = display_mode
+			except IndexError:
+				display_mode_ = display_mode
 			# Axes are fully populating the grid - this may exceed the available number of statistic maps (`stat_maps`).
 			# The missing statistic maps may either be missing (raising an `IndexError`) or `None` (raising an `AttributeError` from `_draw_colorbar` and `TypeError` from `scaled_plot`).
 			try:
 				if draw_colorbar:
-					cax, _,_,_,_ = _draw_colorbar(stat_maps[ix],flat_axes[ix:ix+conserve_colorbar_steps],
+					cax, kw,vmin,vmax,cmap = _draw_colorbar(stat_maps[ix],flat_axes[ix:ix+conserve_colorbar_steps],
 						threshold=threshold,
 						aspect=cbar_aspect,
 						fraction=fraction,
-						anchor=(2,0.5),
+						anchor=(0,0.5),
+						cmap=cmap,
 						)
 				display = scaled_plot(template, fig, ax,
 					stat_map=stat_maps[ix],
+					stat_map_alpha=alpha,
 					overlay=overlays[ix],
 					title=title,
 					cmap=cmap,
@@ -455,7 +477,9 @@ def stat(stat_maps,
 					scale=scale,
 					black_bg=black_bg,
 					anat_cmap=anat_cmap,
-					display_mode=display_mode,
+					display_mode=display_mode_,
+					vmax=vmax,
+					vmin=vmin,
 					)
 			except (AttributeError, IndexError, TypeError):
 				ax.axis('off')

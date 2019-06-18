@@ -175,7 +175,7 @@ def roi_distributions(df,
 
 	if isinstance(df,str):
 		df = path.abspath(path.expanduser(df))
-		df = pd.read_csv(df_path)
+		df = pd.read_csv(df)
 	if 'side' in df.columns:
 		df.loc[(df['side']=='left'),'Structure'] = df.loc[(df['side']=='left'),'Structure'] + ' (L)'
 		df.loc[(df['side']=='right'),'Structure'] = df.loc[(df['side']=='right'),'Structure'] + ' (R)'
@@ -233,29 +233,28 @@ def roi_distributions(df,
 			text = ax.text(0, .04, label,
 				fontweight="bold",
 				color=color,
-				ha="left",
+				horizontalalignment="left",
 				va="bottom",
 				transform=ax.transAxes,
 				)
 		if text_side == 'right':
-			text = ax.text(1, .04, label,
+			text = ax.text(1.1, .04, label,
 				fontweight="bold",
 				color=color,
-				ha="right",
+				horizontalalignment="right",
 				va="bottom",
 				transform=ax.transAxes,
 				)
-		text.set_path_effects([path_effects.Stroke(linewidth=lw, foreground='w'),
+		text.set_path_effects([path_effects.Stroke(linewidth=lw*1.5, foreground='w'),
                        path_effects.Normal()])
 	g.map(apply_label, value_label)
 
 	# Set the subplots to overlap and apply the margins which for some reason otherwise get reset here
-	lw = mpl.rcParams['lines.linewidth']
 	g.fig.subplots_adjust(
-		mpl.rcParams['figure.subplot.left'],
-		mpl.rcParams['figure.subplot.bottom'],
-		mpl.rcParams['figure.subplot.right'],
-		mpl.rcParams['figure.subplot.top'],
+		left=mpl.rcParams['figure.subplot.left'],
+		bottom=mpl.rcParams['figure.subplot.bottom'],
+		right=mpl.rcParams['figure.subplot.right'],
+		top=mpl.rcParams['figure.subplot.top'],
 		wspace=0.0,
 		hspace=hspace,
 		)

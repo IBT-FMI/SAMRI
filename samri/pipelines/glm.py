@@ -657,6 +657,7 @@ def l2_common_effect(l1_dir,
 	if include:
 		for key in include:
 			data_selection = data_selection[data_selection[key].isin(include[key])]
+			return()
 	data_selection.to_csv(path.join(workdir,'data_selection.csv'))
 
 	copemerge = pe.Node(interface=fsl.Merge(dimension='t'),name="copemerge")
@@ -1143,14 +1144,12 @@ def l2_anova(l1_dir,
 	copeonly = data_selection[data_selection['modality']=='cope']
 	regressors = {}
 	for sub in copeonly['subject'].unique():
-		#print(sub)
 		regressor = [copeonly['subject'] == sub][0]
 		regressor = [int(i) for i in regressor]
 		key = "sub-"+str(sub)
 		regressors[key] = regressor
 	reference = str(copeonly['session'].unique()[0])
 	for ses in copeonly['session'].unique()[1:]:
-		#print(ses)
 		regressor = [copeonly['session'] == ses][0]
 		regressor = [int(i) for i in regressor]
 		key = "ses-("+str(ses)+'-'+reference+')'
@@ -1163,9 +1162,6 @@ def l2_anova(l1_dir,
 	level2model = pe.Node(interface=fsl.MultipleRegressDesign(),name='level2model')
 	level2model.inputs.regressors = regressors
 	level2model.inputs.contrasts = contrasts
-	#print(regressors)
-	#print(contrasts)
-	#return
 
 	flameo = pe.Node(interface=fsl.FLAMEO(), name="flameo")
 	flameo.inputs.mask_file = mask

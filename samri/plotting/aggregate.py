@@ -227,26 +227,6 @@ def roi_distributions(df,
 	g.map(plt.axhline, y=0, lw=lw, clip_on=False)
 
 	# Define and use a simple function to label the plot in axes coordinates
-	def apply_label(x, color, label):
-		ax = plt.gca()
-		if text_side == 'left':
-			text = ax.text(0, .04, label,
-				fontweight="bold",
-				color=color,
-				horizontalalignment="left",
-				va="bottom",
-				transform=ax.transAxes,
-				)
-		if text_side == 'right':
-			text = ax.text(1.1, .04, label,
-				fontweight="bold",
-				color=color,
-				horizontalalignment="right",
-				va="bottom",
-				transform=ax.transAxes,
-				)
-		text.set_path_effects([path_effects.Stroke(linewidth=lw*1.5, foreground='w'),
-                       path_effects.Normal()])
 	g.map(apply_label, value_label)
 
 	# Set the subplots to overlap and apply the margins which for some reason otherwise get reset here
@@ -266,3 +246,24 @@ def roi_distributions(df,
 	if save_as:
 		save_as = path.abspath(path.expanduser(save_as))
 		plt.savefig(save_as)
+
+def apply_label(x, color, label):
+	ax = plt.gca()
+	if text_side == 'left':
+		text = ax.text(0, .04, label,
+			fontweight="bold",
+			color=color,
+			horizontalalignment="left",
+			va="bottom",
+			transform=ax.transAxes,
+			)
+	if text_side == 'right':
+		text = ax.text(1.1, .04, label,
+			fontweight="bold",
+			color=color,
+			horizontalalignment="right",
+			va="bottom",
+			transform=ax.transAxes,
+			)
+	text.set_path_effects([path_effects.Stroke(linewidth=lw*1.5, foreground='w'),
+	       path_effects.Normal()])

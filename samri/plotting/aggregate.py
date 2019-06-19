@@ -9,6 +9,27 @@ from matplotlib import rcParams
 
 EXTRA_COLORSET = ["#797979","#000000","#505050","#FFFFFF","#B0B0B0",]
 
+def apply_label(x, color, label, text_side):
+	ax = plt.gca()
+	if text_side == 'left':
+		text = ax.text(0, .04, label,
+			fontweight="bold",
+			color=color,
+			horizontalalignment="left",
+			va="bottom",
+			transform=ax.transAxes,
+			)
+	if text_side == 'right':
+		text = ax.text(1.1, .04, label,
+			fontweight="bold",
+			color=color,
+			horizontalalignment="right",
+			va="bottom",
+			transform=ax.transAxes,
+			)
+	text.set_path_effects([path_effects.Stroke(linewidth=lw*1.5, foreground='w'),
+	       path_effects.Normal()])
+
 def registration_qc(df,
 	cmap="Set3",
 	extra=False,
@@ -200,12 +221,6 @@ def roi_distributions(df,
 		df = df[df['Structure'].isin(keep)]
 	structures = list(df['Structure'].unique())
 
-	# Define colors
-	## The colormap is applied inversely, so we go from stop to start.
-	cm_subsection = np.linspace(stop, start, len(structures))
-	cmap = plt.get_cmap(cmap)
-	pal = [ cmap(x) for x in cm_subsection ]
-
 	# Initialize the FacetGrid object
 	aspect = mpl.rcParams['figure.figsize']
 	ratio = aspect[0]/aspect[1]
@@ -214,7 +229,7 @@ def roi_distributions(df,
 		hue='Structure',
 		aspect=max_rois*ratio,
 		height=aspect[1]/max_rois,
-		palette=pal,
+		#palette=pal,
 		xlim=xlim,
 		ylim=ylim,
 		despine=True,
@@ -227,7 +242,7 @@ def roi_distributions(df,
 	g.map(plt.axhline, y=0, lw=lw, clip_on=False)
 
 	# Define and use a simple function to label the plot in axes coordinates
-	g.map(apply_label, value_label)
+	g.map(apply_label, value_label, text_side)
 
 	# Set the subplots to overlap and apply the margins which for some reason otherwise get reset here
 	g.fig.subplots_adjust(
@@ -247,23 +262,149 @@ def roi_distributions(df,
 		save_as = path.abspath(path.expanduser(save_as))
 		plt.savefig(save_as)
 
-def apply_label(x, color, label):
-	ax = plt.gca()
-	if text_side == 'left':
-		text = ax.text(0, .04, label,
-			fontweight="bold",
-			color=color,
-			horizontalalignment="left",
-			va="bottom",
-			transform=ax.transAxes,
-			)
-	if text_side == 'right':
-		text = ax.text(1.1, .04, label,
-			fontweight="bold",
-			color=color,
-			horizontalalignment="right",
-			va="bottom",
-			transform=ax.transAxes,
-			)
-	text.set_path_effects([path_effects.Stroke(linewidth=lw*1.5, foreground='w'),
-	       path_effects.Normal()])
+def roi_sums(df,
+	ascending=False,
+	cmap='viridis',
+	exclude_tissue_type=[],
+	max_rois=7,
+	save_as=False,
+	small_roi_cutoff=8,
+	text_side='left',
+	value_label='Assignment',
+	target_label='Percent Assigned',
+	roi_value=1,
+	xlim=None,
+	ylim=None,
+	bw=0.2,
+	hspace=-0.1,
+	):
+	"""Plot the distributions of values inside 3D image regions of interest.
+
+	Parameters
+	----------
+
+	df : str or pandas.DataFrame
+		A Pandas Dataframe, or path to one, which contains columns named 'Structure', 'tissue type', and the value of the `value_label` parameter (values by default).
+	ascending : boolean, optional
+		Whether to plot the ROI distributions from lowest to highest mean
+		(if `False` the ROI distributions are plotted from highest to lowest mean).
+	bw : float, optional
+		Bandwidth scalar factor for the kernel size estimation.
+	cmap : string, optional
+		Name of matplotlib colormap which to color the plot array with.
+	exclude_tissue_type : list, optional
+		What tissue types to discount from plotting.
+		Values in this list will be ckecked on the 'tissue type' column of `df`.
+		This is commonly used to exclude cerebrospinal fluid ROIs from plotting.
+	max_rois : int, optional
+		How many ROIs to limit the plot to.
+	save_as : str, optional
+		Path to save the figure to.
+	small_roi_cutoff : int, optional
+		Minimum number of rows per 'Structure' value required to add the respective 'Structure' value to the plot
+		(this corresponds to the minimum number of voxels which a ROI needs to have in order to be included in the plot).
+	start : float, optional
+		At which fraction of the colormap to start.
+	stop : float, optional
+		At which fraction of the colormap to stop.
+	text_side : {'left', 'right'}, optional
+		Which side of the plot to set the `df` 'Structure'-column values on.
+	xlim : list, optional
+		X-axis limits, passed to `seaborn.FacetGrid()`
+	ylim : list, optional
+		Y-axis limits, passed to `seaborn.FacetGrid()`
+	hspace : float, optional
+		How much (in percent of the axis height) to overlap the individual axes.
+	"""
+
+	mpl.rcParams["xtick.major.size"] = 0.0
+	mpl.rcParams["ytick.major.size"] = 0.0
+
+	if isinstance(df,str):
+		df = path.abspath(path.expanduser(df))
+		df = pd.read_csv(df)
+	if 'side' in df.columns:
+		df.loc[(df['side']=='left'),'Structure'] = df.loc[(df['side']=='left'),'Structure'] + ' (L)'
+		df.loc[(df['side']=='right'),'Structure'] = df.loc[(df['side']=='right'),'Structure'] + ' (R)'
+	df = pd.DataFrame({
+	       'Structure': row['Structure'],
+	       'tissue type': row['tissue type'],
+	       value_label: float(value),
+	       }
+	       for i, row in df.iterrows() for value in row[value_label].split(', ')
+	       )
+
+	new = []
+	for i in list(df['Structure'].unique()):
+	       d = {}
+	       total = len(df[df['Structure']==i])
+	       if small_roi_cutoff:
+	               if total < small_roi_cutoff:
+	                       break
+	       assigned = len(df[(df['Structure']==i)&(df[value_label]==roi_value)])
+	       d['Total'] = total
+	       d['Assigned'] = assigned
+	       d['Percent Assigned'] = assigned / total
+	       d['Structure'] = i
+	       d['tissue type'] = df[df['Structure']==i,'tissue type'].item()
+	       new.append(d)
+
+	df = pd.DataFrame(new)
+
+	if exclude_tissue_type:
+		df = df[~df['tissue type'].isin(exclude_tissue_type)]
+	if max_rois:
+	       uniques = list(df['Structure'].unique())
+	       keep = uniques[:max_rois]
+	       df = df[df['Structure'].isin(keep)]
+
+	df = df.sort_values([target_label],ascending=ascending)
+	structures = list(df['Structure'].unique())
+
+	# Define colors
+	## The colormap is applied inversely, so we go from stop to start.
+	cm_subsection = np.linspace(stop, start, len(structures))
+	cmap = plt.get_cmap(cmap)
+	pal = [ cmap(x) for x in cm_subsection ]
+
+	# Initialize the FacetGrid object
+	aspect = mpl.rcParams['figure.figsize']
+	ratio = aspect[0]/aspect[1]
+	g = sns.FacetGrid(df,
+		row='Structure',
+		#hue='Structure',
+		aspect=max_rois*ratio,
+		height=aspect[1]/max_rois,
+		palette=pal,
+		xlim=xlim,
+		ylim=ylim,
+		despine=True,
+		)
+
+	# Draw the densities in a few steps
+	lw = mpl.rcParams['lines.linewidth']
+	g.map(apply_label, target_label)
+	#g.map(sns.kdeplot, value_label, clip_on=False, gridsize=500, shade=True, alpha=1, lw=lw/4.*3, bw=bw)
+	#g.map(sns.kdeplot, value_label, clip_on=False, gridsize=500, color="w", lw=lw, bw=bw)
+	#g.map(plt.axhline, y=0, lw=lw, clip_on=False)
+
+	# Define and use a simple function to label the plot in axes coordinates
+	g.map(apply_label, value_label, text_side)
+
+	# Set the subplots to overlap and apply the margins which for some reason otherwise get reset here
+	g.fig.subplots_adjust(
+		left=mpl.rcParams['figure.subplot.left'],
+		bottom=mpl.rcParams['figure.subplot.bottom'],
+		right=mpl.rcParams['figure.subplot.right'],
+		top=mpl.rcParams['figure.subplot.top'],
+		wspace=0.0,
+		hspace=hspace,
+		)
+
+	# Remove axes details that don't play will with overlap
+	g.set_titles("")
+	g.set(yticks=[])
+
+	if save_as:
+		save_as = path.abspath(path.expanduser(save_as))
+		plt.savefig(save_as)

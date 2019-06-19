@@ -643,7 +643,6 @@ def l2_common_effect(l1_dir,
 		sessions=False,
 		verbose=True,
 		)
-
 	out_dir = path.join(out_base,workflow_name)
 	workdir_name = workflow_name+'_work'
 	workdir = path.join(out_base,workdir_name)

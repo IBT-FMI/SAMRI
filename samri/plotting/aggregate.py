@@ -226,6 +226,13 @@ def roi_distributions(df,
 		df = df[df['Structure'].isin(keep)]
 	structures = list(df['Structure'].unique())
 
+	# Apply FacetGrid limit values to dataframe
+	if xlim:
+		df = df.loc[
+			(df[value_label] >= xlim[0])&
+			(df[value_label] <= xlim[1])
+			]
+
 	# Define colors
 	## The colormap is applied inversely, so we go from stop to start.
 	cm_subsection = np.linspace(stop, start, len(structures))
@@ -325,8 +332,8 @@ def roi_sums(df,
 		How much (in percent of the axis height) to overlap the individual axes.
 	"""
 
-	#mpl.rcParams["xtick.major.size"] = 0.0
-	#mpl.rcParams["ytick.major.size"] = 0.0
+	mpl.rcParams["xtick.major.size"] = 0.0
+	mpl.rcParams["ytick.major.size"] = 0.0
 
 	if isinstance(df,str):
 		df = path.abspath(path.expanduser(df))
@@ -368,12 +375,6 @@ def roi_sums(df,
 	       df = df[df['Structure'].isin(keep)]
 
 	structures = list(df['Structure'].unique())
-
-	# Define colors
-	## The colormap is applied inversely, so we go from stop to start.
-	#cm_subsection = np.linspace(stop, start, len(structures))
-	#cmap = plt.get_cmap(cmap)
-	#pal = [ cmap(x) for x in cm_subsection ]
 
 	# Initialize the FacetGrid object
 	aspect = mpl.rcParams['figure.figsize']

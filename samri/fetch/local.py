@@ -4,7 +4,8 @@ import pandas as pd
 from os import path
 from scipy import ndimage
 
-def roi_from_atlaslabel(atlas, mapping, label_names,
+def roi_from_atlaslabel(atlas, label_names,
+	mapping=False,
 	bilateral=True,
 	dilate=True,
 	parser={
@@ -20,10 +21,23 @@ def roi_from_atlaslabel(atlas, mapping, label_names,
 	Whether to dilate the roi by one voxel. This is useful for filling up downsampled masks (nearest-neighbour interpolation, may create unexpected holes in masks).
 	"""
 
-	mapping = path.abspath(path.expanduser(mapping))
-	atlas = path.abspath(path.expanduser(atlas))
-	atlas = nib.load(atlas)
+	if isinstance(atlas, str):
+		atlas = path.abspath(path.expanduser(atlas))
+		atlas = nib.load(atlas)
+	if not mapping:
+		atlas_data = atlas.get_data()
+		components = []
+		for i in label_names:
+			i_data = deepcopy(atlas_data)
+			i_data[i_data!=i] = False
+			i_data[i_data==i] = True
+			components.append(i_data)
+		roi_data = sum(components).astype(bool).astype(int)
+		roi = nib.NiftiImage(roi_data, atlas.affine, atlas.header)
 
+		return roi
+
+	mapping = path.abspath(path.expanduser(mapping))
 	mapping = pd.read_csv(mapping)
 	if bilateral and (parser["valuecolumn right"] and parser["valuecolumn left"]):
 		roi_values = []

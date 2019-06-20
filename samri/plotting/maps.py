@@ -42,6 +42,7 @@ def _draw_colorbar(stat_map_img, axes,
 	positive_only=False,
 	negative_only=False,
 	cmap=None,
+	really_draw=True,
 	):
 	if isinstance(stat_map_img, str):
 		stat_map_img = path.abspath(path.expanduser(stat_map_img))
@@ -49,7 +50,10 @@ def _draw_colorbar(stat_map_img, axes,
 		stat_map_img_dat = _safe_get_data(stat_map_img, ensure_finite=True)
 
 	if cmap:
-		cmap = plt.cm.get_cmap(cmap)
+		try:
+			cmap = plt.cm.get_cmap(cmap)
+		except TypeError:
+			cmap = mcolors.LinearSegmentedColormap.from_list('SAMRI cmap from list', cmap*256, N=256)
 		colors = cmap(np.linspace(0,1,256))
 		cmap_minus = mcolors.LinearSegmentedColormap.from_list('my_colormap', colors[0:128,:])
 		cmap_plus = mcolors.LinearSegmentedColormap.from_list('my_colormap', colors[128:255,:])
@@ -68,13 +72,6 @@ def _draw_colorbar(stat_map_img, axes,
 	else:
 		colmap = cmap
 
-	cbar_ax, p_ax = make_axes(axes,
-		aspect=aspect,
-		fraction=fraction,
-		# pad=-0.5,
-		anchor=anchor,
-		# panchor=(-110.0, 0.5),
-		)
 	ticks = np.linspace(vmin, vmax, nb_ticks)
 	bounds = np.linspace(vmin, vmax, colmap.N)
 	norm = mcolors.Normalize(vmin=vmin, vmax=vmax)
@@ -87,25 +84,37 @@ def _draw_colorbar(stat_map_img, axes,
 		cmaplist[i] = (0.5, 0.5, 0.5, 1.)
 	our_cmap = colmap.from_list('Custom cmap', cmaplist, colmap.N)
 
-	cbar = ColorbarBase(
-		cbar_ax,
-		ticks=ticks,
-		norm=norm,
-		orientation="vertical",
-		cmap=our_cmap,
-		boundaries=bounds,
-		spacing="proportional",
-		format="%.2g",
-		)
+	if really_draw:
+		cbar_ax, p_ax = make_axes(axes,
+			aspect=aspect,
+			fraction=fraction,
+			# pad=-0.5,
+			anchor=anchor,
+			# panchor=(-110.0, 0.5),
+			)
+		cbar = ColorbarBase(
+			cbar_ax,
+			ticks=ticks,
+			norm=norm,
+			orientation="vertical",
+			cmap=our_cmap,
+			boundaries=bounds,
+			spacing="proportional",
+			format="%.2g",
+			)
 
-	cbar.outline.set_edgecolor(edge_color)
-	cbar.outline.set_alpha(edge_alpha)
+		cbar.outline.set_edgecolor(edge_color)
+		cbar.outline.set_alpha(edge_alpha)
 
-	cbar_ax.yaxis.tick_left()
-	tick_color = 'k'
-	for tick in cbar_ax.yaxis.get_ticklabels():
-		tick.set_color(tick_color)
-	cbar_ax.yaxis.set_tick_params(width=0)
+		cbar_ax.yaxis.tick_left()
+		tick_color = 'k'
+		for tick in cbar_ax.yaxis.get_ticklabels():
+			tick.set_color(tick_color)
+		cbar_ax.yaxis.set_tick_params(width=0)
+	else:
+		cbar_ax = None
+		p_ax = None
+
 	return cbar_ax, p_ax,vmin,vmax,colmap
 
 def make_pos(stat_map):
@@ -338,17 +347,19 @@ def stat(stat_maps,
 		else:
 			title=None
 
-		if draw_colorbar:
-			cax, kw,vmin,vmax,cmap = _draw_colorbar(stat_maps[0],ax,
-				threshold=threshold,
-				aspect=30,
-				fraction=0.05,
-				anchor=(1.,0.5),
-				cut_coords = cut_coords,
-				positive_only = positive_only,
-				negative_only = negative_only,
-				cmap=cmap
-				)
+		# Only draws if really_draw is set.
+		# This function needs to be broken up.
+		cax, kw,vmin,vmax,cmap = _draw_colorbar(stat_maps[0],ax,
+			threshold=threshold,
+			aspect=30,
+			fraction=0.05,
+			anchor=(1.,0.5),
+			cut_coords = cut_coords,
+			positive_only = positive_only,
+			negative_only = negative_only,
+			cmap=cmap,
+			really_draw=draw_colorbar,
+			)
 		if overlays:
 			my_overlay = overlays[0]
 		else:
@@ -549,7 +560,10 @@ def _create_3Dplot(stat_maps,
 	if not cmap:
 		cmap = MYMAP
 	else:
-		cmap = plt.cm.get_cmap(cmap)
+		try:
+			cmap = plt.cm.get_cmap(cmap)
+		except TypeError:
+			cmap = mcolors.LinearSegmentedColormap.from_list('SAMRI cmap from list', cmap*256, N=256)
 
 	col_plus = norm(threshold)
 	col_minus = norm(-threshold)
@@ -740,7 +754,26 @@ def stat3D(stat_maps,
 
 	#plot initial figure
 
-	display,vmin,vmax = stat(stat_maps,display_mode='tiled',template=template,draw_colorbar=draw_colorbar,cmap=cmap,cut_coords=cut_coords,threshold=threshold,positive_only = positive_only,negative_only=negative_only,save_as=save_as,overlays=overlays,figure_title=figure_title,show_plot=show_plot,draw_cross=draw_cross,annotate=annotate,black_bg=black_bg,dim=dim,scale=scale,shape="portrait")
+	display,vmin,vmax = stat(stat_maps,
+		display_mode='tiled',
+		template=template,
+		draw_colorbar=draw_colorbar,
+		cmap=cmap,
+		cut_coords=cut_coords,
+		threshold=threshold,
+		positive_only=positive_only,
+		negative_only=negative_only,
+		save_as=save_as,
+		overlays=overlays,
+		figure_title=figure_title,
+		show_plot=show_plot,
+		draw_cross=draw_cross,
+		annotate=annotate,
+		black_bg=black_bg,
+		dim=dim,
+		scale=scale,
+		shape="portrait",
+		)
 
 	if threshold_mesh is None:
 		threshold_mesh = threshold

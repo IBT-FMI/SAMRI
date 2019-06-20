@@ -9,8 +9,13 @@ from matplotlib import rcParams
 
 EXTRA_COLORSET = ["#797979","#000000","#505050","#FFFFFF","#B0B0B0",]
 
-def apply_label(x, color, label, text_side):
+def apply_label(x, color, label,
+	text_side='left',
+	lw=False,
+	):
 	ax = plt.gca()
+	if not lw:
+		lw = mpl.rcParams['lines.linewidth']
 	if text_side == 'left':
 		text = ax.text(0, .04, label,
 			fontweight="bold",
@@ -20,7 +25,7 @@ def apply_label(x, color, label, text_side):
 			transform=ax.transAxes,
 			)
 	if text_side == 'right':
-		text = ax.text(1.1, .04, label,
+		text = ax.text(1.0, .04, label,
 			fontweight="bold",
 			color=color,
 			horizontalalignment="right",
@@ -141,7 +146,7 @@ def roi_distributions(df,
 	cmap='viridis',
 	exclude_tissue_type=[],
 	max_rois=7,
-	save_as=False,
+	save_as='',
 	small_roi_cutoff=8,
 	start=0.0,
 	stop=1.0,
@@ -221,6 +226,12 @@ def roi_distributions(df,
 		df = df[df['Structure'].isin(keep)]
 	structures = list(df['Structure'].unique())
 
+	# Define colors
+	## The colormap is applied inversely, so we go from stop to start.
+	cm_subsection = np.linspace(stop, start, len(structures))
+	cmap = plt.get_cmap(cmap)
+	pal = [ cmap(x) for x in cm_subsection ]
+
 	# Initialize the FacetGrid object
 	aspect = mpl.rcParams['figure.figsize']
 	ratio = aspect[0]/aspect[1]
@@ -229,7 +240,7 @@ def roi_distributions(df,
 		hue='Structure',
 		aspect=max_rois*ratio,
 		height=aspect[1]/max_rois,
-		#palette=pal,
+		palette=pal,
 		xlim=xlim,
 		ylim=ylim,
 		despine=True,
@@ -242,7 +253,7 @@ def roi_distributions(df,
 	g.map(plt.axhline, y=0, lw=lw, clip_on=False)
 
 	# Define and use a simple function to label the plot in axes coordinates
-	g.map(apply_label, value_label, text_side)
+	g.map(apply_label, value_label, text_side=text_side, lw=lw)
 
 	# Set the subplots to overlap and apply the margins which for some reason otherwise get reset here
 	g.fig.subplots_adjust(
@@ -264,7 +275,7 @@ def roi_distributions(df,
 
 def roi_sums(df,
 	ascending=False,
-	cmap='viridis',
+	palette=['#984ea3'],
 	exclude_tissue_type=[],
 	max_rois=7,
 	save_as=False,
@@ -275,10 +286,9 @@ def roi_sums(df,
 	roi_value=1,
 	xlim=None,
 	ylim=None,
-	bw=0.2,
-	hspace=-0.1,
+	hspace=0.0,
 	):
-	"""Plot the distributions of values inside 3D image regions of interest.
+	"""Plot the percentage of voxels with values equal to `target_value` in atlas regions of interest.
 
 	Parameters
 	----------
@@ -288,8 +298,6 @@ def roi_sums(df,
 	ascending : boolean, optional
 		Whether to plot the ROI distributions from lowest to highest mean
 		(if `False` the ROI distributions are plotted from highest to lowest mean).
-	bw : float, optional
-		Bandwidth scalar factor for the kernel size estimation.
 	cmap : string, optional
 		Name of matplotlib colormap which to color the plot array with.
 	exclude_tissue_type : list, optional
@@ -317,8 +325,8 @@ def roi_sums(df,
 		How much (in percent of the axis height) to overlap the individual axes.
 	"""
 
-	mpl.rcParams["xtick.major.size"] = 0.0
-	mpl.rcParams["ytick.major.size"] = 0.0
+	#mpl.rcParams["xtick.major.size"] = 0.0
+	#mpl.rcParams["ytick.major.size"] = 0.0
 
 	if isinstance(df,str):
 		df = path.abspath(path.expanduser(df))
@@ -346,11 +354,12 @@ def roi_sums(df,
 	       d['Assigned'] = assigned
 	       d['Percent Assigned'] = assigned / total
 	       d['Structure'] = i
-	       d['tissue type'] = df[df['Structure']==i,'tissue type'].item()
+	       d['tissue type'] = df.loc[(df['Structure']==i),'tissue type'].unique()[0]
 	       new.append(d)
 
 	df = pd.DataFrame(new)
 
+	df = df.sort_values([target_label],ascending=ascending)
 	if exclude_tissue_type:
 		df = df[~df['tissue type'].isin(exclude_tissue_type)]
 	if max_rois:
@@ -358,24 +367,23 @@ def roi_sums(df,
 	       keep = uniques[:max_rois]
 	       df = df[df['Structure'].isin(keep)]
 
-	df = df.sort_values([target_label],ascending=ascending)
 	structures = list(df['Structure'].unique())
 
 	# Define colors
 	## The colormap is applied inversely, so we go from stop to start.
-	cm_subsection = np.linspace(stop, start, len(structures))
-	cmap = plt.get_cmap(cmap)
-	pal = [ cmap(x) for x in cm_subsection ]
+	#cm_subsection = np.linspace(stop, start, len(structures))
+	#cmap = plt.get_cmap(cmap)
+	#pal = [ cmap(x) for x in cm_subsection ]
 
 	# Initialize the FacetGrid object
 	aspect = mpl.rcParams['figure.figsize']
 	ratio = aspect[0]/aspect[1]
 	g = sns.FacetGrid(df,
 		row='Structure',
-		#hue='Structure',
+		hue='Structure',
 		aspect=max_rois*ratio,
 		height=aspect[1]/max_rois,
-		palette=pal,
+		palette=palette,
 		xlim=xlim,
 		ylim=ylim,
 		despine=True,
@@ -383,23 +391,23 @@ def roi_sums(df,
 
 	# Draw the densities in a few steps
 	lw = mpl.rcParams['lines.linewidth']
-	g.map(apply_label, target_label)
+	g.map(sns.barplot, target_label, clip_on=False)
 	#g.map(sns.kdeplot, value_label, clip_on=False, gridsize=500, shade=True, alpha=1, lw=lw/4.*3, bw=bw)
 	#g.map(sns.kdeplot, value_label, clip_on=False, gridsize=500, color="w", lw=lw, bw=bw)
 	#g.map(plt.axhline, y=0, lw=lw, clip_on=False)
 
 	# Define and use a simple function to label the plot in axes coordinates
-	g.map(apply_label, value_label, text_side)
+	g.map(apply_label, target_label, text_side=text_side)
 
 	# Set the subplots to overlap and apply the margins which for some reason otherwise get reset here
-	g.fig.subplots_adjust(
-		left=mpl.rcParams['figure.subplot.left'],
-		bottom=mpl.rcParams['figure.subplot.bottom'],
-		right=mpl.rcParams['figure.subplot.right'],
-		top=mpl.rcParams['figure.subplot.top'],
-		wspace=0.0,
-		hspace=hspace,
-		)
+	#g.fig.subplots_adjust(
+	#	left=mpl.rcParams['figure.subplot.left'],
+	#	bottom=mpl.rcParams['figure.subplot.bottom'],
+	#	right=mpl.rcParams['figure.subplot.right'],
+	#	top=mpl.rcParams['figure.subplot.top'],
+	#	wspace=0.0,
+	#	hspace=hspace,
+	#	)
 
 	# Remove axes details that don't play will with overlap
 	g.set_titles("")

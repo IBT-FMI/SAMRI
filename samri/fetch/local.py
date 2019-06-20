@@ -1,6 +1,7 @@
 import nibabel as nib
 import numpy as np
 import pandas as pd
+from copy import deepcopy
 from os import path
 from scipy import ndimage
 
@@ -33,9 +34,10 @@ def roi_from_atlaslabel(atlas, label_names,
 			i_data[i_data==i] = True
 			components.append(i_data)
 		roi_data = sum(components).astype(bool).astype(int)
-		roi = nib.NiftiImage(roi_data, atlas.affine, atlas.header)
+		roi = nib.Nifti1Image(roi_data, atlas.affine, atlas.header)
 
 		return roi
+
 
 	mapping = path.abspath(path.expanduser(mapping))
 	mapping = pd.read_csv(mapping)

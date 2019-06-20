@@ -257,7 +257,8 @@ def significant_signal(data_path,
 	except FileNotFoundError:
 		return float('NaN'), float('NaN')
 	if mask_path:
-		mask_path = path.abspath(path.expanduser(mask_path))
+		if isinstance(mask_path, str):
+			mask_path = path.abspath(path.expanduser(mask_path))
 		masker = NiftiMasker(mask_img=mask_path)
 		masked_data = masker.fit_transform(img).T
 		data = masked_data[~np.isnan(masked_data)]
@@ -443,7 +444,8 @@ def df_roi_data(df,
 	iter_length = len(in_files)
 
 	# Convert mask path to masker
-	mask_path = path.abspath(path.expanduser(mask_path))
+	if isinstance(mask_path, str):
+		mask_path = path.abspath(path.expanduser(mask_path))
 	mask = NiftiMasker(mask_img=mask_path)
 
 	# This is an easy jop CPU-wise, but not memory-wise.

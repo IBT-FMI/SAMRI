@@ -827,7 +827,7 @@ def atlas_label(atlas,
 
 	anat = path.abspath(path.expanduser(anat))
 
-	if mapping and label_names:
+	if label_names:
 		roi = roi_from_atlaslabel(atlas, mapping=mapping, label_names=label_names, **kwargs)
 	elif isinstance(atlas, str):
 		atlas = path.abspath(path.expanduser(atlas))
@@ -849,7 +849,6 @@ def atlas_label(atlas,
 		threshold=threshold,
 		figure=fig,
 		cmap=anat_cmap,
-		#interpolation=interpolation,
 		title=None,
 		annotate=False,
 		draw_cross=False,

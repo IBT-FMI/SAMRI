@@ -216,6 +216,7 @@ def atlasassignment(data_path='~/ni_data/ofM.dr/bids/l2/anova/anova_zfstat.nii.g
 	verbose=False,
 	lateralized=False,
 	save_as='',
+	exact_zero_threshold=0.34,
 	):
 	"""
 	Create CSV file containing a tabular summary of mean image intensity per DSURQE region of interest.
@@ -278,12 +279,12 @@ def atlasassignment(data_path='~/ni_data/ofM.dr/bids/l2/anova/anova_zfstat.nii.g
 	results = deepcopy(mapping)
 	results[value_label] = ''
 	if lateralized:
-		results['side'] = ''
+		results['Side'] = ''
 		results_medial = results.loc[(results['right label'] == results['left label'])].copy()
 		results_left = results.loc[(results['right label'] != results['left label'])].copy()
 		results_right = deepcopy(results_left)
-		results_right['side'] = 'right'
-		results_left['side'] = 'left'
+		results_right['Side'] = 'right'
+		results_left['Side'] = 'left'
 	for structure in structures:
 		right_label = mapping[mapping['Structure'] == structure]['right label'].item()
 		left_label = mapping[mapping['Structure'] == structure]['left label'].item()
@@ -293,6 +294,11 @@ def atlasassignment(data_path='~/ni_data/ofM.dr/bids/l2/anova/anova_zfstat.nii.g
 				values = data[mask]
 				if voxels_ratio != 1:
 					values = values[::voxels_ratio]
+				if exact_zero_threshold:
+					val_number = len(values)
+					zeroes = len(values[values==0.0])
+					if exact_zero_threshold <= zeroes/float(val_number):
+						continue
 				values = ', '.join([str(i) for i in list(values)])
 				results_medial.loc[results['Structure'] == structure, value_label] = values
 			else:
@@ -303,6 +309,11 @@ def atlasassignment(data_path='~/ni_data/ofM.dr/bids/l2/anova/anova_zfstat.nii.g
 				if voxels_ratio != 1:
 					right_values = right_values[::voxels_ratio]
 					left_values = left_values[::voxels_ratio]
+				if exact_zero_threshold:
+					val_number = len(right_values) + len(left_values)
+					zeroes = len(right_values[right_values==0.0]) + len(right_values[right_values==0.0])
+					if exact_zero_threshold <= zeroes/float(val_number):
+						continue
 				right_values = ', '.join([str(i) for i in list(right_values)])
 				left_values = ', '.join([str(i) for i in list(left_values)])
 				results_right.loc[results['Structure'] == structure, value_label] = right_values
@@ -314,10 +325,16 @@ def atlasassignment(data_path='~/ni_data/ofM.dr/bids/l2/anova/anova_zfstat.nii.g
 			values = list(values)
 			if voxels_ratio != 1:
 				values = values[::voxels_ratio]
+			if exact_zero_threshold:
+				val_number = len(values)
+				zeroes = len(values[values==0.0])
+				if exact_zero_threshold <= zeroes/float(val_number):
+					continue
 			values = ', '.join([str(i) for i in values])
 			results.loc[results['Structure'] == structure, value_label] = values
 	if lateralized:
 		results = pd.concat([results_left, results_medial, results_right], ignore_index=True)
+	results = results.loc[results[value_label] != '']
 	if save_as:
 		save_path = path.dirname(save_as)
 		if save_path and not path.exists(save_path):

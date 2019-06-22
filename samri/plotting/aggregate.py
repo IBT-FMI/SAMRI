@@ -12,12 +12,14 @@ EXTRA_COLORSET = ["#797979","#000000","#505050","#FFFFFF","#B0B0B0",]
 def apply_label(x, color, label,
 	text_side='left',
 	lw=False,
+	x_align=0.0,
+	y_align=0.04,
 	):
 	ax = plt.gca()
 	if not lw:
 		lw = mpl.rcParams['lines.linewidth']
 	if text_side == 'left':
-		text = ax.text(0, .04, label,
+		text = ax.text(x_align, y_align, label,
 			fontweight="bold",
 			color=color,
 			horizontalalignment="left",
@@ -25,7 +27,7 @@ def apply_label(x, color, label,
 			transform=ax.transAxes,
 			)
 	if text_side == 'right':
-		text = ax.text(1.0, .04, label,
+		text = ax.text(1.0-x_align, y_align, label,
 			fontweight="bold",
 			color=color,
 			horizontalalignment="right",
@@ -289,11 +291,13 @@ def roi_sums(df,
 	small_roi_cutoff=8,
 	text_side='left',
 	value_label='Assignment',
-	target_label='Percent Assigned',
+	target_label='Assigned Fraction',
 	roi_value=1,
 	xlim=None,
 	ylim=None,
 	hspace=0.0,
+	x_align=0.0,
+	y_align=0.1,
 	):
 	"""Plot the percentage of voxels with values equal to `target_value` in atlas regions of interest.
 
@@ -359,7 +363,7 @@ def roi_sums(df,
 	       assigned = len(df[(df['Structure']==i)&(df[value_label]==roi_value)])
 	       d['Total'] = total
 	       d['Assigned'] = assigned
-	       d['Percent Assigned'] = assigned / total
+	       d[target_label] = assigned / total
 	       d['Structure'] = i
 	       d['tissue type'] = df.loc[(df['Structure']==i),'tissue type'].unique()[0]
 	       new.append(d)
@@ -398,7 +402,11 @@ def roi_sums(df,
 	#g.map(plt.axhline, y=0, lw=lw, clip_on=False)
 
 	# Define and use a simple function to label the plot in axes coordinates
-	g.map(apply_label, target_label, text_side=text_side)
+	g.map(apply_label, target_label,
+		text_side=text_side,
+		x_align=x_align,
+		y_align=y_align,
+		)
 
 	# Set the subplots to overlap and apply the margins which for some reason otherwise get reset here
 	#g.fig.subplots_adjust(

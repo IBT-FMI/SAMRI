@@ -48,6 +48,7 @@ def _draw_colorbar(stat_map_img, axes,
 		stat_map_img = path.abspath(path.expanduser(stat_map_img))
 		stat_map_img = nib.load(stat_map_img)
 		stat_map_img_dat = _safe_get_data(stat_map_img, ensure_finite=True)
+	cbar_vmin,cbar_vmax,vmin, vmax = _get_colorbar_and_data_ranges(stat_map_img_dat,None,"auto","")
 
 	if cmap:
 		try:
@@ -62,7 +63,6 @@ def _draw_colorbar(stat_map_img, axes,
 		cmap_plus = MYMAP_PLUS
 		cmap = MYMAP
 
-	cbar_vmin,cbar_vmax,vmin, vmax = _get_colorbar_and_data_ranges(stat_map_img_dat,None,"auto","")
 	if cbar_vmin is not None or positive_only:
 		vmin = 0
 		colmap = cmap_plus
@@ -437,11 +437,20 @@ def stat(stat_maps,
 			fraction = 0.025
 		else:
 			fraction = 0.04
+		if draw_colorbar == False:
+			cax, kw,vmin,vmax,new_cmap = _draw_colorbar(stat_maps[0],None,
+				threshold=threshold,
+				aspect=cbar_aspect,
+				fraction=fraction,
+				anchor=(0,0.5),
+				cmap=cmap,
+				really_draw=draw_colorbar,
+				)
 		for ix, ax in enumerate(flat_axes):
-			draw_colorbar=False
+			draw_this_colorbar=False
 			#create or use conserved colorbar for multiple cnsecutive plots of the same image
 			if conserve_colorbar_steps == 0:
-				draw_colorbar=True
+				draw_this_colorbar=True
 				while True and conserve_colorbar_steps < len(stat_maps)-ix:
 					if stat_maps[ix+conserve_colorbar_steps] == stat_maps[ix]:
 						conserve_colorbar_steps+=1
@@ -465,13 +474,14 @@ def stat(stat_maps,
 			# Axes are fully populating the grid - this may exceed the available number of statistic maps (`stat_maps`).
 			# The missing statistic maps may either be missing (raising an `IndexError`) or `None` (raising an `AttributeError` from `_draw_colorbar` and `TypeError` from `scaled_plot`).
 			try:
-				if draw_colorbar:
+				if draw_this_colorbar:
 					cax, kw,vmin,vmax,cmap = _draw_colorbar(stat_maps[ix],flat_axes[ix:ix+conserve_colorbar_steps],
 						threshold=threshold,
 						aspect=cbar_aspect,
 						fraction=fraction,
 						anchor=(0,0.5),
 						cmap=cmap,
+						really_draw=draw_colorbar,
 						)
 				display = scaled_plot(template, fig, ax,
 					stat_map=stat_maps[ix],

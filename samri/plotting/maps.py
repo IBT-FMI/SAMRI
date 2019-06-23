@@ -678,6 +678,7 @@ def _plots_overlay(display,display_3Dplot):
 	return fh
 
 def stat3D(stat_maps,
+	alpha=1.0,
 	overlays=[],
 	figure_title="",
 	interpolation="hermite",
@@ -765,6 +766,7 @@ def stat3D(stat_maps,
 	#plot initial figure
 
 	display,vmin,vmax = stat(stat_maps,
+		alpha=alpha,
 		display_mode='tiled',
 		template=template,
 		draw_colorbar=draw_colorbar,
@@ -806,6 +808,7 @@ def stat3D(stat_maps,
 
 def atlas_label(atlas,
 	alpha=1,
+	overlay_alpha=1.0,
 	anat="/usr/share/mouse-brain-atlases/dsurqec_40micron_masked.nii",
 	ax=None,
 	color="#E69F00",
@@ -868,6 +871,7 @@ def atlas_label(atlas,
 		cut_coords=cut,
 		)
 	display.add_overlay(roi,
+		alpha=overlay_alpha,
 		colorbar=False,
 		cmap=cm,
 		)

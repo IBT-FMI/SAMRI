@@ -14,7 +14,11 @@ def apply_label(x, color, label,
 	lw=False,
 	x_align=0.0,
 	y_align=0.04,
+	contour_ratio=1.5,
+	text_color=False,
 	):
+	if text_color:
+		color=text_color
 	ax = plt.gca()
 	if not lw:
 		lw = mpl.rcParams['lines.linewidth']
@@ -34,7 +38,7 @@ def apply_label(x, color, label,
 			va="bottom",
 			transform=ax.transAxes,
 			)
-	text.set_path_effects([path_effects.Stroke(linewidth=lw*1.5, foreground='w'),
+	text.set_path_effects([path_effects.Stroke(linewidth=lw*contour_ratio, foreground='w'),
 	       path_effects.Normal()])
 
 def registration_qc(df,
@@ -298,6 +302,8 @@ def roi_sums(df,
 	hspace=0.0,
 	x_align=0.0,
 	y_align=0.1,
+	contour_ratio=1.5,
+	text_color=False,
 	):
 	"""Plot the percentage of voxels with values equal to `target_value` in atlas regions of interest.
 
@@ -406,6 +412,8 @@ def roi_sums(df,
 		text_side=text_side,
 		x_align=x_align,
 		y_align=y_align,
+		contour_ratio=contour_ratio,
+		text_color=text_color,
 		)
 
 	# Set the subplots to overlap and apply the margins which for some reason otherwise get reset here

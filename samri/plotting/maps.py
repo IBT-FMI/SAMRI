@@ -43,7 +43,10 @@ def _draw_colorbar(stat_map_img, axes,
 	negative_only=False,
 	cmap=None,
 	really_draw=True,
+	bypass_cmap=False,
 	):
+	if bypass_cmap:
+		bypass_cmap = cmap
 	if isinstance(stat_map_img, str):
 		stat_map_img = path.abspath(path.expanduser(stat_map_img))
 		stat_map_img = nib.load(stat_map_img)
@@ -114,6 +117,9 @@ def _draw_colorbar(stat_map_img, axes,
 	else:
 		cbar_ax = None
 		p_ax = None
+
+	if bypass_cmap:
+		colmap = bypass_cmap
 
 	return cbar_ax, p_ax,vmin,vmax,colmap
 
@@ -277,7 +283,8 @@ def stat(stat_maps,
 	anat_cmap='binary',
 	display_mode='ortho',
 	positive_only=False,
-	negative_only=False
+	negative_only=False,
+	bypass_cmap=False,
 	):
 
 	"""Plot a list of statistical maps.
@@ -445,6 +452,7 @@ def stat(stat_maps,
 				anchor=(0,0.5),
 				cmap=cmap,
 				really_draw=draw_colorbar,
+				bypass_cmap=bypass_cmap,
 				)
 		for ix, ax in enumerate(flat_axes):
 			draw_this_colorbar=False
@@ -482,6 +490,7 @@ def stat(stat_maps,
 						anchor=(0,0.5),
 						cmap=cmap,
 						really_draw=draw_colorbar,
+						bypass_cmap=bypass_cmap,
 						)
 				display = scaled_plot(template, fig, ax,
 					stat_map=stat_maps[ix],

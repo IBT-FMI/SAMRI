@@ -208,9 +208,9 @@ def roi_distributions(df,
 	if isinstance(df,str):
 		df = path.abspath(path.expanduser(df))
 		df = pd.read_csv(df)
-	if 'side' in df.columns:
-		df.loc[(df['side']=='left'),'Structure'] = df.loc[(df['side']=='left'),'Structure'] + ' (L)'
-		df.loc[(df['side']=='right'),'Structure'] = df.loc[(df['side']=='right'),'Structure'] + ' (R)'
+	if 'Side' in df.columns:
+		df.loc[(df['Side']=='left'),'Structure'] = df.loc[(df['Side']=='left'),'Structure'] + ' (L)'
+		df.loc[(df['Side']=='right'),'Structure'] = df.loc[(df['Side']=='right'),'Structure'] + ' (R)'
 	df = pd.DataFrame({
 		'Structure': row['Structure'],
 		'tissue type': row['tissue type'],

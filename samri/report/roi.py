@@ -322,7 +322,6 @@ def atlasassignment(data_path='~/ni_data/ofM.dr/bids/l2/anova/anova_zfstat.nii.g
 			labels = [right_label, left_label]
 			mask = np.isin(atlas, labels)
 			values = data[mask]
-			values = list(values)
 			if voxels_ratio != 1:
 				values = values[::voxels_ratio]
 			if exact_zero_threshold:
@@ -330,6 +329,7 @@ def atlasassignment(data_path='~/ni_data/ofM.dr/bids/l2/anova/anova_zfstat.nii.g
 				zeroes = len(values[values==0.0])
 				if exact_zero_threshold <= zeroes/float(val_number):
 					continue
+			values = list(values)
 			values = ', '.join([str(i) for i in values])
 			results.loc[results['Structure'] == structure, value_label] = values
 	if lateralized:

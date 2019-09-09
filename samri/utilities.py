@@ -270,3 +270,63 @@ def session_irregularity_filter(bids_path, exclude_irregularities):
 						ses_entry['exclude'] = False
 					sessions.append(ses_entry)
 	return pd.DataFrame(sessions)
+
+
+def ordered_structures(
+	atlas='/usr/share/mouse-brain-atlases/dsurqec_40micron_labels.nii',
+	mapping='/usr/share/mouse-brain-atlases/dsurqe_labels.csv',
+	label_columns=['right label','left label'],
+	structure_column='Structure',
+	remove_zero_label=True,
+	):
+	"""Return a list of structure names corresponding to the ascending order of numerical labels in the atlas image.
+
+	Parameters
+	----------
+
+	atlas : str, optional
+		Path to a NIfTI atlas file.
+	mapping : str, optional
+		Path to a CSV mapping file containing columns which include the string specified under `structure_column` and the strings specified under `label_columns`.
+		The latter of these columns need to include the numerical values found in the data matrix of the file whose path is assigned to `atlas`.
+	label_columns : list, optional
+		Names of columns in the `mapping` file under which numerical labels are specified.
+		This can be a length-2 list if separate columns exist for left and right labels; in this case the function will perform the differentiation implicitly.
+	structure_column : str, optional
+		The name of the column, which in the `mapping` file records the structure names.
+	remove_zero_label : bool, optional
+		Whether to disconsider the zero label in the atlas image.
+	"""
+	atlas = path.abspath(path.expanduser(atlas))
+	mapping = path.abspath(path.expanduser(mapping))
+	atlas_img = nib.load(atlas)
+	atlas_data = atlas_img.get_data()
+	atlas_data_unique = np.unique(atlas_data)
+	if remove_zero_label:
+		atlas_data_unique = atlas_data_unique[atlas_data_unique != 0]
+	mapping = path.abspath(path.expanduser(mapping))
+	mapping = pd.read_csv(mapping)
+	structure_names = []
+	for label in atlas_data_unique:
+		structure_name = []
+		for label_column in label_columns:
+			try:
+				structure = mapping.loc[mapping[label_column]==label,structure_column].values[0]
+			except IndexError:
+				pass
+			else:
+				if any(i in label_column for i in ['right','Right','RIGHT']):
+					lateralized_structure = '{} (R)'.format(structure)
+					structure_name.append(lateralized_structure)
+				elif any(i in label_column for i in ['left','Left','LEFT']):
+					lateralized_structure = '{} (L)'.format(structure)
+					structure_name.append(lateralized_structure)
+				else:
+					structure_name.append(structure)
+		if len(structure_name) != 1:
+			structure_name = structure
+		else:
+			structure_name = structure_name[0]
+		structure_names.append(structure_name)
+
+	return structure_names

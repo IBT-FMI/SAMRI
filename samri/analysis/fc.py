@@ -356,7 +356,7 @@ def correlation_matrix(ts,atlas,
 	atlas = path.abspath(path.expanduser(atlas))
 	if mask:
 		mask = path.abspath(path.expanduser(mask))
-	tr = ts.header['pixdim'][0]
+	tr = nib.load(ts).header['pixdim'][0]
 	labels_masker = NiftiLabelsMasker(
 		labels_img=atlas,
 		mask_img=mask,

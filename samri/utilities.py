@@ -67,11 +67,11 @@ def bids_autofind(bids_dir,
 	if match_regex:
 		pass
 	elif typ in ("func","dwi"):
-	       match_regex = '.+/sub-(?P<sub>.+)/ses-(?P<ses>.+)/'+typ+'/.*?_task-(?P<task>.+).*?_acq-(?P<acquisition>.+)\.nii.gz'
+		match_regex = '.+/sub-(?P<sub>.+)/ses-(?P<ses>.+)/'+typ+'/.*?_task-(?P<task>.+).*?_acq-(?P<acquisition>.+)\.nii.gz'
 	elif typ == "":
-	       match_regex = '.+/sub-(?P<sub>.+)/ses-(?P<ses>.+)/.*?_task-(?P<task>.+).*?_acq-(?P<acquisition>.+).*?_run-(?P<run>[0-9]+).*?\.nii.gz'
+		match_regex = '.+/sub-(?P<sub>.+)/ses-(?P<ses>.+)/.*?_task-(?P<task>.+).*?_acq-(?P<acquisition>.+).*?_run-(?P<run>[0-9]+).*?\.nii.gz'
 	elif typ == "anat":
-	       match_regex = '.+/sub-(?P<sub>.+)/ses-(?P<ses>.+)/anat/.*?_(?P<task>.+).*?_acq-(?P<acquisition>.+)\.nii.gz'
+		match_regex = '.+/sub-(?P<sub>.+)/ses-(?P<ses>.+)/anat/.*?_(?P<task>.+).*?_acq-(?P<acquisition>.+)\.nii.gz'
 
 	if path_template[:1] != '/' and 'bids_dir' not in path_template:
 		path_template = '{bids_dir}/'+path_template

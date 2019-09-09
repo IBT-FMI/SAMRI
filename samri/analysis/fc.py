@@ -329,7 +329,7 @@ def seed_based_connectivity(ts, seed_mask,
 
 def correlation_matrix(ts,atlas,
 	confounds=None,
-	mask='',
+	mask=None,
 	loud=False,
 	structure_names=[],
 	save_as='',

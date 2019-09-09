@@ -9,6 +9,7 @@ from nilearn.connectome import ConnectivityMeasure
 from nilearn.input_data import NiftiLabelsMasker, NiftiMasker
 from nipype.interfaces import fsl
 from os import path, makedirs
+import pandas as pd
 import scipy
 import scipy.cluster.hierarchy as hier_clustering
 import pylab

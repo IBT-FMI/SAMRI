@@ -327,67 +327,64 @@ def seed_based_connectivity(ts, seed_mask,
 
 	return seed_based_correlation_img
 
-def correlation_matrix(ts,mask,
+def correlation_matrix(ts,atlas,
 	confounds=None,
-	labels_img='',
-	loud = False,
-	save_as = '',
-	tr=1,
+	mask='',
+	loud=False,
+	structure_names=[],
+	save_as='',
 	low_pass=0.25,
 	high_pass=0.004,
 	smoothing_fwhm=.3,
 	):
-	"""Return a csv containing correlations between ROIs.
+	"""Return a CSV file containing correlations between ROIs.
 
 	Parameters
 	----------
-
-	ts : string
-	Path to the 4D NIfTI timeseries file on which to perform the connectivity analysis.
-
-	labels_img: string
-	Path to a 3D NIfTI-like binary label file designating ROIs.
-
-	safe_as : str
-
+	ts : str
+		Path to the 4D NIfTI timeseries file on which to perform the connectivity analysis.
 	confounds : 2D array OR path to CSV file
-	Array/CSV file containing confounding time-series to be regressed out before FC analysis.
-
+		Array/CSV file containing confounding time-series to be regressed out before FC analysis.
+	atlas : str, optional
+		Path to a 3D NIfTI-like binary label file designating ROIs.
+	structure_names : list, optional
+		Ordered list of all structure names in atlas (length N).
+	save_as : str
+		Path under which to save the Pandas DataFrame conttaining the NxN correlation matrix.
 	"""
-
 	ts = path.abspath(path.expanduser(ts))
-	labels_img = path.abspath(path.expanduser(labels_img))
-	mask = path.abspath(path.expanduser(mask))
-
-
-	print(ts)
+	atlas = path.abspath(path.expanduser(atlas))
+	if mask:
+		mask = path.abspath(path.expanduser(mask))
+	tr = ts.header['pixdim'][0]
 	labels_masker = NiftiLabelsMasker(
-		labels_img=labels_img,
+		labels_img=atlas,
 		mask_img=mask,
-		memory="nilearn_cache",
-		memory_level=3,
 		standardize=True,
-		verbose=5,
+		memory='nilearn_cache',
+		verbose=5
 		low_pass = low_pass,
 		high_pass = high_pass,
 		smoothing_fwhm=smoothing_fwhm,
 		t_r=tr,
 		)
-
 	#TODO: test confounds with physiological signals
 	if(confounds):
 		confounds = path.abspath(path.expanduser(confounds))
 		timeseries = labels_masker.fit_transform(ts, confounds=confounds)
 	else:
 		timeseries = labels_masker.fit_transform(ts)
-
 	correlation_measure = ConnectivityMeasure(kind='correlation')
 	correlation_matrix = correlation_measure.fit_transform([timeseries])[0]
-
+	if structure_names:
+		df = pd.DataFrame(columns=structure_names, index=structure_names, data=correlation_matrix)
+	else:
+		df = pd.DataFrame(data=correlation_matrix)
 	if save_as:
-		np.savetxt(path.abspath(path.expanduser(save_as)), correlation_matrix, delimiter=',')
-
-	return correlation_matrix
+		save_dir = path.dirname(save_as)
+		if not path.exists(save_dir):
+			makedirs(save_dir)
+		df.to_csv(save_as)
 
 
 def dendogram(correlation_matrix,

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import errno
 import multiprocessing as mp
-import nibabel
+import nibabel as nib
 import numpy as np
 from copy import deepcopy
 from joblib import Parallel, delayed
@@ -176,7 +176,7 @@ def dual_regression(substitutions_a, substitutions_b,
 
 	ts_all = ts_a + ts_b
 	if group_level == "concat" and not path.isfile(all_merged_path):
-		ts_all_merged = nibabel.concat_images(ts_all, axis=3)
+		ts_all_merged = nib.concat_images(ts_all, axis=3)
 		ts_all_merged.to_filename(all_merged_path)
 
 	ica = fsl.model.MELODIC()

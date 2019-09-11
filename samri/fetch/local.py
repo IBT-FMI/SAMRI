@@ -7,19 +7,22 @@ from scipy import ndimage
 
 def roi_from_atlaslabel(atlas, label_names,
 	mapping=False,
-	bilateral=True,
+	laterality='',
 	dilate=True,
-	parser={
-		"textcolumn":"Structure",
-		"valuecolumn right":"right label",
-		"valuecolumn left":"left label",
-		},
+	label_column_l='left label',
+	label_column_r='right label',
+	structure_column='Structure',
 	save_as='',
+	output_label=1,
 	):
 	"""Return a region of interest map based on an atlas and a label.
 
-	dilate : bool
-	Whether to dilate the roi by one voxel. This is useful for filling up downsampled masks (nearest-neighbour interpolation, may create unexpected holes in masks).
+	dilate : bool, optional
+		Whether to dilate the roi by one voxel. This is useful for filling up downsampled masks (nearest-neighbour interpolation may create unexpected holes in masks).
+	laterality : {'', 'both', 'left', 'right'}, optional
+		What side of the brain to select if labels are lateralized and a structure match gives labels for both sides.
+	mapping : str, optional
+		Path to CSV file which contains columns matching the values assigned to the `label_column_l`, `label_column_r`, `structure_column` parameters of this function.
 	"""
 
 	if isinstance(atlas, str):
@@ -38,17 +41,24 @@ def roi_from_atlaslabel(atlas, label_names,
 	else:
 		mapping = path.abspath(path.expanduser(mapping))
 		mapping = pd.read_csv(mapping)
-		if bilateral and (parser["valuecolumn right"] and parser["valuecolumn left"]):
-			roi_values = []
-			for label_name in label_names:
-				roi_values.extend(mapping[mapping[parser["textcolumn"]].str.contains(label_name)][parser["valuecolumn right"]].values.tolist())
-				roi_values.extend(mapping[mapping[parser["textcolumn"]].str.contains(label_name)][parser["valuecolumn left"]].values.tolist())
+		roi_values = []
+		for label_name in label_names:
+			if laterality == 'left':
+				roi_values.extend(mapping[mapping[structure_column].str.contains(label_name)][label_column_l].values.tolist())
+			elif laterality == 'right':
+				roi_values.extend(mapping[mapping[structure_column].str.contains(label_name)][label_column_r].values.tolist())
+			elif laterality in ['', 'both']:
+				roi_values.extend(mapping[mapping[structure_column].str.contains(label_name)][label_column_r].values.tolist())
+				roi_values.extend(mapping[mapping[structure_column].str.contains(label_name)][label_column_l].values.tolist())
+			else:
+				raise ValueError('You need to provide an accepted value for the `laterality` parameter of the `samri.fetch.local.roi_from_atlaslabel()` function.')
 		header = atlas.header
 		affine = atlas.affine
 		data = atlas.get_data()
 		masked_data = np.in1d(data, roi_values).reshape(data.shape).astype(int)
 		if dilate:
 			masked_data = ndimage.binary_dilation(masked_data).astype(masked_data.dtype)
+		masked_data = masked_data*output_label
 		roi = nib.Nifti1Image(masked_data, affine, header)
 	if save_as:
 		roi.to_filename(path.abspath(path.expanduser(save_as)))

@@ -89,14 +89,18 @@ def roi_from_atlaslabel(atlas, label_names,
 	save_as='',
 	output_label=1,
 	):
-	"""Return a region of interest map based on an atlas and a label.
+	"""Return a region of interest (ROI) map based on an atlas and a label.
 
+	Parameters
+	----------
 	dilate : bool, optional
-		Whether to dilate the roi by one voxel. This is useful for filling up downsampled masks (nearest-neighbour interpolation may create unexpected holes in masks).
+		Whether to dilate the region of interest by one voxel. This is useful for filling up downsampled masks (nearest-neighbour interpolation may create unexpected holes in masks).
 	laterality : {'', 'both', 'left', 'right'}, optional
 		What side of the brain to select if labels are lateralized and a structure match gives labels for both sides.
 	mapping : str, optional
 		Path to CSV file which contains columns matching the values assigned to the `label_column_l`, `label_column_r`, `structure_column` parameters of this function.
+	output_label : int, optional
+		Integer value to use so as to label the desired region of interest voxels.
 	"""
 
 	if isinstance(atlas, str):

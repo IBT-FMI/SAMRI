@@ -74,6 +74,7 @@ def summary_atlas(atlas,
 			new_atlas = roi
 	df = pd.DataFrame(new_mapping)
 	df = df.groupby(structure_column).sum()
+	df[structure_column] = df.index
 	new_mapping = df.astype({label_column_l: int, label_column_r: int})
 
 	return new_atlas, new_mapping

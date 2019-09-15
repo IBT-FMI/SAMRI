@@ -284,9 +284,9 @@ def ordered_structures(
 	Parameters
 	----------
 
-	atlas : str, optional
+	atlas : str or nibabel.Nifti1Image, optional
 		Path to a NIfTI atlas file.
-	mapping : str, optional
+	mapping : str or pandas.DataFrame, optional
 		Path to a CSV mapping file containing columns which include the string specified under `structure_column` and the strings specified under `label_columns`.
 		The latter of these columns need to include the numerical values found in the data matrix of the file whose path is assigned to `atlas`.
 	label_columns : list, optional
@@ -297,15 +297,16 @@ def ordered_structures(
 	remove_zero_label : bool, optional
 		Whether to disconsider the zero label in the atlas image.
 	"""
-	atlas = path.abspath(path.expanduser(atlas))
-	mapping = path.abspath(path.expanduser(mapping))
-	atlas_img = nib.load(atlas)
-	atlas_data = atlas_img.get_data()
+	if isinstance(atlas, str):
+		atlas = path.abspath(path.expanduser(atlas))
+		atlas = nib.load(atlas)
+	if isinstance(mapping, str):
+		mapping = path.abspath(path.expanduser(mapping))
+		mapping = pd.read_csv(mapping)
+	atlas_data = atlas.get_data()
 	atlas_data_unique = np.unique(atlas_data)
 	if remove_zero_label:
 		atlas_data_unique = atlas_data_unique[atlas_data_unique != 0]
-	mapping = path.abspath(path.expanduser(mapping))
-	mapping = pd.read_csv(mapping)
 	structure_names = []
 	for label in atlas_data_unique:
 		structure_name = []

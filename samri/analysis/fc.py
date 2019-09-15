@@ -354,7 +354,8 @@ def correlation_matrix(ts,atlas,
 		Path under which to save the Pandas DataFrame conttaining the NxN correlation matrix.
 	"""
 	ts = path.abspath(path.expanduser(ts))
-	atlas = path.abspath(path.expanduser(atlas))
+	if isinstance(atlas,str):
+		atlas = path.abspath(path.expanduser(atlas))
 	if mask:
 		mask = path.abspath(path.expanduser(mask))
 	tr = nib.load(ts).header['pixdim'][0]

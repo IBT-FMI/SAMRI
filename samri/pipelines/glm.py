@@ -656,7 +656,6 @@ def l2_common_effect(l1_dir,
 	if include:
 		for key in include:
 			data_selection = data_selection[data_selection[key].isin(include[key])]
-			return()
 	data_selection.to_csv(path.join(workdir,'data_selection.csv'))
 
 	copemerge = pe.Node(interface=fsl.Merge(dimension='t'),name="copemerge")

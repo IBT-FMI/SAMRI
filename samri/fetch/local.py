@@ -5,6 +5,7 @@ import pandas as pd
 from copy import deepcopy
 from os import path
 from scipy import ndimage
+from sklearn.preprocessing import minmax_scale, MinMaxScaler
 
 def prepare_feature_map(data_path,
 	invert_lr=False,
@@ -58,6 +59,8 @@ def prepare_feature_map(data_path,
 			data = data[:,::-1,:]
 		elif lr_dim == 3:
 			data = data[:,:,::-1]
+	if min_max_scaling:
+		data = (data-data.min()) / (data.max() - data.min())
 	prepared_file = nib.Nifti1Image(data, affine, header)
 	if save_as:
 		prepared_file.to_filename(path.abspath(path.expanduser(save_as)))

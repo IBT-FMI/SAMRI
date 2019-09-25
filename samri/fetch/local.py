@@ -1,9 +1,68 @@
 import nibabel as nib
 import numpy as np
+import os
 import pandas as pd
 from copy import deepcopy
 from os import path
 from scipy import ndimage
+
+def prepare_feature_map(data_path,
+	invert_lr=False,
+	lr_dim=1,
+	min_max_scaling=True,
+	save_as='',
+	):
+	"""
+	Prepare NIfTI feature map file for analysis.
+	This function is primarily intended to help with ABI gene expression and connectivity data, and can do flipping (left-right is often necessary for lateralized features), and normalization.
+
+	Parameters
+	----------
+
+	data_path : str
+		Path to either the target feature map file (NIfTI file, ending in ".nii" or ".nii.gz"), or a directory containing a single NIfTI file, which is the target feature map.
+	invert_lr : str, optional
+		Whether to invert the (presumably) left-right dimension of the image.
+	lr_dim : {1,2,3}, optional
+		Which dimension corresponds to the left-right dimension of the image.
+		If the image uses the NIfTI specification correctly (RAS orientation), this will always be the first dimension.
+	save_as : str, optional
+		Path to which to save the prepared feature map.
+
+	"""
+
+	data_path = path.abspath(path.expanduser(data_path))
+	if path.isdir(data_path):
+		file_names = []
+		for my_file in os.listdir(data_path):
+			if my_file.endswith(".nii.gz") or my_file.endswith(".nii"):
+				file_names.append(my_file)
+		if len(file_names) > 1:
+			files_string = '\n'.join(file_names)
+			raise ValueError('More than one file was found in the `{}` directory:\n'
+					'{}\n Please choose one and pass the file name to the `data_path` parameter of the `samri.fetch.local.prepare_abi_connctivity()` function.'.format(
+						data_path,
+						file_names,
+						))
+		else:
+			file_name = file_names[0]
+		data_path = path.join(data_path,file_name)
+	img = nib.load(data_path)
+	header = img.header
+	affine = img.affine
+	data = img.get_data()
+	if invert_lr:
+		if lr_dim == 1:
+			data = data[::-1,:,:]
+		elif lr_dim == 2:
+			data = data[:,::-1,:]
+		elif lr_dim == 3:
+			data = data[:,:,::-1]
+	prepared_file = nib.Nifti1Image(data, affine, header)
+	if save_as:
+		prepared_file.to_filename(path.abspath(path.expanduser(save_as)))
+
+	return prepared_file
 
 def summary_atlas(atlas,
 	mapping='',

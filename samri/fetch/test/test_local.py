@@ -1,5 +1,13 @@
 import numpy as np
 
+def test_prepare_feature_map():
+	from samri.fetch.local import prepare_feature_map
+
+	prepare_feature_map('/usr/share/ABI-connectivity-data/Ventral_tegmental_area-127651139/',
+		invert_lr=True,
+		save_as='/var/tmp/samri_testing/pytest/vta_127651139.nii.gz',
+		)
+
 def test_summary_atlas():
 	from samri.fetch.local import summary_atlas
 

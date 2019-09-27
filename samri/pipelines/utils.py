@@ -201,6 +201,9 @@ def bids_data_selection(base, structural_match, functional_match, subjects, sess
 	if 'anat' in df.columns:
 		df.loc[df.modality == 'anat', 'scan_type'] = 'acq-'+df['acq'] +'_' + df['type']
 
+	# Unclear in current BIDS specification, we refer to BOLD/CBV as modalities and func/anat as types
+	df = df.rename(columns={'modality': 'type', 'type': 'modality'})
+
 	#TODO: The following should be collapsed into one criterion category
 	if functional_match or structural_match:
 		res_df = pd.DataFrame()
@@ -236,9 +239,6 @@ def bids_data_selection(base, structural_match, functional_match, subjects, sess
 		df = filter_data(df, 'subject', subjects)
 	if sessions:
 		df = filter_data(df, 'session', sessions)
-
-	# Unclear in current BIDS specification, we refer to BOLD/CBV as modalities and func/anat as types
-	df = df.rename(columns={'modality': 'type', 'type': 'modality'})
 
 	return df
 

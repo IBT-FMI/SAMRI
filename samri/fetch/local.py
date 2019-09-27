@@ -63,6 +63,9 @@ def prepare_feature_map(data_path,
 		data = (data-data.min()) / (data.max() - data.min())
 	prepared_file = nib.Nifti1Image(data, affine, header)
 	if save_as:
+		save_dir = os.path.dirname(save_as)
+		if not os.path.exists(save_dir):
+			    os.makedirs(save_dir)
 		prepared_file.to_filename(path.abspath(path.expanduser(save_as)))
 
 	return prepared_file

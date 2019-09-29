@@ -922,6 +922,7 @@ def l2_common_effect(l1_dir,
 		shutil.rmtree(path.join(out_base,workdir_name))
 
 def l2_controlled_effect(l1_dir,
+	control_dir='',
 	keep_work=False,
 	tr=1,
 	nprocs=6,
@@ -946,6 +947,9 @@ def l2_controlled_effect(l1_dir,
 	Parameters
 	----------
 
+	control_dir : str, optional
+		Directory where the BIDS hierarchy for the control data is located.
+		If the value of this parameter evaluates as false, the control data will be assumed to aslo reside in `l1_dir`.
 	n_jobs_percentage : float, optional
 		Percentage of the cores present on the machine which to maximally use for deploying jobs in parallel.
 	run_mode : {'ols', 'fe', 'flame1', 'flame12'}, optional
@@ -963,6 +967,10 @@ def l2_controlled_effect(l1_dir,
 	from samri.pipelines.utils import bids_data_selection
 
 	l1_dir = path.abspath(path.expanduser(l1_dir))
+	if control_dir:
+		control_dir = path.abspath(path.expanduser(control_dir))
+	else:
+		control_dir = l1_dir
 	out_base = path.abspath(path.expanduser(out_base))
 	out_dir = path.abspath(path.expanduser(out_dir))
 	mask=path.abspath(path.expanduser(mask))
@@ -974,7 +982,7 @@ def l2_controlled_effect(l1_dir,
 		sessions=False,
 		verbose=True,
 		)
-	control_data_selection = bids_data_selection(l1_dir,
+	control_data_selection = bids_data_selection(control_dir,
 		structural_match=False,
 		functional_match=control_match,
 		subjects=False,
@@ -1010,7 +1018,10 @@ def l2_controlled_effect(l1_dir,
 	datasink_substitutions = [('_iterable_', '')]
 
 	common_fields = ''
-	common_fields += 'acq-'+data_selection.acq.drop_duplicates().item()
+	try:
+		common_fields += 'acq-'+data_selection.acq.drop_duplicates().item()
+	except ValueError:
+		pass
 	try:
 		common_fields += '_run-'+data_selection.run.drop_duplicates().item()
 	except ValueError:
@@ -1023,10 +1034,6 @@ def l2_controlled_effect(l1_dir,
 	copemerge = pe.Node(interface=fsl.Merge(dimension='t'),name="copemerge")
 	copemerge.inputs.in_files = copes
 	copemerge.inputs.merged_file = 'copes.nii.gz'
-
-	varcopemerge = pe.Node(interface=fsl.Merge(dimension='t'),name="varcopemerge")
-	varcopemerge.inputs.in_files = varcopes
-	varcopemerge.inputs.merged_file = 'varcopes.nii.gz'
 
 	feature = [~copeonly['control']][0]
 	control = [not i for i in feature]
@@ -1054,7 +1061,6 @@ def l2_controlled_effect(l1_dir,
 
 	workflow_connections = [
 		(copemerge,flameo,[('merged_file','cope_file')]),
-		(varcopemerge,flameo,[('merged_file','var_cope_file')]),
 		(level2model,flameo, [('design_mat','design_file')]),
 		(level2model,flameo, [('design_grp','cov_split_file')]),
 		(level2model,flameo, [('design_fts','f_con_file')]),
@@ -1065,6 +1071,14 @@ def l2_controlled_effect(l1_dir,
 		(flameo, datasink, [('fstats', '@fstats')]),
 		(flameo, datasink, [('zfstats', '@zfstats')]),
 		]
+
+	if len(varcopes) != 0:
+		varcopemerge = pe.Node(interface=fsl.Merge(dimension='t'),name="varcopemerge")
+		varcopemerge.inputs.in_files = varcopes
+		varcopemerge.inputs.merged_file = 'varcopes.nii.gz'
+		workflow_connections.extend([
+			(varcopemerge,flameo,[('merged_file','var_cope_file')]),
+			])
 
 	workflow_config = {'execution': {'crashdump_dir': path.join(out_base,'crashdump'),}}
 

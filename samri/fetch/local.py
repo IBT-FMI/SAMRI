@@ -64,6 +64,12 @@ def prepare_feature_map(data_path,
 			data = data[:,:,::-1]
 	if scaling == 'minmax':
 		data = (data-data.min()) / (data.max() - data.min())
+	if scaling == 'normalize':
+		data = (data-data.mean()) / data.std()
+	if scaling == 'standardize':
+		data = data / data.std()
+	if scaling == 'standardize positive':
+		data = (data-data.min()) / data.std()
 	prepared_file = nib.Nifti1Image(data, affine, header)
 	if save_as:
 		save_dir = os.path.dirname(save_as)

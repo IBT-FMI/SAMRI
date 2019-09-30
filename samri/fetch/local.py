@@ -10,7 +10,7 @@ from sklearn.preprocessing import minmax_scale, MinMaxScaler
 def prepare_feature_map(data_path,
 	invert_lr=False,
 	lr_dim=1,
-	min_max_scaling=True,
+	scaling='',
 	save_as='',
 	):
 	"""
@@ -27,6 +27,9 @@ def prepare_feature_map(data_path,
 	lr_dim : {1,2,3}, optional
 		Which dimension corresponds to the left-right dimension of the image.
 		If the image uses the NIfTI specification correctly (RAS orientation), this will always be the first dimension.
+	scaling : {'minmax', ''}, optional
+		String specifying what scaling should be performed to homogenize data ranges.
+		If this parameter evaluates to false, no scaling is performed.
 	save_as : str, optional
 		Path to which to save the prepared feature map.
 
@@ -59,7 +62,7 @@ def prepare_feature_map(data_path,
 			data = data[:,::-1,:]
 		elif lr_dim == 3:
 			data = data[:,:,::-1]
-	if min_max_scaling:
+	if scaling == 'minmax':
 		data = (data-data.min()) / (data.max() - data.min())
 	prepared_file = nib.Nifti1Image(data, affine, header)
 	if save_as:

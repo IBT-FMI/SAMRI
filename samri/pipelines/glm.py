@@ -594,7 +594,7 @@ def add_suffix(name, suffix):
 	return str(name)+str(suffix)
 
 def l2_common_effect(l1_dir,
-	groupby="session",
+	groupby="none",
 	keep_work=False,
 	loud=False,
 	tr=1,
@@ -657,6 +657,9 @@ def l2_common_effect(l1_dir,
 		for key in include:
 			data_selection = data_selection[data_selection[key].isin(include[key])]
 	data_selection.to_csv(path.join(workdir,'data_selection.csv'))
+
+	varcopes_list = data_selection[data_selection['modality']=='varcb']['path'].tolist()
+	copes_list = data_selection[data_selection['modality']=='cope']['path'].tolist()
 
 	copemerge = pe.Node(interface=fsl.Merge(dimension='t'),name="copemerge")
 	varcopemerge = pe.Node(interface=fsl.Merge(dimension='t'),name="varcopemerge")
@@ -827,8 +830,10 @@ def l2_common_effect(l1_dir,
 			]
 	elif groupby == "none":
 		common_fields = ''
-		common_fields += 'acq-'+data_selection.acq.drop_duplicates().item()
-		common_fields += '_run-'+data_selection.run.drop_duplicates().item()
+		if not data_selection.acq.drop_duplicates().isnull().values.any():
+			common_fields += 'acq-'+data_selection.acq.drop_duplicates().item()
+		if not data_selection.run.drop_duplicates().isnull().values.any():
+			common_fields += '_run-'+data_selection.run.drop_duplicates().item()
 
 		datasink_substitutions.extend([('cope1.nii.gz', common_fields+'_'+'cope.nii.gz')])
 		datasink_substitutions.extend([('tstat1.nii.gz', common_fields+'_'+'tstat.nii.gz')])
@@ -875,10 +880,8 @@ def l2_common_effect(l1_dir,
 
 	workflow_connections.extend([
 		(copes, copemerge, [('selection', 'in_files')]),
-		(varcopes, varcopemerge, [('selection', 'in_files')]),
-		(varcopes, level2model, [(('selection',mylen), 'num_copes')]),
+		(copes, level2model, [(('selection',mylen), 'num_copes')]),
 		(copemerge,flameo,[('merged_file','cope_file')]),
-		(varcopemerge,flameo,[('merged_file','var_cope_file')]),
 		(level2model,flameo, [('design_mat','design_file')]),
 		(level2model,flameo, [('design_grp','cov_split_file')]),
 		(level2model,flameo, [('design_con','t_con_file')]),
@@ -887,6 +890,12 @@ def l2_common_effect(l1_dir,
 		(flameo, datasink, [('tstats', '@tstats')]),
 		(flameo, datasink, [('zstats', '@zstats')]),
 		])
+
+	if len(varcopes_list) != 0:
+		workflow_connections.extend([
+			(varcopes, varcopemerge, [('selection', 'in_files')]),
+			(varcopemerge,flameo,[('merged_file','var_cope_file')]),
+			])
 
 	workflow_config = {'execution': {'crashdump_dir': path.join(out_base,'crashdump'),}}
 	if debug:

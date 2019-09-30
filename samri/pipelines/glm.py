@@ -1001,7 +1001,6 @@ def l2_controlled_effect(l1_dir,
 	data_selection['control'] = False
 	control_data_selection['control'] = True
 	data_selection = pd.concat([control_data_selection, data_selection])
-
 	if not out_dir:
 		out_dir = path.join(out_base,workflow_name)
 	workdir_name = workflow_name+'_work'
@@ -1053,13 +1052,15 @@ def l2_controlled_effect(l1_dir,
 			'control': control
 			}
 
-	sessions = [['feature','T',['feature'], [1]]]
-	contrasts = deepcopy(sessions)
-	contrasts.append(['anova', 'F', sessions])
+	t_contrasts = [['feature','T',['feature'], [1]]]
+	contrasts = deepcopy(t_contrasts)
+	contrasts.append(['controlled group', 'F', t_contrasts])
 
 	level2model = pe.Node(interface=fsl.MultipleRegressDesign(),name='level2model')
 	level2model.inputs.regressors = regressors
 	level2model.inputs.contrasts = contrasts
+	# create group for paired t-tests
+	#level2model.inputs.groups = [i for i in range(len(feature))]
 
 	datasink_substitutions.extend([('cope1.nii.gz', '{}_cope.nii.gz'.format(common_fields))])
 	datasink_substitutions.extend([('tstat1.nii.gz','{}_tstat.nii.gz'.format(common_fields))])

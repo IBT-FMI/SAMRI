@@ -1,3 +1,4 @@
+import glob
 import nibabel as nib
 import numpy as np
 import os
@@ -11,10 +12,11 @@ def prepare_abi_connectivity_maps(identifier,
 	abi_data_root='/usr/share/ABI-connectivity-data/',
 	invert_lr_experiments=[],
 	reposit_path='/var/tmp/samri/abi_connectivity/{identifier}/sub-{experiment}/ses-1/anat/sub-{experiment}_ses-1_cope.nii.gz',
+	**kwargs
 	):
 	"""
 	Prepare NIfTI feature maps from the ABI connectivity data for analysis.
-	This functionis a thin wrapper applying the known path formats for the ABI dataset structure to the `samri.fetch.local.prepare_feature_map()` function.
+	This function is a thin wrapper applying the known path formats for the ABI dataset structure to the `samri.fetch.local.prepare_feature_map()` function.
 
 	Parameters
 	----------
@@ -30,15 +32,14 @@ def prepare_abi_connectivity_maps(identifier,
 		Generally this should be a temporal path, which ideally is deleted after the prepared data is used.
 	"""
 
-	import glob
 	for experiment_path in glob.glob(path.join(abi_data_root,identifier)+"*"):
 		experiment = experiment_path[-9:]
 		invert_lr = experiment in invert_lr_experiments
 		save_as = reposit_path.format(identifier=identifier,experiment=experiment)
 		prepare_feature_map(experiment_path,
 			invert_lr = invert_lr,
-			scaling='',
 			save_as=save_as,
+			**kwargs
 			)
 
 def prepare_feature_map(data_path,

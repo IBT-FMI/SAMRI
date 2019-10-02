@@ -44,8 +44,8 @@ def prepare_abi_connectivity_maps(identifier,
 def prepare_feature_map(data_path,
 	invert_lr=False,
 	lr_dim=1,
-	scaling='',
 	save_as='',
+	scaling='',
 	):
 	"""
 	Prepare NIfTI feature map file for analysis.
@@ -61,12 +61,11 @@ def prepare_feature_map(data_path,
 	lr_dim : {1,2,3}, optional
 		Which dimension corresponds to the left-right dimension of the image.
 		If the image uses the NIfTI specification correctly (RAS orientation), this will always be the first dimension.
+	save_as : str, optional
+		Path to which to save the prepared feature map.
 	scaling : {'minmax', ''}, optional
 		String specifying what scaling should be performed to homogenize data ranges.
 		If this parameter evaluates to false, no scaling is performed.
-	save_as : str, optional
-		Path to which to save the prepared feature map.
-
 	"""
 
 	data_path = path.abspath(path.expanduser(data_path))
@@ -189,14 +188,14 @@ def summary_atlas(atlas,
 
 
 def roi_from_atlaslabel(atlas, label_names,
-	mapping=False,
-	laterality='',
 	dilate=False,
 	label_column_l='left label',
 	label_column_r='right label',
-	structure_column='Structure',
-	save_as='',
+	laterality='',
+	mapping=False,
 	output_label=1,
+	save_as='',
+	structure_column='Structure',
 	):
 	"""Return a region of interest (ROI) map based on an atlas and a label.
 

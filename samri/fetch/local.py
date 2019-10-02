@@ -7,6 +7,40 @@ from os import path
 from scipy import ndimage
 from sklearn.preprocessing import minmax_scale, MinMaxScaler
 
+def prepare_abi_connectivity_map(identifier,
+	abi_data_root='/usr/share/ABI-connectivity-data/',
+	invert_lr_experiments=[],
+	reposit_path='/var/tmp/samri/abi_connectivity/{identifier}/sub-{experiment}/ses-1/anat/sub-{experiment}_ses-1_cope.nii.gz',
+	):
+	"""
+	Prepare NIfTI feature maps from the ABI connectivity data for analysis.
+	This functionis a thin wrapper applying the known path formats for the ABI dataset structure to the `samri.fetch.local.prepare_feature_map()` function.
+
+	Parameters
+	----------
+
+	identifier : str
+		Experiment set identifier which corresponds to the data set paths from the ABI-connectivity-data package.
+	abi_data_root : str, optional
+		Root path for the ABI-connectivity-data package installation on the current machine.
+	invert_lr_experiments : list of str, optional
+		List of strings, each string 9 characters long, identifying which experiments need to be inverted with respect to the left-right orientation.
+	reposit_path : string, optional
+		Python-formattable string, containing "{identifier}" and "{experiment}", under which the prepared data is to be saved.
+		Generally this should be a temporal path, which ideally is deleted after the prepared data is used.
+	"""
+
+	import glob
+	for experiment_path in glob.glob(path.join(abi_data_root,identifier)+"*"):
+		experiment = experiment_path[-9:]
+		invert_lr = experiment in invert_lr_experiments
+		save_as = reposit_path.format(identifier=identifier,experiment=experiment)
+		prepare_feature_map(experiment_path,
+			invert_lr = invert_lr,
+			scaling='',
+			save_as=save_as,
+			)
+
 def prepare_feature_map(data_path,
 	invert_lr=False,
 	lr_dim=1,

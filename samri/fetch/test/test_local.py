@@ -1,9 +1,8 @@
 import numpy as np
 
-def test_prepare_abi_connectivity_map():
-	from samri.fetch.local import prepare_abi_connectivity_map
-	prepare_abi_connectivity_map('Ventral_tegmental_area',
-		#exclude_experiments=['175736945','301062306'],
+def test_prepare_abi_connectivity_maps():
+	from samri.fetch.local import prepare_abi_connectivity_maps
+	prepare_abi_connectivity_maps('Ventral_tegmental_area',
 		invert_lr_experiments=[
 			"127651139",
 			"127796728",

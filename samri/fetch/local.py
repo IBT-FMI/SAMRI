@@ -7,7 +7,7 @@ from os import path
 from scipy import ndimage
 from sklearn.preprocessing import minmax_scale, MinMaxScaler
 
-def prepare_abi_connectivity_map(identifier,
+def prepare_abi_connectivity_maps(identifier,
 	abi_data_root='/usr/share/ABI-connectivity-data/',
 	invert_lr_experiments=[],
 	reposit_path='/var/tmp/samri/abi_connectivity/{identifier}/sub-{experiment}/ses-1/anat/sub-{experiment}_ses-1_cope.nii.gz',

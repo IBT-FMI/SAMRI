@@ -830,10 +830,16 @@ def l2_common_effect(l1_dir,
 			]
 	elif groupby == "none":
 		common_fields = ''
-		if not data_selection.acq.drop_duplicates().isnull().values.any():
-			common_fields += 'acq-'+data_selection.acq.drop_duplicates().item()
-		if not data_selection.run.drop_duplicates().isnull().values.any():
-			common_fields += '_run-'+data_selection.run.drop_duplicates().item()
+		try:
+			if not data_selection.acq.drop_duplicates().isnull().values.any():
+				common_fields += 'acq-'+data_selection.acq.drop_duplicates().item()
+		except AttributeError:
+			pass
+		try:
+			if not data_selection.run.drop_duplicates().isnull().values.any():
+				common_fields += '_run-'+data_selection.run.drop_duplicates().item()
+		except AttributeError:
+			pass
 
 		datasink_substitutions.extend([('cope1.nii.gz', common_fields+'_'+'cope.nii.gz')])
 		datasink_substitutions.extend([('tstat1.nii.gz', common_fields+'_'+'tstat.nii.gz')])

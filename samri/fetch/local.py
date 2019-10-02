@@ -28,7 +28,7 @@ def prepare_abi_connectivity_maps(identifier,
 	invert_lr_experiments : list of str, optional
 		List of strings, each string 9 characters long, identifying which experiments need to be inverted with respect to the left-right orientation.
 	reposit_path : string, optional
-		Python-formattable string, containing "{identifier}" and "{experiment}", under which the prepared data is to be saved.
+		Python-formattable string, which can contain "{experiment}" and may contain "{identifier}", under which the prepared data is to be saved.
 		Generally this should be a temporal path, which ideally is deleted after the prepared data is used.
 	"""
 

@@ -6,6 +6,7 @@ from os import path
 import subprocess
 import sys
 import io
+import math
 import os
 
 #Here we import internal nilearn functions, YOLO!
@@ -1174,7 +1175,7 @@ def slices(heatmap_image,
 	ratio='portrait',
 	save_as='',
 	scale=0.4,
-	slice_spacing=0.5,
+	slice_spacing=0.4,
 	substitutions=[{},],
 	style='light',
 	title_color='#BBBBBB',
@@ -1278,7 +1279,7 @@ def slices(heatmap_image,
 	while True:
 		for i in np.arange(heatmap_data.shape[1]):
 			my_slice = heatmap_data[:,i,:]
-			if my_slice.max() < heatmap_threshold:
+			if math.isnan(my_slice.max()) or my_slice.max() < heatmap_threshold:
 				subthreshold_start_slices += 1
 			else:
 				break
@@ -1287,7 +1288,7 @@ def slices(heatmap_image,
 	while True:
 		for i in np.arange(heatmap_data.shape[1])[::-1]:
 			my_slice = heatmap_data[:,i,:]
-			if my_slice.max() < heatmap_threshold:
+			if math.isnan(my_slice.max()) or my_slice.max() < heatmap_threshold:
 				subthreshold_end_slices += 1
 			else:
 				break

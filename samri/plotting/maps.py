@@ -85,7 +85,10 @@ def _draw_colorbar(stat_map_img, axes,
 	for i in range(istart, (istop+1)):
 		# just an average gray color
 		cmaplist[i] = (0.5, 0.5, 0.5, 1.)
-	our_cmap = colmap.from_list('Custom cmap', cmaplist, colmap.N)
+	try:
+		our_cmap = colmap.from_list('Custom cmap', cmaplist, colmap.N)
+	except AttributeError:
+		pass
 
 	if really_draw:
 		cbar_ax, p_ax = make_axes(axes,
@@ -1137,6 +1140,241 @@ def contour_slices(bg_image, file_template,
 		for ix, img in enumerate(imgs):
 			color = colors[ix]
 			display.add_contours(img, levels=levels, colors=[color])
+
+	if figure_title:
+		fig.suptitle(figure_title, color=title_color)
+
+	if save_as:
+		save_as = save_as.format(**substitutions[0])
+		save_as = path.abspath(path.expanduser(save_as))
+		save_dir,_ = os.path.split(save_as)
+		try:
+			os.makedirs(save_dir)
+		except FileExistsError:
+			pass
+		plt.savefig(save_as,
+			#facecolor=fig.get_facecolor(),
+			)
+		plt.close()
+
+def slices(heatmap_image,
+	bg_image='/usr/share/mouse-brain-atlases/dsurqec_40micron_masked.nii',
+	contour_image='',
+	heatmap_threshold=3,
+	contour_threshold=3,
+	auto_figsize=False,
+	invert=False,
+	contour_alpha=0.9,
+	colors=['r','g','b'],
+	dimming=0.,
+	figure_title='',
+	force_reverse_slice_order=True,
+	legend_template='',
+	levels_percentile=[80],
+	ratio='portrait',
+	save_as='',
+	scale=0.4,
+	slice_spacing=0.5,
+	substitutions=[{},],
+	style='light',
+	title_color='#BBBBBB',
+	cmap='autumn_r',
+	):
+	"""
+	Plot coronal `bg_image` slices at a given spacing, and overlay contours from a list of NIfTI files.
+
+	Parameters
+	----------
+
+	bg_image : str
+		Path to the NIfTI image to draw in grayscale as th eplot background.
+		This would commonly be some sort of brain template.
+	heatmap_image : str
+		Path to an overlay image to be printed as a heatmap.
+	contour_image : str
+		Path to an overlay image to be printed as a contours.
+	auto_figsize : boolean, optional
+		Whether to automatically determine the size of the figure.
+	invert : boolean, optional
+		Whether to automatically invert data matrix values (useful if the image consists of negative values, e.g. when dealing with negative contrast agent CBV scans).
+	contour_alpha : float, optional
+		Alpha (transparency) with which to draw the contour image.
+	contour_color : str, optional
+		Color with which to draw the contour image.
+	contour_width : float, optional
+		Desired contour image line width.
+	cmap : str, optional
+		Colormap with which to draw the heatmap image.
+	dimming : float, optional
+		Dimming factor, generally between -2 and 2 (-2 increases contrast, 2 decreases it).
+		This parameter is passed directly to `nilearn.plotting.plot_anat()`
+		Set to 'auto', to use nilearn automagick dimming.
+	figure_title : str, optional
+		Title for the figure.
+	force_reverse_slice_order : bool, optional
+		Whether to force the reversal of the slice order.
+		This can be done to enforce a visual presentation without having to modify the underlying data (i.e. visualize neurological-order slices in radiological order).
+		This option should generally be avoided, ideally one would not obfuscate the data orientation when plotting.
+	legend : string, optional
+		The legend text.
+	ratio : list or {'landscape', 'portrait'}, optional
+		Either a list of 2 integers giving the desired number of rows and columns (in this order), or a string, which is either 'landscape' or 'portrait', and which prompts the function to auto-determine the best number of rows and columns given the number of slices and the `scale` attribute.
+	save_as : str, optional
+		Path under which to save the output figure.
+		The string may contain formatting fields from the first dictionary in the `substitutions` variable.
+	scale : float, optional
+		The expected ratio of the slice height divided by the sum of the slice height and width.
+		This somewhat complex metric controls the row and column distribution of slices in the 'landscape' and 'portrait' plotting shapes.
+	slice_spacing : float
+		Slice spacing in mm.
+	style : {'light', 'dark', ''}, optional
+		Default SAMRI styling which to apply, set to an empty string to apply no styling and leave it to the environment matplotlibrc.
+	title_color : string, optional
+		String specifying the desired color for the title.
+		This needs to be specified in-function, because the matplotlibrc styling standard does not provide for title color specification [matplotlibrc_title]
+
+	References
+	----------
+
+	.. [matplotlibrc_title] https://stackoverflow.com/questions/30109465/matplotlib-set-title-color-in-stylesheet
+	"""
+
+	if len(substitutions) == 0:
+		print('ERROR: You have specified a substitution dictionary of length 0. There needs to be at least one set of substitutions. If your string contains no formatting fields, please pass a list containing an empty dictionary to the `sbstitution parameter` (this is also its default value).')
+
+	plotting_module_path = path.dirname(path.realpath(__file__))
+	if style=='light':
+		black_bg=False
+		anatomical_cmap = 'binary'
+		style_path = path.join(plotting_module_path,'contour_slices.conf')
+		plt.style.use([style_path])
+	elif style=='dark':
+		black_bg=True
+		anatomical_cmap = 'binary_r'
+		style_path = path.join(plotting_module_path,'contour_slices_dark.conf')
+		plt.style.use([style_path])
+	else:
+		anatomical_cmap = 'binary'
+		black_bg=False
+
+	bg_image = path.abspath(path.expanduser(bg_image))
+	bg_img = nib.load(bg_image)
+	# Select first slice from 4D data
+	if bg_img.header['dim'][0] > 3:
+		bg_img = collapse(bg_img)
+
+	slice_order_is_reversed = 0
+	heatmap_image = path.abspath(path.expanduser(heatmap_image))
+	heatmap_img = nib.load(heatmap_image)
+	heatmap_data = heatmap_img.get_data()
+	if heatmap_img.header['dim'][0] > 3:
+		img = collapse(heatmap_img)
+	if invert:
+		heatmap_data = -heatmap_data
+		heatmap_img = nib.nifti1.Nifti1Image(heatmap_data, heatmap_img.affine, heatmap_img.header)
+	#we should only be looking at the percentile of the entire data matrix, rather than just the active slice
+	slice_row = heatmap_img.affine[1]
+	subthreshold_start_slices = 0
+	while True:
+		for i in np.arange(heatmap_data.shape[1]):
+			my_slice = heatmap_data[:,i,:]
+			if my_slice.max() < heatmap_threshold:
+				subthreshold_start_slices += 1
+			else:
+				break
+		break
+	subthreshold_end_slices = 0
+	while True:
+		for i in np.arange(heatmap_data.shape[1])[::-1]:
+			my_slice = heatmap_data[:,i,:]
+			if my_slice.max() < heatmap_threshold:
+				subthreshold_end_slices += 1
+			else:
+				break
+		break
+	slice_thickness = (slice_row[0]**2+slice_row[1]**2+slice_row[2]**2)**(1/2)
+	best_guess_negative = abs(min(slice_row[0:3])) > abs(max(slice_row[0:3]))
+	slices_number = heatmap_data.shape[list(slice_row).index(max(slice_row))]
+	img_min_slice = slice_row[3] + subthreshold_start_slices*slice_thickness
+	img_max_slice = slice_row[3] + (slices_number-subthreshold_end_slices)*slice_thickness
+	bounds = [img_min_slice,img_max_slice]
+	if best_guess_negative:
+		slice_order_is_reversed += 1
+	else:
+		slice_order_is_reversed -= 1
+
+	min_slice = min(bounds)
+	max_slice = max(bounds)
+	cut_coords = np.arange(min_slice, max_slice, slice_spacing)
+	if slice_order_is_reversed > 0:
+		cut_coords = cut_coords[::-1]
+	if force_reverse_slice_order:
+		cut_coords = cut_coords[::-1]
+
+	linewidth = rcParams['axes.linewidth']
+
+	cut_coord_length = len(cut_coords)
+	if legend_template:
+		cut_coord_length += 1
+	try:
+		nrows, ncols = ratio
+	except ValueError:
+		if ratio == "portrait":
+			ncols = np.floor(cut_coord_length**scale)
+			nrows = np.ceil(cut_coord_length/float(ncols))
+		elif ratio == "landscape":
+			nrows = np.floor(cut_coord_length**(scale))
+			ncols = np.ceil(cut_coord_length/float(nrows))
+	# we adjust the respective rc.Param here, because it needs to be set before drawing to take effect
+	if legend_template and cut_coord_length == ncols*(nrows-1)+1:
+		rcParams['figure.subplot.bottom'] = np.max([rcParams['figure.subplot.bottom']-0.05,0.])
+
+	if auto_figsize:
+		figsize = np.array(rcParams['figure.figsize'])
+		figsize_scales = figsize/np.array([float(ncols),float(nrows)])
+		figsize_scale = figsize_scales.min()
+		fig, ax = plt.subplots(figsize=(ncols*figsize_scale,nrows*figsize_scale),
+				nrows=int(nrows), ncols=int(ncols),
+				)
+	else:
+		fig, ax = plt.subplots(
+				nrows=int(nrows), ncols=int(ncols),
+				)
+	flat_axes = list(ax.flatten())
+	for ix, ax_i in enumerate(flat_axes):
+		try:
+			display = nilearn.plotting.plot_anat(bg_img,
+				axes=ax_i,
+				display_mode='y',
+				cut_coords=[cut_coords[ix]],
+				annotate=False,
+				black_bg=black_bg,
+				dim=dimming,
+				cmap=anatomical_cmap,
+				)
+		except IndexError:
+			ax_i.axis('off')
+		else:
+			display.add_overlay(heatmap_img,
+				threshold=heatmap_threshold,
+				cmap=cmap,
+				#vmin = vmin,vmax = vmax, colorbar=False,
+				#alpha=stat_map_alpha,
+				)
+			#display.add_contours(heatmap_img,
+			#		alpha=alpha[img_ix],
+			#		colors=[color],
+			#		levels=levels[img_ix],
+			#		linewidths=(linewidths[img_ix],),
+			#		)
+
+	if legend_template:
+		for ix, img in enumerate(imgs):
+			insertion_legend, = plt.plot([],[], color=colors[ix], label=legend_template.format(**substitutions[ix]))
+		if cut_coord_length == ncols*(nrows-1)+1:
+			plt.legend(loc='upper left',bbox_to_anchor=(-0.1, -0.3))
+		else:
+			plt.legend(loc='lower left',bbox_to_anchor=(1.1, 0.))
 
 	if figure_title:
 		fig.suptitle(figure_title, color=title_color)

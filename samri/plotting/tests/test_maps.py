@@ -7,6 +7,15 @@ import samri.plotting.maps as maps
 import seaborn as sns
 from os import path
 
+def test_slices():
+       bindata_dir = '/usr/share/samri_bidsdata'
+       heatmap_image = '{}/l1/sub-4007/ses-ofM/sub-4007_ses-ofM_task-JogB_acq-EPIlowcov_run-1_cbv_tstat.nii.gz'.format(bindata_dir)
+       contour_image = '{}/l1/sub-4007/ses-ofMaF/sub-4007_ses-ofMaF_task-JogB_acq-EPIlowcov_run-1_cbv_tstat.nii.gz'.format(bindata_dir)
+       maps.slices(heatmap_image,
+	      contour_image=contour_image,
+	      save_as='test_slices.pdf',
+	      )
+
 def test_population_roi_over_time():
        # Style elements
        palette=["#56B4E9", "#E69F00"]

@@ -1273,6 +1273,15 @@ def slices(heatmap_image,
 	if invert:
 		heatmap_data = -heatmap_data
 		heatmap_img = nib.nifti1.Nifti1Image(heatmap_data, heatmap_img.affine, heatmap_img.header)
+	if contour_image:
+		contour_image = path.abspath(path.expanduser(contour_image))
+		contour_img = nib.load(contour_image)
+		contour_data = contour_img.get_data()
+		if contour_img.header['dim'][0] > 3:
+			img = collapse(contour_img)
+		if invert:
+			contour_data = -contour_data
+			contour_img = nib.nifti1.Nifti1Image(contour_data, contour_img.affine, contour_img.header)
 	#we should only be looking at the percentile of the entire data matrix, rather than just the active slice
 	slice_row = heatmap_img.affine[1]
 	subthreshold_start_slices = 0
@@ -1362,12 +1371,13 @@ def slices(heatmap_image,
 				#vmin = vmin,vmax = vmax, colorbar=False,
 				#alpha=stat_map_alpha,
 				)
-			#display.add_contours(heatmap_img,
-			#		alpha=alpha[img_ix],
-			#		colors=[color],
-			#		levels=levels[img_ix],
-			#		linewidths=(linewidths[img_ix],),
-			#		)
+			if contour_image:
+				display.add_contours(contour_img,
+						#alpha=alpha[img_ix],
+						#colors=[color],
+						#levels=levels[img_ix],
+						linewidths=linewidth,
+						)
 
 	if legend_template:
 		for ix, img in enumerate(imgs):

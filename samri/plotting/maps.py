@@ -1399,7 +1399,5 @@ def slices(heatmap_image,
 			os.makedirs(save_dir)
 		except FileExistsError:
 			pass
-		plt.savefig(save_as,
-			#facecolor=fig.get_facecolor(),
-			)
+		plt.savefig(save_as)
 		plt.close()

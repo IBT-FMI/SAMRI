@@ -1166,20 +1166,18 @@ def slices(heatmap_image,
 	auto_figsize=False,
 	invert=False,
 	contour_alpha=0.9,
-	colors=['r','g','b'],
+	contour_color='g',
+	cmap='autumn_r',
 	dimming=0.,
 	figure_title='',
 	force_reverse_slice_order=True,
-	legend_template='',
-	levels_percentile=[80],
-	ratio='portrait',
+	legend=False,
+	aspect='portrait',
 	save_as='',
-	scale=0.4,
+	ratio=3/4,
 	slice_spacing=0.4,
-	substitutions=[{},],
 	style='light',
 	title_color='#BBBBBB',
-	cmap='autumn_r',
 	):
 	"""
 	Plot coronal `bg_image` slices at a given spacing, and overlay contours from a list of NIfTI files.
@@ -1187,13 +1185,17 @@ def slices(heatmap_image,
 	Parameters
 	----------
 
-	bg_image : str
-		Path to the NIfTI image to draw in grayscale as th eplot background.
-		This would commonly be some sort of brain template.
 	heatmap_image : str
 		Path to an overlay image to be printed as a heatmap.
-	contour_image : str
-		Path to an overlay image to be printed as a contours.
+	bg_image : str, optional
+		Path to the NIfTI image to draw in grayscale as th eplot background.
+		This would commonly be some sort of brain template.
+	contour_image : str, optional
+		Path to an overlay image to be printed as a contour.
+	heatmap_threshold : float, optional
+		Value at which to threshold the heatmap_image.
+	contour_threshold : float, optional
+		Value at which to threshold the contour_image.
 	auto_figsize : boolean, optional
 		Whether to automatically determine the size of the figure.
 	invert : boolean, optional
@@ -1202,8 +1204,6 @@ def slices(heatmap_image,
 		Alpha (transparency) with which to draw the contour image.
 	contour_color : str, optional
 		Color with which to draw the contour image.
-	contour_width : float, optional
-		Desired contour image line width.
 	cmap : str, optional
 		Colormap with which to draw the heatmap image.
 	dimming : float, optional
@@ -1218,14 +1218,12 @@ def slices(heatmap_image,
 		This option should generally be avoided, ideally one would not obfuscate the data orientation when plotting.
 	legend : string, optional
 		The legend text.
-	ratio : list or {'landscape', 'portrait'}, optional
+	aspect : list or {'landscape', 'portrait'}, optional
 		Either a list of 2 integers giving the desired number of rows and columns (in this order), or a string, which is either 'landscape' or 'portrait', and which prompts the function to auto-determine the best number of rows and columns given the number of slices and the `scale` attribute.
 	save_as : str, optional
 		Path under which to save the output figure.
-		The string may contain formatting fields from the first dictionary in the `substitutions` variable.
-	scale : float, optional
-		The expected ratio of the slice height divided by the sum of the slice height and width.
-		This somewhat complex metric controls the row and column distribution of slices in the 'landscape' and 'portrait' plotting shapes.
+	ratio : float, optional
+		The desired ratio between the number of columns and the number of rows in the desired figure layout.
 	slice_spacing : float
 		Slice spacing in mm.
 	style : {'light', 'dark', ''}, optional
@@ -1239,9 +1237,6 @@ def slices(heatmap_image,
 
 	.. [matplotlibrc_title] https://stackoverflow.com/questions/30109465/matplotlib-set-title-color-in-stylesheet
 	"""
-
-	if len(substitutions) == 0:
-		print('ERROR: You have specified a substitution dictionary of length 0. There needs to be at least one set of substitutions. If your string contains no formatting fields, please pass a list containing an empty dictionary to the `sbstitution parameter` (this is also its default value).')
 
 	plotting_module_path = path.dirname(path.realpath(__file__))
 	if style=='light':
@@ -1260,7 +1255,6 @@ def slices(heatmap_image,
 
 	bg_image = path.abspath(path.expanduser(bg_image))
 	bg_img = nib.load(bg_image)
-	# Select first slice from 4D data
 	if bg_img.header['dim'][0] > 3:
 		bg_img = collapse(bg_img)
 
@@ -1324,19 +1318,19 @@ def slices(heatmap_image,
 	linewidth = rcParams['axes.linewidth']
 
 	cut_coord_length = len(cut_coords)
-	if legend_template:
+	if legend:
 		cut_coord_length += 1
 	try:
-		nrows, ncols = ratio
+		nrows, ncols = aspect
 	except ValueError:
-		if ratio == "portrait":
-			ncols = np.floor(cut_coord_length**scale)
-			nrows = np.ceil(cut_coord_length/float(ncols))
-		elif ratio == "landscape":
-			nrows = np.floor(cut_coord_length**(scale))
-			ncols = np.ceil(cut_coord_length/float(nrows))
+		if aspect == "portrait":
+			ncols = np.ceil((cut_coord_length*ratio)**(1/2))
+			nrows = np.ceil(cut_coord_length/ncols)
+		elif aspect == "landscape":
+			nrows = np.ceil((cut_coord_length*ratio)**(1/2))
+			ncols = np.ceil(cut_coord_length/nrows)
 	# we adjust the respective rc.Param here, because it needs to be set before drawing to take effect
-	if legend_template and cut_coord_length == ncols*(nrows-1)+1:
+	if legend and cut_coord_length == ncols*(nrows-1)+1:
 		rcParams['figure.subplot.bottom'] = np.max([rcParams['figure.subplot.bottom']-0.05,0.])
 
 	if auto_figsize:
@@ -1351,6 +1345,7 @@ def slices(heatmap_image,
 				nrows=int(nrows), ncols=int(ncols),
 				)
 	flat_axes = list(ax.flatten())
+	from matplotlib.text import Text
 	for ix, ax_i in enumerate(flat_axes):
 		try:
 			display = nilearn.plotting.plot_anat(bg_img,
@@ -1373,15 +1368,22 @@ def slices(heatmap_image,
 				)
 			if contour_image:
 				display.add_contours(contour_img,
-						#alpha=alpha[img_ix],
-						#colors=[color],
-						#levels=levels[img_ix],
-						linewidths=linewidth,
-						)
+					#cut_coords=[cut_coords[ix]],
+					#alpha=alpha[img_ix],
+					#colors=[color],
+					#levels=levels[img_ix],
+					linewidths=linewidth,
+					)
+			ax_i.set_xlabel('{} label'.format(ix))
+			slice_title = '{0:.2f}mm'.format(cut_coords[ix])
+			text = ax_i.text(0.5,0.0,
+				slice_title,
+				horizontalalignment='center',
+				)
 
-	if legend_template:
+	if legend:
 		for ix, img in enumerate(imgs):
-			insertion_legend, = plt.plot([],[], color=colors[ix], label=legend_template.format(**substitutions[ix]))
+			insertion_legend, = plt.plot([],[], color=colors[ix], label=legend)
 		if cut_coord_length == ncols*(nrows-1)+1:
 			plt.legend(loc='upper left',bbox_to_anchor=(-0.1, -0.3))
 		else:
@@ -1391,7 +1393,6 @@ def slices(heatmap_image,
 		fig.suptitle(figure_title, color=title_color)
 
 	if save_as:
-		save_as = save_as.format(**substitutions[0])
 		save_as = path.abspath(path.expanduser(save_as))
 		save_dir,_ = os.path.split(save_as)
 		try:

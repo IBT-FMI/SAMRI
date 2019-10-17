@@ -211,8 +211,8 @@ def write_bids_metadata_file(scan_dir, extraction_dicts,
 	metadata = {}
 
 	# Extract parameters which are nicely accessible in the Bruker files:
-	try:
-		for extraction_dict in extraction_dicts:
+	for extraction_dict in extraction_dicts:
+		try:
 			query_file = path.abspath(path.join(scan_dir,extraction_dict['query_file']))
 			with open(query_file) as search:
 				for line in search:
@@ -229,8 +229,8 @@ def write_bids_metadata_file(scan_dir, extraction_dicts,
 							pass
 						metadata[extraction_dict['field_name']] = value
 						break
-	except FileNotFoundError:
-		pass
+		except FileNotFoundError:
+			pass
 
 	# Extract DelayAfterTrigger
 	try:

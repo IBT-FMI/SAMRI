@@ -210,24 +210,28 @@ def write_bids_metadata_file(scan_dir, extraction_dicts,
 	scan_dir = path.abspath(path.expanduser(scan_dir))
 	metadata = {}
 
-	# Extract nice parameters:
-	for extraction_dict in extraction_dicts:
-		query_file = path.abspath(path.join(scan_dir,extraction_dict['query_file']))
-		with open(query_file) as search:
-			for line in search:
-				if re.match(extraction_dict['regex'], line):
-					m = re.match(extraction_dict['regex'], line)
-					value = m.groupdict()['value']
-					try:
-						value = extraction_dict['type'](value)
-					except KeyError:
-						pass
-					try:
-						value = value * extraction_dict['scale']
-					except KeyError:
-						pass
-					metadata[extraction_dict['field_name']] = value
-					break
+	# Extract parameters which are nicely accessible in the Bruker files:
+	try:
+		for extraction_dict in extraction_dicts:
+			query_file = path.abspath(path.join(scan_dir,extraction_dict['query_file']))
+			with open(query_file) as search:
+				for line in search:
+					if re.match(extraction_dict['regex'], line):
+						m = re.match(extraction_dict['regex'], line)
+						value = m.groupdict()['value']
+						try:
+							value = extraction_dict['type'](value)
+						except KeyError:
+							pass
+						try:
+							value = value * extraction_dict['scale']
+						except KeyError:
+							pass
+						metadata[extraction_dict['field_name']] = value
+						break
+	except FileNotFoundError:
+		pass
+
 	# Extract DelayAfterTrigger
 	try:
 		query_file = path.abspath(path.join(scan_dir,'AdjStatePerScan'))
@@ -411,7 +415,8 @@ def write_bids_physio_file(scan_dir,
 	out_metadata_file = '{}.json'.format(physio_metadata_name)
 	out_metadata_file = os.path.abspath(os.path.expanduser(out_metadata_file))
 	with open(out_metadata_file, 'w') as f:
-		    json.dump(physio_metadata, f)
+		json.dump(physio_metadata, f, indent=1)
+		f.write("\n")  # `json.dump` does not add a newline at the end; we do it here.
 
 	return out_file, out_metadata_file
 

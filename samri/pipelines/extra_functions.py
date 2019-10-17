@@ -316,6 +316,94 @@ def eventfile_add_habituation(in_file,
 
 	return out_file
 
+def write_bids_physio_file(scan_dir,
+	out_file='physio.tsv',
+	forced_dummy_scans=0.,
+	):
+	"""Create a BIDS physiology recording ("physio") file, based on available data files in the scan directory.
+
+	Parameters
+	----------
+
+	scan_dir : str
+		ParaVision scan directory path, containing one or more files prefixed with "physio_".
+	out_file : str, optional
+		Path to which to write the adjusted physiology file.
+
+	Returns
+	-------
+
+	out_file : str
+		Path to which the collapsed physiology file was saved.
+	out_file : str
+		Path to which the collapsed physiology metadata file was saved.
+	"""
+
+	import csv
+	import json
+	import os
+
+	out_file = os.path.abspath(os.path.expanduser(out_file))
+	scan_dir = os.path.abspath(os.path.expanduser(scan_dir))
+
+	physio_prefix = 'physio_'
+	scan_dir_contents = os.listdir(scan_dir)
+	physio_files = [i for i in scan_dir_contents if (physio_prefix in i)]
+	if physio_files:
+		physio_files = [os.path.join(scan_dir, i) for i in physio_files]
+	else:
+		return '/dev/null'
+
+	physio_columns = []
+	column_names = []
+	start_times = []
+	sampling_frequencies = []
+	for physio_file in physio_files:
+		if physio_file.endswith('.1D'):
+			f = open(physio_file, 'r')
+			physio_column = f.read()
+			physio_column = physio_column.split(' ')
+			physio_column = [float(i.split('*')[1]) for i in physio_column]
+			physio_columns.append(physio_column)
+			column_name = os.path.basename(physio_file)
+			column_name, _ = os.path.splitext(column_name)
+			column_name = column_name[len(physio_prefix):]
+			column_names.append(column_name)
+			start_times.append(60)
+			sampling_frequencies.append(1)
+	column_lengths = [len(i) for i in physio_columns]
+
+	# check if all regressors are of the same length, as this would otherwise break list transposition.
+	if len(set(column_lengths)) != 1:
+		max_len = max(column_lengths)
+		for physio_column in physio_columns:
+			physio_column += ['n/a'] * (max_len - len(physio_column))
+
+	physio_rows = [list(i) for i in zip(*physio_columns)]
+
+	with open(out_file, 'w') as tsvfile:
+		writer = csv.writer(tsvfile, delimiter='\t', lineterminator='\n')
+		for physio_row in physio_rows:
+			writer.writerow(physio_row)
+
+	if len(set(start_times)) == 1:
+		start_times = start_times[0]
+	if len(set(sampling_frequencies)) == 1:
+		sampling_frequencies = sampling_frequencies[0]
+
+	physio_metadata = {}
+	physio_metadata['SamplingFrequency'] = sampling_frequencies
+	physio_metadata['Start_Time'] = start_times
+	physio_metadata['Columns'] = column_names
+
+	physio_metadata_name,_ = os.path.splitext(out_file)
+	out_metadata_file = '{}.json'.format(physio_metadata_name)
+	with open(out_metadata_file, 'w') as f:
+		    json.dump(physio_metadata, f)
+
+	return out_file, out_metadata_file
+
+
 def write_bids_events_file(scan_dir,
 	db_path="~/syncdata/meta.db",
 	metadata_file='',

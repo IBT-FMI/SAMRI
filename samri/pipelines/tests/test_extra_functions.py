@@ -1,3 +1,9 @@
+def test_write_bids_physio_file():
+	from samri.pipelines.extra_functions import write_bids_physio_file
+
+	scan_path = '/usr/share/samri_bindata/20170317_203312_5691_1_5/8/'
+	write_bids_physio_file(scan_path)
+
 def test_reset_background():
 	from samri.pipelines.extra_functions import reset_background
 	import nibabel as nib

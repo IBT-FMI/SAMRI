@@ -60,8 +60,13 @@ def _draw_colorbar(stat_map_img, axes,
 		except TypeError:
 			cmap = mcolors.LinearSegmentedColormap.from_list('SAMRI cmap from list', cmap*256, N=256)
 		colors = cmap(np.linspace(0,1,256))
-		cmap_minus = mcolors.LinearSegmentedColormap.from_list('my_colormap', colors[0:128,:])
-		cmap_plus = mcolors.LinearSegmentedColormap.from_list('my_colormap', colors[128:255,:])
+		if positive_only:
+			cmap_plus = mcolors.LinearSegmentedColormap.from_list('my_colormap', colors[0:255,:])
+		elif negative_only:
+			cmap_minus = mcolors.LinearSegmentedColormap.from_list('my_colormap', colors[0:255,:])
+		else:
+			cmap_minus = mcolors.LinearSegmentedColormap.from_list('my_colormap', colors[0:128,:])
+			cmap_plus = mcolors.LinearSegmentedColormap.from_list('my_colormap', colors[128:255,:])
 	else:
 		cmap_minus = MYMAP_MINUS
 		cmap_plus = MYMAP_PLUS
@@ -450,6 +455,8 @@ def stat(stat_maps,
 			fraction = 0.04
 		if draw_colorbar == False:
 			cax, kw,vmin,vmax,new_cmap = _draw_colorbar(stat_maps[0],None,
+				positive_only = positive_only,
+				negative_only = negative_only,
 				threshold=threshold,
 				aspect=cbar_aspect,
 				fraction=fraction,
@@ -495,6 +502,8 @@ def stat(stat_maps,
 						cmap=cmap,
 						really_draw=draw_colorbar,
 						bypass_cmap=bypass_cmap,
+						positive_only = positive_only,
+						negative_only = negative_only,
 						)
 				display = scaled_plot(template, fig, ax,
 					stat_map=stat_maps[ix],
@@ -571,14 +580,15 @@ def _create_3Dplot(stat_maps,
 		obj_paths.extend(create_mesh(stat_map,threshold,one=True,positive_only=positive_only,negative_only=negative_only))
 
 	##Find matching color of used threshold in colorbar, needed to determine color for blender
-	if vmax == 0:
-		norm = mcolors.Normalize(vmin=vmin, vmax=-float(vmin))
-
-	if vmin == 0:
-		norm = mcolors.Normalize(vmin=-float(vmax), vmax=vmax)
-
-	if (vmin != 0 and vmax != 0):
-		norm = mcolors.Normalize(vmin=-float(vmax), vmax=vmax)
+	if positive_only or negative_only:
+		norm = mcolors.Normalize(vmin=vmin, vmax=vmax)
+	else:
+		if vmax == 0:
+			norm = mcolors.Normalize(vmin=vmin, vmax=-float(vmin))
+		if vmin == 0:
+			norm = mcolors.Normalize(vmin=-float(vmax), vmax=vmax)
+		if (vmin != 0 and vmax != 0):
+			norm = mcolors.Normalize(vmin=-float(vmax), vmax=vmax)
 
 	if not cmap:
 		cmap = MYMAP
@@ -1178,6 +1188,7 @@ def slices(heatmap_image,
 	slice_spacing=0.4,
 	style='light',
 	title_color='#BBBBBB',
+	position_hspace=0.0,
 	):
 	"""
 	Plot coronal `bg_image` slices at a given spacing, and overlay contours from a list of NIfTI files.
@@ -1315,7 +1326,7 @@ def slices(heatmap_image,
 	if force_reverse_slice_order:
 		cut_coords = cut_coords[::-1]
 
-	linewidth = rcParams['axes.linewidth']
+	linewidth = rcParams['lines.linewidth']
 
 	cut_coord_length = len(cut_coords)
 	if legend:
@@ -1341,6 +1352,7 @@ def slices(heatmap_image,
 				nrows=int(nrows), ncols=int(ncols),
 				)
 	else:
+		figsize = np.array(rcParams['figure.figsize'])
 		fig, ax = plt.subplots(
 				nrows=int(nrows), ncols=int(ncols),
 				)
@@ -1368,8 +1380,8 @@ def slices(heatmap_image,
 				)
 			if contour_image:
 				display.add_contours(contour_img,
+					alpha=contour_alpha,
 					#cut_coords=[cut_coords[ix]],
-					#alpha=alpha[img_ix],
 					#colors=[color],
 					#levels=levels[img_ix],
 					levels=[contour_threshold],
@@ -1377,9 +1389,11 @@ def slices(heatmap_image,
 					)
 			ax_i.set_xlabel('{} label'.format(ix))
 			slice_title = '{0:.2f}mm'.format(cut_coords[ix])
-			text = ax_i.text(0.5,0.0,
+			text = ax_i.text(0.5,position_hspace,
 				slice_title,
 				horizontalalignment='center',
+				fontsize=rcParams['font.size'],
+				#fontsize=2,
 				)
 
 	if legend:

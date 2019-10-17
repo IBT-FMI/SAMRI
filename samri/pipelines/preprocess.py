@@ -386,6 +386,9 @@ def generic(bids_base, template,
 	if not n_jobs:
 		n_jobs = max(int(round(mp.cpu_count()*n_jobs_percentage)),2)
 
+	find_physio = pe.Node(name='find_physio', interface=nio.DataFinder())
+	find_physio.inputs.match_regex = r'.*?_physio.(json|tsv)'
+
 	get_f_scan = pe.Node(name='get_f_scan', interface=util.Function(function=get_bids_scan,input_names=inspect.getargspec(get_bids_scan)[0], output_names=['scan_path','scan_type','task', 'nii_path', 'nii_name', 'events_name', 'subject_session', 'metadata_filename', 'dict_slice']))
 	get_f_scan.inputs.ignore_exception = True
 	get_f_scan.inputs.data_selection = data_selection
@@ -409,7 +412,9 @@ def generic(bids_base, template,
 			('task', 'task'),
 			('scan_path', 'scan_dir')
 			]),
+		(get_f_scan, find_physio, [('scan_path', 'root_paths')]),
 		(events_file, datasink, [('out_file', 'func.@events')]),
+		(find_physio, datasink, [('out_paths', 'func.@physio')]),
 		(get_f_scan, events_file, [('events_name', 'out_file')]),
 		(get_f_scan, datasink, [(('subject_session',ss_to_path), 'container')]),
 		]

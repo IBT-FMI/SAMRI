@@ -391,6 +391,7 @@ def write_bids_physio_file(scan_dir,
 
 	physio_rows = [list(i) for i in zip(*physio_columns)]
 
+	out_file = os.path.abspath(os.path.expanduser(out_file))
 	with open(out_file, 'w') as tsvfile:
 		writer = csv.writer(tsvfile, delimiter='\t', lineterminator='\n')
 		for physio_row in physio_rows:
@@ -408,6 +409,7 @@ def write_bids_physio_file(scan_dir,
 
 	physio_metadata_name,_ = os.path.splitext(out_file)
 	out_metadata_file = '{}.json'.format(physio_metadata_name)
+	out_metadata_file = os.path.abspath(os.path.expanduser(out_metadata_file))
 	with open(out_metadata_file, 'w') as f:
 		    json.dump(physio_metadata, f)
 

@@ -373,7 +373,7 @@ def write_bids_physio_file(scan_dir,
 			f = open(physio_file, 'r')
 			physio_column = f.read()
 			physio_column = physio_column.split(' ')
-			physio_column = [float(i.split('*')[1]) for i in physio_column]
+			physio_column = [float(i.split('*')[1]) for i in physio_column if i != '']
 			physio_columns.append(physio_column)
 			column_name = os.path.basename(physio_file)
 			column_name, _ = os.path.splitext(column_name)

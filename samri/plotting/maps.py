@@ -17,12 +17,14 @@ import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
 from matplotlib import rcParams
 from matplotlib.colorbar import ColorbarBase, make_axes
+from matplotlib.text import Text
 from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 
 from samri.fetch.local import roi_from_atlaslabel
 from samri.plotting.utilities import QUALITATIVE_COLORSET
 from samri.utilities import collapse
 from samri.plotting.create_mesh_featuremaps import create_mesh
+from samri.report.roi import from_img_threshold
 
 COLORS_PLUS = plt.cm.autumn(np.linspace(0., 1, 128))
 COLORS_MINUS = plt.cm.winter(np.linspace(0, 1, 128))
@@ -1195,6 +1197,8 @@ def slices(heatmap_image,
 	style='light',
 	title_color='#BBBBBB',
 	position_hspace=0.0,
+	positive_only=False,
+	negative_only=False,
 	):
 	"""
 	Plot coronal `bg_image` slices at a given spacing, and overlay contours from a list of NIfTI files.
@@ -1281,18 +1285,15 @@ def slices(heatmap_image,
 	heatmap_data = heatmap_img.get_data()
 	if heatmap_img.header['dim'][0] > 3:
 		img = collapse(heatmap_img)
-	if invert:
-		heatmap_data = -heatmap_data
-		heatmap_img = nib.nifti1.Nifti1Image(heatmap_data, heatmap_img.affine, heatmap_img.header)
 	if contour_image:
 		contour_image = path.abspath(path.expanduser(contour_image))
 		contour_img = nib.load(contour_image)
-		contour_data = contour_img.get_data()
 		if contour_img.header['dim'][0] > 3:
-			img = collapse(contour_img)
-		if invert:
-			contour_data = -contour_data
-			contour_img = nib.nifti1.Nifti1Image(contour_data, contour_img.affine, contour_img.header)
+			contour_img = collapse(contour_img)
+		# We apply thresholding here, rather than when drawing the contours, to ensure the same contour color in all slices.
+		# This is possibly a bug in nilearn.
+		contour_img = from_img_threshold(contour_img, contour_threshold)
+
 	#we should only be looking at the percentile of the entire data matrix, rather than just the active slice
 	slice_row = heatmap_img.affine[1]
 	subthreshold_start_slices = 0
@@ -1363,7 +1364,12 @@ def slices(heatmap_image,
 				nrows=int(nrows), ncols=int(ncols),
 				)
 	flat_axes = list(ax.flatten())
-	from matplotlib.text import Text
+	heatmap_img_dat = _safe_get_data(heatmap_img, ensure_finite=True)
+	cbar_vmin, cbar_vmax, vmin, vmax = _get_colorbar_and_data_ranges(heatmap_img_dat,None,"auto","")
+	if positive_only:
+		vmin = 0
+	elif negative_only:
+		vmax = 0
 	for ix, ax_i in enumerate(flat_axes):
 		try:
 			display = nilearn.plotting.plot_anat(bg_img,
@@ -1381,7 +1387,8 @@ def slices(heatmap_image,
 			display.add_overlay(heatmap_img,
 				threshold=heatmap_threshold,
 				cmap=cmap,
-				#vmin = vmin,vmax = vmax, colorbar=False,
+				vmin = vmin,vmax = vmax,
+				#colorbar=False,
 				#alpha=stat_map_alpha,
 				)
 			if contour_image:
@@ -1390,7 +1397,10 @@ def slices(heatmap_image,
 					#cut_coords=[cut_coords[ix]],
 					#colors=[color],
 					#levels=levels[img_ix],
-					levels=[contour_threshold],
+					levels=[0.8],
+					# We threshold the map separately, to ensure the same contour color on all slices.
+					# It is possible this is a bug in nilearn.
+					#levels=[contur_threshold],
 					linewidths=linewidth,
 					)
 			ax_i.set_xlabel('{} label'.format(ix))

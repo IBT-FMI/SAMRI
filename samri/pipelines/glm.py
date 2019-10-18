@@ -320,6 +320,303 @@ def l1(preprocessing_dir,
 	if not keep_work:
 		shutil.rmtree(path.join(out_base,workdir_name))
 
+def l1_physio(preprocessing_dir,
+	bf_path='',
+	convolution='gamma',
+	debug=False,
+	exclude={},
+	habituation='confound',
+	highpass_sigma=225,
+	lowpass_sigma=False,
+	include={},
+	keep_work=False,
+	out_base="",
+	mask="",
+	match={},
+	temporal_derivatives=True,
+	tr=1,
+	workflow_name="generic",
+	modality="cbv",
+	n_jobs_percentage=1,
+	invert=False,
+	):
+	"""Calculate subject level GLM statistic scores.
+
+	Parameters
+	----------
+
+	bf_path : str, optional
+		Basis set path. It should point to a text file in the so-called FEAT/FSL "#2" format (1 entry per volume).
+		If selected, this overrides the `convolution` option and sets it to "custom".
+	convolution : str or dict, optional
+		Select convolution method.
+	exclude : dict
+		A dictionary with any combination of "sessions", "subjects", "tasks" as keys and corresponding identifiers as values.
+		If this is specified matching entries will be excluded in the analysis.
+	debug : bool, optional
+		Whether to enable nipype debug mode.
+		This increases logging.
+	habituation : {"", "confound", "separate_contrast", "in_main_contrast"}, optional
+		How the habituation regressor should be handled.
+		Anything which evaluates as False (though we recommend "") means no habituation regressor will be introduced.
+	highpass_sigma : int, optional
+		Highpass threshold (in seconds).
+	include : dict
+		A dictionary with any combination of "sessions", "subjects", "tasks" as keys and corresponding identifiers as values.
+		If this is specified only matching entries will be included in the analysis.
+	invert : bool
+		If true the values will be inverted with respect to zero.
+		This is commonly used for iron nano-particle Cerebral Blood Volume (CBV) measurements.
+	keep_work : bool, optional
+		Whether to keep the work directory (containing all the intermediary workflow steps, as managed by nipypye).
+		This is useful for debugging and quality control.
+	out_base : str, optional
+		Path to the directory inside which both the working directory and the output directory will be created.
+	mask : str, optional
+		Path to the brain mask which shall be used to define the brain volume in the analysis.
+		This has to point to an existing NIfTI file containing zero and one values only.
+	n_jobs_percentage : float, optional
+		Percentage of the cores present on the machine which to maximally use for deploying jobs in parallel.
+	temporal_derivatives : int, optional
+		Whether to add temporal derivatives of the main regressors in the model. This only applies if the convolution parameter is set to 'dgamma' or 'gamma'.
+	tr : int, optional
+		Repetition time, in seconds.
+	workflow_name : str, optional
+		Name of the workflow; this will also be the name of the final output directory produced under `out_dir`.
+	"""
+
+	from samri.pipelines.utils import bids_data_selection
+
+	preprocessing_dir = path.abspath(path.expanduser(preprocessing_dir))
+	out_base = path.abspath(path.expanduser(out_base))
+
+	data_selection = bids_data_selection(preprocessing_dir, structural_match=False, functional_match=match, subjects=False, sessions=False)
+	if exclude:
+		for key in exclude:
+			data_selection = data_selection[~data_selection[key].isin(exclude[key])]
+	ind = data_selection.index.tolist()
+
+	out_dir = path.join(out_base,workflow_name)
+	workdir_name = workflow_name+'_work'
+	workdir = path.join(out_base,workdir_name)
+	if not os.path.exists(workdir):
+		os.makedirs(workdir)
+	data_selection.to_csv(path.join(workdir,'data_selection.csv'))
+
+	get_scan = pe.Node(name='get_scan', interface=util.Function(function=get_bids_scan,input_names=inspect.getargspec(get_bids_scan)[0], output_names=['scan_path','scan_type','task', 'nii_path', 'nii_name', 'events_name', 'subject_session', 'metadata_filename', 'dict_slice']))
+	get_scan.inputs.ignore_exception = True
+	get_scan.inputs.data_selection = data_selection
+	get_scan.inputs.bids_base = preprocessing_dir
+	get_scan.iterables = ("ind_type", ind)
+
+	eventfile = pe.Node(name='eventfile', interface=util.Function(function=corresponding_eventfile,input_names=inspect.getargspec(corresponding_eventfile)[0], output_names=['eventfile']))
+
+	if invert:
+		invert = pe.Node(interface=fsl.ImageMaths(), name="invert")
+		invert.inputs.op_string = '-mul -1'
+
+	specify_model = pe.Node(interface=SpecifyModel(), name="specify_model")
+	specify_model.inputs.input_units = 'secs'
+	specify_model.inputs.time_repetition = tr
+	specify_model.inputs.high_pass_filter_cutoff = highpass_sigma
+
+	level1design = pe.Node(interface=Level1Design(), name="level1design")
+	level1design.inputs.interscan_interval = tr
+	if bf_path:
+		convolution = 'custom'
+	if convolution == 'custom':
+		bf_path = path.abspath(path.expanduser(bf_path))
+		level1design.inputs.bases = {"custom": {"bfcustompath":bf_path}}
+	elif convolution == 'gamma':
+		# We are not adding derivatives here, as these conflict with the habituation option.
+		# !!! This is not difficult to solve, and would only require the addition of an elif condition to the habituator definition, which would add multiple column copies for each of the derivs.
+		level1design.inputs.bases = {'gamma': {'derivs':temporal_derivatives, 'gammasigma':30, 'gammadelay':10}}
+	elif convolution == 'dgamma':
+		# We are not adding derivatives here, as these conflict with the habituation option.
+		# !!! This is not difficult to solve, and would only require the addition of an elif condition to the habituator definition, which would add multiple column copies for each of the derivs.
+		level1design.inputs.bases = {'dgamma': {'derivs':temporal_derivatives,}}
+	elif isinstance(convolution, dict):
+		level1design.inputs.bases = convolution
+	else:
+		raise ValueError('You have specified an invalid value for the "convoltion" parameter of.')
+	level1design.inputs.model_serial_correlations = True
+
+	modelgen = pe.Node(interface=fsl.FEATModel(), name='modelgen')
+	#modelgen.inputs.ignore_exception = True
+
+	glm = pe.Node(interface=fsl.GLM(), name='glm', iterfield='design')
+	if mask == 'mouse':
+		mask = '/usr/share/mouse-brain-atlases/dsurqec_200micron_mask.nii'
+		glm.inputs.mask = path.abspath(path.expanduser(mask))
+	else:
+		glm.inputs.mask = path.abspath(path.expanduser(mask))
+	glm.interface.mem_gb = 6
+	#glm.inputs.ignore_exception = True
+
+	out_file_name_base = 'sub-{{subject}}_ses-{{session}}_task-{{task}}_acq-{{acquisition}}_run-{{run}}_{{modality}}_{}.{}'
+
+	betas_filename = pe.Node(name='betas_filename', interface=util.Function(function=bids_dict_to_source,input_names=inspect.getargspec(bids_dict_to_source)[0], output_names=['filename']))
+	betas_filename.inputs.source_format = out_file_name_base.format('betas','nii.gz')
+	cope_filename = pe.Node(name='cope_filename', interface=util.Function(function=bids_dict_to_source,input_names=inspect.getargspec(bids_dict_to_source)[0], output_names=['filename']))
+	cope_filename.inputs.source_format = out_file_name_base.format('cope','nii.gz')
+	varcb_filename = pe.Node(name='varcb_filename', interface=util.Function(function=bids_dict_to_source,input_names=inspect.getargspec(bids_dict_to_source)[0], output_names=['filename']))
+	varcb_filename.inputs.source_format = out_file_name_base.format('varcb','nii.gz')
+	tstat_filename = pe.Node(name='tstat_filename', interface=util.Function(function=bids_dict_to_source,input_names=inspect.getargspec(bids_dict_to_source)[0], output_names=['filename']))
+	tstat_filename.inputs.source_format = out_file_name_base.format('tstat','nii.gz')
+	zstat_filename = pe.Node(name='zstat_filename', interface=util.Function(function=bids_dict_to_source,input_names=inspect.getargspec(bids_dict_to_source)[0], output_names=['filename']))
+	zstat_filename.inputs.source_format = out_file_name_base.format('zstat','nii.gz')
+	pstat_filename = pe.Node(name='pstat_filename', interface=util.Function(function=bids_dict_to_source,input_names=inspect.getargspec(bids_dict_to_source)[0], output_names=['filename']))
+	pstat_filename.inputs.source_format = out_file_name_base.format('pstat','nii.gz')
+	pfstat_filename = pe.Node(name='pfstat_filename', interface=util.Function(function=bids_dict_to_source,input_names=inspect.getargspec(bids_dict_to_source)[0], output_names=['filename']))
+	pfstat_filename.inputs.source_format = out_file_name_base.format('pfstat','nii.gz')
+	design_filename = pe.Node(name='design_filename', interface=util.Function(function=bids_dict_to_source,input_names=inspect.getargspec(bids_dict_to_source)[0], output_names=['filename']))
+	design_filename.inputs.source_format = out_file_name_base.format('design','mat')
+	designimage_filename = pe.Node(name='designimage_filename', interface=util.Function(function=bids_dict_to_source,input_names=inspect.getargspec(bids_dict_to_source)[0], output_names=['filename']))
+	designimage_filename.inputs.source_format = out_file_name_base.format('design','png')
+
+	design_rename = pe.Node(interface=util.Rename(), name='design_rename')
+	designimage_rename = pe.Node(interface=util.Rename(), name='designimage_rename')
+
+	datasink = pe.Node(nio.DataSink(), name='datasink')
+	datasink.inputs.base_directory = path.join(out_base,workflow_name)
+	datasink.inputs.parameterization = False
+
+	workflow_connections = [
+		(get_scan, eventfile, [('nii_path', 'timecourse_file')]),
+		(specify_model, level1design, [('session_info', 'session_info')]),
+		(level1design, modelgen, [('ev_files', 'ev_files')]),
+		(level1design, modelgen, [('fsf_files', 'fsf_file')]),
+		(modelgen, glm, [('design_file', 'design')]),
+		(modelgen, glm, [('con_file', 'contrasts')]),
+		(get_scan, datasink, [(('dict_slice',bids_dict_to_dir), 'container')]),
+		(get_scan, betas_filename, [('dict_slice', 'bids_dictionary')]),
+		(get_scan, cope_filename, [('dict_slice', 'bids_dictionary')]),
+		(get_scan, varcb_filename, [('dict_slice', 'bids_dictionary')]),
+		(get_scan, tstat_filename, [('dict_slice', 'bids_dictionary')]),
+		(get_scan, zstat_filename, [('dict_slice', 'bids_dictionary')]),
+		(get_scan, pstat_filename, [('dict_slice', 'bids_dictionary')]),
+		(get_scan, pfstat_filename, [('dict_slice', 'bids_dictionary')]),
+		(get_scan, design_filename, [('dict_slice', 'bids_dictionary')]),
+		(get_scan, designimage_filename, [('dict_slice', 'bids_dictionary')]),
+		(betas_filename, glm, [('filename', 'out_file')]),
+		(cope_filename, glm, [('filename', 'out_cope')]),
+		(varcb_filename, glm, [('filename', 'out_varcb_name')]),
+		(tstat_filename, glm, [('filename', 'out_t_name')]),
+		(zstat_filename, glm, [('filename', 'out_z_name')]),
+		(pstat_filename, glm, [('filename', 'out_p_name')]),
+		(pfstat_filename, glm, [('filename', 'out_pf_name')]),
+		(modelgen, design_rename, [('design_file', 'in_file')]),
+		(modelgen, designimage_rename, [('design_image', 'in_file')]),
+		(design_filename, design_rename, [('filename', 'format_string')]),
+		(designimage_filename, designimage_rename, [('filename', 'format_string')]),
+		(glm, datasink, [('out_pf', '@pfstat')]),
+		(glm, datasink, [('out_p', '@pstat')]),
+		(glm, datasink, [('out_z', '@zstat')]),
+		(glm, datasink, [('out_t', '@tstat')]),
+		(glm, datasink, [('out_cope', '@cope')]),
+		(glm, datasink, [('out_varcb', '@varcb')]),
+		(glm, datasink, [('out_file', '@betas')]),
+		(design_rename, datasink, [('out_file', '@design')]),
+		(designimage_rename, datasink, [('out_file', '@designimage')]),
+		]
+
+	if habituation:
+		level1design.inputs.orthogonalization = {1: {0:0,1:0,2:0}, 2: {0:1,1:1,2:0}}
+		specify_model.inputs.bids_condition_column = 'samri_l1_regressors'
+		specify_model.inputs.bids_amplitude_column = 'samri_l1_amplitude'
+		add_habituation = pe.Node(name='add_habituation', interface=util.Function(function=eventfile_add_habituation,input_names=inspect.getargspec(eventfile_add_habituation)[0], output_names=['out_file']))
+		# Regressor names need to be prefixed with "e" plus a numerator so that Level1Design will be certain to conserve the order.
+		add_habituation.inputs.original_stimulation_value='1stim'
+		add_habituation.inputs.habituation_value='2habituation'
+		workflow_connections.extend([
+			(eventfile, add_habituation, [('eventfile', 'in_file')]),
+			(add_habituation, specify_model, [('out_file', 'bids_event_file')]),
+			])
+	if not habituation:
+		specify_model.inputs.bids_condition_column = ''
+		if convolution == 'custom':
+			level1design.inputs.contrasts = [('allStim','T', ['ev0'],[1])]
+		elif convolution in ['gamma','dgamma']:
+			level1design.inputs.contrasts = [('allStim','T', ['ev0','ev1'],[1,1])]
+		workflow_connections.extend([
+			(eventfile, specify_model, [('eventfile', 'bids_event_file')]),
+			])
+	#condition names as defined in eventfile_add_habituation:
+	elif habituation=="separate_contrast":
+		level1design.inputs.contrasts = [('stim','T', ['1stim','2habituation'],[1,0]),('hab','T', ['1stim','2habituation'],[0,1])]
+	elif habituation=="in_main_contrast":
+		level1design.inputs.contrasts = [('all','T', ['1stim','2habituation'],[1,1])]
+	elif habituation=="confound":
+		level1design.inputs.contrasts = [('stim','T', ["1stim", "2habituation"],[1,0])]
+	else:
+		raise ValueError('The value you have provided for the `habituation` parameter, namely "{}", is invalid. Please choose one of: {{None, False,"","confound","in_main_contrast","separate_contrast"}}'.format(habituation))
+
+	if highpass_sigma or lowpass_sigma:
+		bandpass = pe.Node(interface=fsl.maths.TemporalFilter(), name="bandpass")
+		bandpass.inputs.highpass_sigma = highpass_sigma
+		bandpass.interface.mem_gb = 16
+		if lowpass_sigma:
+			bandpass.inputs.lowpass_sigma = lowpass_sigma
+		else:
+			bandpass.inputs.lowpass_sigma = tr
+		if invert:
+			workflow_connections.extend([
+				(get_scan, invert, [('nii_path', 'in_file')]),
+				(invert, bandpass, [('out_file', 'in_file')]),
+				(bandpass, specify_model, [('out_file', 'functional_runs')]),
+				(bandpass, glm, [('out_file', 'in_file')]),
+				(bandpass, datasink, [('out_file', '@ts_file')]),
+				(get_scan, bandpass, [('nii_name', 'out_file')]),
+				])
+		else:
+			workflow_connections.extend([
+				(get_scan, bandpass, [('nii_path', 'in_file')]),
+				(bandpass, specify_model, [('out_file', 'functional_runs')]),
+				(bandpass, glm, [('out_file', 'in_file')]),
+				(bandpass, datasink, [('out_file', '@ts_file')]),
+				(get_scan, bandpass, [('nii_name', 'out_file')]),
+				])
+	else:
+		if invert:
+			workflow_connections.extend([
+				(get_scan, invert, [('nii_path', 'in_file')]),
+				(invert, specify_model, [('out_file', 'functional_runs')]),
+				(invert, glm, [('out_file', 'in_file')]),
+				(invert, datasink, [('out_file', '@ts_file')]),
+				(get_scan, invert, [('nii_name', 'out_file')]),
+				])
+		else:
+			workflow_connections.extend([
+				(get_scan, specify_model, [('nii_path', 'functional_runs')]),
+				(get_scan, glm, [('nii_path', 'in_file')]),
+				(get_scan, datasink, [('nii_path', '@ts_file')]),
+				])
+
+
+	workflow_config = {'execution': {'crashdump_dir': path.join(out_base,'crashdump'),}}
+	if debug:
+		workflow_config['logging'] = {
+			'workflow_level':'DEBUG',
+			'utils_level':'DEBUG',
+			'interface_level':'DEBUG',
+			'filemanip_level':'DEBUG',
+			'log_to_file':'true',
+			}
+
+	workflow = pe.Workflow(name=workdir_name)
+	workflow.connect(workflow_connections)
+	workflow.base_dir = out_base
+	workflow.config = workflow_config
+	try:
+		workflow.write_graph(dotfilename=path.join(workflow.base_dir,workdir_name,"graph.dot"), graph2use="hierarchical", format="png")
+	except OSError:
+		print('We could not write the DOT file for visualization (`dot` function from the graphviz package). This is non-critical to the processing, but you should get this fixed.')
+
+	n_jobs = max(int(round(mp.cpu_count()*n_jobs_percentage)),2)
+	workflow.run(plugin="MultiProc", plugin_args={'n_procs' : n_jobs})
+	if not keep_work:
+		shutil.rmtree(path.join(out_base,workdir_name))
+
 def seed(preprocessing_dir, seed_mask,
 	debug=False,
 	erode_iterations=False,

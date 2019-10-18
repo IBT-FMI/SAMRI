@@ -1,5 +1,5 @@
 from os import path, remove
-from samri.pipelines.extra_functions import get_data_selection, get_bids_scan, write_bids_metadata_file, write_bids_events_file, BIDS_METADATA_EXTRACTION_DICTS
+from samri.pipelines.extra_functions import get_data_selection, get_bids_scan, write_bids_metadata_file, write_bids_events_file, write_bids_physio_file, BIDS_METADATA_EXTRACTION_DICTS
 import os
 
 import argh
@@ -109,8 +109,6 @@ def bru2bids(measurements_base,
 	workdir_name = workflow_name+'_work'
 	workdir = path.join(out_base,workdir_name)
 
-
-
 	if not os.path.exists(out_dir):
 		    os.makedirs(out_dir)
 	# This is needed because BIDS does not yet support CBV
@@ -198,6 +196,8 @@ def bru2bids(measurements_base,
 		events_file = pe.Node(name='events_file', interface=util.Function(function=write_bids_events_file,input_names=inspect.getargspec(write_bids_events_file)[0], output_names=['out_file']))
 		events_file.ignore_exception = True
 
+		physio_file = pe.Node(name='physio_file', interface=util.Function(function=write_bids_physio_file,input_names=inspect.getargspec(write_bids_physio_file)[0], output_names=['out_file','out_metadata_file']))
+
 		workflow_connections = [
 			(get_f_scan, datasink, [(('subject_session',ss_to_path), 'container')]),
 			(get_f_scan, f_bru2nii, [('scan_path', 'input_dir')]),
@@ -215,7 +215,13 @@ def bru2bids(measurements_base,
 				('task', 'task'),
 				('scan_path', 'scan_dir')
 				]),
+			(get_f_scan, physio_file, [
+				('nii_name', 'nii_name'),
+				('scan_path', 'scan_dir')
+				]),
 			(events_file, datasink, [('out_file', 'func.@events')]),
+			(physio_file, datasink, [('out_file', 'func.@physio')]),
+			(physio_file, datasink, [('out_metadata_file', 'func.@physio_metadata')]),
 			(f_metadata_file, datasink, [('out_file', 'func.@metadata')]),
 			]
 		crashdump_dir = path.join(out_base,workflow_name+'_crashdump')

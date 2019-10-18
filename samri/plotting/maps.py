@@ -580,7 +580,7 @@ def _create_3Dplot(stat_maps,
 		obj_paths.extend(create_mesh(stat_map,threshold,one=True,positive_only=positive_only,negative_only=negative_only))
 
 	##Find matching color of used threshold in colorbar, needed to determine color for blender
-	if positive_only or negative_only:
+	if (positive_only or negative_only):
 		norm = mcolors.Normalize(vmin=vmin, vmax=vmax)
 	else:
 		if vmax == 0:
@@ -591,7 +591,14 @@ def _create_3Dplot(stat_maps,
 			norm = mcolors.Normalize(vmin=-float(vmax), vmax=vmax)
 
 	if not cmap:
-		cmap = MYMAP
+		if positive_only:
+			cmap = 'autumn_r'
+			cmap = plt.cm.get_cmap(cmap)
+		elif negative_only:
+			cmap = 'winter'
+			cmap = plt.cm.get_cmap(cmap)
+		else:
+			cmap = MYMAP
 	else:
 		try:
 			cmap = plt.cm.get_cmap(cmap)
@@ -787,7 +794,6 @@ def stat3D(stat_maps,
 		stat_maps = [path.abspath(path.expanduser(i)) for i in stat_maps]
 
 	#plot initial figure
-
 	display,vmin,vmax = stat(stat_maps,
 		alpha=alpha,
 		display_mode='tiled',

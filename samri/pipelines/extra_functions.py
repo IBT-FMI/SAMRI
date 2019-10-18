@@ -533,6 +533,21 @@ def write_bids_events_file(scan_dir,
 
 	return out_file
 
+def corresponding_physiofile(timecourse_file, as_list=False):
+	"""Based on a BIDS timecourse path, get the corresponding BIDS physiology file."""
+
+	from os import path
+
+	timecourse_dir = path.dirname(timecourse_file)
+	timecourse_name = path.basename(timecourse_file)
+	stripped_name = timecourse_name.split('.', 1)[0].rsplit('_', 1)[0]
+	eventfile = path.join(timecourse_dir,stripped_name+'_physio.tsv')
+
+	if as_list:
+		return [eventfile,]
+	else:
+		return eventfile
+
 def corresponding_eventfile(timecourse_file, as_list=False):
 	"""Based on a BIDS timecourse path, get the corresponding BIDS eventfile."""
 

@@ -52,6 +52,7 @@ def legacy(bids_base, template,
 	subjects=[],
 	tr=1,
 	workflow_name='legacy',
+	enforce_dummy_scans=DUMMY_SCANS,
 	):
 	'''
 	Legacy realignment and registration workflow representative of the tweaks and workarounds commonly used in the pre-SAMRI period.
@@ -120,7 +121,7 @@ def legacy(bids_base, template,
 	get_f_scan.iterables = ("ind_type", func_ind)
 
 	dummy_scans = pe.Node(name='dummy_scans', interface=util.Function(function=force_dummy_scans,input_names=inspect.getargspec(force_dummy_scans)[0], output_names=['out_file','deleted_scans']))
-	dummy_scans.inputs.desired_dummy_scans = DUMMY_SCANS
+	dummy_scans.inputs.desired_dummy_scans = enforce_dummy_scans
 
 	events_file = pe.Node(name='events_file', interface=util.Function(function=write_bids_events_file,input_names=inspect.getargspec(write_bids_events_file)[0], output_names=['out_file']))
 
@@ -319,6 +320,7 @@ def generic(bids_base, template,
 	workflow_name='generic',
 	params={},
 	phase_dictionary=GENERIC_PHASES,
+	enforce_dummy_scans=DUMMY_SCANS,
 	):
 	'''
 	Generic preprocessing and registration workflow for small animal data in BIDS format.
@@ -396,7 +398,7 @@ def generic(bids_base, template,
 	get_f_scan.iterables = ("ind_type", func_ind)
 
 	dummy_scans = pe.Node(name='dummy_scans', interface=util.Function(function=force_dummy_scans,input_names=inspect.getargspec(force_dummy_scans)[0], output_names=['out_file','deleted_scans']))
-	dummy_scans.inputs.desired_dummy_scans = DUMMY_SCANS
+	dummy_scans.inputs.desired_dummy_scans = enforce_dummy_scans
 
 	events_file = pe.Node(name='events_file', interface=util.Function(function=write_bids_events_file,input_names=inspect.getargspec(write_bids_events_file)[0], output_names=['out_file']))
 

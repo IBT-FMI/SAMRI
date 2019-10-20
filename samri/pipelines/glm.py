@@ -16,7 +16,7 @@ from nipype.interfaces.fsl.model import Level1Design
 #from nipype.algorithms.modelgen import SpecifyModel
 
 from samri.pipelines.extra_interfaces import SpecifyModel
-from samri.pipelines.extra_functions import select_from_datafind_df, corresponding_eventfile, get_bids_scan, eventfile_add_habituation, regressor
+from samri.pipelines.extra_functions import select_from_datafind_df, corresponding_eventfile, get_bids_scan, physiofile_ts, eventfile_add_habituation, regressor
 from samri.pipelines.utils import bids_dict_to_source, ss_to_path, iterfield_selector, datasource_exclude, bids_dict_to_dir
 from samri.report.roi import ts
 from samri.utilities import N_PROCS
@@ -320,12 +320,11 @@ def l1(preprocessing_dir,
 	if not keep_work:
 		shutil.rmtree(path.join(out_base,workdir_name))
 
-def l1_physio(preprocessing_dir,
+def l1_physio(preprocessing_dir, physiology_identifier,
 	bf_path='',
 	convolution='gamma',
 	debug=False,
 	exclude={},
-	habituation='confound',
 	highpass_sigma=225,
 	lowpass_sigma=False,
 	include={},
@@ -356,9 +355,6 @@ def l1_physio(preprocessing_dir,
 	debug : bool, optional
 		Whether to enable nipype debug mode.
 		This increases logging.
-	habituation : {"", "confound", "separate_contrast", "in_main_contrast"}, optional
-		How the habituation regressor should be handled.
-		Anything which evaluates as False (though we recommend "") means no habituation regressor will be introduced.
 	highpass_sigma : int, optional
 		Highpass threshold (in seconds).
 	include : dict
@@ -409,16 +405,21 @@ def l1_physio(preprocessing_dir,
 	get_scan.inputs.bids_base = preprocessing_dir
 	get_scan.iterables = ("ind_type", ind)
 
-	eventfile = pe.Node(name='eventfile', interface=util.Function(function=corresponding_eventfile,input_names=inspect.getargspec(corresponding_eventfile)[0], output_names=['eventfile']))
+	physiofile = pe.Node(name='physiofile', interface=util.Function(function=physiofile_ts,input_names=inspect.getargspec(physiofile_ts)[0], output_names=['nii_file','ts']))
+	physiofile.inputs.column_name = physiology_identifier
+
+	make_regressor = pe.Node(name='make_regressor', interface=util.Function(function=regressor,input_names=inspect.getargspec(regressor)[0], output_names=['output']))
+	make_regressor.inputs.hpf = highpass_sigma
+	make_regressor.inputs.name = physiology_identifier
 
 	if invert:
 		invert = pe.Node(interface=fsl.ImageMaths(), name="invert")
 		invert.inputs.op_string = '-mul -1'
 
-	specify_model = pe.Node(interface=SpecifyModel(), name="specify_model")
-	specify_model.inputs.input_units = 'secs'
-	specify_model.inputs.time_repetition = tr
-	specify_model.inputs.high_pass_filter_cutoff = highpass_sigma
+	#specify_model = pe.Node(interface=SpecifyModel(), name="specify_model")
+	#specify_model.inputs.input_units = 'secs'
+	#specify_model.inputs.time_repetition = tr
+	#specify_model.inputs.high_pass_filter_cutoff = highpass_sigma
 
 	level1design = pe.Node(interface=Level1Design(), name="level1design")
 	level1design.inputs.interscan_interval = tr
@@ -427,16 +428,19 @@ def l1_physio(preprocessing_dir,
 	if convolution == 'custom':
 		bf_path = path.abspath(path.expanduser(bf_path))
 		level1design.inputs.bases = {"custom": {"bfcustompath":bf_path}}
+		level1design.inputs.contrasts = [('allStim','T', ['ev0'],[1])]
 	elif convolution == 'gamma':
-		# We are not adding derivatives here, as these conflict with the habituation option.
-		# !!! This is not difficult to solve, and would only require the addition of an elif condition to the habituator definition, which would add multiple column copies for each of the derivs.
 		level1design.inputs.bases = {'gamma': {'derivs':temporal_derivatives, 'gammasigma':30, 'gammadelay':10}}
+		#level1design.inputs.contrasts = [('allStim','T', ['ev0','ev1'],[1,1])]
+		level1design.inputs.contrasts = [('allStim','T', [physiology_identifier],[1])]
 	elif convolution == 'dgamma':
-		# We are not adding derivatives here, as these conflict with the habituation option.
-		# !!! This is not difficult to solve, and would only require the addition of an elif condition to the habituator definition, which would add multiple column copies for each of the derivs.
 		level1design.inputs.bases = {'dgamma': {'derivs':temporal_derivatives,}}
+		level1design.inputs.contrasts = [('allStim','T', ['ev0','ev1'],[1,1])]
 	elif isinstance(convolution, dict):
 		level1design.inputs.bases = convolution
+	elif not convolution:
+		level1design.inputs.bases = {'none': {}}
+		level1design.inputs.contrasts = [('stim','T', [physiology_identifier],[1])]
 	else:
 		raise ValueError('You have specified an invalid value for the "convoltion" parameter of.')
 	level1design.inputs.model_serial_correlations = True
@@ -482,8 +486,10 @@ def l1_physio(preprocessing_dir,
 	datasink.inputs.parameterization = False
 
 	workflow_connections = [
-		(get_scan, eventfile, [('nii_path', 'timecourse_file')]),
-		(specify_model, level1design, [('session_info', 'session_info')]),
+		(get_scan, physiofile, [('nii_path', 'in_file')]),
+		(physiofile, make_regressor, [('ts', 'timecourse')]),
+		(physiofile, make_regressor, [('nii_file', 'scan_path')]),
+		(make_regressor, level1design, [('output', 'session_info')]),
 		(level1design, modelgen, [('ev_files', 'ev_files')]),
 		(level1design, modelgen, [('fsf_files', 'fsf_file')]),
 		(modelgen, glm, [('design_file', 'design')]),
@@ -520,37 +526,6 @@ def l1_physio(preprocessing_dir,
 		(designimage_rename, datasink, [('out_file', '@designimage')]),
 		]
 
-	if habituation:
-		level1design.inputs.orthogonalization = {1: {0:0,1:0,2:0}, 2: {0:1,1:1,2:0}}
-		specify_model.inputs.bids_condition_column = 'samri_l1_regressors'
-		specify_model.inputs.bids_amplitude_column = 'samri_l1_amplitude'
-		add_habituation = pe.Node(name='add_habituation', interface=util.Function(function=eventfile_add_habituation,input_names=inspect.getargspec(eventfile_add_habituation)[0], output_names=['out_file']))
-		# Regressor names need to be prefixed with "e" plus a numerator so that Level1Design will be certain to conserve the order.
-		add_habituation.inputs.original_stimulation_value='1stim'
-		add_habituation.inputs.habituation_value='2habituation'
-		workflow_connections.extend([
-			(eventfile, add_habituation, [('eventfile', 'in_file')]),
-			(add_habituation, specify_model, [('out_file', 'bids_event_file')]),
-			])
-	if not habituation:
-		specify_model.inputs.bids_condition_column = ''
-		if convolution == 'custom':
-			level1design.inputs.contrasts = [('allStim','T', ['ev0'],[1])]
-		elif convolution in ['gamma','dgamma']:
-			level1design.inputs.contrasts = [('allStim','T', ['ev0','ev1'],[1,1])]
-		workflow_connections.extend([
-			(eventfile, specify_model, [('eventfile', 'bids_event_file')]),
-			])
-	#condition names as defined in eventfile_add_habituation:
-	elif habituation=="separate_contrast":
-		level1design.inputs.contrasts = [('stim','T', ['1stim','2habituation'],[1,0]),('hab','T', ['1stim','2habituation'],[0,1])]
-	elif habituation=="in_main_contrast":
-		level1design.inputs.contrasts = [('all','T', ['1stim','2habituation'],[1,1])]
-	elif habituation=="confound":
-		level1design.inputs.contrasts = [('stim','T', ["1stim", "2habituation"],[1,0])]
-	else:
-		raise ValueError('The value you have provided for the `habituation` parameter, namely "{}", is invalid. Please choose one of: {{None, False,"","confound","in_main_contrast","separate_contrast"}}'.format(habituation))
-
 	if highpass_sigma or lowpass_sigma:
 		bandpass = pe.Node(interface=fsl.maths.TemporalFilter(), name="bandpass")
 		bandpass.inputs.highpass_sigma = highpass_sigma
@@ -561,17 +536,15 @@ def l1_physio(preprocessing_dir,
 			bandpass.inputs.lowpass_sigma = tr
 		if invert:
 			workflow_connections.extend([
-				(get_scan, invert, [('nii_path', 'in_file')]),
+				(physiofile, invert, [('nii_file', 'in_file')]),
 				(invert, bandpass, [('out_file', 'in_file')]),
-				(bandpass, specify_model, [('out_file', 'functional_runs')]),
 				(bandpass, glm, [('out_file', 'in_file')]),
 				(bandpass, datasink, [('out_file', '@ts_file')]),
 				(get_scan, bandpass, [('nii_name', 'out_file')]),
 				])
 		else:
 			workflow_connections.extend([
-				(get_scan, bandpass, [('nii_path', 'in_file')]),
-				(bandpass, specify_model, [('out_file', 'functional_runs')]),
+				(physiofile, bandpass, [('nii_file', 'in_file')]),
 				(bandpass, glm, [('out_file', 'in_file')]),
 				(bandpass, datasink, [('out_file', '@ts_file')]),
 				(get_scan, bandpass, [('nii_name', 'out_file')]),
@@ -579,16 +552,14 @@ def l1_physio(preprocessing_dir,
 	else:
 		if invert:
 			workflow_connections.extend([
-				(get_scan, invert, [('nii_path', 'in_file')]),
-				(invert, specify_model, [('out_file', 'functional_runs')]),
+				(physiofile, invert, [('nii_file', 'in_file')]),
 				(invert, glm, [('out_file', 'in_file')]),
 				(invert, datasink, [('out_file', '@ts_file')]),
 				(get_scan, invert, [('nii_name', 'out_file')]),
 				])
 		else:
 			workflow_connections.extend([
-				(get_scan, specify_model, [('nii_path', 'functional_runs')]),
-				(get_scan, glm, [('nii_path', 'in_file')]),
+				(physiofile, glm, [('nii_file', 'in_file')]),
 				(get_scan, datasink, [('nii_path', '@ts_file')]),
 				])
 
@@ -729,6 +700,7 @@ def seed(preprocessing_dir, seed_mask,
 
 	if mask == 'mouse':
 		mask = '/usr/share/mouse-brain-atlases/dsurqec_200micron_mask.nii'
+		(make_regressor, level1design, [('output', 'session_info')]),
 		glm.inputs.mask = path.abspath(path.expanduser(mask))
 	else:
 		glm.inputs.mask = path.abspath(path.expanduser(mask))

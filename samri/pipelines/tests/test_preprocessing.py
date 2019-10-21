@@ -11,5 +11,5 @@ def test_generic():
 		functional_match={'acquisition':['EPIlowcov'],},
 		structural_match={'acquisition':['TurboRARElowcov'],},
 		out_base='/var/tmp/samri_testing/pytest/',
-		workflow_name='preprocess',
+		workflow_name='prep',
 		)

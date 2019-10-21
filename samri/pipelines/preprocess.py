@@ -388,6 +388,7 @@ def generic(bids_base, template,
 
 	find_physio = pe.Node(name='find_physio', interface=nio.DataFinder())
 	find_physio.inputs.match_regex = r'.*?_physio.(json|tsv)'
+	find_physio.inputs.ignore_exception = True
 
 	get_f_scan = pe.Node(name='get_f_scan', interface=util.Function(function=get_bids_scan,input_names=inspect.getargspec(get_bids_scan)[0], output_names=['scan_path','scan_type','task', 'nii_path', 'nii_name', 'events_name', 'subject_session', 'metadata_filename', 'dict_slice']))
 	get_f_scan.inputs.ignore_exception = True

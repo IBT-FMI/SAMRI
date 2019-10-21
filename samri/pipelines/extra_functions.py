@@ -572,20 +572,18 @@ def physiofile_ts(in_file, column_name,
 
 	return nii_file, ts
 
-def corresponding_physiofile(timecourse_file, as_list=False):
+def corresponding_physiofile(nii_path):
 	"""Based on a BIDS timecourse path, get the corresponding BIDS physiology file."""
 
 	from os import path
 
-	timecourse_dir = path.dirname(timecourse_file)
-	timecourse_name = path.basename(timecourse_file)
-	stripped_name = timecourse_name.split('.', 1)[0].rsplit('_', 1)[0]
-	eventfile = path.join(timecourse_dir,stripped_name+'_physio.tsv')
+	nii_dir = path.dirname(nii_path)
+	nii_name = path.basename(nii_path)
+	stripped_name = nii_name.split('.', 1)[0].rsplit('_', 1)[0]
+	physiofile = path.join(nii_dir,stripped_name+'_physio.tsv')
 
-	if as_list:
-		return [eventfile,]
-	else:
-		return eventfile
+	if path.isfile(physiofile):
+		return physiofile
 
 def corresponding_eventfile(timecourse_file, as_list=False):
 	"""Based on a BIDS timecourse path, get the corresponding BIDS eventfile."""

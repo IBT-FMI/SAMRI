@@ -1,10 +1,17 @@
-def test_write_bids_physio_file():
-	from samri.pipelines.extra_functions import write_bids_physio_file
+def test_physiofile_ts():
+	from samri.pipelines.extra_functions import physiofile_ts
 
-	scan_path = '/usr/share/samri_bindata/20170317_203312_5691_1_5/8/'
-	write_bids_physio_file(scan_path,
-		nii_name='sub-0001_ses-01_acq-geEPI_cbv.nii.gz',
-		)
+	timecourse_file = '/home/chymera/.scratch/nvcz/preprocessed/sub-7293/ses-ketxyl/func/sub-7293_ses-ketxyl_task-rhp_acq-geEPI_run-0_bold.nii.gz'
+	physiofile_ts(timecourse_file,'neurons')
+
+# Uncomment when testing data with physiology files is available
+#def test_write_bids_physio_file():
+#	from samri.pipelines.extra_functions import write_bids_physio_file
+#
+#	scan_path = '/usr/share/samri_bindata/20170317_203312_5691_1_5/8/'
+#	write_bids_physio_file(scan_path,
+#		nii_name='sub-0001_ses-01_acq-geEPI_cbv.nii.gz',
+#		)
 
 def test_reset_background():
 	from samri.pipelines.extra_functions import reset_background

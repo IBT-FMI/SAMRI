@@ -322,7 +322,6 @@ def eventfile_add_habituation(in_file,
 
 def write_bids_physio_file(scan_dir,
 	out_file='physio.tsv',
-	nii_name=False,
 	forced_dummy_scans=0.,
 	):
 	"""Create a BIDS physiology recording ("physio") file, based on available data files in the scan directory.
@@ -350,15 +349,6 @@ def write_bids_physio_file(scan_dir,
 
 	out_file = os.path.abspath(os.path.expanduser(out_file))
 	scan_dir = os.path.abspath(os.path.expanduser(scan_dir))
-
-	if nii_name:
-		nii_basename, ext = os.path.splitext(nii_name)
-		if ext == '.gz':
-			nii_basename, ext = os.path.splitext(nii_name)
-		nii_basename_segments = nii_basename.split('_')
-		nii_basename_segments = [i for i in nii_basename_segments if '-' in i]
-		nii_basename = '_'.join(nii_basename_segments)
-		out_file = '{}_physio.tsv'.format(nii_basename)
 
 	physio_prefix = 'physio_'
 	scan_dir_contents = os.listdir(scan_dir)
@@ -532,6 +522,55 @@ def write_bids_events_file(scan_dir,
 	mydf.to_csv(out_file, sep=str('\t'), na_rep='n/a', index=False)
 
 	return out_file
+
+def physiofile_ts(in_file, column_name,
+	save=True,
+	):
+	"""Based on a BIDS timecourse path, get the corresponding BIDS physiology file."""
+
+	from os import path
+	import json
+	import nibabel as nib
+
+	img = nib.load(in_file)
+	nii_dir = path.dirname(in_file)
+	nii_name = path.basename(in_file)
+	stripped_name = nii_name.split('.', 1)[0].rsplit('_', 1)[0]
+	physiofile = path.join(nii_dir,stripped_name+'_physio.tsv')
+	physiofile_meta = path.join(nii_dir,stripped_name+'_physio.json')
+
+	with open(physiofile_meta, 'r') as json_file:
+		metadata = json.load(json_file)
+	columns = metadata['Columns']
+	with open(physiofile, 'r') as f:
+		physios = f.read().split('\n')
+	physios = [i.split('\t') for i in physios if i != '']
+	physios = [list(map(float, sublist)) for sublist in physios]
+	physios = [list(i) for i in zip(*physios)]
+	ts_index = columns.index(column_name)
+	ts = physios[ts_index]
+
+	duration_img = img.header['dim'][4]
+	duration_physios = len(ts)
+
+	if duration_physios > duration_img:
+		ts = ts[:duration_img]
+	elif duration_img > duration_physios:
+		data = img.get_data()
+		data = data[:,:,:,duration_physio]
+		img = nib.Nifti1Image(data, img.affine, img.header)
+
+	if save:
+		nib.save(img, nii_name)
+		nii_file = path.abspath(path.expanduser(nii_name))
+	elif isinstance(save, str):
+		save = path.abspath(path.expanduser(save))
+		nib_save(img, save)
+		nii_file = save
+	else:
+		nii_file = img
+
+	return nii_file, ts
 
 def corresponding_physiofile(timecourse_file, as_list=False):
 	"""Based on a BIDS timecourse path, get the corresponding BIDS physiology file."""

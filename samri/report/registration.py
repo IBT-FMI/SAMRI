@@ -7,7 +7,7 @@ from joblib import Parallel, delayed
 
 from nipype.interfaces import ants, fsl
 
-def measure_sim(path_template, reference,
+def measure_sim(image_path, reference,
 	substitutions=False,
 	metric="MI",
 	radius_or_number_of_bins = 8,
@@ -18,7 +18,7 @@ def measure_sim(path_template, reference,
 	"""Return a similarity metric score for two 3d images"""
 
 	if substitutions:
-		image_path = path_template.format(**substitutions)
+		image_path = image_path.format(**substitutions)
 	image_path = path.abspath(path.expanduser(image_path))
 
 	#some BIDS identifier combinations may not exist:
@@ -27,9 +27,10 @@ def measure_sim(path_template, reference,
 
 	file_data = {}
 	file_data["path"] = image_path
-	file_data["session"] = substitutions["session"]
-	file_data["subject"] = substitutions["subject"]
-	file_data["acquisition"] = substitutions["acquisition"]
+	if substitutions:
+		file_data["session"] = substitutions["session"]
+		file_data["subject"] = substitutions["subject"]
+		file_data["acquisition"] = substitutions["acquisition"]
 
 	img = nib.load(image_path)
 	if img.header['dim'][0] > 3:

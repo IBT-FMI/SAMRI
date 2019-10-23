@@ -581,9 +581,14 @@ def corresponding_physiofile(nii_path):
 	nii_name = path.basename(nii_path)
 	stripped_name = nii_name.split('.', 1)[0].rsplit('_', 1)[0]
 	physiofile = path.join(nii_dir,stripped_name+'_physio.tsv')
+	meta_physiofile = path.join(nii_dir,stripped_name+'_physio.json')
 
-	if path.isfile(physiofile):
-		return physiofile
+	if not path.isfile(physiofile):
+		physiofile = ''
+	if not path.isfile(meta_physiofile):
+		meta_physiofile = ''
+
+	return physiofile, meta_physiofile
 
 def corresponding_eventfile(timecourse_file, as_list=False):
 	"""Based on a BIDS timecourse path, get the corresponding BIDS eventfile."""

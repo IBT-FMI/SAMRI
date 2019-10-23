@@ -388,7 +388,7 @@ def generic(bids_base, template,
 	if not n_jobs:
 		n_jobs = max(int(round(mp.cpu_count()*n_jobs_percentage)),2)
 
-	find_physio = pe.Node(name='find_physio', interface=util.Function(function=corresponding_physiofile,input_names=inspect.getargspec(corresponding_physiofile)[0], output_names=['physiofile']))
+	find_physio = pe.Node(name='find_physio', interface=util.Function(function=corresponding_physiofile,input_names=inspect.getargspec(corresponding_physiofile)[0], output_names=['physiofile','meta_physiofile']))
 
 	get_f_scan = pe.Node(name='get_f_scan', interface=util.Function(function=get_bids_scan,input_names=inspect.getargspec(get_bids_scan)[0], output_names=['scan_path','scan_type','task', 'nii_path', 'nii_name', 'events_name', 'subject_session', 'metadata_filename', 'dict_slice']))
 	get_f_scan.inputs.ignore_exception = True
@@ -416,6 +416,7 @@ def generic(bids_base, template,
 		(get_f_scan, find_physio, [('nii_path', 'nii_path')]),
 		(events_file, datasink, [('out_file', 'func.@events')]),
 		(find_physio, datasink, [('physiofile', 'func.@physio')]),
+		(find_physio, datasink, [('meta_physiofile', 'func.@meta_physio')]),
 		(get_f_scan, events_file, [('events_name', 'out_file')]),
 		(get_f_scan, datasink, [(('subject_session',ss_to_path), 'container')]),
 		]

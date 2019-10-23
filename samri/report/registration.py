@@ -9,13 +9,28 @@ from nipype.interfaces import ants, fsl
 
 def measure_sim(image_path, reference,
 	substitutions=False,
-	metric="MI",
-	radius_or_number_of_bins = 8,
-	sampling_strategy = "None",
+	mask='',
+	metric='MI',
+	radius_or_number_of_bins=8,
+	sampling_strategy='None',
 	sampling_percentage=0.3,
-	mask="",
 	):
-	"""Return a similarity metric score for two 3d images"""
+	"""Return a similarity metric score for two 3d images
+
+	Parameters
+	----------
+
+	image_path : str
+		Path to moving image (moving and fixed image assignment is arbitrary for this function).
+	reference : str
+		Path to fixed image (moving and fixed image assignment is arbitrary for this function).
+	substitutions : dict, optional
+		Dictionary with keys which include 'subject', 'session', and 'acquisition', which will be applied to format the image_path string.
+	mask : str
+		Path to mask which selects a subregionfor which to compute the similarity.
+	metric : {'CC', 'MI', 'Mattes', 'MeanSquares', 'Demons', 'GC'}
+		Similarity metric, as accepted by `nipype.interfaces.ants.registration.MeasureImageSimilarity` (which wraps the ANTs command `MeasureImageSimilarity`).
+	"""
 
 	if substitutions:
 		image_path = image_path.format(**substitutions)
@@ -28,8 +43,8 @@ def measure_sim(image_path, reference,
 	file_data = {}
 	file_data["path"] = image_path
 	if substitutions:
-		file_data["session"] = substitutions["session"]
 		file_data["subject"] = substitutions["subject"]
+		file_data["session"] = substitutions["session"]
 		file_data["acquisition"] = substitutions["acquisition"]
 
 	img = nib.load(image_path)
@@ -57,7 +72,6 @@ def measure_sim(image_path, reference,
 	sim.inputs.sampling_percentage = sampling_percentage
 	if mask:
 		sim.inputs.fixed_image_mask = mask
-	#sim.inputs.moving_image_mask = 'mask.nii.gz'
 	sim_res = sim.run()
 	file_data["similarity"] = sim_res.outputs.similarity
 

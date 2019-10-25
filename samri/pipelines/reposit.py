@@ -221,7 +221,7 @@ def bru2bids(measurements_base,
 				]),
 			(events_file, datasink, [('out_file', 'func.@events')]),
 			(physio_file, datasink, [('out_file', 'func.@physio')]),
-			(physio_file, datasink, [('out_metadata_file', 'func.@physio_metadata')]),
+			(physio_file, datasink, [('out_metadata_file', 'func.@meta_physio')]),
 			(f_metadata_file, datasink, [('out_file', 'func.@metadata')]),
 			]
 		crashdump_dir = path.join(out_base,workflow_name+'_crashdump')

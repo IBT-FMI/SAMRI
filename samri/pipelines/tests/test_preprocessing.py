@@ -1,11 +1,10 @@
 from samri.pipelines.preprocess import generic, legacy
 from samri.pipelines import manipulations
 
-#bids_base = '/usr/share/samri_bidsdata/bids'
-bids_base = '/home/chymera/samri_bidsdata-0.3/bids'
+BIDS_BASE = '/usr/share/samri_bidsdata/bids'
 
 def test_generic():
-	generic(bids_base,
+	generic(BIDS_BASE,
 		"/usr/share/mouse-brain-atlases/dsurqec_200micron.nii",
 		registration_mask="/usr/share/mouse-brain-atlases/dsurqec_200micron_mask.nii",
 		functional_match={'acquisition':['EPIlowcov'],},

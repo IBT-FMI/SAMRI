@@ -179,6 +179,7 @@ def scaled_plot(template,
 	vmin=None,
 	vmax=None,
 	#stat_cmap=None,
+	contour_colors=['tab:pink'],
 	):
 	"""A wrapper for nilearn's plot_stat_map which allows scaling of crosshairs, titles and annotations.
 
@@ -246,7 +247,10 @@ def scaled_plot(template,
 	if stat_map:
 		display.add_overlay(stat_map,
 			threshold=threshold,
-			cmap=cmap, vmin = vmin,vmax = vmax, colorbar=False,
+			cmap=cmap,
+			vmin=vmin,
+			vmax=vmax,
+			colorbar=False,
 			alpha=stat_map_alpha,
 			)
 
@@ -262,7 +266,7 @@ def scaled_plot(template,
 		except AttributeError:
 			pass
 		display.add_contours(overlay,
-			colors=['tab:pink'],
+			colors=contour_colors,
 			#linesyles='dotted',
 			linewidths=.4,
 			threshold=.5,
@@ -296,6 +300,7 @@ def stat(stat_maps,
 	positive_only=False,
 	negative_only=False,
 	bypass_cmap=False,
+	contour_colors=['tab:pink'],
 	):
 
 	"""Plot a list of statistical maps.
@@ -403,6 +408,7 @@ def stat(stat_maps,
 			vmin=vmin,
 			vmax=vmax,
 			#stat_cmap=stat_cmap,
+			contour_colors=contour_colors,
 			)
 	else:
 		try:
@@ -712,10 +718,10 @@ def _plots_overlay(display,display_3Dplot):
 def stat3D(stat_maps,
 	alpha=1.0,
 	overlays=[],
-	figure_title="",
-	interpolation="hermite",
-	template="/usr/share/mouse-brain-atlases/dsurqec_40micron_masked.nii",
-	save_as="",
+	figure_title='',
+	interpolation='hermite',
+	template='/usr/share/mouse-brain-atlases/dsurqec_40micron_masked.nii',
+	save_as='',
 	scale=1.,
 	subplot_titles=[],
 	cut_coords=None,
@@ -727,13 +733,14 @@ def stat3D(stat_maps,
 	cmap=None,
 	dim=0,
 	vmax=None,
-	shape="portrait",
+	shape='portrait',
 	draw_colorbar=True,
 	ax=None,
 	positive_only=False,
 	negative_only=False,
 	threshold_mesh=None,
-	template_mesh='/usr/share/mouse-brain-atlases/ambmc2dsurqec_15micron_masked.obj'
+	template_mesh='/usr/share/mouse-brain-atlases/ambmc2dsurqec_15micron_masked.obj',
+	contour_colors=['tab:pink'],
 	):
 
 	"""Same plotting options as stat(), but with an additional 3D plot and a 2x2 layout of plots.
@@ -816,6 +823,7 @@ def stat3D(stat_maps,
 		dim=dim,
 		scale=scale,
 		shape="portrait",
+		contour_colors=contour_colors,
 		)
 
 	if threshold_mesh is None:

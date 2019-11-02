@@ -34,6 +34,8 @@ N_PROCS=max(N_PROCS-4, 2)
 @argh.arg('-m','--measurements', nargs='*', type=str)
 def bru2bids(measurements_base,
 	bids_extra=['acq','run'],
+	dataset_authors=[],
+	dataset_license='',
 	dataset_name=False,
 	debug=False,
 	diffusion_match={},
@@ -60,6 +62,12 @@ def bru2bids(measurements_base,
 	bids_extra : list, optional
 		List of strings denoting optional BIDS fields to include in the resulting file names.
 		Accepted items are 'acq' and 'run'.
+	dataset_authors : list of string, optional
+		A list of dataset author names, which will be written into the BIDS metadata file.
+		Generally not needed, unless this is important for you.
+	dataset_license : string, optional
+		A dataset license name that will be written into the BIDS metadata file.
+		Generally not needed, unless this is important for you.
 	dataset_name : string, optional
 		A dataset name that will be written into the BIDS metadata file.
 		Generally not needed, as by default we use the dataset path to satisfy this BIDS requirement.
@@ -122,8 +130,13 @@ def bru2bids(measurements_base,
 		'Name':dataset_name,
 		'BIDSVersion':'1.2.0',
 		}
+	if dataset_authors:
+		description['Authors'] = dataset_authors
+	if dataset_license:
+		description['License'] = dataset_license
 	with open(path.join(out_dir,'dataset_description.json'), 'w') as f:
-		json.dump(description, f)
+		json.dump(description, f, indent=1)
+		f.write("\n")
 
 	# define measurement directories to be processed, and populate the list either with the given include_measurements, or with an intelligent selection
 	functional_scan_types = diffusion_scan_types = structural_scan_types = []

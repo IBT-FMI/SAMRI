@@ -1,6 +1,6 @@
 from os import path
 
-import nipype.pipeline.engine as pe				# pypeline engine
+import nipype.pipeline.engine as pe
 import nipype.interfaces.ants as ants
 from nipype.interfaces import fsl
 from samri.pipelines.utils import GENERIC_PHASES
@@ -169,7 +169,7 @@ def functional_registration(template,
 	mask="/usr/share/mouse-brain-atlases/dsurqec_200micron_mask.nii",
 	num_threads=4,
 	phase_dictionary=GENERIC_PHASES,
-	f_phases=["s_rigid","affine","syn"],
+	f_phases=["f_translation",'similarity',"affine","syn"],
 	):
 
 	template = path.abspath(path.expanduser(template))
@@ -210,8 +210,9 @@ def functional_registration(template,
 	warp.inputs.input_image_type = 3
 	warp.inputs.interpolation = 'NearestNeighbor'
 	warp.inputs.invert_transform_flags = [False]
-	warp.inputs.terminal_output = 'file'
-	warp.num_threads = 4
+	#warp.inputs.terminal_output = 'file'
+	warp.num_threads = num_threads
+	warp.interface.mem_gb = 16
 
 	return f_registration, warp
 

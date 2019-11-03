@@ -10,6 +10,23 @@ from copy import deepcopy
 from datetime import datetime
 
 GENERIC_PHASES = {
+	"f_only_translation":{
+		"transforms":"Translation",
+		"transform_parameters":(0.1,),
+		"number_of_iterations":[2000,1000,500],
+		"metric":"MeanSquares",
+		"metric_weight":1,
+		"radius_or_number_of_bins":32,
+		"sampling_strategy":"Regular",
+		"sampling_percentage":0.8,
+		"convergence_threshold":1.e-16,
+		"convergence_window_size":20,
+		"smoothing_sigmas":[2,1,0],
+		"sigma_units":"vox",
+		"shrink_factors":[4,2,1],
+		"use_estimate_learning_rate_once":False,
+		"use_histogram_matching":True,
+		},
 	"f_translation":{
 		"transforms":"Translation",
 		"transform_parameters":(0.1,),

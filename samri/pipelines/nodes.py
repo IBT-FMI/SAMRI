@@ -169,7 +169,7 @@ def functional_registration(template,
 	mask="/usr/share/mouse-brain-atlases/dsurqec_200micron_mask.nii",
 	num_threads=4,
 	phase_dictionary=GENERIC_PHASES,
-	f_phases=["f_translation",'similarity',"affine","syn"],
+	f_phases=["f_only_translation",'similarity',"affine","syn"],
 	):
 
 	template = path.abspath(path.expanduser(template))
@@ -185,7 +185,7 @@ def functional_registration(template,
 	f_registration.inputs.dimension = 3
 	f_registration.inputs.write_composite_transform = True
 	f_registration.inputs.collapse_output_transforms = True
-	f_registration.inputs.initial_moving_transform_com = True
+	f_registration.inputs.initial_moving_transform_com = 0
 	f_registration.inputs.metric = [i["metric"] for i in f_parameters]
 	f_registration.inputs.metric_weight = [i["metric_weight"] for i in f_parameters]
 	f_registration.inputs.radius_or_number_of_bins = [i["radius_or_number_of_bins"] for i in f_parameters]

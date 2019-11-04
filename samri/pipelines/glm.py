@@ -145,7 +145,6 @@ def l1(preprocessing_dir,
 	level1design.inputs.model_serial_correlations = True
 
 	modelgen = pe.Node(interface=fsl.FEATModel(), name='modelgen')
-	#modelgen.inputs.ignore_exception = True
 
 	glm = pe.Node(interface=fsl.GLM(), name='glm', iterfield='design')
 	if mask == 'mouse':
@@ -154,7 +153,6 @@ def l1(preprocessing_dir,
 	else:
 		glm.inputs.mask = path.abspath(path.expanduser(mask))
 	glm.interface.mem_gb = 6
-	#glm.inputs.ignore_exception = True
 
 	out_file_name_base = 'sub-{{subject}}_ses-{{session}}_task-{{task}}_acq-{{acquisition}}_run-{{run}}_{{modality}}_{}.{}'
 
@@ -416,11 +414,6 @@ def l1_physio(preprocessing_dir, physiology_identifier,
 		invert = pe.Node(interface=fsl.ImageMaths(), name="invert")
 		invert.inputs.op_string = '-mul -1'
 
-	#specify_model = pe.Node(interface=SpecifyModel(), name="specify_model")
-	#specify_model.inputs.input_units = 'secs'
-	#specify_model.inputs.time_repetition = tr
-	#specify_model.inputs.high_pass_filter_cutoff = highpass_sigma
-
 	level1design = pe.Node(interface=Level1Design(), name="level1design")
 	level1design.inputs.interscan_interval = tr
 	if bf_path:
@@ -446,7 +439,6 @@ def l1_physio(preprocessing_dir, physiology_identifier,
 	level1design.inputs.model_serial_correlations = True
 
 	modelgen = pe.Node(interface=fsl.FEATModel(), name='modelgen')
-	#modelgen.inputs.ignore_exception = True
 
 	glm = pe.Node(interface=fsl.GLM(), name='glm', iterfield='design')
 	if mask == 'mouse':
@@ -455,7 +447,6 @@ def l1_physio(preprocessing_dir, physiology_identifier,
 	else:
 		glm.inputs.mask = path.abspath(path.expanduser(mask))
 	glm.interface.mem_gb = 6
-	#glm.inputs.ignore_exception = True
 
 	out_file_name_base = 'sub-{{subject}}_ses-{{session}}_task-{{task}}_acq-{{acquisition}}_run-{{run}}_{{modality}}_{}.{}'
 

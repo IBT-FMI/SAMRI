@@ -1,2 +1,3 @@
+recursive-exclude tests *
 include tests/data/drs_activity.csv
 include tests/data/f_reg_quality.csv

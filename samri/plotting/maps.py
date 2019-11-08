@@ -187,19 +187,15 @@ def scaled_plot(template,
 	----------
 
 	stat_map : string or array_like
-	A path to a NIfTI file, or a nibabel object (e.g. Nifti1Image), giving the statistic image to plot.
-
+		A path to a NIfTI file, or a nibabel object (e.g. Nifti1Image), giving the statistic image to plot.
 	template : string or array_like
-	A path to a NIfTI file, or a nibabel object (e.g. Nifti1Image), to use as a backdrop when plotting the statistic image.
-
+		A path to a NIfTI file, or a nibabel object (e.g. Nifti1Image), to use as a backdrop when plotting the statistic image.
 	fig : matplotlib figure object
-	Figure to draw to.
-
+		Figure to draw to.
 	ax : matplotlib axis object
-	Axis to draw to.
-
+		Axis to draw to.
 	overlay: string or array_like
-	A path to a NIfTI file, or a nibabel object (e.g. Nifti1Image), giving an image for which to draw the contours on top of the statistic plot.
+		A path to a NIfTI file, or a nibabel object (e.g. Nifti1Image), giving an image for which to draw the contours on top of the statistic plot.
 
 	"""
 	# Make sure that if the variables are paths, they are absolute
@@ -311,31 +307,22 @@ def stat(stat_maps,
 
 	stat_maps : list or numpy.array
 		A list of strings containing statistical map paths or statistical map objects to be plotted. If a `numpy.array` is provided, the shape and order is used to place the subplots.
-
 	figure_title : string, optional
 		Title for the entire figure.
-
 	interpolation : string, optional
 		Interpolation to use for plot. Possible values according to matplotlib http://matplotlib.org/examples/images_contours_and_fields/interpolation_methods.html .
-
 	template : string, optional
 		Path to template onto which to plot the statistical maps.
-
 	save_as : string, optional
 		Path under which to save the figure. If None or equivalent, the plot will be shown (via `plt.show()`).
-
 	scale : float, optional
 		Allows intelligent scaling of annotation, crosshairs, and title.
-
 	cmap : string, optional
 		Name of matplotlib colormap
-
 	vmax : int or None, optional
 		Allows explicit specificaion of the maximum range of the color bar (the color bar will span +vmax to -vmax).
-
 	subplot_titles : list or numpy.array, optional
 		List of titles for sub plots. Must be empty list or strings list of the same length as the stats_maps list.
-
 	shape : {"portrait", "landscape"}
 		if the `stat_maps` variable does not have a shape (i.e. if it is simply a list) this variable controls the kind of shape which the function auto-determines.
 		Setting this parameter to "portrait" will force a shape with two columns, whereas setting it to "landscape" will force a shape with two rows.
@@ -566,16 +553,12 @@ def _create_3Dplot(stat_maps,
 
 	stat_maps : string or array_like
 		A path to a NIfTI file, or a nibabel object (e.g. Nifti1Image), giving the statistical map to.
-
 	template_mesh : string or array_like
 		A path to a .obj file containing the template mesh.
-
 	threshold : int or array<int>, optional
 		threshold used for iso-surface extraction.
-
 	vmin : int
 		min for colorbar range.
-
 	vmax : int
 		max for colorbar range.
 	"""
@@ -684,7 +667,6 @@ def _plots_overlay(display,display_3Dplot):
 
 	display : nilearn.plotting.display.TiledSlicer object
 		figure plot as returned by stat() or nilearn.plotting.plot_img(), containing plots in 2x2 view with empty space for 3D image.
-
 	display_3Dplot : array
 		image array.
 
@@ -750,41 +732,29 @@ def stat3D(stat_maps,
 
 	stat_maps : list or numpy.array
 		A list of strings containing statistical map paths or statistical map objects to be plotted. If a `numpy.array` is provided, the shape and order is used to place the subplots.
-
 	figure_title : string, optional
 		Title for the entire figure.
-
 	interpolation : string, optional
 		Interpolation to use for plot. Possible values according to matplotlib http://matplotlib.org/examples/images_contours_and_fields/interpolation_methods.html .
-
 	template : string, optional
 		Path to template onto which to plot the statistical maps.
-
 	save_as : string, optional
 		Path under which to save the figure. If None or equivalent, the plot will be shown (via `plt.show()`).
-
 	scale : float, optional
 		Allows intelligent scaling of annotation, crosshairs, and title.
-
 	cmap : string, optional
 		Name of matplotlib colormap
-
 	vmax : int or None, optional
 		Allows explicit specificaion of the maximum range of the color bar (the color bar will span +vmax to -vmax).
-
 	subplot_titles : list or numpy.array, optional
 		List of titles for sub plots. Must be empty list or strings list of the same length as the stats_maps list.
-
 	shape : {"portrait", "landscape"}
 		if the `stat_maps` variable does not have a shape (i.e. if it is simply a list) this variable controls the kind of shape which the function auto-determines.
 		Setting this parameter to "portrait" will force a shape with two columns, whereas setting it to "landscape" will force a shape with two rows.
-
 	positive_only : bool, optional
 		if True, only positive values are displayed.
-
 	negative_only : bool, optional
 		if True, only negative values are displayed.
-
 	threshold_mesh : int, optional
 		Threshold given for iso-surface extraction of the feature map for 3D plotting. If none is given, same threshold is used as for the 2D plots.
 
@@ -848,7 +818,7 @@ def stat3D(stat_maps,
 def atlas_label(atlas,
 	alpha=1,
 	overlay_alpha=1.0,
-	anat="/usr/share/mouse-brain-atlases/dsurqec_40micron_masked.nii",
+	anat='/usr/share/mouse-brain-atlases/dsurqec_40micron_masked.nii',
 	ax=None,
 	color="#E69F00",
 	fig=None,

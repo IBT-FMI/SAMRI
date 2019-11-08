@@ -1,25 +1,19 @@
 from setuptools import setup, find_packages
 
+packages = find_packages(exclude=('samri.tests*', 'samri.*.tests*'))
+
 setup(
 	name="SAMRI",
 	version="9999",
 	description = "Small animal magnetic resonance imaging via Python.",
 	author = "Horea Christian",
-	author_email = "horea.christ@yandex.com",
+	author_email = "chr@chymera.eu",
 	url = "https://github.com/IBT-FMI/SAMRI",
 	keywords = ["fMRI", "pipelines", "data analysis", "bruker"],
 	classifiers = [],
 	install_requires = [],
 	provides = ["samri"],
-	packages = [
-		"samri",
-		"samri.analysis",
-		"samri.fetch",
-		"samri.optimization",
-		"samri.pipelines",
-		"samri.plotting",
-		"samri.report",
-		],
+	packages = packages,
 	include_package_data=True,
 	extras_require = {
 		},

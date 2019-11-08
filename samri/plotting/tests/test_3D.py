@@ -1,8 +1,8 @@
 def test_stat3D_mask():
 	import samri.plotting.maps as maps
 
-	stat_map = "/usr/share/mouse-brain-atlases/dsurqec_200micron_roi-dr.nii"
-	template = "/usr/share/mouse-brain-atlases/dsurqec_40micron_masked.nii"
+	stat_map = '/usr/share/mouse-brain-atlases/dsurqec_200micron_roi-dr.nii'
+	template = '/usr/share/mouse-brain-atlases/dsurqec_40micron_masked.nii'
 
 	maps.stat3D(stat_map,
 		template=template,
@@ -17,7 +17,7 @@ def test_stat3D_heatmap():
 
 	bindata_dir = '/usr/share/samri_bidsdata'
 	heatmap_image = '{}/l1/sub-4007/ses-ofM/sub-4007_ses-ofM_task-JogB_acq-EPIlowcov_run-1_cbv_tstat.nii.gz'.format(bindata_dir)
-	template = "/usr/share/mouse-brain-atlases/dsurqec_40micron_masked.nii"
+	template = '/usr/share/mouse-brain-atlases/dsurqec_40micron_masked.nii'
 
 	maps.stat3D(heatmap_image,
 		cut_coords=(0.0,-4.6,-3.4),
@@ -34,8 +34,8 @@ def test_stat3D_overlay():
 
 	bindata_dir = '/usr/share/samri_bidsdata'
 	heatmap_image = '{}/l1/sub-4007/ses-ofM/sub-4007_ses-ofM_task-JogB_acq-EPIlowcov_run-1_cbv_tstat.nii.gz'.format(bindata_dir)
-	overlay = "/usr/share/mouse-brain-atlases/dsurqec_200micron_roi-dr.nii"
-	template = "/usr/share/mouse-brain-atlases/dsurqec_40micron_masked.nii"
+	overlay = '/usr/share/mouse-brain-atlases/dsurqec_200micron_roi-dr.nii'
+	template = '/usr/share/mouse-brain-atlases/dsurqec_40micron_masked.nii'
 
 	maps.stat3D(heatmap_image,
 		cut_coords=(0.0,-4.6,-3.4),

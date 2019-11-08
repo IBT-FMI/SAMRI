@@ -49,7 +49,7 @@ def test_activity_timecourse_with_inlay():
 	       )
 
 	ax2 = plt.axes(roi_coordinates)
-	maps.atlas_label("/usr/share/mouse-brain-atlases/dsurqec_200micron_roi-dr.nii",
+	maps.atlas_label('/usr/share/mouse-brain-atlases/dsurqec_200micron_roi-dr.nii',
 		scale=0.3,
 		color="#E69F00",
 		ax=ax2,

@@ -145,7 +145,7 @@ def single_generic(in_func, in_anat, template,
 
 
 def structural(substitutions, parameters,
-	reference="/usr/share/mouse-brain-atlases/dsurqec_200micron.nii",
+	reference='/usr/share/mouse-brain-atlases/dsurqec_200micron.nii',
 	structural_file_template="~/ni_data/ofM.dr/preprocessing/{preprocessing_workdir}/_subject_session_{subject}.{session}/_scan_type_{scan}/s_bru2nii/",
 	workdir="~/samri_optimize/structural",
 	threads=6,
@@ -222,7 +222,7 @@ def structural(substitutions, parameters,
 			struct_registration.inputs.winsorize_lower_quantile = 0.05
 			struct_registration.inputs.winsorize_upper_quantile = 0.95
 			struct_registration.inputs.args = '--float'
-			struct_registration.inputs.fixed_image_mask = "/usr/share/mouse-brain-atlases/dsurqec_200micron_mask.nii"
+			struct_registration.inputs.fixed_image_mask = '/usr/share/mouse-brain-atlases/dsurqec_200micron_mask.nii'
 			struct_registration.inputs.num_threads = threads
 			struct_registration.inputs.output_warped_image = os.path.join(workdir,'{subject}_{session}.nii.gz'.format(**substitution))
 			struct_registration.inputs.moving_image = n4_out

@@ -40,7 +40,7 @@ def plot_roi_per_session(df,
 	roi_bottom=0.74,
 	roi_width=0.3,
 	roi_height=0.2,
-	roi_anat="/usr/share/mouse-brain-atlases/dsurqec_40micron_masked.nii",
+	roi_anat='/usr/share/mouse-brain-atlases/dsurqec_40micron_masked.nii',
 	roi_threshold=None,
 	cut_coords=None,
 	samri_style=True,
@@ -209,7 +209,7 @@ def fc_per_session(substitutions, analytic_pattern,
 def responders(l2_dir,
 	roi="dsurqec_200micron_roi-dr",
 	data_root="~/ni_data/ofM.dr",
-	roi_root="/usr/share/mouse-brain-atlases",
+	roi_root='/usr/share/mouse-brain-atlases',
 	save_inplace=True,
 	save_as='',
 	):
@@ -453,7 +453,7 @@ def p_filtered_ts(substitutions,
 	design_file_template="~/ni_data/ofM.dr/l1/{l1_workdir}/_subject_session_scan_{subject}.{session}.{scan}/modelgen/run0.mat",
 	event_file_template="~/ni_data/ofM.dr/preprocessing/{preprocessing_dir}/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_task-{scan}_events.tsv",
 	p_level=0.1,
-	brain_mask="/usr/share/mouse-brain-atlases/dsurqec_200micron.niis"
+	brain_mask='/usr/share/mouse-brain-atlases/dsurqec_200micron.niis'
 	):
 
 	timecourses = []

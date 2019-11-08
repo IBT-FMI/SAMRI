@@ -1,5 +1,7 @@
 from setuptools import setup, find_packages
 
+packages = find_packages(exclude=('samri.tests*', 'samri.*.tests*'))
+
 setup(
 	name="SAMRI",
 	version="9999",
@@ -11,15 +13,7 @@ setup(
 	classifiers = [],
 	install_requires = [],
 	provides = ["samri"],
-	packages = [
-		"samri",
-		"samri.analysis",
-		"samri.fetch",
-		"samri.optimization",
-		"samri.pipelines",
-		"samri.plotting",
-		"samri.report",
-		],
+	packages = packages,
 	include_package_data=True,
 	extras_require = {
 		},

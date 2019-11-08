@@ -323,6 +323,7 @@ def eventfile_add_habituation(in_file,
 def write_bids_physio_file(scan_dir,
 	out_file='physio.tsv',
 	forced_dummy_scans=0.,
+	nii_name=False,
 	):
 	"""Create a BIDS physiology recording ("physio") file, based on available data files in the scan directory.
 
@@ -346,6 +347,15 @@ def write_bids_physio_file(scan_dir,
 	import csv
 	import json
 	import os
+
+	if nii_name:
+		nii_basename, ext = os.path.splitext(nii_name)
+		if ext == '.gz':
+			nii_basename, ext = os.path.splitext(nii_name)
+		nii_basename_segments = nii_basename.split('_')
+		nii_basename_segments = [i for i in nii_basename_segments if '-' in i]
+		nii_basename = '_'.join(nii_basename_segments)
+		out_file = '{}_physio.tsv'.format(nii_basename)
 
 	out_file = os.path.abspath(os.path.expanduser(out_file))
 	scan_dir = os.path.abspath(os.path.expanduser(scan_dir))

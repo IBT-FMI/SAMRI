@@ -70,7 +70,7 @@ This approach cannot manage any of our numerous non-Python dependencies (by desi
 as such, given any other alternative, **we do not recommend this approach**:
 
 ````
-git clone git@github.com:IBT-FMI/SAMRI.git
+git clone https://github.com/IBT-FMI/SAMRI.git
 cd SAMRI
 python setup.py install --user
 ````

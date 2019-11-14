@@ -47,6 +47,9 @@ def _draw_colorbar(stat_map_img, axes,
 	cmap=None,
 	really_draw=True,
 	bypass_cmap=False,
+	pad=0.05,
+	panchor=(10.0, 0.5),
+	shrink=1.0,
 	):
 	if bypass_cmap:
 		bypass_cmap = cmap
@@ -102,11 +105,12 @@ def _draw_colorbar(stat_map_img, axes,
 
 	if really_draw:
 		cbar_ax, p_ax = make_axes(axes,
-			aspect=aspect,
 			fraction=fraction,
-			# pad=-0.5,
+			pad=pad,
+			shrink=shrink,
+			aspect=aspect,
 			anchor=anchor,
-			# panchor=(-110.0, 0.5),
+			panchor=panchor,
 			)
 		cbar = ColorbarBase(
 			cbar_ax,
@@ -1351,9 +1355,12 @@ def slices(heatmap_image,
 	if cmap and heatmap_image:
 		cax, kw,vmin,vmax,cmap = _draw_colorbar(heatmap_image,ax,
 			threshold=heatmap_threshold,
-			aspect=30,
+			aspect=40,
 			fraction=0.05,
-			anchor=(1.,0.5),
+			anchor=(0,-0.5),
+			pad=0.05,
+			panchor=(10.0, 0.5),
+			shrink=0.99,
 			cut_coords = cut_coords,
 			positive_only = positive_only,
 			negative_only = negative_only,

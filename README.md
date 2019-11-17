@@ -133,7 +133,7 @@ For manual dependency management and overview you may use the following list:
 * [AFNI](https://afni.nimh.nih.gov/)
 * [nilearn](https://nilearn.github.io/)
 
-Needed if no other data is available for testing and development:
+Needed for package testing:
 * [pytest](https://pytest.org/en/latest/)
 * SAMRI example binary data: [download link](http://chymera.eu/distfiles/samri_bindata-0.3.tar.xz)
 * SAMRI example BIDS data: [download link](http://chymera.eu/distfiles/samri_bidsdata-0.3.tar.xz)

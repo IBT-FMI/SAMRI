@@ -47,6 +47,9 @@ def _draw_colorbar(stat_map_img, axes,
 	cmap=None,
 	really_draw=True,
 	bypass_cmap=False,
+	pad=0.05,
+	panchor=(10.0, 0.5),
+	shrink=1.0,
 	):
 	if bypass_cmap:
 		bypass_cmap = cmap
@@ -54,6 +57,8 @@ def _draw_colorbar(stat_map_img, axes,
 		stat_map_img = path.abspath(path.expanduser(stat_map_img))
 		stat_map_img = nib.load(stat_map_img)
 		stat_map_img_dat = _safe_get_data(stat_map_img, ensure_finite=True)
+	else:
+		stat_map_img_dat = stat_map_img
 	cbar_vmin,cbar_vmax,vmin, vmax = _get_colorbar_and_data_ranges(stat_map_img_dat,None,"auto","")
 
 	if cmap:
@@ -100,11 +105,12 @@ def _draw_colorbar(stat_map_img, axes,
 
 	if really_draw:
 		cbar_ax, p_ax = make_axes(axes,
-			aspect=aspect,
 			fraction=fraction,
-			# pad=-0.5,
+			pad=pad,
+			shrink=shrink,
+			aspect=aspect,
 			anchor=anchor,
-			# panchor=(-110.0, 0.5),
+			panchor=panchor,
 			)
 		cbar = ColorbarBase(
 			cbar_ax,
@@ -1345,8 +1351,22 @@ def slices(heatmap_image,
 				nrows=int(nrows), ncols=int(ncols),
 				)
 	flat_axes = list(ax.flatten())
-	heatmap_img_dat = _safe_get_data(heatmap_img, ensure_finite=True)
-	cbar_vmin, cbar_vmax, vmin, vmax = _get_colorbar_and_data_ranges(heatmap_img_dat,None,"auto","")
+
+	if cmap and heatmap_image:
+		cax, kw,vmin,vmax,cmap = _draw_colorbar(heatmap_image,ax,
+			threshold=heatmap_threshold,
+			aspect=40,
+			fraction=0.05,
+			anchor=(0,-0.5),
+			pad=0.05,
+			panchor=(10.0, 0.5),
+			shrink=0.99,
+			cut_coords = cut_coords,
+			positive_only = positive_only,
+			negative_only = negative_only,
+			cmap=cmap,
+			really_draw=True,
+			)
 	if positive_only:
 		vmin = 0
 	elif negative_only:
@@ -1369,19 +1389,11 @@ def slices(heatmap_image,
 				threshold=heatmap_threshold,
 				cmap=cmap,
 				vmin = vmin,vmax = vmax,
-				#colorbar=False,
-				#alpha=stat_map_alpha,
 				)
 			if contour_image:
 				display.add_contours(contour_img,
 					alpha=contour_alpha,
-					#cut_coords=[cut_coords[ix]],
-					#colors=[color],
-					#levels=levels[img_ix],
 					levels=[0.8],
-					# We threshold the map separately, to ensure the same contour color on all slices.
-					# It is possible this is a bug in nilearn.
-					#levels=[contur_threshold],
 					linewidths=linewidth,
 					)
 			ax_i.set_xlabel('{} label'.format(ix))
@@ -1390,9 +1402,7 @@ def slices(heatmap_image,
 				slice_title,
 				horizontalalignment='center',
 				fontsize=rcParams['font.size'],
-				#fontsize=2,
 				)
-
 	if legend:
 		for ix, img in enumerate(imgs):
 			insertion_legend, = plt.plot([],[], color=colors[ix], label=legend)

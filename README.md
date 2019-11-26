@@ -89,11 +89,9 @@ This method is sub-par for dependency management (see above notice), but - as a 
 ````
 git clone git@github.com:IBT-FMI/SAMRI.git
 cd SAMRI
-mkdir ~/.python_develop
-echo "export PYTHONPATH=\$HOME/.python_develop:\$PYTHONPATH" >> ~/.bashrc
-echo "export PATH=\$HOME/.python_develop:\$PATH" >> ~/.bashrc
+echo "export PATH=\$HOME/.local/bin/:\$PATH" >> ~/.bashrc
 source ~/.bashrc
-python setup.py develop --install-dir ~/.python_develop/
+python setup.py develop --user
 ````
 
 If you are getting a `Permission denied (publickey)` error upon trying to clone, you can either:

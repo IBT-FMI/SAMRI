@@ -210,7 +210,8 @@ def multi(timecourses,
 	samri_style=True,
 	ax_size=[28,4],
 	unit_ticking=False,
-	x_label="TR [1s]"
+	x_label="TR [1s]",
+	model_line_multiplier=2,
 	):
 	"""Plot multiple timecourses on an intelligently scaled multi-axis figure.
 
@@ -284,17 +285,17 @@ def multi(timecourses,
 			if isinstance(timecourse, pd.DataFrame):
 				timecourse.plot(ax=ax)
 			elif isinstance(timecourse[0], int) or isinstance(timecourse[0], float) or isinstance(timecourse[0], np.float32):
-				ax.plot(timecourse, lw=rcParams['lines.linewidth']/4)
+				ax.plot(timecourse, lw=rcParams['lines.linewidth'])
 			else:
 				for timecourse_variant in timecourse:
 					if isinstance(timecourse_variant, dict):
 						ax.plot(list(timecourse_variant.values())[0],
-							lw=rcParams['lines.linewidth']/4,
+							lw=rcParams['lines.linewidth'],
 							label=list(timecourse_variant.keys())[0],
 							)
 					else:
 						ax.plot(timecourse_variant.values,
-							lw=rcParams['lines.linewidth']/4,
+							lw=rcParams['lines.linewidth'],
 							)
 
 
@@ -304,7 +305,7 @@ def multi(timecourses,
 				pass
 			else:
 				for column in design:
-					ax.plot(design[column])
+					ax.plot(design[column], lw=rcParams['lines.linewidth']*model_line_multiplier)
 
 			if not ix in xlabel_positive:
 				plt.setp(ax.get_xticklabels(), visible=False)

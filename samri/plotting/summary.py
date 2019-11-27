@@ -375,13 +375,13 @@ def roi_masking(substitution, ts_file_template, betas_file_template, design_file
 	except ValueError:
 		print('Not found:','\n',ts_file)
 		return None,None,None,None,None
-	roi_resampled = processing.resample_from_to(roi, (ts_img.shape[:3],ts_img.affine))
-	masker = NiftiMasker(mask_img=roi_resampled)
 	if isinstance(roi, str):
 		mask_map = nib.load(roi)
 	else:
 		mask_map = roi
-	timecourse = masker.fit_transform(ts_img).T
+	masker = NiftiMasker(mask_img=roi, target_affine=ts_img.affine, memory=path.expanduser('~/.nilearn_cache'), memory_level=1)
+	timecourse = masker.fit_transform(ts_img)
+	timecourse = timecourse.T
 	try:
 		betas = masker.fit_transform(betas_file).T
 	except ValueError:

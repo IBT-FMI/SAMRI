@@ -37,7 +37,7 @@ def test_multi_roi_timeseries():
 		betas_file_template="{data_dir}/l1/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_task-JogB_acq-EPIlowcov_run-{run}_{modality}_betas.nii.gz",
 		design_file_template="{data_dir}/l1/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_task-JogB_acq-EPIlowcov_run-{run}_{modality}_design.mat",
 		event_file_template='{data_dir}/preprocessing/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_task-JogB_acq-EPIlowcov_run-{run}_events.tsv',
-		n_jobs_percentage=0.5,
+		n_jobs_percentage=0.2,
 		)
 
 	style_file = path.join(path.dirname(path.realpath(__file__)),'../samri_multiple-ts.conf')

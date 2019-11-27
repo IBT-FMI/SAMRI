@@ -283,7 +283,7 @@ def multi(timecourses,
 
 			if isinstance(timecourse, pd.DataFrame):
 				timecourse.plot(ax=ax)
-			elif isinstance(timecourse[0], int) or isinstance (timecourse[0], float):
+			elif isinstance(timecourse[0], int) or isinstance(timecourse[0], float) or isinstance(timecourse[0], np.float32):
 				ax.plot(timecourse, lw=rcParams['lines.linewidth']/4)
 			else:
 				for timecourse_variant in timecourse:

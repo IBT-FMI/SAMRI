@@ -817,7 +817,12 @@ def get_data_selection(workflow_base,
 						if not match_exclude_ss(entry, match, exclude, selected_measurement, 'session'):
 							break
 						read_variables +=1 #count recorded variables
-					if read_variables == 2:
+					if "##$SUBJECT_position=SUBJ_POS_" in current_line:
+						m = re.match(r'^##\$SUBJECT_position=SUBJ_POS_(?P<position>.+?)$', current_line)
+						position = m.groupdict()['position']
+						read_variables +=1 #count recorded variables
+						selected_measurement['PV_position'] = sub_dir
+					if read_variables == 3:
 						selected_measurement['measurement'] = sub_dir
 						scan_program_file = os.path.join(workflow_base,sub_dir,"ScanProgram.scanProgram")
 						scan_dir_resolved = False

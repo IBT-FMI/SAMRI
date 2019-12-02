@@ -147,6 +147,7 @@ def bru2bids(measurements_base,
 			exclude=exclude,
 			measurements=measurements,
 			)
+		print(s_data_selection.columns)
 		structural_scan_types = list(s_data_selection['scan_type'].unique())
 		struct_ind = s_data_selection.index.tolist()
 		data_selection = pd.concat([data_selection,s_data_selection], sort=True)
@@ -156,6 +157,7 @@ def bru2bids(measurements_base,
 			exclude=exclude,
 			measurements=measurements,
 			)
+		print(f_data_selection.columns)
 		functional_scan_types = list(f_data_selection['scan_type'].unique())
 		func_ind = f_data_selection.index.tolist()
 		data_selection = pd.concat([data_selection,f_data_selection], sort=True)

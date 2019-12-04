@@ -1,5 +1,5 @@
 from os import path, remove
-from samri.pipelines.extra_functions import get_data_selection, get_bids_scan, write_bids_metadata_file, write_bids_events_file, write_bids_physio_file, BIDS_METADATA_EXTRACTION_DICTS
+from samri.pipelines.extra_functions import flip_if_needed, get_data_selection, get_bids_scan, write_bids_metadata_file, write_bids_events_file, write_bids_physio_file, BIDS_METADATA_EXTRACTION_DICTS
 import os
 
 import argh
@@ -157,7 +157,7 @@ def bru2bids(measurements_base,
 			exclude=exclude,
 			measurements=measurements,
 			)
-		print(f_data_selection.columns)
+		print(f_data_selection)
 		functional_scan_types = list(f_data_selection['scan_type'].unique())
 		func_ind = f_data_selection.index.tolist()
 		data_selection = pd.concat([data_selection,f_data_selection], sort=True)
@@ -368,11 +368,16 @@ def bru2bids(measurements_base,
 		s_metadata_file = pe.Node(name='metadata_file', interface=util.Function(function=write_bids_metadata_file,input_names=inspect.getargspec(write_bids_metadata_file)[0], output_names=['out_file']))
 		s_metadata_file.inputs.extraction_dicts = BIDS_METADATA_EXTRACTION_DICTS
 
+		s_flip = pe.Node(name='s_flip', interface=util.Function(function=flip_if_needed,input_names=inspect.getargspec(flip_if_needed)[0], output_names=['out_file']))
+		s_flip.inputs.extraction_dicts = s_data_selection
+
 		workflow_connections = [
 			(get_s_scan, datasink, [(('subject_session',ss_to_path), 'container')]),
 			(get_s_scan, s_bru2nii, [('scan_path', 'input_dir')]),
 			(get_s_scan, s_bru2nii, [('nii_name', 'output_filename')]),
-			(s_bru2nii, datasink, [('nii_file', 'anat')]),
+			(get_s_scan, s_flip, [('dict_slice', 'ind')]),
+			(s_bru2nii, s_flip, [('nii_file', 'nii_file')]),
+			(s_flip, datasink, [('out_file', 'anat')]),
 			(get_s_scan, s_metadata_file, [
 				('metadata_filename', 'out_file'),
 				('task', 'task'),

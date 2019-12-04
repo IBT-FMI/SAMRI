@@ -821,7 +821,7 @@ def get_data_selection(workflow_base,
 						m = re.match(r'^##\$SUBJECT_position=SUBJ_POS_(?P<position>.+?)$', current_line)
 						position = m.groupdict()['position']
 						read_variables +=1 #count recorded variables
-						selected_measurement['PV_position'] = sub_dir
+						selected_measurement['PV_position'] = position
 					if read_variables == 3:
 						selected_measurement['measurement'] = sub_dir
 						scan_program_file = os.path.join(workflow_base,sub_dir,"ScanProgram.scanProgram")
@@ -980,3 +980,14 @@ def regressor(timecourse,
 
 	output = [my_dict]
 	return output
+
+def flip_if_needed(data_selection, nii_path,
+	ind=0,
+	out_name='flipped.nii.gz',
+	):
+	from samri.manipulations import flip_axis
+	if ind:
+		position = data_selection.iloc[ind]['PV_position']
+	if position == 'Prone':
+		out_name = flip_axis(nii_path, axis=2, out_path=out_name)
+	return out_name

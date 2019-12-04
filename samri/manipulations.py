@@ -32,4 +32,4 @@ def flip_axis(img_path,
 	    flipped_data = data[::-1,::-1,:,...]
 	flipped_img = nib.Nifti1Image(flipped_data,affine,img.header)
 	nib.save(flipped_img,out_path)
-
+	return out_path

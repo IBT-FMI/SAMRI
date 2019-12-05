@@ -694,8 +694,7 @@ def get_bids_scan(data_selection,
 
 		dict_slice = filtered_data.to_dict('records')[0]
 
-		return scan_path, typ, task, nii_path, nii_name, eventfile_name, subject_session, metadata_filename, dict_slice
-
+		return scan_path, typ, task, nii_path, nii_name, eventfile_name, subject_session, metadata_filename, dict_slice, ind_type
 BIDS_KEY_DICTIONARY = {
 	'acquisition':['acquisition','ACQUISITION','acq','ACQ'],
 	'task':['task','TASK','stim','STIM','stimulation','STIMULATION'],
@@ -981,13 +980,34 @@ def regressor(timecourse,
 	output = [my_dict]
 	return output
 
-def flip_if_needed(data_selection, nii_path,
-	ind=0,
-	out_name='flipped.nii.gz',
+def flip_if_needed(data_selection, nii_path, ind,
+	output_filename='flipped.nii.gz',
 	):
+	"""Check based on a SAMRI data selection of Bruker Paravision scans, if the orientation is incorrect (“Prone”, terminologically correct, but corresponding to an incorrect “Supine” representation in Bruker ParaVision small animal scans), and flip the scan with respect to the axial axis if so.
+
+	Parameters
+	----------
+
+	data_selection : pandas.DataFrame
+		Pandas Dataframe object, with indices corresponding to the SAMRI data source iterator and columns including 'PV_position'.
+	nii_path : str
+		Path to a NIfTI file.
+	ind : int
+		Index of the `data_selection` entry.
+	output_filename : str, optional
+		String specifying the desired flipped NIfTI filename for potential flipped output.
+	"""
+
+	from os import path
 	from samri.manipulations import flip_axis
-	if ind:
-		position = data_selection.iloc[ind]['PV_position']
+	position = data_selection.iloc[ind]['PV_position']
+	output_filename = path.abspath(path.expanduser(output_filename))
+	nii_path = path.abspath(path.expanduser(nii_path))
+	# The output_filename variable may not contain a format suffix, as it is used to generate associated files.
+	if output_filename[-7:] != '.nii.gz' and output_filename[-4:] != '.nii':
+		output_filename = '{}.nii.gz'.format(output_filename)
 	if position == 'Prone':
-		out_name = flip_axis(nii_path, axis=2, out_path=out_name)
-	return out_name
+		output_filename = flip_axis(nii_path, axis=2, out_path=output_filename)
+	else:
+		output_filename = nii_path
+	return output_filename

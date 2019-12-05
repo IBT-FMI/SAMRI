@@ -13,12 +13,12 @@ def test_flip_if_needed():
 
 	ind = 0
 	out_name = 'should_be_a_file.nii.gz'
-	flip_if_needed(data_selection, ind, nii_path, out_name=out_name)
+	flip_if_needed(data_selection, nii_path, ind, output_filename=out_name)
 	assert os.path.isfile(out_name)
 
 	ind = 1
 	out_name = 'should_not_be_a_file.nii.gz'
-	flip_if_needed(data_selection, 1, nii_path, out_name=out_name)
+	flip_if_needed(data_selection, nii_path, ind, output_filename=out_name)
 	assert not os.path.isfile(out_name)
 
 def test_physiofile_ts():

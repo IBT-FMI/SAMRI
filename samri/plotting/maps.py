@@ -1183,7 +1183,7 @@ def slices(heatmap_image,
 	slice_spacing=0.4,
 	style='light',
 	title_color='#BBBBBB',
-	position_hspace=0.0,
+	position_vspace=0.0,
 	positive_only=False,
 	negative_only=False,
 	):
@@ -1239,6 +1239,8 @@ def slices(heatmap_image,
 	title_color : string, optional
 		String specifying the desired color for the title.
 		This needs to be specified in-function, because the matplotlibrc styling standard does not provide for title color specification [matplotlibrc_title]
+	position_vspace : float, optional
+		Vertical distance adjustment between slice and coordinate text annotation.
 
 	References
 	----------
@@ -1398,7 +1400,7 @@ def slices(heatmap_image,
 					)
 			ax_i.set_xlabel('{} label'.format(ix))
 			slice_title = '{0:.2f}mm'.format(cut_coords[ix])
-			text = ax_i.text(0.5,position_hspace,
+			text = ax_i.text(0.5,-position_vspace,
 				slice_title,
 				horizontalalignment='center',
 				fontsize=rcParams['font.size'],

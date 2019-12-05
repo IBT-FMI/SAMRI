@@ -19,8 +19,7 @@ def flip_axis(img_path,
 	"""
 
 	img_path = path.abspath(path.expanduser(img_path))
-	img_out = path.abspath(path.expanduser(out_path))
-
+	out_path = path.abspath(path.expanduser(out_path))
 	img = nib.load(img_path)
 	data = img.get_data()
 	affine = img.affine

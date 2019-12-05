@@ -114,7 +114,7 @@ def legacy(bids_base, template,
 	if not n_jobs:
 		n_jobs = max(int(round(mp.cpu_count()*n_jobs_percentage)),2)
 
-	get_f_scan = pe.Node(name='get_f_scan', interface=util.Function(function=get_bids_scan,input_names=inspect.getargspec(get_bids_scan)[0], output_names=['scan_path', 'scan_type', 'task', 'nii_path', 'nii_name', 'events_name', 'subject_session','metadata_filename','dict_slice']))
+	get_f_scan = pe.Node(name='get_f_scan', interface=util.Function(function=get_bids_scan,input_names=inspect.getargspec(get_bids_scan)[0], output_names=['scan_path', 'scan_type', 'task', 'nii_path', 'nii_name', 'events_name', 'subject_session', 'metadata_filename', 'dict_slice', 'ind_type']))
 	get_f_scan.inputs.ignore_exception = True
 	get_f_scan.inputs.data_selection = data_selection
 	get_f_scan.inputs.bids_base = bids_base
@@ -390,7 +390,7 @@ def generic(bids_base, template,
 
 	find_physio = pe.Node(name='find_physio', interface=util.Function(function=corresponding_physiofile,input_names=inspect.getargspec(corresponding_physiofile)[0], output_names=['physiofile','meta_physiofile']))
 
-	get_f_scan = pe.Node(name='get_f_scan', interface=util.Function(function=get_bids_scan,input_names=inspect.getargspec(get_bids_scan)[0], output_names=['scan_path','scan_type','task', 'nii_path', 'nii_name', 'events_name', 'subject_session', 'metadata_filename', 'dict_slice']))
+	get_f_scan = pe.Node(name='get_f_scan', interface=util.Function(function=get_bids_scan,input_names=inspect.getargspec(get_bids_scan)[0], output_names=['scan_path','scan_type','task', 'nii_path', 'nii_name', 'events_name', 'subject_session', 'metadata_filename', 'dict_slice', 'ind_type']))
 	get_f_scan.inputs.ignore_exception = True
 	get_f_scan.inputs.data_selection = data_selection
 	get_f_scan.inputs.bids_base = bids_base
@@ -452,7 +452,7 @@ def generic(bids_base, template,
 		for match in structural_match.keys():
 			s_data_selection = s_data_selection.loc[s_data_selection[match].isin(structural_match[match])]
 
-		get_s_scan = pe.Node(name='get_s_scan', interface=util.Function(function=get_bids_scan, input_names=inspect.getargspec(get_bids_scan)[0], output_names=['scan_path','scan_type','task', 'nii_path', 'nii_name', 'events_name', 'subject_session', 'metadata_filename', 'dict_slice']))
+		get_s_scan = pe.Node(name='get_s_scan', interface=util.Function(function=get_bids_scan, input_names=inspect.getargspec(get_bids_scan)[0], output_names=['scan_path','scan_type','task', 'nii_path', 'nii_name', 'events_name', 'subject_session', 'metadata_filename', 'dict_slice', 'ind_type']))
 		get_s_scan.inputs.ignore_exception = True
 		get_s_scan.inputs.data_selection = s_data_selection
 		get_s_scan.inputs.bids_base = bids_base

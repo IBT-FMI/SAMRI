@@ -208,6 +208,9 @@ def bru2bids(measurements_base,
 		f_metadata_file = pe.Node(name='metadata_file', interface=util.Function(function=write_bids_metadata_file,input_names=inspect.getargspec(write_bids_metadata_file)[0], output_names=['out_file']))
 		f_metadata_file.inputs.extraction_dicts = BIDS_METADATA_EXTRACTION_DICTS
 
+		f_flip = pe.Node(name='f_flip', interface=util.Function(function=flip_if_needed,input_names=inspect.getargspec(flip_if_needed)[0], output_names=['out_file']))
+		f_flip.inputs.data_selection = f_data_selection
+
 		events_file = pe.Node(name='events_file', interface=util.Function(function=write_bids_events_file,input_names=inspect.getargspec(write_bids_events_file)[0], output_names=['out_file']))
 		events_file.ignore_exception = True
 
@@ -217,9 +220,12 @@ def bru2bids(measurements_base,
 			(get_f_scan, datasink, [(('subject_session',ss_to_path), 'container')]),
 			(get_f_scan, f_bru2nii, [('scan_path', 'input_dir')]),
 			(get_f_scan, f_bru2nii, [('nii_name', 'output_filename')]),
+			(get_f_scan, f_flip, [('ind_type', 'ind')]),
+			(get_f_scan, f_flip, [('nii_name', 'output_filename')]),
+			(f_bru2nii, f_flip, [('nii_file', 'nii_path')]),
+			(f_flip, datasink, [('out_file', 'func')]),
 			(f_metadata_file, events_file, [('out_file', 'metadata_file')]),
 			(f_bru2nii, events_file, [('nii_file', 'timecourse_file')]),
-			(f_bru2nii, datasink, [('nii_file', 'func')]),
 			(get_f_scan, f_metadata_file, [
 				('metadata_filename', 'out_file'),
 				('task', 'task'),

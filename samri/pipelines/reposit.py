@@ -431,3 +431,10 @@ def bru2bids(measurements_base,
 	# Create essions files
 	sessions_file(out_dir, data_selection)
 
+	# Introduce the notion of validation:
+	print('\n'
+		'USER NOTICE:\n'
+		'To ensure conformity with the most recent release of the BIDS standard, you may want to submit the dataset to the online\n'
+		'validator (this will *not* require you to actually upload any of the data):\n'
+		'https://bids-standard.github.io/bids-validator/'
+		)

@@ -908,7 +908,7 @@ def get_data_selection(workflow_base,
 	data_selection = pd.DataFrame(selected_measurements)
 	try:
 		shutil.rmtree(bids_temppath)
-	except PermissionError:
+	except (FileNotFoundError, PermissionError):
 		pass
 	return data_selection
 

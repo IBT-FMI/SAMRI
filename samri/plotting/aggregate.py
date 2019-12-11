@@ -28,6 +28,8 @@ def apply_label(x, color, label,
 			color=color,
 			horizontalalignment="left",
 			va="bottom",
+			# For diagnostic purposes, the rasterization workaround should be removed once we can identify why function execution in PythonTeX introduces enlarged bounding boxes.
+			#bbox=dict(facecolor='red', alpha=0.5),
 			transform=ax.transAxes,
 			)
 	if text_side == 'right':
@@ -36,6 +38,9 @@ def apply_label(x, color, label,
 			color=color,
 			horizontalalignment="right",
 			va="bottom",
+			# For diagnostic purposes, the rasterization workaround should be removed once we can identify why function execution in PythonTeX introduces enlarged bounding boxes.
+			#bbox=dict(facecolor='red', alpha=0.5),
+			rasterized=True,
 			transform=ax.transAxes,
 			)
 	text.set_path_effects([path_effects.Stroke(linewidth=lw*contour_ratio, foreground='w'),

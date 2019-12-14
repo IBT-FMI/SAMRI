@@ -11,7 +11,7 @@ The package is compatible with small rodent data acquired via Bruker ParaVision.
 
 ## Examples
 
-To execute the examples below, actual 	small animal imaging data is required.
+To execute the examples below, actual small animal imaging data is required.
 This section includes lines to fetch such data (using `wget`, `tar`, and `mv`), which can however be omitted if data is already present.
 If dependencies were managed via Portage (e.g. on Gentoo Linux) mouse brain atlases may already be present under `/usr/share/mouse-brain-atlases`, and test data under `/usr/share/samri_bindata` and `/usr/share/samri_bidsdata`.
 

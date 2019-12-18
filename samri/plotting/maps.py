@@ -23,7 +23,6 @@ from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 from samri.fetch.local import roi_from_atlaslabel
 from samri.plotting.utilities import QUALITATIVE_COLORSET
 from samri.utilities import collapse
-from samri.plotting.create_mesh_featuremaps import create_mesh
 from samri.report.roi import from_img_threshold
 
 COLORS_PLUS = plt.cm.autumn(np.linspace(0., 1, 128))
@@ -564,6 +563,8 @@ def _create_3Dplot(stat_maps,
 	vmax : int
 		max for colorbar range.
 	"""
+	# The following imports a lot of extra functions, and is only required for this function.
+	from samri.plotting.create_mesh_featuremaps import create_mesh
 
 	if isinstance(stat_maps, str):
 		stat_maps=[stat_maps]

@@ -1,5 +1,5 @@
 from os import path, remove
-from samri.pipelines.extra_functions import get_data_selection, get_bids_scan, write_bids_metadata_file, write_bids_events_file, write_bids_physio_file, BIDS_METADATA_EXTRACTION_DICTS
+from samri.pipelines.extra_functions import flip_if_needed, get_data_selection, get_bids_scan, write_bids_metadata_file, write_bids_events_file, write_bids_physio_file, BIDS_METADATA_EXTRACTION_DICTS
 import os
 
 import argh
@@ -147,6 +147,7 @@ def bru2bids(measurements_base,
 			exclude=exclude,
 			measurements=measurements,
 			)
+		print(s_data_selection.columns)
 		structural_scan_types = list(s_data_selection['scan_type'].unique())
 		struct_ind = s_data_selection.index.tolist()
 		data_selection = pd.concat([data_selection,s_data_selection], sort=True)
@@ -156,6 +157,7 @@ def bru2bids(measurements_base,
 			exclude=exclude,
 			measurements=measurements,
 			)
+		print(f_data_selection)
 		functional_scan_types = list(f_data_selection['scan_type'].unique())
 		func_ind = f_data_selection.index.tolist()
 		data_selection = pd.concat([data_selection,f_data_selection], sort=True)
@@ -192,7 +194,7 @@ def bru2bids(measurements_base,
 			os.makedirs(workdir)
 		f_data_selection.to_csv(path.join(workdir,'f_data_selection.csv'))
 		get_f_scan = pe.Node(name='get_f_scan', interface=util.Function(function=get_bids_scan,input_names=inspect.getargspec(get_bids_scan)[0], output_names=[
-			'scan_path', 'typ', 'task', 'nii_path', 'nii_name', 'eventfile_name', 'subject_session', 'metadata_filename', 'dict_slice',
+			'scan_path', 'typ', 'task', 'nii_path', 'nii_name', 'eventfile_name', 'subject_session', 'metadata_filename', 'dict_slice', 'ind_type',
 			]))
 		get_f_scan.inputs.ignore_exception = True
 		get_f_scan.inputs.data_selection = f_data_selection
@@ -206,6 +208,9 @@ def bru2bids(measurements_base,
 		f_metadata_file = pe.Node(name='metadata_file', interface=util.Function(function=write_bids_metadata_file,input_names=inspect.getargspec(write_bids_metadata_file)[0], output_names=['out_file']))
 		f_metadata_file.inputs.extraction_dicts = BIDS_METADATA_EXTRACTION_DICTS
 
+		f_flip = pe.Node(name='f_flip', interface=util.Function(function=flip_if_needed,input_names=inspect.getargspec(flip_if_needed)[0], output_names=['out_file']))
+		f_flip.inputs.data_selection = f_data_selection
+
 		events_file = pe.Node(name='events_file', interface=util.Function(function=write_bids_events_file,input_names=inspect.getargspec(write_bids_events_file)[0], output_names=['out_file']))
 		events_file.ignore_exception = True
 
@@ -215,9 +220,12 @@ def bru2bids(measurements_base,
 			(get_f_scan, datasink, [(('subject_session',ss_to_path), 'container')]),
 			(get_f_scan, f_bru2nii, [('scan_path', 'input_dir')]),
 			(get_f_scan, f_bru2nii, [('nii_name', 'output_filename')]),
+			(get_f_scan, f_flip, [('ind_type', 'ind')]),
+			(get_f_scan, f_flip, [('nii_name', 'output_filename')]),
+			(f_bru2nii, f_flip, [('nii_file', 'nii_path')]),
+			(f_flip, datasink, [('out_file', 'func')]),
 			(f_metadata_file, events_file, [('out_file', 'metadata_file')]),
 			(f_bru2nii, events_file, [('nii_file', 'timecourse_file')]),
-			(f_bru2nii, datasink, [('nii_file', 'func')]),
 			(get_f_scan, f_metadata_file, [
 				('metadata_filename', 'out_file'),
 				('task', 'task'),
@@ -279,7 +287,7 @@ def bru2bids(measurements_base,
 			os.makedirs(workdir)
 		d_data_selection.to_csv(path.join(workdir,'d_data_selection.csv'))
 		get_d_scan = pe.Node(name='get_d_scan', interface=util.Function(function=get_bids_scan,input_names=inspect.getargspec(get_bids_scan)[0], output_names=[
-			'scan_path', 'typ', 'task', 'nii_path', 'nii_name', 'eventfile_name', 'subject_session', 'metadata_filename', 'dict_slice',
+			'scan_path', 'typ', 'task', 'nii_path', 'nii_name', 'eventfile_name', 'subject_session', 'metadata_filename', 'dict_slice', 'ind_type',
 			]))
 		get_d_scan.inputs.ignore_exception = True
 		get_d_scan.inputs.data_selection = d_data_selection
@@ -350,7 +358,7 @@ def bru2bids(measurements_base,
 			os.makedirs(workdir)
 		s_data_selection.to_csv(path.join(workdir,'s_data_selection.csv'))
 		get_s_scan = pe.Node(name='get_s_scan', interface=util.Function(function=get_bids_scan,input_names=inspect.getargspec(get_bids_scan)[0], output_names=[
-			'scan_path', 'typ', 'task', 'nii_path', 'nii_name', 'eventfile_name', 'subject_session', 'metadata_filename', 'dict_slice',
+			'scan_path', 'typ', 'task', 'nii_path', 'nii_name', 'eventfile_name', 'subject_session', 'metadata_filename', 'dict_slice', 'ind_type',
 			]))
 		get_s_scan.inputs.ignore_exception = True
 		get_s_scan.inputs.data_selection = s_data_selection
@@ -366,11 +374,17 @@ def bru2bids(measurements_base,
 		s_metadata_file = pe.Node(name='metadata_file', interface=util.Function(function=write_bids_metadata_file,input_names=inspect.getargspec(write_bids_metadata_file)[0], output_names=['out_file']))
 		s_metadata_file.inputs.extraction_dicts = BIDS_METADATA_EXTRACTION_DICTS
 
+		s_flip = pe.Node(name='s_flip', interface=util.Function(function=flip_if_needed,input_names=inspect.getargspec(flip_if_needed)[0], output_names=['out_file']))
+		s_flip.inputs.data_selection = s_data_selection
+
 		workflow_connections = [
 			(get_s_scan, datasink, [(('subject_session',ss_to_path), 'container')]),
 			(get_s_scan, s_bru2nii, [('scan_path', 'input_dir')]),
 			(get_s_scan, s_bru2nii, [('nii_name', 'output_filename')]),
-			(s_bru2nii, datasink, [('nii_file', 'anat')]),
+			(get_s_scan, s_flip, [('ind_type', 'ind')]),
+			(get_s_scan, s_flip, [('nii_name', 'output_filename')]),
+			(s_bru2nii, s_flip, [('nii_file', 'nii_path')]),
+			(s_flip, datasink, [('out_file', 'anat')]),
 			(get_s_scan, s_metadata_file, [
 				('metadata_filename', 'out_file'),
 				('task', 'task'),
@@ -417,3 +431,10 @@ def bru2bids(measurements_base,
 	# Create essions files
 	sessions_file(out_dir, data_selection)
 
+	# Introduce the notion of validation:
+	print('\n'
+		'USER NOTICE:\n'
+		'To ensure conformity with the most recent release of the BIDS standard, you may want to submit the dataset to the online\n'
+		'validator (this will *not* require you to actually upload any of the data):\n'
+		'https://bids-standard.github.io/bids-validator/'
+		)

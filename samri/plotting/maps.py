@@ -46,6 +46,9 @@ def _draw_colorbar(stat_map_img, axes,
 	cmap=None,
 	really_draw=True,
 	bypass_cmap=False,
+	pad=0.05,
+	panchor=(10.0, 0.5),
+	shrink=1.0,
 	):
 	if bypass_cmap:
 		bypass_cmap = cmap
@@ -101,11 +104,12 @@ def _draw_colorbar(stat_map_img, axes,
 
 	if really_draw:
 		cbar_ax, p_ax = make_axes(axes,
-			aspect=aspect,
 			fraction=fraction,
-			# pad=-0.5,
+			pad=pad,
+			shrink=shrink,
+			aspect=aspect,
 			anchor=anchor,
-			# panchor=(-110.0, 0.5),
+			panchor=panchor,
 			)
 		cbar = ColorbarBase(
 			cbar_ax,
@@ -1180,7 +1184,7 @@ def slices(heatmap_image,
 	slice_spacing=0.4,
 	style='light',
 	title_color='#BBBBBB',
-	position_hspace=0.0,
+	position_vspace=0.0,
 	positive_only=False,
 	negative_only=False,
 	):
@@ -1236,6 +1240,8 @@ def slices(heatmap_image,
 	title_color : string, optional
 		String specifying the desired color for the title.
 		This needs to be specified in-function, because the matplotlibrc styling standard does not provide for title color specification [matplotlibrc_title]
+	position_vspace : float, optional
+		Vertical distance adjustment between slice and coordinate text annotation.
 
 	References
 	----------
@@ -1352,18 +1358,18 @@ def slices(heatmap_image,
 	if cmap and heatmap_image:
 		cax, kw,vmin,vmax,cmap = _draw_colorbar(heatmap_image,ax,
 			threshold=heatmap_threshold,
-			aspect=30,
+			aspect=40,
 			fraction=0.05,
-			anchor=(1.,0.5),
+			anchor=(0,-0.5),
+			pad=0.05,
+			panchor=(10.0, 0.5),
+			shrink=0.99,
 			cut_coords = cut_coords,
 			positive_only = positive_only,
 			negative_only = negative_only,
 			cmap=cmap,
 			really_draw=True,
 			)
-
-	#heatmap_img_dat = _safe_get_data(heatmap_img, ensure_finite=True)
-	#cbar_vmin, cbar_vmax, vmin, vmax = _get_colorbar_and_data_ranges(heatmap_img_dat,None,"auto","")
 	if positive_only:
 		vmin = 0
 	elif negative_only:
@@ -1386,28 +1392,19 @@ def slices(heatmap_image,
 				threshold=heatmap_threshold,
 				cmap=cmap,
 				vmin = vmin,vmax = vmax,
-				#colorbar=False,
-				#alpha=stat_map_alpha,
 				)
 			if contour_image:
 				display.add_contours(contour_img,
 					alpha=contour_alpha,
-					#cut_coords=[cut_coords[ix]],
-					#colors=[color],
-					#levels=levels[img_ix],
 					levels=[0.8],
-					# We threshold the map separately, to ensure the same contour color on all slices.
-					# It is possible this is a bug in nilearn.
-					#levels=[contur_threshold],
 					linewidths=linewidth,
 					)
 			ax_i.set_xlabel('{} label'.format(ix))
 			slice_title = '{0:.2f}mm'.format(cut_coords[ix])
-			text = ax_i.text(0.5,position_hspace,
+			text = ax_i.text(0.5,-position_vspace,
 				slice_title,
 				horizontalalignment='center',
 				fontsize=rcParams['font.size'],
-				#fontsize=2,
 				)
 	if legend:
 		for ix, img in enumerate(imgs):
@@ -1429,84 +1426,3 @@ def slices(heatmap_image,
 			pass
 		plt.savefig(save_as)
 		plt.close()
-
-#def make_cbar():
-#
-
-	#cbar = fig.colorbar(, ax=ax.ravel().tolist(), shrink=0.95)
-	#cax, kw,vmin,vmax,cmap = _draw_colorbar(heatmap_img,ax,
-	#	threshold=heatmap_threshold,
-	#	aspect=30,
-	#	fraction=0.05,
-	#	anchor=(1.,0.5),
-	#	positive_only = positive_only,
-	#	negative_only = negative_only,
-	#	cmap=cmap,
-	#	)
-
-	#if cmap:
-	#	try:
-	#		cmap = plt.cm.get_cmap(cmap)
-	#	except TypeError:
-	#		cmap = mcolors.LinearSegmentedColormap.from_list('SAMRI cmap from list', cmap*256, N=256)
-	#	colors = cmap(np.linspace(0,1,256))
-	#	if positive_only:
-	#		cmap_plus = mcolors.LinearSegmentedColormap.from_list('my_colormap', colors[0:255,:])
-	#	elif negative_only:
-	#		cmap_minus = mcolors.LinearSegmentedColormap.from_list('my_colormap', colors[0:255,:])
-	#	else:
-	#		cmap_minus = mcolors.LinearSegmentedColormap.from_list('my_colormap', colors[0:128,:])
-	#		cmap_plus = mcolors.LinearSegmentedColormap.from_list('my_colormap', colors[128:255,:])
-	#else:
-	#	cmap_minus = MYMAP_MINUS
-	#	cmap_plus = MYMAP_PLUS
-	#	cmap = MYMAP
-
-	#if cbar_vmin is not None or positive_only:
-	#	vmin = 0
-	#	colmap = cmap_plus
-	#elif cbar_vmax is not None or negative_only:
-	#	vmax = 0
-	#	colmap = cmap_minus
-	#else:
-	#	colmap = cmap
-	#nb_ticks=5
-	#ticks = np.linspace(vmin, vmax, nb_ticks)
-	#bounds = np.linspace(vmin, vmax, colmap.N)
-	#norm = mcolors.Normalize(vmin=vmin, vmax=vmax)
-	## some colormap hacking
-	#cmaplist = [colmap(i) for i in range(colmap.N)]
-	#istart = int(norm(-heatmap_threshold, clip=True) * (colmap.N - 1))
-	#istop = int(norm(heatmap_threshold, clip=True) * (colmap.N - 1))
-	#for i in range(istart, (istop+1)):
-	#	# just an average gray color
-	#	cmaplist[i] = (0.5, 0.5, 0.5, 1.)
-	#try:
-	#	our_cmap = colmap.from_list('Custom cmap', cmaplist, colmap.N)
-	#except AttributeError:
-	#	pass
-
-	#cbar_ax = fig.add_axes([0.83, 0.1, 0.02, 0.3])
-	## leftright_distance, bottomtop_distance, width, height
-	#cbar = ColorbarBase(
-	#	cbar_ax,
-	#	ticks=ticks,
-	#	norm=norm,
-	#	orientation="vertical",
-	#	cmap=our_cmap,
-	#	boundaries=bounds,
-	#	spacing="proportional",
-	#	format="%.2g",
-	#	)
-
-	#edge_color="0.5"
-	#edge_alpha=1
-	#cbar.outline.set_edgecolor(edge_color)
-	#cbar.outline.set_alpha(edge_alpha)
-
-	#cbar_ax.yaxis.tick_left()
-	#tick_color = 'k'
-	#for tick in cbar_ax.yaxis.get_ticklabels():
-	#	tick.set_color(tick_color)
-	#cbar_ax.yaxis.set_tick_params(width=0)
-

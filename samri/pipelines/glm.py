@@ -106,7 +106,7 @@ def l1(preprocessing_dir,
 		os.makedirs(workdir)
 	data_selection.to_csv(path.join(workdir,'data_selection.csv'))
 
-	get_scan = pe.Node(name='get_scan', interface=util.Function(function=get_bids_scan,input_names=inspect.getargspec(get_bids_scan)[0], output_names=['scan_path','scan_type','task', 'nii_path', 'nii_name', 'events_name', 'subject_session', 'metadata_filename', 'dict_slice']))
+	get_scan = pe.Node(name='get_scan', interface=util.Function(function=get_bids_scan,input_names=inspect.getargspec(get_bids_scan)[0], output_names=['scan_path','scan_type','task', 'nii_path', 'nii_name', 'events_name', 'subject_session', 'metadata_filename', 'dict_slice', 'ind_type']))
 	get_scan.inputs.ignore_exception = True
 	get_scan.inputs.data_selection = data_selection
 	get_scan.inputs.bids_base = preprocessing_dir
@@ -397,7 +397,7 @@ def l1_physio(preprocessing_dir, physiology_identifier,
 		os.makedirs(workdir)
 	data_selection.to_csv(path.join(workdir,'data_selection.csv'))
 
-	get_scan = pe.Node(name='get_scan', interface=util.Function(function=get_bids_scan,input_names=inspect.getargspec(get_bids_scan)[0], output_names=['scan_path','scan_type','task', 'nii_path', 'nii_name', 'events_name', 'subject_session', 'metadata_filename', 'dict_slice']))
+	get_scan = pe.Node(name='get_scan', interface=util.Function(function=get_bids_scan,input_names=inspect.getargspec(get_bids_scan)[0], output_names=['scan_path','scan_type','task', 'nii_path', 'nii_name', 'events_name', 'subject_session', 'metadata_filename', 'dict_slice', 'ind_type']))
 	get_scan.inputs.ignore_exception = True
 	get_scan.inputs.data_selection = data_selection
 	get_scan.inputs.bids_base = preprocessing_dir
@@ -656,7 +656,7 @@ def seed(preprocessing_dir, seed_mask,
 		os.makedirs(workdir)
 	data_selection.to_csv(path.join(workdir,'data_selection.csv'))
 
-	get_scan = pe.Node(name='get_scan', interface=util.Function(function=get_bids_scan,input_names=inspect.getargspec(get_bids_scan)[0], output_names=['scan_path','scan_type','task', 'nii_path', 'nii_name', 'events_name', 'subject_session', 'metadata_filename', 'dict_slice']))
+	get_scan = pe.Node(name='get_scan', interface=util.Function(function=get_bids_scan,input_names=inspect.getargspec(get_bids_scan)[0], output_names=['scan_path','scan_type','task', 'nii_path', 'nii_name', 'events_name', 'subject_session', 'metadata_filename', 'dict_slice', 'ind_type']))
 	get_scan.inputs.ignore_exception = True
 	get_scan.inputs.data_selection = data_selection
 	get_scan.inputs.bids_base = preprocessing_dir

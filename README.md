@@ -11,7 +11,7 @@ The package is compatible with small rodent data acquired via Bruker ParaVision.
 
 ## Examples
 
-To execute the examples below, actual 	small animal imaging data is required.
+To execute the examples below, actual small animal imaging data is required.
 This section includes lines to fetch such data (using `wget`, `tar`, and `mv`), which can however be omitted if data is already present.
 If dependencies were managed via Portage (e.g. on Gentoo Linux) mouse brain atlases may already be present under `/usr/share/mouse-brain-atlases`, and test data under `/usr/share/samri_bindata` and `/usr/share/samri_bidsdata`.
 
@@ -89,11 +89,9 @@ This method is sub-par for dependency management (see above notice), but - as a 
 ````
 git clone git@github.com:IBT-FMI/SAMRI.git
 cd SAMRI
-mkdir ~/.python_develop
-echo "export PYTHONPATH=\$HOME/.python_develop:\$PYTHONPATH" >> ~/.bashrc
-echo "export PATH=\$HOME/.python_develop:\$PATH" >> ~/.bashrc
+echo "export PATH=\$HOME/.local/bin/:\$PATH" >> ~/.bashrc
 source ~/.bashrc
-python setup.py develop --install-dir ~/.python_develop/
+python setup.py develop --user
 ````
 
 If you are getting a `Permission denied (publickey)` error upon trying to clone, you can either:
@@ -133,7 +131,7 @@ For manual dependency management and overview you may use the following list:
 * [AFNI](https://afni.nimh.nih.gov/)
 * [nilearn](https://nilearn.github.io/)
 
-Needed if no other data is available for testing and development:
+Needed for package testing:
 * [pytest](https://pytest.org/en/latest/)
 * SAMRI example binary data: [download link](http://chymera.eu/distfiles/samri_bindata-0.3.tar.xz)
 * SAMRI example BIDS data: [download link](http://chymera.eu/distfiles/samri_bidsdata-0.3.tar.xz)

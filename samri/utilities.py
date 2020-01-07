@@ -166,7 +166,7 @@ def bids_substitution_iterator(sessions, subjects,
 	runs = list(dict.fromkeys(runs))
 	acquisitions = list(dict.fromkeys(acquisitions))
 	modalities = list(dict.fromkeys(modalities))
-	
+
 	for subject, session, task, run, acquisition, modality in product(subjects, sessions, tasks, runs, acquisitions, modalities):
 		substitution={}
 		substitution["data_dir"] = data_dir
@@ -185,7 +185,7 @@ def bids_substitution_iterator(sessions, subjects,
 		else:
 			substitutions.append(substitution)
 	return substitutions
-	
+
 def iter_collapse_by_path(in_files, out_files,
 	n_jobs=None,
 	n_jobs_percentage=0.75,

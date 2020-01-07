@@ -31,6 +31,9 @@ def bids_autofind_df(bids_dir,
 	substitutions : list of dicti
 		A substitution iterator usable as a standard SAMRI function input, which (together with `path_template`) unambiguoulsy identifies input files for analysis.
 	"""
+	if not os.path.exists(bids_dir):
+		print('path not found')
+	else: print('path found')
 
 	path_template, substitutions = bids_autofind(bids_dir, **kwargs)
 
@@ -157,6 +160,13 @@ def bids_substitution_iterator(sessions, subjects,
 		With the keys being `"data_dir"`, `"subject"`, `"session"`, `"task"`!!!.
 	"""
 	substitutions=[]
+	subjects = list(dict.fromkeys(subjects))
+	sessions = list(dict.fromkeys(sessions))
+	tasks = list(dict.fromkeys(tasks))
+	runs = list(dict.fromkeys(runs))
+	acquisitions = list(dict.fromkeys(acquisitions))
+	modalities = list(dict.fromkeys(modalities))
+	
 	for subject, session, task, run, acquisition, modality in product(subjects, sessions, tasks, runs, acquisitions, modalities):
 		substitution={}
 		substitution["data_dir"] = data_dir
@@ -171,10 +181,11 @@ def bids_substitution_iterator(sessions, subjects,
 			check_file = path.abspath(path.expanduser(check_file))
 			if path.isfile(check_file):
 				substitutions.append(substitution)
+			else: print('no file under path')
 		else:
 			substitutions.append(substitution)
 	return substitutions
-
+	
 def iter_collapse_by_path(in_files, out_files,
 	n_jobs=None,
 	n_jobs_percentage=0.75,

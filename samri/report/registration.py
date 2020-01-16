@@ -95,11 +95,11 @@ def iter_measure_sim(file_template, reference, substitutions,
 		[file_template]*len(substitutions),
 		[reference]*len(substitutions),
 		substitutions,
+		[mask] * len(substitutions),
 		[metric]*len(substitutions),
 		[radius_or_number_of_bins]*len(substitutions),
 		[sampling_strategy]*len(substitutions),
 		[sampling_percentage]*len(substitutions),
-		[mask]*len(substitutions),
 		))
 
 	df = pd.DataFrame.from_dict(similarity_data)

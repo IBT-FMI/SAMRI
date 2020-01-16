@@ -405,6 +405,7 @@ def l1_physio(preprocessing_dir, physiology_identifier,
 
 	physiofile = pe.Node(name='physiofile', interface=util.Function(function=physiofile_ts,input_names=inspect.getargspec(physiofile_ts)[0], output_names=['nii_file','ts']))
 	physiofile.inputs.column_name = physiology_identifier
+	physiofile.inputs.ignore_exception = True
 
 	make_regressor = pe.Node(name='make_regressor', interface=util.Function(function=regressor,input_names=inspect.getargspec(regressor)[0], output_names=['output']))
 	make_regressor.inputs.hpf = highpass_sigma

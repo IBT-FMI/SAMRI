@@ -856,9 +856,8 @@ def add_suffix(name, suffix):
 def l2_common_effect(l1_dir,
 	groupby="none",
 	keep_work=False,
-	loud=False,
+	keep_crashdump=False,
 	tr=1,
-	nprocs=6,
 	mask='/usr/share/mouse-brain-atlases/dsurqec_200micron_mask.nii',
 	match={},
 	n_jobs_percentage=1,
@@ -1163,7 +1162,8 @@ def l2_common_effect(l1_dir,
 			(varcopemerge,flameo,[('merged_file','var_cope_file')]),
 			])
 
-	workflow_config = {'execution': {'crashdump_dir': path.join(out_base,'crashdump'),}}
+	crashdump_dir = path.join(out_base,'crashdump')
+	workflow_config = {'execution': {'crashdump_dir': crashdump_dir}}
 	if debug:
 		workflow_config['logging'] = {
 			'workflow_level':'DEBUG',
@@ -1183,16 +1183,12 @@ def l2_common_effect(l1_dir,
 		print('We could not write the DOT file for visualization (`dot` function from the graphviz package). This is non-critical to the processing, but you should get this fixed.')
 
 	n_jobs = max(int(round(mp.cpu_count()*n_jobs_percentage)),2)
-	if not loud:
+	workflow.run(plugin="MultiProc", plugin_args={'n_procs' : n_jobs})
+	if not keep_crashdump:
 		try:
-			workflow.run(plugin="MultiProc", plugin_args={'n_procs' : nprocs})
-		except RuntimeError:
-			print("WARNING: Some expected tasks have not been found (or another RuntimeError has occured).")
-		for f in listdir(getcwd()):
-			if re.search("crash.*?-varcopemerge|-copemerge.*", f):
-				remove(path.join(getcwd(), f))
-	else:
-		workflow.run(plugin="MultiProc", plugin_args={'n_procs' : n_jobs})
+			shutil.rmtree(crashdump_dir)
+		except (FileNotFoundError, OSError):
+			pass
 	if not keep_work:
 		shutil.rmtree(path.join(out_base,workdir_name))
 
@@ -1200,7 +1196,6 @@ def l2_controlled_effect(l1_dir,
 	control_dir='',
 	keep_work=False,
 	tr=1,
-	nprocs=6,
 	mask='/usr/share/mouse-brain-atlases/dsurqec_200micron_mask.nii',
 	match={},
 	control_match={},
@@ -1387,9 +1382,10 @@ def l2_anova(l1_dir,
 	l2_dir="",
 	loud=False,
 	tr=1,
-	nprocs=6,
+	keep_crashdump=False,
 	workflow_name="generic",
 	mask='/usr/share/mouse-brain-atlases/dsurqec_200micron_mask.nii',
+	n_jobs_percentage=1,
 	exclude={},
 	include={},
 	match_regex='.+/sub-(?P<sub>[a-zA-Z0-9]+)/ses-(?P<ses>[a-zA-Z0-9]+)/.*?_acq-(?P<acq>[a-zA-Z0-9]+)_task-(?P<task>[a-zA-Z0-9]+)_(?P<mod>[a-zA-Z0-9]+)_(?P<stat>(cope|varcb)+)\.(?:nii|nii\.gz)'
@@ -1491,25 +1487,21 @@ def l2_anova(l1_dir,
 	workdir_name = workflow_name+"_work"
 	workflow = pe.Workflow(name=workdir_name)
 	workflow.connect(workflow_connections)
-	workflow.config = {"execution": {"crashdump_dir": path.join(l2_dir,"crashdump")}}
+	crashdump_dir = path.join(l2_dir,"crashdump")
+	workflow.config = {"execution": {"crashdump_dir": crashdump_dir}}
 	workflow.base_dir = l2_dir
 	try:
 		workflow.write_graph(dotfilename=path.join(workflow.base_dir,workdir_name,"graph.dot"), graph2use="hierarchical", format="png")
 	except OSError:
 		print('We could not write the DOT file for visualization (`dot` function from the graphviz package). This is non-critical to the processing, but you should get this fixed.')
 
-	if not loud:
+	n_jobs = max(int(round(mp.cpu_count()*n_jobs_percentage)),2)
+	workflow.run(plugin="MultiProc", plugin_args={'n_procs' : n_jobs})
+	if not keep_crashdump:
 		try:
-			workflow.run(plugin="MultiProc", plugin_args={'n_procs' : nprocs})
-		except RuntimeError:
-			print("WARNING: Some expected tasks have not been found (or another RuntimeError has occured).")
-		for f in listdir(getcwd()):
-			if re.search("crash.*?-varcopemerge|-copemerge.*", f):
-				remove(path.join(getcwd(), f))
-	else:
-		workflow.run(plugin="MultiProc", plugin_args={'n_procs' : nprocs})
-
-
+			shutil.rmtree(crashdump_dir)
+		except (FileNotFoundError, OSError):
+			pass
 	if not keep_work:
 		shutil.rmtree(path.join(l2_dir,workdir_name))
 

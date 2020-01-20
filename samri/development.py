@@ -109,35 +109,6 @@ def temporal_qc_al_in_one():
 		unit_ticking=True,
 		)
 
-def reg_gc():
-	from samri.plotting.aggregate import registration_qc
-	from samri.report.registration import iter_measure_sim
-	from samri.typesetting import inline_anova
-
-	df = iter_measure_sim(
-		"~/ni_data/ofM.dr/preprocessing/composite",
-		"~/.samri_files/templates/mouse/DSURQE/DSURQEc_200micron_average.nii",
-		#modality="anat",
-		metric="GC",
-		radius_or_number_of_bins = 0,
-		sampling_strategy = "Regular",
-		sampling_percentage=0.5,
-		save_as=False,
-		)
-
-	anova_summary = registration_qc(df,
-		value={"similarity":"Similarity"},
-		group={"sub":"Subject"},
-		repeat={"ses":"Session"},
-		show=False,
-		save_as='/tmp/f_reg_gc.png',
-		)
-
-	subject_effect = inline_anova(anova_summary,"C(Subject)",style="python")
-	print("Subject Main Effect: {}".format(subject_effect))
-	session_effect = inline_anova(anova_summary,"C(Session)",style="python")
-	print("Session Main Effect: {}".format(session_effect))
-
 def reg_cc(
         path = "~/ni_data/ofM.dr/preprocessing/composite",
         template = '/usr/share/mouse-brain-atlases/dsurqec_200micron.nii',

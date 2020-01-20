@@ -567,7 +567,7 @@ def physiofile_ts(in_file, column_name,
 		ts = ts[:duration_img]
 	elif duration_img > duration_physios:
 		data = img.get_data()
-		data = data[:,:,:,duration_physio]
+		data = data[:,:,:,:duration_physios]
 		img = nib.Nifti1Image(data, img.affine, img.header)
 
 	if save:

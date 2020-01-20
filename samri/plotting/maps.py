@@ -1187,6 +1187,8 @@ def slices(heatmap_image,
 	position_vspace=0.0,
 	positive_only=False,
 	negative_only=False,
+	skip_start=0,
+	skip_end=0,
 	):
 	"""
 	Plot coronal `bg_image` slices at a given spacing, and overlay contours from a list of NIfTI files.
@@ -1242,6 +1244,10 @@ def slices(heatmap_image,
 		This needs to be specified in-function, because the matplotlibrc styling standard does not provide for title color specification [matplotlibrc_title]
 	position_vspace : float, optional
 		Vertical distance adjustment between slice and coordinate text annotation.
+	skip_start : int, optional
+		Number of slices (at the slice spacing given by `slice_spacing`) to skip at the start of the listing.
+	skip_end : int, optional
+		Number of slices (at the slice spacing given by `slice_spacing`) to skip at the end of the listing.
 
 	References
 	----------
@@ -1307,8 +1313,10 @@ def slices(heatmap_image,
 	slice_thickness = (slice_row[0]**2+slice_row[1]**2+slice_row[2]**2)**(1/2)
 	best_guess_negative = abs(min(slice_row[0:3])) > abs(max(slice_row[0:3]))
 	slices_number = heatmap_data.shape[list(slice_row).index(max(slice_row))]
-	img_min_slice = slice_row[3] + subthreshold_start_slices*slice_thickness
-	img_max_slice = slice_row[3] + (slices_number-subthreshold_end_slices)*slice_thickness
+	skip_start = skip_start*slice_spacing/slice_thickness
+	skip_end = skip_end*slice_spacing/slice_thickness
+	img_min_slice = slice_row[3] + (subthreshold_start_slices+skip_start)*slice_thickness
+	img_max_slice = slice_row[3] + (slices_number-subthreshold_end_slices-skip_end)*slice_thickness
 	bounds = [img_min_slice,img_max_slice]
 	if best_guess_negative:
 		slice_order_is_reversed += 1

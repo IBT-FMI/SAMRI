@@ -68,5 +68,5 @@ python_test() {
 	sed -i -e \
 		"/def test_bru2bids():/i@pytest.mark.skip('Removed in full test suite, as this is already tested in `test_scripts.sh`')" \
 		samri/pipelines/tests/test_repos.py || die
-	pytest -vv || die
+	pytest -vv -k "not longtime" || die
 }

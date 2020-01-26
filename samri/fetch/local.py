@@ -193,7 +193,7 @@ def roi_from_atlaslabel(atlas, label_names,
 	label_column_l='left label',
 	label_column_r='right label',
 	laterality='',
-	mapping=False,
+	mapping=None,
 	output_label=1,
 	save_as='',
 	structure_column='Structure',
@@ -215,7 +215,7 @@ def roi_from_atlaslabel(atlas, label_names,
 	if isinstance(atlas, str):
 		atlas = path.abspath(path.expanduser(atlas))
 		atlas = nib.load(atlas)
-	if not mapping:
+	if mapping is None:
 		atlas_data = atlas.get_data()
 		components = []
 		for i in label_names:
@@ -226,8 +226,9 @@ def roi_from_atlaslabel(atlas, label_names,
 		roi_data = sum(components).astype(bool).astype(int)
 		roi = nib.Nifti1Image(roi_data, atlas.affine, atlas.header)
 	else:
-		mapping = path.abspath(path.expanduser(mapping))
-		mapping = pd.read_csv(mapping)
+		if isinstance(mapping, str):
+			mapping = path.abspath(path.expanduser(mapping))
+			mapping = pd.read_csv(mapping)
 		roi_values = []
 		for label_name in label_names:
 			if laterality == 'left':

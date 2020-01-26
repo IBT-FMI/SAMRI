@@ -9,10 +9,10 @@ from os import path
 import pytest
 
 @pytest.mark.skip(reason="Takes too long (~60 min)")
-def test_atlas_labels():
+def test_atlas_labels_longtime():
        maps.atlas_labels()
 
-def test_atlas_labels_fast():
+def test_atlas_labels():
        mapping = pd.read_csv('/usr/share/mouse-brain-atlases/dsurqe_labels.csv')
        mapping = mapping.iloc[::60, :]
        maps.atlas_labels(mapping=mapping)

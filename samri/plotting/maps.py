@@ -1164,6 +1164,67 @@ def contour_slices(bg_image, file_template,
 			)
 		plt.close()
 
+def atlas_labels(
+	atlas='/usr/share/mouse-brain-atlases/dsurqec_40micron_labels.nii',
+	mapping='/usr/share/mouse-brain-atlases/dsurqe_labels.csv',
+	template='/usr/share/mouse-brain-atlases/dsurqec_40micron_masked.nii',
+	target_dir='/var/tmp/samri_atlas_labels',
+	structure_column='Structure',
+	label_column_l='left label',
+	label_column_r='right label',
+	file_format='png',
+	):
+	"""
+	Plot individual images for all of the labels in an atlas.
+
+	Parameters
+	----------
+
+	atlas : str, optional
+		Path to an atlas NIfTI file, containing integer values for all voxels.
+	mapping : str or pandas.DataFramr, optional
+		Path to mapping file in CSV format or Pandas Dataframe object, containing columns named according to the values of `structure_column`, `label_column_l`, and `label_column_r`.
+	template : str, optional
+		Path to template file in NIfTI format.
+	target_dir : str, optional
+		Path to directory to which image files will be saved.
+	structure_column : str, optional
+		A name of a column present in the `mapping` file, which contains the structure names.
+	label_column_l : str, optional
+		A name of a column present in the `mapping` file, which contains the integer which is used to denote the left lateralized structure in the `atlas` file.
+	label_column_r : str, optional
+		A name of a column present in the `mapping` file, which contains the integer which is used to denote the right lateralized structure in the `atlas` file.
+	file_format : {'png', 'pdf'}, optional
+		The format as which the image files should be saved.
+	"""
+
+
+	if not os.path.exists(target_dir):
+		os.makedirs(target_dir)
+
+	if isinstance(mapping, str):
+		mapping_df = pd.read_csv(mapping)
+	else:
+		mapping_df = mapping
+
+	for index, row in mapping_df.iterrows():
+		structure = row[structure_column]
+		left_label = row[label_column_l]
+		right_label = row[label_column_r]
+		if left_label == right_label:
+			structure_filename = structure.replace(" ", "_")
+			atlas_label(atlas, mapping=mapping, label_names=[structure], display_mode='ortho')
+			plt.savefig('{}/{}.{}'.format(target_dir,structure_filename,file_format))
+		else:
+			structure_filename = structure.replace(" ", "_")
+			structure_filename = structure.replace("/", "_")
+			structure_filename_l = '{}_l'.format(structure_filename)
+			atlas_label(atlas, mapping=mapping, label_names=[structure], laterality='left', display_mode='ortho')
+			plt.savefig('{}/{}.{}'.format(target_dir,structure_filename_l,file_format))
+			structure_filename_r = '{}_r'.format(structure_filename)
+			atlas_label(atlas, mapping=mapping, label_names=[structure], laterality='right', display_mode='ortho')
+			plt.savefig('{}/{}.{}'.format(target_dir,structure_filename_r,file_format))
+
 def slices(heatmap_image,
 	bg_image='/usr/share/mouse-brain-atlases/dsurqec_40micron_masked.nii',
 	contour_image='',

@@ -6,6 +6,16 @@ import matplotlib.pyplot as plt
 import samri.plotting.maps as maps
 import seaborn as sns
 from os import path
+import pytest
+
+@pytest.mark.skip(reason="Takes too long (~60 min)")
+def test_atlas_labels():
+       maps.atlas_labels()
+
+def test_atlas_labels_fast():
+       mapping = pd.read_csv('/usr/share/mouse-brain-atlases/dsurqe_labels.csv')
+       mapping = mapping.iloc[::60, :]
+       maps.atlas_labels(mapping=mapping)
 
 def test_slices():
        bindata_dir = '/usr/share/samri_bidsdata'

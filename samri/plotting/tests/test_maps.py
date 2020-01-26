@@ -8,7 +8,6 @@ import seaborn as sns
 from os import path
 import pytest
 
-@pytest.mark.skip(reason="Takes too long (~60 min)")
 def test_atlas_labels_longtime():
        maps.atlas_labels()
 

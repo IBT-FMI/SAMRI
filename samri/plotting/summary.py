@@ -325,8 +325,10 @@ def p_roi_masking(substitution, ts_file_template, beta_file_template, p_file_tem
 
 	return timecourse, design, mask_map, event_df, subplot_title
 
-def roi_masking(substitution, ts_file_template, betas_file_template, design_file_template, event_file_template, roi):
-	"""Apply a substitution pattern to timecourse, beta, and design file templates - and mask the data of the former two according to a roi. Subsequently scale the design by the mean beta.
+def roi_masking(substitution, ts_file_template, betas_file_template, design_file_template, event_file_template, roi,
+	scale_design=True,
+	):
+	"""Apply a substitution pattern to timecourse, beta, and design file templates - and mask the data of the former two according to a roi; optionally scales the design by the mean beta.
 
 	Parameters
 	----------
@@ -335,16 +337,15 @@ def roi_masking(substitution, ts_file_template, betas_file_template, design_file
 	A dictionary containing the template replacement fields as keys and identifiers as values.
 
 	ts_file_template : string
-	Timecourse file template with replacement fields. The file should be in NIfTI format.
-
+		Timecourse file template with replacement fields. The file should be in NIfTI format.
 	beta_file_template : string
-	Beta file template with replacement fields. The file should be in NIfTI format.
-
+		Beta file template with replacement fields. The file should be in NIfTI format.
 	design_file_template : string
-	Design file template with replacement fields. The file should be in TSV format.
-
+		Design file template with replacement fields. The file should be in TSV format.
 	roi_path : string
-	Path to the region of interest file based on which to create a mask for the time course and beta files. The file should be in NIfTI format.
+		Path to the region of interest file based on which to create a mask for the time course and beta files. The file should be in NIfTI format.
+	scale_design : string
+		Whether or not to scale the design timecourse by the mean beta of the region of interest.
 
 	Returns
 	-------
@@ -402,8 +403,10 @@ def roi_masking(substitution, ts_file_template, betas_file_template, design_file
 	except KeyError:
 		subplot_title = ''
 	timecourse = np.mean(timecourse, axis=0)
-	for ix, i in enumerate(betas.T):
-		design[ix] = design[ix]*np.mean(i)
+
+	if scale_design:
+		for ix, i in enumerate(betas.T):
+			design[ix] = design[ix]*np.mean(i)
 
 	return timecourse, design, mask_map, event_df, subplot_title
 
@@ -414,6 +417,7 @@ def ts_overviews(substitutions, roi,
 	event_file_template="~/ni_data/ofM.dr/preprocessing/{preprocessing_dir}/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_task-{scan}_events.tsv",
 	n_jobs=False,
 	n_jobs_percentage=0.6,
+	scale_design=True,
 	):
 
 	timecourses = []
@@ -434,6 +438,7 @@ def ts_overviews(substitutions, roi,
 		[design_file_template]*len(substitutions),
 		[event_file_template]*len(substitutions),
 		[roi]*len(substitutions),
+		[scale_design]*len(substitutions),
 		))
 	timecourses, designs, roi_maps, event_dfs, subplot_titles = zip(*substitutions_data)
 

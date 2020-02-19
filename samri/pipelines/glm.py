@@ -1097,7 +1097,10 @@ def l2_common_effect(l1_dir,
 			pass
 		try:
 			if not data_selection.run.drop_duplicates().isnull().values.any():
-				common_fields += '_run-'+data_selection.run.drop_duplicates().item()
+				try:
+					common_fields += '_run-'+data_selection.run.drop_duplicates().item()
+				except ValueError:
+					pass
 		except AttributeError:
 			pass
 

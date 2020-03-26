@@ -833,7 +833,7 @@ def atlas_label(atlas,
 	color="#E69F00",
 	fig=None,
 	label_names=[],
-	mapping="",
+	mapping='/usr/share/mouse-brain-atlases/dsurqe_labels.csv',
 	annotate=True,
 	black_bg=False,
 	draw_cross=True,
@@ -1229,6 +1229,7 @@ def slices(heatmap_image,
 	bg_image='/usr/share/mouse-brain-atlases/dsurqec_40micron_masked.nii',
 	contour_image='',
 	heatmap_threshold=3,
+	heatmap_alpha=1.0,
 	contour_threshold=3,
 	auto_figsize=False,
 	invert=False,
@@ -1266,6 +1267,8 @@ def slices(heatmap_image,
 		Path to an overlay image to be printed as a contour.
 	heatmap_threshold : float, optional
 		Value at which to threshold the heatmap_image.
+	heatmap_alpha : float, optional
+		Alpha (opacity, from 0.0 to 1.0) with which to draw the contour image.
 	contour_threshold : float, optional
 		Value at which to threshold the contour_image.
 	auto_figsize : boolean, optional
@@ -1273,7 +1276,7 @@ def slices(heatmap_image,
 	invert : boolean, optional
 		Whether to automatically invert data matrix values (useful if the image consists of negative values, e.g. when dealing with negative contrast agent CBV scans).
 	contour_alpha : float, optional
-		Alpha (transparency) with which to draw the contour image.
+		Alpha (opacity, from 0.0 to 1.0) with which to draw the contour image.
 	contour_color : str, optional
 		Color with which to draw the contour image.
 	cmap : str, optional
@@ -1459,6 +1462,7 @@ def slices(heatmap_image,
 		else:
 			display.add_overlay(heatmap_img,
 				threshold=heatmap_threshold,
+				alpha=heatmap_alpha,
 				cmap=cmap,
 				vmin = vmin,vmax = vmax,
 				)

@@ -1127,7 +1127,7 @@ def contour_slices(bg_image, file_template,
 					display.add_contours(img,
 							alpha=alpha[img_ix],
 							colors=[color],
-							levels=levels[img_ix],
+							levels=[levels[img_ix]],
 							linewidths=(linewidths[img_ix],),
 							)
 

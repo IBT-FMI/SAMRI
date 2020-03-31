@@ -14,7 +14,6 @@ import nipype.interfaces.utility as util
 import nipype.pipeline.engine as pe
 import pandas as pd
 from nipype.interfaces import ants, afni, bru2nii, fsl, nipy
-import nipype.interfaces.ants.legacy as antslegacy
 
 from samri.fetch.templates import fetch_rat_waxholm
 from samri.pipelines.extra_functions import corresponding_physiofile, get_bids_scan, write_bids_events_file, force_dummy_scans, BIDS_METADATA_EXTRACTION_DICTS
@@ -98,6 +97,15 @@ def legacy(bids_base, template,
 	workflow_name : str, optional
 		Top level name for the output directory.
 	'''
+
+	try:
+		import nipype.interfaces.ants.legacy as antslegacy
+	except ModuleNotFoundError:
+		print('''
+			The `nipype.interfaces.ants.legacy` was not found on this system.
+			You may want to downgrade nipype to e.g. 1.1.1, as this module has been removed in more recent versions:
+			https://github.com/nipy/nipype/issues/3197
+		''')
 
 	bids_base, out_base, out_dir, template, registration_mask, data_selection, functional_scan_types, structural_scan_types, subjects_sessions, func_ind, struct_ind = common_select(
 			bids_base,

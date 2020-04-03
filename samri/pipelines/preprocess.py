@@ -676,8 +676,8 @@ def common_select(bids_base, out_base, workflow_name, template, registration_mas
 	data_selection.to_csv(path.join(workdir,'data_selection.csv'))
 
 	# generate functional and structural scan types
-	functional_scan_types = data_selection.loc[data_selection.type == 'func']['acq'].values
-	structural_scan_types = data_selection.loc[data_selection.type == 'anat']['acq'].values
+	functional_scan_types = data_selection.loc[data_selection['type'] == 'func']['acq'].values
+	structural_scan_types = data_selection.loc[data_selection['type'] == 'anat']['acq'].values
 	# we start to define nipype workflow elements (nodes, connections, meta)
 	subjects_sessions = data_selection[["subject","session"]].drop_duplicates().values.tolist()
 

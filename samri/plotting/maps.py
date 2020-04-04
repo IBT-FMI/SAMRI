@@ -687,7 +687,10 @@ def _plots_overlay(display,display_3Dplot):
 	this_user = getpass.getuser()
 	dummy_output='/var/tmp/{}_samri_plot3d.png'.format(this_user)
 	plt.savefig(dummy_output)
-	os.remove(dummy_output)
+	try:
+		os.remove(dummy_output)
+	except FileNotFoundError:
+		pass
 
 	#get matplotlib figure from Nilearn.OrthoSlicer2 object
 	fh = display.frame_axes.get_figure()

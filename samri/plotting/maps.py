@@ -529,7 +529,8 @@ def stat(stat_maps,
 			conserve_colorbar_steps-=1
 	if save_as:
 		if isinstance(save_as, str):
-			plt.savefig(path.abspath(path.expanduser(save_as)), dpi=400, bbox_inches='tight')
+			my_dpi=rcParams['savefig.dpi']
+			plt.savefig(path.abspath(path.expanduser(save_as)), dpi=my_dpi, bbox_inches='tight')
 		else:
 			from matplotlib.backends.backend_pdf import PdfPages
 			if isinstance(save_as, PdfPages):
@@ -666,7 +667,6 @@ def _create_3Dplot(stat_maps,
 
 
 def _plots_overlay(display,display_3Dplot):
-
 	"""Internal function which overlays the plot from stat() with the 3D plot
 
 	Parameters
@@ -679,17 +679,36 @@ def _plots_overlay(display,display_3Dplot):
 
 	"""
 
+	# Hackish fix for 3D image displacement when exporting to PGF.
+	# Somehow the bounding boxes in the PGF file are messed up leading to the figure being displaced partly or wholly out of the field of view.
+	# Originally documented on zenhost configuration (partial displacement), lately appeared across multiple configurations (total displacement).
+	# Can hopefully be deleted in the future.
+	import getpass
+	this_user = getpass.getuser()
+	dummy_output='/var/tmp/{}_samri_plot3d.png'.format(this_user)
+	plt.savefig(dummy_output)
+	try:
+		os.remove(dummy_output)
+	except FileNotFoundError:
+		pass
+
 	#get matplotlib figure from Nilearn.OrthoSlicer2 object
 	fh = display.frame_axes.get_figure()
 	fh.canvas.draw()
 
-	# Hackish fix for 3D image displacement on zenhost configuration !!!
-	#import getpass
-	#this_user = getpass.getuser()
-	#plt.savefig('/tmp/{}_tmp.png'.format(this_user))
-
 	#Determine correct location to put the plot in relation to existing figure axes
-	box = [max(display.axes['x'].ax.get_position().x0,display.axes['y'].ax.get_position().x0,display.axes['z'].ax.get_position().x0),min(display.axes['x'].ax.get_position().y0,display.axes['y'].ax.get_position().y0,display.axes['z'].ax.get_position().y0),display.axes['x'].ax.get_position().bounds[2],display.axes['z'].ax.get_position().bounds[3]]
+	box = [
+		max(display.axes['x'].ax.get_position().x0,
+			display.axes['y'].ax.get_position().x0,
+			display.axes['z'].ax.get_position().x0,
+			),
+		min(display.axes['x'].ax.get_position().y0,
+			display.axes['y'].ax.get_position().y0,
+			display.axes['z'].ax.get_position().y0,
+			),
+		display.axes['x'].ax.get_position().bounds[2],
+		display.axes['z'].ax.get_position().bounds[3],
+		]
 
 	#add new axes
 	ax_mesh = fh.add_axes(box)

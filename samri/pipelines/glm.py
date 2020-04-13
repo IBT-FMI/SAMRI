@@ -1097,7 +1097,10 @@ def l2_common_effect(l1_dir,
 			pass
 		try:
 			if not data_selection.run.drop_duplicates().isnull().values.any():
-				common_fields += '_run-'+data_selection.run.drop_duplicates().item()
+				try:
+					common_fields += '_run-'+data_selection.run.drop_duplicates().item()
+				except ValueError:
+					pass
 		except AttributeError:
 			pass
 
@@ -1208,7 +1211,7 @@ def l2_controlled_effect(l1_dir,
 	tasks=[],
 	exclude={},
 	include={},
-	workflow_name="generic",
+	workflow_name="l2_common_effect",
 	debug=False,
 	target_set=[],
 	run_mode='flame12'
@@ -1238,13 +1241,16 @@ def l2_controlled_effect(l1_dir,
 	from samri.pipelines.utils import bids_data_selection
 
 	l1_dir = path.abspath(path.expanduser(l1_dir))
+	out_base = path.abspath(path.expanduser(out_base))
+	mask=path.abspath(path.expanduser(mask))
 	if control_dir:
 		control_dir = path.abspath(path.expanduser(control_dir))
 	else:
 		control_dir = l1_dir
-	out_base = path.abspath(path.expanduser(out_base))
-	out_dir = path.abspath(path.expanduser(out_dir))
-	mask=path.abspath(path.expanduser(mask))
+	if not out_dir:
+		out_dir = path.join(out_base,workflow_name)
+	else:
+		out_dir = path.abspath(path.expanduser(out_dir))
 
 	data_selection = bids_data_selection(l1_dir,
 		structural_match=False,

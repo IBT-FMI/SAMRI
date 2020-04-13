@@ -529,7 +529,8 @@ def stat(stat_maps,
 			conserve_colorbar_steps-=1
 	if save_as:
 		if isinstance(save_as, str):
-			plt.savefig(path.abspath(path.expanduser(save_as)), dpi=400, bbox_inches='tight')
+			my_dpi=rcParams['savefig.dpi']
+			plt.savefig(path.abspath(path.expanduser(save_as)), dpi=my_dpi, bbox_inches='tight')
 		else:
 			from matplotlib.backends.backend_pdf import PdfPages
 			if isinstance(save_as, PdfPages):
@@ -666,7 +667,6 @@ def _create_3Dplot(stat_maps,
 
 
 def _plots_overlay(display,display_3Dplot):
-
 	"""Internal function which overlays the plot from stat() with the 3D plot
 
 	Parameters
@@ -679,17 +679,36 @@ def _plots_overlay(display,display_3Dplot):
 
 	"""
 
+	# Hackish fix for 3D image displacement when exporting to PGF.
+	# Somehow the bounding boxes in the PGF file are messed up leading to the figure being displaced partly or wholly out of the field of view.
+	# Originally documented on zenhost configuration (partial displacement), lately appeared across multiple configurations (total displacement).
+	# Can hopefully be deleted in the future.
+	import getpass
+	this_user = getpass.getuser()
+	dummy_output='/var/tmp/{}_samri_plot3d.png'.format(this_user)
+	plt.savefig(dummy_output)
+	try:
+		os.remove(dummy_output)
+	except FileNotFoundError:
+		pass
+
 	#get matplotlib figure from Nilearn.OrthoSlicer2 object
 	fh = display.frame_axes.get_figure()
 	fh.canvas.draw()
 
-	# Hackish fix for 3D image displacement on zenhost configuration !!!
-	#import getpass
-	#this_user = getpass.getuser()
-	#plt.savefig('/tmp/{}_tmp.png'.format(this_user))
-
 	#Determine correct location to put the plot in relation to existing figure axes
-	box = [max(display.axes['x'].ax.get_position().x0,display.axes['y'].ax.get_position().x0,display.axes['z'].ax.get_position().x0),min(display.axes['x'].ax.get_position().y0,display.axes['y'].ax.get_position().y0,display.axes['z'].ax.get_position().y0),display.axes['x'].ax.get_position().bounds[2],display.axes['z'].ax.get_position().bounds[3]]
+	box = [
+		max(display.axes['x'].ax.get_position().x0,
+			display.axes['y'].ax.get_position().x0,
+			display.axes['z'].ax.get_position().x0,
+			),
+		min(display.axes['x'].ax.get_position().y0,
+			display.axes['y'].ax.get_position().y0,
+			display.axes['z'].ax.get_position().y0,
+			),
+		display.axes['x'].ax.get_position().bounds[2],
+		display.axes['z'].ax.get_position().bounds[3],
+		]
 
 	#add new axes
 	ax_mesh = fh.add_axes(box)
@@ -833,7 +852,7 @@ def atlas_label(atlas,
 	color="#E69F00",
 	fig=None,
 	label_names=[],
-	mapping="",
+	mapping='/usr/share/mouse-brain-atlases/dsurqe_labels.csv',
 	annotate=True,
 	black_bg=False,
 	draw_cross=True,
@@ -1127,7 +1146,7 @@ def contour_slices(bg_image, file_template,
 					display.add_contours(img,
 							alpha=alpha[img_ix],
 							colors=[color],
-							levels=levels[img_ix],
+							levels=[levels[img_ix]],
 							linewidths=(linewidths[img_ix],),
 							)
 
@@ -1229,6 +1248,7 @@ def slices(heatmap_image,
 	bg_image='/usr/share/mouse-brain-atlases/dsurqec_40micron_masked.nii',
 	contour_image='',
 	heatmap_threshold=3,
+	heatmap_alpha=1.0,
 	contour_threshold=3,
 	auto_figsize=False,
 	invert=False,
@@ -1266,6 +1286,8 @@ def slices(heatmap_image,
 		Path to an overlay image to be printed as a contour.
 	heatmap_threshold : float, optional
 		Value at which to threshold the heatmap_image.
+	heatmap_alpha : float, optional
+		Alpha (opacity, from 0.0 to 1.0) with which to draw the contour image.
 	contour_threshold : float, optional
 		Value at which to threshold the contour_image.
 	auto_figsize : boolean, optional
@@ -1273,7 +1295,7 @@ def slices(heatmap_image,
 	invert : boolean, optional
 		Whether to automatically invert data matrix values (useful if the image consists of negative values, e.g. when dealing with negative contrast agent CBV scans).
 	contour_alpha : float, optional
-		Alpha (transparency) with which to draw the contour image.
+		Alpha (opacity, from 0.0 to 1.0) with which to draw the contour image.
 	contour_color : str, optional
 		Color with which to draw the contour image.
 	cmap : str, optional
@@ -1459,6 +1481,7 @@ def slices(heatmap_image,
 		else:
 			display.add_overlay(heatmap_img,
 				threshold=heatmap_threshold,
+				alpha=heatmap_alpha,
 				cmap=cmap,
 				vmin = vmin,vmax = vmax,
 				)

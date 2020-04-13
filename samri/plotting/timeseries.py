@@ -212,6 +212,7 @@ def multi(timecourses,
 	unit_ticking=False,
 	x_label="TR [1s]",
 	model_line_multiplier=2,
+	scale_x=False,
 	):
 	"""Plot multiple timecourses on an intelligently scaled multi-axis figure.
 
@@ -294,18 +295,23 @@ def multi(timecourses,
 							label=list(timecourse_variant.keys())[0],
 							)
 					else:
-						ax.plot(timecourse_variant.values,
-							lw=rcParams['lines.linewidth'],
-							)
-
+						try:
+							ax.plot(timecourse_variant.values,
+								lw=rcParams['lines.linewidth'],
+								)
+						except:
+							pass
 
 			try:
 				design = designs[ix]
 			except:
 				pass
 			else:
-				for column in design:
-					ax.plot(design[column], lw=rcParams['lines.linewidth']*model_line_multiplier)
+				if isinstance(design, pd.DataFrame):
+					for column in design:
+						ax.plot(design[column], lw=rcParams['lines.linewidth']*model_line_multiplier)
+				else:
+					ax.plot(design, lw=rcParams['lines.linewidth']*model_line_multiplier)
 
 			if not ix in xlabel_positive:
 				plt.setp(ax.get_xticklabels(), visible=False)
@@ -340,10 +346,26 @@ def multi(timecourses,
 				ax.xaxis.set_minor_locator(loc_min)
 
 			ax.set_xlim([0,len(timecourse)])
+			if scale_x:
+				from matplotlib import ticker
+				if isinstance(timecourse[0], int) or isinstance(timecourse[0], float) or isinstance(timecourse[0], np.float32):
+					ticks_x = ticker.FuncFormatter(lambda x, pos: '{0:g}'.format(x/scale_x))
+				else:
+					ticks_x = ticker.FuncFormatter(lambda x, pos: '{0:g}'.format(x/scale_x[ix]))
+				ax.xaxis.set_major_formatter(ticks_x)
 	else:
 		fig, ax = plt.subplots(facecolor='#eeeeee')
 
-		timecourse = timecourses[0]
+		try:
+			timecourse = timecourses[0]
+		except:
+			pass
+		else:
+			if isinstance(timecourse, pd.DataFrame):
+				timecourse.plot(ax=ax)
+			else:
+				ax.plot(timecourse, lw=rcParams['lines.linewidth']*1.5, color=colors[0], alpha=1)
+
 		subplot_title = subplot_titles[0]
 
 		# Add plot elements as appropriate
@@ -369,10 +391,6 @@ def multi(timecourses,
 				o = round(o)
 				ax.axvspan(o,o+d, facecolor="cyan", alpha=0.15)
 
-		if isinstance(timecourse, pd.DataFrame):
-			timecourse.plot(ax=ax)
-		else:
-			ax.plot(timecourse, lw=rcParams['lines.linewidth']*1.5, color=colors[0], alpha=1)
 		if not quantitative:
 			ax.yaxis.grid(False)
 			ax.set_yticks([])

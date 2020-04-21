@@ -60,6 +60,35 @@ MODALITY_MATCH = {
 	('MToff','MtOff'):'MToff',
 	}
 
+def extract_volume(in_file, volume,
+	axis=3,
+	out_file='extracted_volume.nii.gz'
+	):
+	"""
+	Extract one volume from a given axis of a NIfTI file.
+
+	Parameters
+	----------
+
+	in_file : string
+		Path to a NIfTI file with more than one volume on the selected axis.
+	volume : int
+		The volume on the selected axis which to extract.
+		Volume numbering starts at zero.
+	axis : int
+		The axis which to select the volume on.
+		Axis numbering starts at zero.
+	"""
+
+	import nibabel as nib
+	import numpy as np
+
+	img = nib.load(in_file)
+	data = img.get_data()
+	extracted_data = np.rollaxis(data,axis)[volume]
+	img_ = nib.Nifti1Image(extracted_data, img.affine, img.header)
+	nib.save(img_,out_file)
+
 def reset_background(in_file,
 	bg_value=0,
 	out_file='background_reset_complete.nii.gz',

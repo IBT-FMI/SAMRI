@@ -70,8 +70,7 @@ def structural_registration(template, num_threads=4):
 	return registration, s_warp, f_warp
 
 def generic_registration(template,
-	structural_mask='/usr/share/mouse-brain-atlases/dsurqec_200micron_mask.nii',
-	functional_mask='',
+	template_mask='/usr/share/mouse-brain-atlases/dsurqec_200micron_mask.nii',
 	num_threads=4,
 	phase_dictionary=GENERIC_PHASES,
 	s_phases=['s_translation','similarity','affine','syn'],
@@ -108,8 +107,8 @@ def generic_registration(template,
 	s_registration.inputs.winsorize_lower_quantile = 0.005
 	s_registration.inputs.winsorize_upper_quantile = 0.995
 	s_registration.inputs.args = '--float'
-	if structural_mask:
-		s_registration.inputs.fixed_image_masks = [path.abspath(path.expanduser(structural_mask))]
+	if template_mask:
+		s_registration.inputs.fixed_image_masks = [path.abspath(path.expanduser(template_mask))]
 	s_registration.inputs.num_threads = num_threads
 
 	f_parameters = [phase_dictionary[selection] for selection in f_phases]
@@ -139,8 +138,6 @@ def generic_registration(template,
 	f_registration.inputs.winsorize_lower_quantile = 0.05
 	f_registration.inputs.winsorize_upper_quantile = 0.95
 	f_registration.inputs.args = '--float'
-	if functional_mask:
-		f_registration.inputs.fixed_image_masks = [path.abspath(path.expanduser(functional_mask))]
 	f_registration.inputs.num_threads = num_threads
 
 
@@ -235,6 +232,17 @@ def real_size_nodes():
 
 	return s_biascorrect, f_biascorrect
 
+def additional_s_biascorrect(node_name = '_s_biascorrect'):
+	s_biascorrect = pe.Node(interface=ants.N4BiasFieldCorrection(), name=node_name)
+	s_biascorrect.inputs.dimension = 3
+	s_biascorrect.inputs.bspline_fitting_distance = 10
+	s_biascorrect.inputs.bspline_order = 4
+	s_biascorrect.inputs.shrink_factor = 2
+	s_biascorrect.inputs.n_iterations = [150,100,50,30]
+	s_biascorrect.inputs.convergence_threshold = 1e-16
+
+	return s_biascorrect
+
 def inflated_size_nodes():
 	s_biascorrect = pe.Node(interface=ants.N4BiasFieldCorrection(), name="s_biascorrect")
 	s_biascorrect.inputs.dimension = 3
@@ -249,5 +257,6 @@ def inflated_size_nodes():
 	f_biascorrect.inputs.shrink_factor = 2
 	f_biascorrect.inputs.n_iterations = [200,200,200,200]
 	f_biascorrect.inputs.convergence_threshold = 1e-11
+	f_biascorrect.inputs.mask = mask
 
 	return s_biascorrect, f_biascorrect

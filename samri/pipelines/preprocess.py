@@ -14,7 +14,6 @@ import nipype.interfaces.utility as util
 import nipype.pipeline.engine as pe
 import pandas as pd
 from nipype.interfaces import ants, afni, bru2nii, fsl, nipy
-import nipype.interfaces.ants.legacy as antslegacy
 
 from samri.fetch.templates import fetch_rat_waxholm
 from samri.pipelines.extra_functions import corresponding_physiofile, get_bids_scan, write_bids_events_file, force_dummy_scans, BIDS_METADATA_EXTRACTION_DICTS
@@ -98,6 +97,15 @@ def legacy(bids_base, template,
 	workflow_name : str, optional
 		Top level name for the output directory.
 	'''
+
+	try:
+		import nipype.interfaces.ants.legacy as antslegacy
+	except ModuleNotFoundError:
+		print('''
+			The `nipype.interfaces.ants.legacy` was not found on this system.
+			You may want to downgrade nipype to e.g. 1.1.1, as this module has been removed in more recent versions:
+			https://github.com/nipy/nipype/issues/3197
+		''')
 
 	bids_base, out_base, out_dir, template, registration_mask, data_selection, functional_scan_types, structural_scan_types, subjects_sessions, func_ind, struct_ind = common_select(
 			bids_base,
@@ -277,7 +285,8 @@ def legacy(bids_base, template,
 	workflow.base_dir = out_base
 	workflow.config = workflow_config
 	try:
-		workflow.write_graph(dotfilename=path.join(workflow.base_dir,workdir_name,"graph.dot"), graph2use="hierarchical", format="png")
+		workflow.write_graph(dotfilename=path.join(workflow.base_dir, workdir_name, "graph.dot"), graph2use="hierarchical", format="png")
+
 	except OSError:
 		print('We could not write the DOT file for visualization (`dot` function from the graphviz package). This is non-critical to the processing, but you should get this fixed.')
 
@@ -321,6 +330,8 @@ def generic(bids_base, template,
 	params={},
 	phase_dictionary=GENERIC_PHASES,
 	enforce_dummy_scans=DUMMY_SCANS,
+	model_prediction_mask = False,
+	classifier_paths = ['','']
 	):
 	'''
 	Generic preprocessing and registration workflow for small animal data in BIDS format.
@@ -372,7 +383,6 @@ def generic(bids_base, template,
 	workflow_name : str, optional
 		Top level name for the output directory.
 	'''
-
 	bids_base, out_base, out_dir, template, registration_mask, data_selection, functional_scan_types, structural_scan_types, subjects_sessions, func_ind, struct_ind = common_select(
 			bids_base,
 			out_base,
@@ -384,10 +394,8 @@ def generic(bids_base, template,
 			subjects,
 			sessions,
 			)
-
 	if not n_jobs:
 		n_jobs = max(int(round(mp.cpu_count()*n_jobs_percentage)),2)
-
 	find_physio = pe.Node(name='find_physio', interface=util.Function(function=corresponding_physiofile,input_names=inspect.getargspec(corresponding_physiofile)[0], output_names=['physiofile','meta_physiofile']))
 
 	get_f_scan = pe.Node(name='get_f_scan', interface=util.Function(function=get_bids_scan,input_names=inspect.getargspec(get_bids_scan)[0], output_names=['scan_path','scan_type','task', 'nii_path', 'nii_name', 'events_name', 'subject_session', 'metadata_filename', 'dict_slice', 'ind_type']))
@@ -418,7 +426,7 @@ def generic(bids_base, template,
 		(find_physio, datasink, [('physiofile', 'func.@physio')]),
 		(find_physio, datasink, [('meta_physiofile', 'func.@meta_physio')]),
 		(get_f_scan, events_file, [('events_name', 'out_file')]),
-		(get_f_scan, datasink, [(('subject_session',ss_to_path), 'container')]),
+		(get_f_scan, datasink, [(('subject_session', ss_to_path), 'container')]),
 		]
 
 	if realign == "space":
@@ -458,7 +466,7 @@ def generic(bids_base, template,
 		get_s_scan.inputs.bids_base = bids_base
 
 		s_register, s_warp, f_register, f_warp = generic_registration(template,
-			structural_mask=registration_mask,
+			template_mask=registration_mask,
 			phase_dictionary=phase_dictionary,
 			)
 		#TODO: incl. in func registration
@@ -476,10 +484,33 @@ def generic(bids_base, template,
 				(s_warp, datasink, [('output_image', 'anat')]),
 				])
 
-		workflow_connections.extend([
-			(get_f_scan, get_s_scan, [('subject_session', 'selector')]),
-			(get_s_scan, s_warp, [('nii_name','output_image')]),
-			(get_s_scan, s_biascorrect, [('nii_path', 'input_image')]),
+		if model_prediction_mask == True:
+			from mlebe.masking.predict_mask import predict_mask
+			s_mask = pe.Node(name='s_mask', interface=util.Function(function=predict_mask, input_names=
+			inspect.getargspec(predict_mask)[0], output_names=['out_file', 'mask_list', 'mask']))
+			f_mask = pe.Node(name='f_mask', interface=util.Function(function=predict_mask, input_names= inspect.getargspec(predict_mask)[0], output_names=['out_file','mask_list','mask']))
+			s_mask.inputs.bias_correct_bool = True
+			s_mask.inputs.anat_model_path = classifier_paths[0]
+			f_mask.inputs.bias_correct_bool = True
+			f_mask.inputs.input_type = 'func'
+			f_mask.inputs.func_model_path = classifier_paths[1]
+			workflow_connections.extend([
+				(get_f_scan, get_s_scan, [('subject_session', 'selector')]),
+				(get_f_scan, f_mask, [('nii_path', 'in_file')]),
+				(f_mask, f_biascorrect, [('mask', 'mask_image')]),
+				(get_s_scan, s_warp, [('nii_name', 'output_image')]),
+				(get_s_scan, s_mask, [('nii_path', 'in_file')]),
+				(s_mask, s_biascorrect, [('out_file', 'input_image')]),
+				(s_mask, s_biascorrect, [('mask', 'mask_image')]),
+				(s_mask, s_register, [('mask_list', 'moving_image_masks')]),
+				(f_mask, f_register, [('mask_list', 'moving_image_masks')]),
+			])
+
+		else:
+			workflow_connections.extend([
+				(get_f_scan, get_s_scan, [('subject_session', 'selector')]),
+				(get_s_scan, s_warp, [('nii_name', 'output_image')]),
+				(get_s_scan, s_biascorrect, [('nii_path', 'input_image')]),
 			])
 
 	if functional_registration_method == "structural":
@@ -510,15 +541,26 @@ def generic(bids_base, template,
 		temporal_mean = pe.Node(interface=fsl.MeanImage(), name="temporal_mean")
 
 		merge = pe.Node(util.Merge(2), name='merge')
-
-		workflow_connections.extend([
-			(temporal_mean, f_biascorrect, [('out_file', 'input_image')]),
-			(f_biascorrect, f_register, [('output_image', 'moving_image')]),
-			(s_biascorrect, f_register, [('output_image', 'fixed_image')]),
-			(s_register, merge, [('composite_transform', 'in1')]),
-			(f_register, merge, [('composite_transform', 'in2')]),
-			(merge, f_warp, [('out', 'transforms')]),
-			])
+		if model_prediction_mask == True:
+			additional_biascorrect = additional_s_biascorrect()
+			workflow_connections.extend([
+				(temporal_mean, f_biascorrect, [('out_file', 'input_image')]),
+				(f_biascorrect, f_register, [('output_image', 'moving_image')]),
+				(get_s_scan, additional_biascorrect, [('nii_path', 'input_image')]),
+				(additional_biascorrect, f_register, [('output_image', 'fixed_image')]),
+				(s_register, merge, [('composite_transform', 'in1')]),
+				(f_register, merge, [('composite_transform', 'in2')]),
+				(merge, f_warp, [('out', 'transforms')]),
+				])
+		else:
+			workflow_connections.extend([
+				(temporal_mean, f_biascorrect, [('out_file', 'input_image')]),
+				(f_biascorrect, f_register, [('output_image', 'moving_image')]),
+				(s_biascorrect, f_register, [('output_image', 'fixed_image')]),
+				(s_register, merge, [('composite_transform', 'in1')]),
+				(f_register, merge, [('composite_transform', 'in2')]),
+				(merge, f_warp, [('out', 'transforms')]),
+				])
 		if realign == "space":
 			workflow_connections.extend([
 				(realigner, temporal_mean, [('realigned_files', 'in_file')]),
@@ -614,6 +656,7 @@ def generic(bids_base, template,
 	workflow.config = workflow_config
 	try:
 		workflow.write_graph(dotfilename=path.join(workflow.base_dir,workdir_name,"graph.dot"), graph2use="hierarchical", format="png")
+		workflow.write_graph(dotfilename=path.join(workflow.base_dir,workdir_name,"graph_flat.dot"), graph2use="flat", format="png")
 	except OSError:
 		print('We could not write the DOT file for visualization (`dot` function from the graphviz package). This is non-critical to the processing, but you should get this fixed.')
 
@@ -660,16 +703,14 @@ def common_select(bids_base, out_base, workflow_name, template, registration_mas
 	else:
 		out_base = path.abspath(path.expanduser(out_base))
 	out_dir = path.join(out_base,workflow_name)
-
 	data_selection = bids_data_selection(bids_base, structural_match, functional_match, subjects, sessions)
 	workdir = out_dir + '_work'
 	if not os.path.exists(workdir):
 		os.makedirs(workdir)
 	data_selection.to_csv(path.join(workdir,'data_selection.csv'))
-
 	# generate functional and structural scan types
-	functional_scan_types = data_selection.loc[data_selection.type == 'func']['acq'].values
-	structural_scan_types = data_selection.loc[data_selection.type == 'anat']['acq'].values
+	functional_scan_types = data_selection.loc[data_selection['type'] == 'func']['acq'].values
+	structural_scan_types = data_selection.loc[data_selection['type'] == 'anat']['acq'].values
 	# we start to define nipype workflow elements (nodes, connections, meta)
 	subjects_sessions = data_selection[["subject","session"]].drop_duplicates().values.tolist()
 

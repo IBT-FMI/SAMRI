@@ -11,7 +11,6 @@ def collapse_nifti(in_dir, out_dir,
 	out_dir = os.path.abspath(os.path.expanduser(out_dir))
 	in_files = []
 	for root, dirs, files in os.walk(in_dir, followlinks=True):
-		for file in files:
 		_in_files = [os.path.join(root,f) for f in files]
 		_in_files = [i for i in _in_files if os.path.isfile(i)]
 		# Only NIfTI files:

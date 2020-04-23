@@ -42,6 +42,7 @@ def l1(preprocessing_dir,
 	modality="cbv",
 	n_jobs_percentage=1,
 	invert=False,
+	user_defined_contrasts=False,
 	):
 	"""Calculate subject level GLM statistic scores.
 
@@ -233,7 +234,12 @@ def l1(preprocessing_dir,
 			(eventfile, add_habituation, [('eventfile', 'in_file')]),
 			(add_habituation, specify_model, [('out_file', 'bids_event_file')]),
 			])
-	if not habituation:
+	if user_defined_contrasts:
+		level1design.inputs.contrasts = user_defined_contrasts
+		workflow_connections.extend([
+			(eventfile, specify_model, [('eventfile', 'bids_event_file')]),
+			])
+	elif not habituation:
 		specify_model.inputs.bids_condition_column = ''
 		if convolution == 'custom':
 			level1design.inputs.contrasts = [('allStim','T', ['ev0'],[1])]
@@ -871,7 +877,8 @@ def l2_common_effect(l1_dir,
 	workflow_name="generic",
 	debug=False,
 	target_set=[],
-	run_mode='flame12'
+	run_mode='flame12',
+	select_input_volume=None,
 	):
 	"""Determine the common effect in a sample of 3D feature maps.
 
@@ -888,6 +895,9 @@ def l2_common_effect(l1_dir,
 		Dictionary containing keys which are BIDS field identifiers, and values which are lists of BIDS identifier values which the user wants to include from the matched selection (whitelist).
 	match : dict, optional
 		Dictionary containing keys which are BIDS field identifiers, and values which are lists of BIDS identifier values which the user wants to select.
+	select_input_volume: int, optional
+		Select one of multiple volumes in the fourth dimension of level-1 input files.
+		This is useful for level-1 files producing multiple regressors.
 	"""
 
 	from samri.pipelines.utils import bids_data_selection
@@ -1147,8 +1157,27 @@ def l2_common_effect(l1_dir,
 	datasink_substitutions.extend([('zstat1.nii.gz', common_fields+'_'+'zstat.nii.gz')])
 	datasink.inputs.regexp_substitutions = datasink_substitutions
 
+	if isinstance(select_input_volume,int):
+		from samri.pipelines.extra_functions import extract_volumes
+
+		copextract = pe.Node(name='copextract', interface=util.Function(function=extract_volumes, input_names=inspect.getargspec(extract_volumes)[0], output_names=['out_files']))
+		copextract.inputs.axis=3
+		copextract.inputs.volume=select_input_volume
+
+		varcopextract = pe.Node(name='varcopextract', interface=util.Function(function=extract_volumes, input_names=inspect.getargspec(extract_volumes)[0], output_names=['out_files']))
+		varcopextract.inputs.axis=3
+		varcopextract.inputs.volume=select_input_volume
+
+		workflow_connections.extend([
+			(copes, copextract, [('selection', 'in_files')]),
+			(copextract, copemerge, [('out_files', 'in_files')]),
+			])
+	else:
+		workflow_connections.extend([
+			(copes, copemerge, [('selection', 'in_files')]),
+			])
+
 	workflow_connections.extend([
-		(copes, copemerge, [('selection', 'in_files')]),
 		(copes, level2model, [(('selection',mylen), 'num_copes')]),
 		(copemerge,flameo,[('merged_file','cope_file')]),
 		(level2model,flameo, [('design_mat','design_file')]),
@@ -1162,9 +1191,17 @@ def l2_common_effect(l1_dir,
 
 	if len(varcopes_list) != 0:
 		workflow_connections.extend([
-			(varcopes, varcopemerge, [('selection', 'in_files')]),
 			(varcopemerge,flameo,[('merged_file','var_cope_file')]),
 			])
+		if isinstance(select_input_volume,int):
+			workflow_connections.extend([
+				(varcopes, varcopextract, [('selection', 'in_files')]),
+				(varcopextract, varcopemerge, [('out_files', 'in_files')]),
+				])
+		else:
+			workflow_connections.extend([
+				(varcopes, varcopemerge, [('selection', 'in_files')]),
+				])
 
 	crashdump_dir = path.join(out_base,'crashdump')
 	workflow_config = {'execution': {'crashdump_dir': crashdump_dir}}

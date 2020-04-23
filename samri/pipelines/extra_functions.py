@@ -60,6 +60,25 @@ MODALITY_MATCH = {
 	('MToff','MtOff'):'MToff',
 	}
 
+def extract_volumes(in_files, volume,
+	axis=3,
+	out_files_base='extracted_volume.nii.gz'
+	):
+	"""
+	Iterative wrapper for `samri.pipelines.extract.volume`
+	"""
+
+	from samri.pipelines.extra_functions import extract_volume
+	from os import path
+
+	out_files=[]
+	for ix, in_file in enumerate(in_files):
+		out_file = '{}_{}'.format(ix, out_files_base)
+		out_file = path.abspath(path.expanduser(out_file))
+		extract_volume(in_file, volume, axis=axis, out_file=out_file)
+		out_files.append(out_file)
+	return out_files
+
 def extract_volume(in_file, volume,
 	axis=3,
 	out_file='extracted_volume.nii.gz'

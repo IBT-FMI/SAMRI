@@ -484,7 +484,7 @@ def generic(bids_base, template,
 				(s_warp, datasink, [('output_image', 'anat')]),
 				])
 
-		if model_prediction_mask == True:
+		if model_prediction_mask:
 			from mlebe.masking.predict_mask import predict_mask
 			s_mask = pe.Node(name='s_mask', interface=util.Function(function=predict_mask, input_names=
 			inspect.getargspec(predict_mask)[0], output_names=['out_file', 'mask_list', 'mask']))

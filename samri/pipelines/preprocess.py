@@ -52,6 +52,7 @@ def legacy(bids_base, template,
 	tr=1,
 	workflow_name='legacy',
 	enforce_dummy_scans=DUMMY_SCANS,
+	exclude={},
 	):
 	'''
 	Legacy realignment and registration workflow representative of the tweaks and workarounds commonly used in the pre-SAMRI period.
@@ -65,6 +66,9 @@ def legacy(bids_base, template,
 	debug : bool, optional
 		Whether to enable nipype debug mode.
 		This increases logging.
+	exclude : dict
+		A dictionary with any combination of "sessions", "subjects", "tasks" as keys and corresponding identifiers as values.
+		If this is specified matching entries will be excluded in the analysis.
 	functional_blur_xy : float, optional
 		Factor by which to smooth data in the xy-plane; if parameter evaluates to false, no smoothing will be applied.
 		Ideally this value should correspond to the resolution or smoothness in the z-direction (assuing z represents the lower-resolution slice-encoding direction).
@@ -117,6 +121,7 @@ def legacy(bids_base, template,
 			structural_match,
 			subjects,
 			sessions,
+			exclude,
 			)
 
 	if not n_jobs:
@@ -332,6 +337,7 @@ def generic(bids_base, template,
 	enforce_dummy_scans=DUMMY_SCANS,
 	model_prediction_mask = False,
 	classifier_paths = ['','']
+	exclude={},
 	):
 	'''
 	Generic preprocessing and registration workflow for small animal data in BIDS format.
@@ -348,6 +354,9 @@ def generic(bids_base, template,
 	debug : bool, optional
 		Whether to enable nipype debug mode.
 		This increases logging.
+	exclude : dict
+		A dictionary with any combination of "sessions", "subjects", "tasks" as keys and corresponding identifiers as values.
+		If this is specified matching entries will be excluded in the analysis.
 	functional_blur_xy : float, optional
 		Factor by which to smooth data in the xy-plane; if parameter evaluates to false, no smoothing will be applied.
 		Ideally this value should correspond to the resolution or smoothness in the z-direction (assuing z represents the lower-resolution slice-encoding direction).
@@ -393,6 +402,7 @@ def generic(bids_base, template,
 			structural_match,
 			subjects,
 			sessions,
+			exclude,
 			)
 	if not n_jobs:
 		n_jobs = max(int(round(mp.cpu_count()*n_jobs_percentage)),2)
@@ -677,7 +687,7 @@ def generic(bids_base, template,
 			else:
 				raise OSError(str(e))
 
-def common_select(bids_base, out_base, workflow_name, template, registration_mask, functional_match, structural_match, subjects, sessions):
+def common_select(bids_base, out_base, workflow_name, template, registration_mask, functional_match, structural_match, subjects, sessions, exclude):
 	"""Common selection and variable processing function for SAMRI preprocessing workflows."""
 
 	if template:
@@ -713,6 +723,10 @@ def common_select(bids_base, out_base, workflow_name, template, registration_mas
 	structural_scan_types = data_selection.loc[data_selection['type'] == 'anat']['acq'].values
 	# we start to define nipype workflow elements (nodes, connections, meta)
 	subjects_sessions = data_selection[["subject","session"]].drop_duplicates().values.tolist()
+
+	if exclude:
+		for key in exclude:
+			data_selection = data_selection[~data_selection[key].isin(exclude[key])]
 
 	_func_ind = data_selection[data_selection["type"] == "func"]
 	func_ind = _func_ind.index.tolist()

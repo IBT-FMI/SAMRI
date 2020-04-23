@@ -422,14 +422,14 @@ def roi_sums(df,
 		)
 
 	# Set the subplots to overlap and apply the margins which for some reason otherwise get reset here
-	#g.fig.subplots_adjust(
-	#	left=mpl.rcParams['figure.subplot.left'],
-	#	bottom=mpl.rcParams['figure.subplot.bottom'],
-	#	right=mpl.rcParams['figure.subplot.right'],
-	#	top=mpl.rcParams['figure.subplot.top'],
-	#	wspace=0.0,
-	#	hspace=hspace,
-	#	)
+	g.fig.subplots_adjust(
+		left=mpl.rcParams['figure.subplot.left'],
+		bottom=mpl.rcParams['figure.subplot.bottom'],
+		right=mpl.rcParams['figure.subplot.right'],
+		top=mpl.rcParams['figure.subplot.top'],
+		wspace=0.0,
+		hspace=hspace,
+		)
 
 	# Remove axes details that don't play will with overlap
 	g.set_titles("")

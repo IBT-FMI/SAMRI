@@ -306,7 +306,10 @@ def parse_paravision_date(pv_date):
 	"""
 	from datetime import datetime
 
-	pv_date, _ = pv_date.split('+')
+	try:
+		pv_date, _ = pv_date.rsplit('+',1)
+	except ValueError:
+		pv_date, _ = pv_date.rsplit('-',1)
 	pv_date += "000"
 	pv_date = datetime.strptime(pv_date, "%Y-%m-%dT%H:%M:%S,%f")
 	return pv_date

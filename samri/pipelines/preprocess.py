@@ -20,10 +20,8 @@ from samri.pipelines.extra_functions import corresponding_physiofile, get_bids_s
 from samri.pipelines.extra_interfaces import VoxelResize, FSLOrient
 from samri.pipelines.nodes import *
 from samri.pipelines.utils import bids_data_selection, fslmaths_invert_values, ss_to_path, GENERIC_PHASES
-from samri.utilities import N_PROCS
 
 DUMMY_SCANS=10
-N_PROCS=max(N_PROCS-2, 1)
 
 #set all outputs to compressed NIfTI
 afni.base.AFNICommand.set_default_output_type('NIFTI_GZ')

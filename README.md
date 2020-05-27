@@ -12,18 +12,18 @@ The package is compatible with small rodent data acquired via Bruker ParaVision.
 ## Examples
 
 To execute the examples below, actual small animal imaging data is required.
-This section includes lines to fetch such data (using `wget`, `tar`, and `mv`), which can however be omitted if data is already present.
 If dependencies were managed via Portage (e.g. on Gentoo Linux) mouse brain atlases may already be present under `/usr/share/mouse-brain-atlases`, and test data under `/usr/share/samri_bindata` and `/usr/share/samri_bidsdata`.
+Otherwise you will need to manually fetch, unpack, and move such data to the correct directories, with the following commands:
 
 ```
 wget http://chymera.eu/distfiles/mouse-brain-atlases-0.5.3.tar.xz
 tar xf mouse-brain-atlases-0.5.3.tar.xz
 mv mouse_brain_atlases /usr/share/
 wget http://chymera.eu/distfiles/samri_bindata-0.1.2.tar.xz
-tar xf samri_bindata-0.1.2.tar.xz
+tar xf samri_bindata-0.4.tar.xz
 mv samri_bindata /usr/share/
 wget http://chymera.eu/distfiles/samri_bidsdata-0.2.1.tar.xz
-tar xf samri_bidsdata-0.2.1.tar.xz
+tar xf samri_bidsdata-0.3.tar.xz
 mv samri_bidsdata /usr/share/
 ```
 

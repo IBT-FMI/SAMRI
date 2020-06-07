@@ -8,6 +8,21 @@ from samri.pipelines.utils import GENERIC_PHASES
 def autorotate(template,
 	in_file='structural.nii',
 	):
+	"""Multi-rotation-state transformation start. This allows the registration to commence with the best rotational fit, and may help if the orientation of the data is malformed with respect to the header.
+	
+	Parameters
+	----------
+	
+	template : string
+		Full path to template data.
+	in_file : string
+		Name of input NIfTI file with data which is to be transformed.
+
+	Returns
+	-------
+	
+	flt_res : Path names of output_file, out_log, and out_matrix_file (affine transformation).
+	"""
 	flt = fsl.FLIRT(bins=640, cost_func='mutualinfo')
 	flt.inputs.in_file = in_file
 	flt.inputs.reference = template

@@ -80,7 +80,7 @@ def legacy(bids_base, template,
 	n_jobs_percentage : float, optional
 		Percentage of available processors (as in available hardware, not available free load) to maximally use for the workflow (this is overriden by `n_jobs`).
 	out_base : str, optional
-		Output base directory --- inside which a directory named `workflow_name` (as well as associated directories) will be created.
+		Output base directory - inside which a directory named `workflow_name` (as well as associated directories) will be created.
 	realign : {"space","time","spacetime",""}, optional
 		Parameter that dictates slictiming correction and realignment of slices. "time" (FSL.SliceTimer) is default, since it works safely. Use others only with caution!
 	registration_mask : str, optional
@@ -651,7 +651,59 @@ def generic(bids_base, template,
 				raise OSError(str(e))
 
 def common_select(bids_base, out_base, workflow_name, template, registration_mask, functional_match, structural_match, subjects, sessions, exclude):
-	"""Common selection and variable processing function for SAMRI preprocessing workflows."""
+	"""Common selection and variable processing function for SAMRI preprocessing workflows.
+
+	Parameters
+	----------
+
+	bids_base : string
+		Path to the BIDS root directory.
+	out_base : string
+		Output base directory - inside which a directory named `workflow_name` (as well as associated directories) will be created.
+	workflow_name : string
+		Top level name for the output directory.
+	template : string
+		Path to the template to register the data to.
+	registration_mask : string
+		Mask to use for the registration process.
+	functional_match : dict
+		Dictionary specifying a whitelist to use for functional data inclusion into the workflow; if dictionary is empty no whitelist is present and all data will be considered.
+	structural_match : dict
+		Dictionary specifying a whitelist to use for structural data inclusion into the workflow; if dictionary is empty no whitelist is present and all data will be considered.
+	subjects : list
+		 A whitelist of subjects to include in the workflow, if the list is empty there is no whitelist and all sessions will be considered.
+	sessions : list
+		A whitelist of sessions to include in the workflow, if the list is empty there is no whitelist and all sessions will be considered.
+	exclude : dict
+		A dictionary with any combination of "sessions", "subjects", "tasks" as keys and corresponding identifiers as values.
+		If this is specified, matching entries will be excluded in the analysis.
+
+	Returns
+	-------
+
+	bids_base : string
+		Path to the BIDS root directory.
+	out_base : string
+		Output base directory - inside which a directory named `workflow_name` (as well as associated directories) is located.
+	out_dir : string
+		Directory where output is located (gives path to workflow_name).
+	template : string
+		Full path to the template.
+	registration_mask : string
+		Full path to the registration mask.
+	data_selection : df
+		A Pandas dataframe of data from bids_base filtered according to structural_match, functional_match, subjects, and sessions.
+	functional_scan_types : np array
+		Functional scan types.
+	structural_scan_types : np array
+		Structural scan types.
+	subjects_sessions : df
+		Pandas dataframe giving names of subjects and sessions selected from bids_base.
+	func_ind: list
+		List of all functional scan entries.
+	struct_ind: list
+		List of all structural scan entries.
+	"""
 
 	if template:
 		if template == "mouse":

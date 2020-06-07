@@ -179,6 +179,33 @@ def bids_data_selection(base, structural_match, functional_match, subjects, sess
 	verbose=False,
 	joint_conditions=True,
 	):
+	"""
+	Creates a Pandas Dataframe descriptor from a BIDS datapath, optionally filtering out conditions.
+
+	Parameters
+	----------
+
+	base : str
+		path specifying the root directory of the BIDS data
+	structural_match : dict or bool
+		Dictionary specifying a whitelist of BIDS field identifiers.
+		False if no whitelist is specified.
+	functional_match : dict or bool
+		Dictionary specifying a whitelist of BIDS field identifiers.
+		False if no whitelist is specified.
+	subjects: list or bool
+		A list of subjects which may be present in the 'subjects' column of the created Pandas DataFrame, 'df'.
+		False if user does not want to filter DataFrame by subjects.
+	sessions: list or bool
+		A list of session names which may be present in the 'sessions' column of the created Pandas DataFrame, 'df'.
+		False if user does not want to filter DataFrame by sessions.
+	
+	Returns
+	-------
+
+	df : pandas.DataFrame
+		A Pandas DataFrame with information corresponding to the whitelisted BIDS identifiers and optionally filtered by subjects and/or sessions.
+	"""
 	validate = BIDSValidator()
 	if verbose:
 		for x in os.walk(base):
@@ -398,6 +425,16 @@ def ss_to_path(subject_session):
 	return "/".join([subject,session])
 
 def bids_dict_to_source(bids_dictionary, source_format):
+	"""Generate a string from the source format with inserted corresponding values from the given dictionary.
+
+	Parameters
+	----------
+
+	bids_dictionary : dict
+		A dictionary with keys that are BIDS identifiers.
+	source_format : str
+		A Python format string with identifiers which are keys of the bids_dictionary parameter.
+	"""
 	from os import path
 
 	source = source_format.format(**bids_dictionary)

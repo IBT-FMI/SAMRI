@@ -12,7 +12,10 @@ def structural_rigid_affine(template="/Users/marksm/GitHub/mriPipeline/ants_test
 	input_image = "/Users/marksm/GitHub/mriPipeline/ants_test/source_add.nii.gz",
 	output_image = 'new_with_flirt.nii.gz',
 	):
-
+	"""
+	Registers a structural scan to the reference template using rigid body transformation and an affine matrix.
+	"""
+		
 	template = os.path.abspath(os.path.expanduser(template))
 	input_image = os.path.abspath(os.path.expanduser(input_image))
 	output_image = os.path.abspath(os.path.expanduser(output_image))
@@ -141,6 +144,9 @@ def structural_rigid(template="/Users/marksm/GitHub/mriPipeline/ants_test/templa
 	input_image = "/Users/marksm/GitHub/mriPipeline/ants_test/source.nii",
 	output_image = 'hard2_new_32_rigid_affine_more_rigid_CC.nii.gz',
 	):
+	"""
+	Registers a structural scan to the reference template using rigid body transformation. 
+	"""
 
 	template = os.path.abspath(os.path.expanduser(template))
 	input_image = os.path.abspath(os.path.expanduser(input_image))

@@ -40,7 +40,6 @@ def _draw_colorbar(stat_map_img, axes,
 	aspect=40,
 	fraction=0.025,
 	anchor=(10.0,0.5),
-	cut_coords=None,
 	positive_only=False,
 	negative_only=False,
 	cmap=None,
@@ -73,7 +72,6 @@ def _draw_colorbar(stat_map_img, axes,
 		Fraction of original axes to use for the colorbar.
 	anchor : tuple (optional)
 		Anchor point on which to place the colorbar on the axes.
-	cut_coords : not implemented (optional)
 	positive_only : bool (optional)
 		If True, only shows positive half of the colorbar.
 	negative_only : bool (optional)
@@ -426,7 +424,6 @@ def stat(stat_maps,
 			aspect=30,
 			fraction=0.05,
 			anchor=(1.,0.5),
-			cut_coords = cut_coords,
 			positive_only = positive_only,
 			negative_only = negative_only,
 			cmap=cmap,
@@ -1512,7 +1509,6 @@ def slices(heatmap_image,
 			pad=0.05,
 			panchor=(10.0, 0.5),
 			shrink=0.99,
-			cut_coords = cut_coords,
 			positive_only = positive_only,
 			negative_only = negative_only,
 			cmap=cmap,

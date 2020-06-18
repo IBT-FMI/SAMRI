@@ -1,3 +1,19 @@
+def test_extract_volume():
+	from samri.pipelines.extra_functions import extract_volume
+	import nibabel as nii
+	import nibabel as nib
+
+	in_file = '/usr/share/samri_bidsdata/preprocessing/sub-4007/ses-ofM/func/sub-4007_ses-ofM_task-JogB_acq-EPIlowcov_run-0_bold.nii.gz'
+
+	out_file_name='test_extract_volume.nii.gz'
+	extract_volume(in_file,
+		volume=0,
+		axis=3,
+		out_file=out_file_name,
+		)
+	img = nib.load(out_file_name)
+	assert img.header['dim'][0] == 3
+
 def test_flip_if_needed():
 	import os
 	import pandas as pd

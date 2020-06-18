@@ -118,7 +118,7 @@ def _draw_colorbar(stat_map_img, axes,
 	if cmap:
 		try:
 			cmap = plt.cm.get_cmap(cmap)
-		except TypeError:
+		except (TypeError, ValueError):
 			cmap = mcolors.LinearSegmentedColormap.from_list('SAMRI cmap from list', cmap*256, N=256)
 		colors = cmap(np.linspace(0,1,256))
 		if positive_only:
@@ -655,7 +655,7 @@ def _create_3Dplot(stat_maps,
 	else:
 		try:
 			cmap = plt.cm.get_cmap(cmap)
-		except TypeError:
+		except (TypeError, ValueError):
 			cmap = mcolors.LinearSegmentedColormap.from_list('SAMRI cmap from list', cmap*256, N=256)
 
 	col_plus = norm(threshold)

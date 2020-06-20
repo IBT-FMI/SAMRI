@@ -119,9 +119,6 @@ def bru2bids(measurements_base,
 
 	if not os.path.exists(out_dir):
 		    os.makedirs(out_dir)
-	# This is needed because BIDS does not yet support CBV
-	with open(path.join(out_dir,".bidsignore"), "w+") as f:
-		f.write('*_cbv.*')
 
 	# BIDS needs a descriptor file
 	if not dataset_name:

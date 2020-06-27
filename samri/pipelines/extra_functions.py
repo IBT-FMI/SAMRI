@@ -9,7 +9,11 @@ import shutil
 
 from copy import deepcopy
 import pandas as pd
-from bids.grabbids import BIDSLayout
+# PyBIDS 0.6.5 and 0.10.2 compatibility
+try:
+	from bids.grabbids import BIDSLayout
+except ModuleNotFoundError:
+	from bids.layout import BIDSLayout
 
 BEST_GUESS_MODALITY_MATCH = {
 	('FLASH',):'T1w',
@@ -837,12 +841,18 @@ def get_data_selection(workflow_base,
 	measurement_path_list = [os.path.join(workflow_base,i) for i in measurements]
 
 	selected_measurements=[]
-	#create a dummy path for bidsgrabber to parse file names from
+	# Create a dummy path for bidsgrabber to parse file names from.
+	# Ideally we could avoid this: https://github.com/bids-standard/pybids/issues/633
 	bids_temppath = '/var/tmp/samri_bids_temppaths/'
 	try:
 		os.mkdir(bids_temppath)
 	except FileExistsError:
 		pass
+	data = {}
+	data['Name'] = ''
+	data['BIDSVersion'] = ''
+	with open(os.path.join(bids_temppath,'dataset_description.json'), 'w') as outfile:
+		json.dump(data, outfile)
 	layout = BIDSLayout(bids_temppath)
 	#populate a list of lists with acceptable subject names, sessions, and sub_dir's
 	for sub_dir in measurement_path_list:

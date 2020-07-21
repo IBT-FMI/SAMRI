@@ -1,4 +1,5 @@
 import shutil
+import getpass
 from os import path
 from samri.pipelines import glm
 from samri.fetch.local import prepare_abi_connectivity_maps
@@ -7,12 +8,12 @@ def abi_connectivity_map(identifier,
 	exclude_experiments=[],
 	keep_work=False,
 	mask='/usr/share/mouse-brain-atlases/dsurqec_200micron_mask.nii',
-	prepare_root='/var/tmp/samri/abi_connectivity/{identifier}',
+	prepare_root='/var/tmp/{user}/samri/abi_connectivity/',
 	prepare_subdirs='sub-{experiment}/ses-1/anat/sub-{experiment}_ses-1_cope.nii.gz',
 	save_as_cope='',
 	save_as_zstat='',
 	save_as_tstat='',
-	tmp_dir='/var/tmp/samri/abi_connectivity/l2',
+	tmp_dir='/var/tmp/{user}/samri/abi_connectivity/l2',
 	abi_data_root='/usr/share/ABI-connectivity-data/',
 	invert_lr_experiments=[],
 	):
@@ -31,8 +32,9 @@ def abi_connectivity_map(identifier,
 		Path to a NIfTI file containing ones and zeroes and specifying the mask for the modelling workflow.
 		It is important that this data is in the same template space as the ABI-connectivity-data package, which is the DSURQEC space [1]_ .
 	prepare_root : string, optional
-		Python-formattable string, containing "{identifier}" under which the prepared (e.g. flipped) data from ABI experiments is to be saved.
-		Generally this should be a temporal and new path, as it will be deleted without request for confirmation if this function is executed with `keep_work=False` (which is the default).
+		Python-formattable string, under which the prepared (e.g. flipped) data from ABI experiments is to be saved.
+		Generally this should be a temporal and new path, containing either "{user}" or located under the user's home directory, in order to avoid race conditions between users.
+		It will be deleted without request for confirmation if this function is executed with `keep_work=False` (which is the default).
 	prepare_subdirs : string, optional
 		Python-formattable string, containing "{experiment}" according to which the prepared (e.g. flipped) data from ABI experiments is to be organized inside the `prepare_root` directory.
 	save_as_cope : str, optional
@@ -43,6 +45,7 @@ def abi_connectivity_map(identifier,
 		Path under which to save the z-statistic result of the modelling.
 	tmp_dir : string, optional
 		Temporary directory inside which to execute the modelling workflow.
+		Generally this should be a temporal and new path, containing either "{user}" or located under the user's home directory, in order to avoid race conditions between users.
 	abi_data_root : str, optional
 		Root path for the ABI-connectivity-data package installation on the current machine.
 	invert_lr_experiments : list of str, optional
@@ -54,10 +57,15 @@ def abi_connectivity_map(identifier,
 
 	References
 	----------
-	.. [1] H. I. Ioanas and M. Marks and M. F. Yanik and M. Rudin "An Optimized Registration Workflow and Standard Geometric Space for Small Animal Brain Imaging" https://doi.org/10.1101/619650 
+	.. [1] H. I. Ioanas and M. Marks and M. F. Yanik and M. Rudin "An Optimized Registration Workflow and Standard Geometric Space for Small Animal Brain Imaging" https://doi.org/10.1101/619650
 	"""
 
-	reposit_path = path.join(prepare_root,prepare_subdirs)
+	# Prepend user name to SAMRI temp directories to prevent users from overwriting each other's work.
+	current_user = getpass.getuser()
+	prepare_root = prepare_root.format(user=current_user)
+	tmp_dir = tmp_dir.format(user=current_user)
+
+	reposit_path = path.join(prepare_root,'{identifier}',prepare_subdirs)
 	prepare_abi_connectivity_maps(identifier,
 		abi_data_root=abi_data_root,
 		reposit_path=reposit_path,

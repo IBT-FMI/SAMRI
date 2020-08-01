@@ -7,8 +7,15 @@ import pandas as pd
 from itertools import product
 from joblib import Parallel, delayed
 from os import path
-from bids.grabbids import BIDSLayout
-from bids.grabbids import BIDSValidator
+# PyBIDS 0.6.5 and 0.10.2 compatibility
+try:
+	from bids.grabbids import BIDSLayout
+except ModuleNotFoundError:
+	from bids.layout import BIDSLayout
+try:
+	from bids.grabbids import BIDSValidator
+except ModuleNotFoundError:
+	from bids_validator import BIDSValidator
 
 N_PROCS=max(mp.cpu_count()-2,2)
 

@@ -155,7 +155,14 @@ def l1(preprocessing_dir,
 		glm.inputs.mask = path.abspath(path.expanduser(mask))
 	glm.interface.mem_gb = 6
 
-	out_file_name_base = 'sub-{{subject}}_ses-{{session}}_task-{{task}}_acq-{{acquisition}}_run-{{run}}_{{modality}}_{}.{}'
+	try:
+		from bids.grabbids import BIDSLayout
+	except ModuleNotFoundError:
+		from bids.layout import BIDSLayout
+		out_file_name_base = 'sub-{{subject}}_ses-{{session}}_task-{{task}}_acq-{{acquisition}}_run-{{run}}_{{suffix}}_{}.{}'
+	else:
+		out_file_name_base = 'sub-{{subject}}_ses-{{session}}_task-{{task}}_acq-{{acquisition}}_run-{{run}}_{{modality}}_{}.{}'
+
 
 	betas_filename = pe.Node(name='betas_filename', interface=util.Function(function=bids_dict_to_source,input_names=inspect.getargspec(bids_dict_to_source)[0], output_names=['filename']))
 	betas_filename.inputs.source_format = out_file_name_base.format('betas','nii.gz')
@@ -455,7 +462,13 @@ def l1_physio(preprocessing_dir, physiology_identifier,
 		glm.inputs.mask = path.abspath(path.expanduser(mask))
 	glm.interface.mem_gb = 6
 
-	out_file_name_base = 'sub-{{subject}}_ses-{{session}}_task-{{task}}_acq-{{acquisition}}_run-{{run}}_{{modality}}_{}.{}'
+	try:
+		from bids.grabbids import BIDSLayout
+	except ModuleNotFoundError:
+		from bids.layout import BIDSLayout
+		out_file_name_base = 'sub-{{subject}}_ses-{{session}}_task-{{task}}_acq-{{acquisition}}_run-{{run}}_{{suffix}}_{}.{}'
+	else:
+		out_file_name_base = 'sub-{{subject}}_ses-{{session}}_task-{{task}}_acq-{{acquisition}}_run-{{run}}_{{modality}}_{}.{}'
 
 	betas_filename = pe.Node(name='betas_filename', interface=util.Function(function=bids_dict_to_source,input_names=inspect.getargspec(bids_dict_to_source)[0], output_names=['filename']))
 	betas_filename.inputs.source_format = out_file_name_base.format('betas','nii.gz')
@@ -704,7 +717,13 @@ def seed(preprocessing_dir, seed_mask,
 		glm.inputs.mask = path.abspath(path.expanduser(mask))
 	glm.interface.mem_gb = 6
 
-	out_file_name_base = 'sub-{{subject}}_ses-{{session}}_task-{{task}}_acq-{{acquisition}}_run-{{run}}_{{modality}}_{}.{}'
+	try:
+		from bids.grabbids import BIDSLayout
+	except ModuleNotFoundError:
+		from bids.layout import BIDSLayout
+		out_file_name_base = 'sub-{{subject}}_ses-{{session}}_task-{{task}}_acq-{{acquisition}}_run-{{run}}_{{suffix}}_{}.{}'
+	else:
+		out_file_name_base = 'sub-{{subject}}_ses-{{session}}_task-{{task}}_acq-{{acquisition}}_run-{{run}}_{{modality}}_{}.{}'
 
 	betas_filename = pe.Node(name='betas_filename', interface=util.Function(function=bids_dict_to_source,input_names=inspect.getargspec(bids_dict_to_source)[0], output_names=['filename']))
 	betas_filename.inputs.source_format = out_file_name_base.format('betas','nii.gz')

@@ -7,6 +7,7 @@ import shutil
 from copy import deepcopy
 from itertools import product
 from os import path
+from shutil import copyfile
 
 import multiprocessing as mp
 import nipype.interfaces.io as nio
@@ -634,6 +635,7 @@ def generic(bids_base, template,
 		print('We could not write the DOT file for visualization (`dot` function from the graphviz package). This is non-critical to the processing, but you should get this fixed.')
 
 	workflow.run(plugin="MultiProc", plugin_args={'n_procs' : n_jobs})
+	copyfile(os.path.join(bids_base,'dataset_description.json'),os.path.join(out_base,workflow_name,'dataset_description.json'))
 	if not keep_work:
 		workdir = path.join(workflow.base_dir,workdir_name)
 		try:
@@ -736,8 +738,13 @@ def common_select(bids_base, out_base, workflow_name, template, registration_mas
 	data_selection.to_csv(path.join(workdir,'data_selection.csv'))
 
 	# generate functional and structural scan types
-	functional_scan_types = data_selection.loc[data_selection['type'] == 'func']['acq'].values
-	structural_scan_types = data_selection.loc[data_selection['type'] == 'anat']['acq'].values
+	# PyBIDS 0.6.5 and 0.10.2 compatibility
+	try:
+		functional_scan_types = data_selection.loc[data_selection['type'] == 'func']['acq'].values
+		structural_scan_types = data_selection.loc[data_selection['type'] == 'anat']['acq'].values
+	except KeyError:
+		functional_scan_types = data_selection.loc[data_selection['datatype'] == 'func']['acquisition'].values
+		structural_scan_types = data_selection.loc[data_selection['datatype'] == 'anat']['acquisition'].values
 	# we start to define nipype workflow elements (nodes, connections, meta)
 	subjects_sessions = data_selection[["subject","session"]].drop_duplicates().values.tolist()
 
@@ -745,10 +752,15 @@ def common_select(bids_base, out_base, workflow_name, template, registration_mas
 		for key in exclude:
 			data_selection = data_selection[~data_selection[key].isin(exclude[key])]
 
-	_func_ind = data_selection[data_selection["type"] == "func"]
-	func_ind = _func_ind.index.tolist()
+	# PyBIDS 0.6.5 and 0.10.2 compatibility
+	try:
+		_func_ind = data_selection[data_selection["type"] == "func"]
+		_struct_ind = data_selection[data_selection["type"] == "anat"]
+	except KeyError:
+		_func_ind = data_selection[data_selection["datatype"] == "func"]
+		_struct_ind = data_selection[data_selection["datatype"] == "anat"]
 
-	_struct_ind = data_selection[data_selection["type"] == "anat"]
+	func_ind = _func_ind.index.tolist()
 	struct_ind = _struct_ind.index.tolist()
 
 	if True:

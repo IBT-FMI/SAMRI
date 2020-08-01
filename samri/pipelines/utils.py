@@ -4,8 +4,15 @@ from __future__ import print_function, division, unicode_literals, absolute_impo
 import csv
 import os
 import pandas as pd
-from bids.grabbids import BIDSLayout
-from bids.grabbids import BIDSValidator
+# PyBIDS 0.6.5 and 0.10.2 compatibility
+try:
+	from bids.grabbids import BIDSLayout
+except ModuleNotFoundError:
+	from bids.layout import BIDSLayout
+try:
+	from bids.grabbids import BIDSValidator
+except ModuleNotFoundError:
+	from bids_validator import BIDSValidator
 from copy import deepcopy
 from datetime import datetime
 
@@ -215,7 +222,10 @@ def bids_data_selection(base, structural_match, functional_match, subjects, sess
 			else:
 				print("Detected!")
 	layout = BIDSLayout(base)
-	df = layout.as_data_frame()
+	try:
+		df = layout.as_data_frame()
+	except AttributeError:
+		df = layout.to_df()
 
 	# Not crashing if the run field is not present
 	try:
@@ -225,7 +235,13 @@ def bids_data_selection(base, structural_match, functional_match, subjects, sess
 		pass
 
 	# drop event files
-	df = df[df.type != 'events']
+	print(df)
+	print(df.columns)
+	# PyBIDS 0.6.5 and 0.10.2 compatibility
+	try:
+		df = df[df.type != 'events']
+	except AttributeError:
+		df = df[df.suffix != 'events']
 
 	# rm .json
 	df = df.loc[df.path.str.contains('.nii')]
@@ -246,6 +262,7 @@ def bids_data_selection(base, structural_match, functional_match, subjects, sess
 		df.loc[df.modality == 'anat', 'scan_type'] = 'acq-'+df['acq'] +'_' + df['type']
 
 	# Unclear in current BIDS specification, we refer to BOLD/CBV as modalities and func/anat as types
+	# Can be removed after Pybids 0.10.2 migration
 	df = df.rename(columns={'modality': 'type', 'type': 'modality'})
 
 	#TODO: The following should be collapsed into one criterion category

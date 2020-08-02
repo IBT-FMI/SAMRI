@@ -9,6 +9,7 @@ import nipype.interfaces.io as nio
 import nipype.interfaces.utility as util
 import nipype.pipeline.engine as pe
 import os
+from shutil import copyfile
 from copy import deepcopy
 from itertools import product
 from nipype.interfaces import fsl
@@ -328,6 +329,7 @@ def l1(preprocessing_dir,
 
 	n_jobs = max(int(round(mp.cpu_count()*n_jobs_percentage)),2)
 	workflow.run(plugin="MultiProc", plugin_args={'n_procs' : n_jobs})
+	copyfile(os.path.join(preprocessing_dir,'dataset_description.json'),os.path.join(out_dir,'dataset_description.json'))
 	if not keep_work:
 		shutil.rmtree(path.join(out_base,workdir_name))
 
@@ -596,6 +598,7 @@ def l1_physio(preprocessing_dir, physiology_identifier,
 
 	n_jobs = max(int(round(mp.cpu_count()*n_jobs_percentage)),2)
 	workflow.run(plugin="MultiProc", plugin_args={'n_procs' : n_jobs})
+	copyfile(os.path.join(preprocessing_dir,'dataset_description.json'),os.path.join(out_dir,'dataset_description.json'))
 	if not keep_work:
 		shutil.rmtree(path.join(out_base,workdir_name))
 
@@ -847,6 +850,7 @@ def seed(preprocessing_dir, seed_mask,
 
 	n_jobs = max(int(round(mp.cpu_count()*n_jobs_percentage)),2)
 	workflow.run(plugin="MultiProc", plugin_args={'n_procs' : n_jobs})
+	copyfile(os.path.join(preprocessing_dir,'dataset_description.json'),os.path.join(out_dir,'dataset_description.json'))
 	if not keep_work:
 		shutil.rmtree(path.join(out_base,workdir_name))
 

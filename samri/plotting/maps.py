@@ -405,7 +405,7 @@ def stat(stat_maps,
 				colorbar=False,
 				).cut_coords
 		if not ax:
-			fig, ax = plt.subplots(facecolor='#eeeeee')
+			fig, ax = plt.subplots()
 		else:
 			fig = None
 
@@ -471,7 +471,7 @@ def stat(stat_maps,
 				#we use inverse floor division to get the ceiling
 				ncols = -(-len(stat_maps)//2)
 				#scale = scale/float(nrows)
-		fig, ax = plt.subplots(facecolor='#eeeeee', nrows=nrows, ncols=ncols)
+		fig, ax = plt.subplots(nrows=nrows, ncols=ncols)
 		#fig, ax = plt.subplots(figsize=(6*ncols,2.5*nrows), facecolor='#eeeeee', nrows=nrows, ncols=ncols)
 		if figure_title:
 			fig.suptitle(figure_title, fontsize=scale*35, fontweight='bold')

@@ -979,7 +979,7 @@ def select_from_datafind_df(df,
 	):
 	"""
 	Function that selects values from a Pandas DataFrame.
-	
+
 	Parameters
 	----------
 
@@ -998,7 +998,7 @@ def select_from_datafind_df(df,
 
 	Returns
 	-------
-	
+
 	list or scalar
 	If list_output is True, the function will return a list of values corresponding to the output key.
 	Otherwise, the function will return a scalar value corresponding to the first element of the Dataframe (if failsafe = True) or the output_key.

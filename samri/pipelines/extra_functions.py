@@ -979,6 +979,7 @@ def select_from_datafind_df(df,
 	):
 	"""
 	Function that selects values from a Pandas DataFrame.
+	This is useful in the context of nipype workflows, where the function needs to be encapsulated in a node.
 
 	Parameters
 	----------

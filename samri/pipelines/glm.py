@@ -160,9 +160,9 @@ def l1(preprocessing_dir,
 		from bids.grabbids import BIDSLayout
 	except ModuleNotFoundError:
 		from bids.layout import BIDSLayout
-		out_file_name_base = 'sub-{{subject}}_ses-{{session}}_task-{{task}}_acq-{{acquisition}}_run-{{run}}_{{suffix}}_{}.{}'
+		out_file_name_base = 'sub-{{subject}}_ses-{{session}}_task-{{task}}_acq-{{acquisition}}_run-{{run}}_desc-{}_{{suffix}}.{}'
 	else:
-		out_file_name_base = 'sub-{{subject}}_ses-{{session}}_task-{{task}}_acq-{{acquisition}}_run-{{run}}_{{modality}}_{}.{}'
+		out_file_name_base = 'sub-{{subject}}_ses-{{session}}_task-{{task}}_acq-{{acquisition}}_run-{{run}}_desc-{}_{{modality}}.{}'
 
 
 	betas_filename = pe.Node(name='betas_filename', interface=util.Function(function=bids_dict_to_source,input_names=inspect.getargspec(bids_dict_to_source)[0], output_names=['filename']))
@@ -468,9 +468,9 @@ def l1_physio(preprocessing_dir, physiology_identifier,
 		from bids.grabbids import BIDSLayout
 	except ModuleNotFoundError:
 		from bids.layout import BIDSLayout
-		out_file_name_base = 'sub-{{subject}}_ses-{{session}}_task-{{task}}_acq-{{acquisition}}_run-{{run}}_{{suffix}}_{}.{}'
+		out_file_name_base = 'sub-{{subject}}_ses-{{session}}_task-{{task}}_acq-{{acquisition}}_run-{{run}}_desc-{}_{{suffix}}.{}'
 	else:
-		out_file_name_base = 'sub-{{subject}}_ses-{{session}}_task-{{task}}_acq-{{acquisition}}_run-{{run}}_{{modality}}_{}.{}'
+		out_file_name_base = 'sub-{{subject}}_ses-{{session}}_task-{{task}}_acq-{{acquisition}}_run-{{run}}_desc-{}_{{modality}}.{}'
 
 	betas_filename = pe.Node(name='betas_filename', interface=util.Function(function=bids_dict_to_source,input_names=inspect.getargspec(bids_dict_to_source)[0], output_names=['filename']))
 	betas_filename.inputs.source_format = out_file_name_base.format('betas','nii.gz')
@@ -724,9 +724,9 @@ def seed(preprocessing_dir, seed_mask,
 		from bids.grabbids import BIDSLayout
 	except ModuleNotFoundError:
 		from bids.layout import BIDSLayout
-		out_file_name_base = 'sub-{{subject}}_ses-{{session}}_task-{{task}}_acq-{{acquisition}}_run-{{run}}_{{suffix}}_{}.{}'
+		out_file_name_base = 'sub-{{subject}}_ses-{{session}}_task-{{task}}_acq-{{acquisition}}_run-{{run}}_desc-{}_{{suffix}}.{}'
 	else:
-		out_file_name_base = 'sub-{{subject}}_ses-{{session}}_task-{{task}}_acq-{{acquisition}}_run-{{run}}_{{modality}}_{}.{}'
+		out_file_name_base = 'sub-{{subject}}_ses-{{session}}_task-{{task}}_acq-{{acquisition}}_run-{{run}}_desc-{}_{{modality}}.{}'
 
 	betas_filename = pe.Node(name='betas_filename', interface=util.Function(function=bids_dict_to_source,input_names=inspect.getargspec(bids_dict_to_source)[0], output_names=['filename']))
 	betas_filename.inputs.source_format = out_file_name_base.format('betas','nii.gz')
@@ -951,8 +951,17 @@ def l2_common_effect(l1_dir,
 			data_selection = data_selection[data_selection[key].isin(include[key])]
 	data_selection.to_csv(path.join(workdir,'data_selection.csv'))
 
-	varcopes_list = data_selection[data_selection['modality']=='varcb']['path'].tolist()
-	copes_list = data_selection[data_selection['modality']=='cope']['path'].tolist()
+	# Workaround until the following issue is adequately addressed in pybids:
+	# https://github.com/bids-standard/pybids/issues/651
+	# The correct solution should be:
+	#	varcopes_list = data_selection[data_selection['modality']=='varcb']['path'].tolist()
+	#	copes_list = data_selection[data_selection['modality']=='cope']['path'].tolist()
+	try:
+		varcopes_list = data_selection[data_selection['modality']=='varcb']['path'].tolist()
+		copes_list = data_selection[data_selection['modality']=='cope']['path'].tolist()
+	except KeyError:
+		varcopes_list=data_selection[data_selection['path'].str.contains('desc-varcb')]
+		copes_list=data_selection[data_selection['path'].str.contains('desc-cope')]
 
 	copemerge = pe.Node(interface=fsl.Merge(dimension='t'),name="copemerge")
 	varcopemerge = pe.Node(interface=fsl.Merge(dimension='t'),name="varcopemerge")
@@ -974,7 +983,7 @@ def l2_common_effect(l1_dir,
 			mymatch = 'subject{}.'.format(mylist)
 			datasink_substitutions.extend([(mymatch, '')])
 		common_fields = ''
-		common_fields += 'acq-'+data_selection.acq.drop_duplicates().item()
+		common_fields += 'acq-'+data_selection.acquisitionuisition.drop_duplicates().item()
 		try:
 			common_fields += '_run-'+data_selection.run.drop_duplicates().item()
 		except ValueError:
@@ -983,12 +992,16 @@ def l2_common_effect(l1_dir,
 		infosource.iterables = [('iterable', target_set)]
 
 		copes = pe.Node(name='copes', interface=util.Function(function=select_from_datafind_df, input_names=inspect.getargspec(select_from_datafind_df)[0], output_names=['selection']))
-		copes.inputs.bids_dictionary_override = {'modality':'cope', 'alias':''}
+		# Remove when =pybids-0.10.2 is fully supported
+		#copes.inputs.bids_dictionary_override = {'modality':'cope', 'alias':''}
+		copes.inputs.bids_dictionary_override = {'desc':'cope', 'alias':''}
 		copes.inputs.df = data_selection
 		copes.inputs.list_output = True
 
 		varcopes = pe.Node(name='varcopes', interface=util.Function(function=select_from_datafind_df, input_names=inspect.getargspec(select_from_datafind_df)[0], output_names=['selection']))
-		varcopes.inputs.bids_dictionary_override = {'modality':'varcb', 'alias':''}
+		# Remove when =pybids-0.10.2 is fully supported
+		#varcopes.inputs.bids_dictionary_override = {'modality':'varcb', 'alias':''}
+		varcopes.inputs.bids_dictionary_override = {'desc':'varcb', 'alias':''}
 		varcopes.inputs.df = data_selection
 		varcopes.inputs.list_output = True
 
@@ -1001,7 +1014,7 @@ def l2_common_effect(l1_dir,
 	if groupby == "subject":
 		datasink_substitutions.extend([('subject', 'sub-')])
 		common_fields = ''
-		common_fields += 'acq-'+data_selection.acq.drop_duplicates().item()
+		common_fields += 'acq-'+data_selection.acquisitionuisition.drop_duplicates().item()
 		try:
 			common_fields += '_run-'+data_selection.run.drop_duplicates().item()
 		except ValueError:
@@ -1016,12 +1029,16 @@ def l2_common_effect(l1_dir,
 		infosource.iterables = [('iterable', subjects)]
 
 		copes = pe.Node(name='copes', interface=util.Function(function=select_from_datafind_df, input_names=inspect.getargspec(select_from_datafind_df)[0], output_names=['selection']))
-		copes.inputs.bids_dictionary_override = {'modality':'cope'}
+		# Remove when =pybids-0.10.2 is fully supported
+		#copes.inputs.bids_dictionary_override = {'modality':'cope'}
+		copes.inputs.bids_dictionary_override = {'desc':'cope'}
 		copes.inputs.df = data_selection
 		copes.inputs.list_output = True
 
 		varcopes = pe.Node(name='varcopes', interface=util.Function(function=select_from_datafind_df, input_names=inspect.getargspec(select_from_datafind_df)[0], output_names=['selection']))
-		varcopes.inputs.bids_dictionary_override = {'modality':'varcb'}
+		# Remove when =pybids-0.10.2 is fully supported
+		#varcopes.inputs.bids_dictionary_override = {'modality':'varcb'}
+		varcopes.inputs.bids_dictionary_override = {'desc':'varcb'}
 		varcopes.inputs.df = data_selection
 		varcopes.inputs.list_output = True
 
@@ -1054,7 +1071,7 @@ def l2_common_effect(l1_dir,
 	elif groupby == "session":
 		datasink_substitutions.extend([('session', 'ses-')])
 		common_fields = ''
-		common_fields += 'acq-'+data_selection.acq.drop_duplicates().item()
+		common_fields += 'acq-'+data_selection.acquisitionuisition.drop_duplicates().item()
 		try:
 			common_fields += '_run-'+data_selection.run.drop_duplicates().item()
 		except ValueError:
@@ -1069,12 +1086,16 @@ def l2_common_effect(l1_dir,
 		infosource.iterables = [('iterable', sessions)]
 
 		copes = pe.Node(name='copes', interface=util.Function(function=select_from_datafind_df, input_names=inspect.getargspec(select_from_datafind_df)[0], output_names=['selection']))
-		copes.inputs.bids_dictionary_override = {'modality':'cope'}
+		# Remove when =pybids-0.10.2 is fully supported
+		#copes.inputs.bids_dictionary_override = {'modality':'cope'}
+		copes.inputs.bids_dictionary_override = {'desc':'cope'}
 		copes.inputs.df = data_selection
 		copes.inputs.list_output = True
 
 		varcopes = pe.Node(name='varcopes', interface=util.Function(function=select_from_datafind_df, input_names=inspect.getargspec(select_from_datafind_df)[0], output_names=['selection']))
-		varcopes.inputs.bids_dictionary_override = {'modality':'varcb'}
+		# Remove when =pybids-0.10.2 is fully supported
+		#varcopes.inputs.bids_dictionary_override = {'modality':'varcb'}
+		varcopes.inputs.bids_dictionary_override = {'desc':'varcb'}
 		varcopes.inputs.df = data_selection
 		varcopes.inputs.list_output = True
 
@@ -1087,7 +1108,7 @@ def l2_common_effect(l1_dir,
 	elif groupby == "task":
 		datasink_substitutions.extend([('task', 'task-')])
 		common_fields = ''
-		common_fields += 'acq-'+data_selection.acq.drop_duplicates().item()
+		common_fields += 'acq-'+data_selection.acquisitionuisition.drop_duplicates().item()
 		try:
 			common_fields += '_run-'+data_selection.run.drop_duplicates().item()
 		except ValueError:
@@ -1106,12 +1127,16 @@ def l2_common_effect(l1_dir,
 		infosource.iterables = [('iterable', iters)]
 
 		copes = pe.Node(name='copes', interface=util.Function(function=select_from_datafind_df, input_names=inspect.getargspec(select_from_datafind_df)[0], output_names=['selection']))
-		copes.inputs.bids_dictionary_override = {'modality':'cope'}
+		# Remove when =pybids-0.10.2 is fully supported
+		#copes.inputs.bids_dictionary_override = {'modality':'cope'}
+		copes.inputs.bids_dictionary_override = {'desc':'cope'}
 		copes.inputs.df = data_selection
 		copes.inputs.list_output = True
 
 		varcopes = pe.Node(name='varcopes', interface=util.Function(function=select_from_datafind_df, input_names=inspect.getargspec(select_from_datafind_df)[0], output_names=['selection']))
-		varcopes.inputs.bids_dictionary_override = {'modality':'varcb'}
+		# Remove when =pybids-0.10.2 is fully supported
+		#varcopes.inputs.bids_dictionary_override = {'modality':'varcb'}
+		varcopes.inputs.bids_dictionary_override = {'desc':'varcb'}
 		varcopes.inputs.df = data_selection
 		varcopes.inputs.list_output = True
 
@@ -1124,8 +1149,8 @@ def l2_common_effect(l1_dir,
 	elif groupby == "none":
 		common_fields = ''
 		try:
-			if not data_selection.acq.drop_duplicates().isnull().values.any():
-				common_fields += 'acq-'+data_selection.acq.drop_duplicates().item()
+			if not data_selection.acquisitionuisition.drop_duplicates().isnull().values.any():
+				common_fields += 'acq-'+data_selection.acquisitionuisition.drop_duplicates().item()
 		except AttributeError:
 			pass
 		try:
@@ -1143,12 +1168,16 @@ def l2_common_effect(l1_dir,
 		datasink.inputs.substitutions = datasink_substitutions
 
 		copes = pe.Node(name='copes', interface=util.Function(function=select_from_datafind_df, input_names=inspect.getargspec(select_from_datafind_df)[0], output_names=['selection']))
-		copes.inputs.bids_dictionary_override = {'modality':'cope'}
+		# Remove when =pybids-0.10.2 is fully supported
+		#copes.inputs.bids_dictionary_override = {'modality':'cope'}
+		copes.inputs.bids_dictionary_override = {'desc':'cope'}
 		copes.inputs.df = data_selection
 		copes.inputs.list_output = True
 
 		varcopes = pe.Node(name='varcopes', interface=util.Function(function=select_from_datafind_df, input_names=inspect.getargspec(select_from_datafind_df)[0], output_names=['selection']))
-		varcopes.inputs.bids_dictionary_override = {'modality':'varcb'}
+		# Remove when =pybids-0.10.2 is fully supported
+		#varcopes.inputs.bids_dictionary_override = {'modality':'varcb'}
+		varcopes.inputs.bids_dictionary_override = {'desc':'varcb'}
 		varcopes.inputs.df = data_selection
 		varcopes.inputs.list_output = True
 
@@ -1355,7 +1384,7 @@ def l2_controlled_effect(l1_dir,
 
 	common_fields = ''
 	try:
-		common_fields += 'acq-'+data_selection.acq.drop_duplicates().item()
+		common_fields += 'acq-'+data_selection.acquisition.drop_duplicates().item()
 	except ValueError:
 		pass
 	try:
@@ -1363,12 +1392,27 @@ def l2_controlled_effect(l1_dir,
 	except ValueError:
 		pass
 
-	copeonly = data_selection[data_selection['modality']=='cope']
-	copes = copeonly['path'].tolist()
-	varcopes = data_selection[data_selection['modality']=='varcb']['path'].tolist()
+	# Workaround until the following issue is adequately addressed in pybids:
+	# https://github.com/bids-standard/pybids/issues/651
+	# The correct solution should be:
+	#	varcopes_list = data_selection[data_selection['modality']=='varcb']['path'].tolist()
+	#	copes_list = data_selection[data_selection['modality']=='cope']['path'].tolist()
+	try:
+		varcopeonly = data_selection[data_selection['modality']=='varcb']['path']
+		copeonly = data_selection[data_selection['modality']=='cope']['path']
+	except KeyError:
+		varcopeonly = data_selection[data_selection['path'].str.contains('desc-varcb')]
+		copeonly = data_selection[data_selection['path'].str.contains('desc-cope')]
+	copes_list = copeonly['path'].tolist()
+	varcopes_list = varcopeonly['path'].tolist()
+	print(copes_list)
+	print(varcopes_list)
+	#copeonly = data_selection[data_selection['modality']=='cope']
+	#copes = copeonly['path'].tolist()
+	#varcopes = data_selection[data_selection['modality']=='varcb']['path'].tolist()
 
 	copemerge = pe.Node(interface=fsl.Merge(dimension='t'),name="copemerge")
-	copemerge.inputs.in_files = copes
+	copemerge.inputs.in_files = copes_list
 	copemerge.inputs.merged_file = 'copes.nii.gz'
 
 	feature = [~copeonly['control']][0]
@@ -1388,13 +1432,14 @@ def l2_controlled_effect(l1_dir,
 	level2model.inputs.regressors = regressors
 	level2model.inputs.contrasts = contrasts
 	# create group for paired t-tests
+	# this should be used for pre-post comparisons of two groups containing the same animals
 	#level2model.inputs.groups = [i for i in range(len(feature))]
 
 	datasink_substitutions.extend([('cope1.nii.gz', '{}_cope.nii.gz'.format(common_fields))])
 	datasink_substitutions.extend([('tstat1.nii.gz','{}_tstat.nii.gz'.format(common_fields))])
 	datasink_substitutions.extend([('zstat1.nii.gz','{}_zstat.nii.gz'.format(common_fields))])
-	datasink_substitutions.extend([('fstat1.nii.gz','{}_fstat.nii.gz'.format(common_fields))])
 	datasink_substitutions.extend([('zfstat1.nii.gz','{}_zfstat.nii.gz'.format(common_fields))])
+	datasink_substitutions.extend([('fstat1.nii.gz','{}_fstat.nii.gz'.format(common_fields))])
 	datasink.inputs.regexp_substitutions = datasink_substitutions
 
 	workflow_connections = [
@@ -1410,9 +1455,9 @@ def l2_controlled_effect(l1_dir,
 		(flameo, datasink, [('zfstats', '@zfstats')]),
 		]
 
-	if len(varcopes) != 0:
+	if len(varcopes_list) != 0:
 		varcopemerge = pe.Node(interface=fsl.Merge(dimension='t'),name="varcopemerge")
-		varcopemerge.inputs.in_files = varcopes
+		varcopemerge.inputs.in_files = varcopes_list
 		varcopemerge.inputs.merged_file = 'varcopes.nii.gz'
 		workflow_connections.extend([
 			(varcopemerge,flameo,[('merged_file','var_cope_file')]),

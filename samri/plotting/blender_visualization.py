@@ -53,7 +53,7 @@ for c in args.stat_map_color:
 ##Function to deselect all objects
 def deselect():
 	for obj in bpy.data.objects:
-		obj.select = False
+		obj.select_set(False)
 
 ##File path
 #path = os.path.abspath('.')
@@ -69,26 +69,38 @@ bpy.ops.wm.read_factory_settings()
 
 #Get rid of blender default objects
 for obj in bpy.data.objects:
-	obj.select = True
+	obj.select_set(True)
 bpy.ops.object.delete()
 
 
 #Import Reference Atlas
 bpy.ops.import_scene.obj(filepath= args.template_path)
 Atlas = bpy.context.selected_objects[0]
+Atlas.data.use_auto_smooth = False
+
 
 #Import Gene data
 gene_data = []
 for stat_map in args.stat_map_path:
 	bpy.ops.import_scene.obj(filepath= stat_map)
+	importedMesh=bpy.context.selected_objects[0]
+	importedMesh.data.use_auto_smooth = False
+
 	gene_data.append(bpy.context.selected_objects[0])
 
+#Increase world brightness0
+bpy.data.worlds["World"].node_tree.nodes["Background"].inputs[0].default_value = (1, 1, 1, 1)
+
+bpy.data.worlds["World"].node_tree.nodes["Background"].inputs[1].default_value = 1
+
+
 #Add a lamp, set location and rotation
-bpy.ops.object.lamp_add(type='SUN', radius=1, view_align=False, location=(0, -10, 10), layers=(True, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False))
+
+bpy.ops.object.light_add(type='SUN', radius=1, location=(-0.00643184, -10.4931, 10.284))
 Sun = bpy.context.selected_objects[0]
 
 deselect()
-Sun.select = True
+Sun.select_set(True)
 bpy.context.object.rotation_mode = 'AXIS_ANGLE'
 bpy.context.object.rotation_axis_angle[0] = 3.02814
 bpy.context.object.rotation_axis_angle[1] = 0.0004
@@ -97,23 +109,27 @@ bpy.context.object.rotation_axis_angle[3] = -0.916546
 
 
 #Try with a hemi lamp
+#HEMI does not exist in 2.8+
 deselect()
 bpy.context.object.rotation_axis_angle[2] = 0.387187
-bpy.ops.object.lamp_add(type='HEMI', radius=1, view_align=False, location=(-0.00643184, -10.4931, 10.284), layers=(True, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False))
+bpy.ops.object.light_add(type='SUN', radius=1, location=(-0.00643184, -10.4931, 10.284))
 Hemi = bpy.context.selected_objects[0]
 
+
 #Create an empty to point camera to???
-bpy.ops.object.empty_add(type='PLAIN_AXES', view_align=False, location=(0, 0, 0), layers=(True, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False))
+bpy.ops.object.empty_add(type='PLAIN_AXES',align='WORLD', location=(0, 0, 0))
 Empty = bpy.context.selected_objects[0]
 
 #Add a camera, set location and rotation
-bpy.ops.object.camera_add(view_align=True, enter_editmode=False, location=(0, 0, 0), rotation=(1.10871, 0.0132652, 1.14827), layers=(True, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False))
+bpy.ops.object.camera_add(enter_editmode=False, location=(0, 0, 0), rotation=(1.10871, 0.0132652, 1.14827))
 Camera = bpy.context.selected_objects[0]
+Camera.data.lens = 35
+Camera.data.sensor_width = 32
 Camera.location = (0,-20,20)
 Camera.scale[0] = -1
 
 deselect()
-Camera.select = True
+Camera.select_set(True)
 
 #bpy.context.object.rotation_mode = 'AXIS_ANGLE'
 #bpy.context.object.rotation_axis_angle[0] = 3.12814
@@ -123,11 +139,11 @@ Camera.select = True
 #bpy.ops.transform.rotate(value=-1, constraint_axis=(False, False, True), constraint_orientation='LOCAL', mirror=False, proportional='DISABLED', proportional_edit_falloff='SMOOTH', proportional_size=1)
 
 deselect()
-Camera.select = True
-Empty.select = True
+Camera.select_set(True)
+Empty.select_set(True)
 
 deselect()
-Camera.select = True
+Camera.select_set(True)
 #bpy.context.space_data.context = 'CONSTRAINT'
 #bpy.ops.object.constraint_add(type='TRACK_TO')
 #bpy.context.object.constraints["Track To"].target = Atlas
@@ -145,14 +161,20 @@ deselect()
 
 ##Create Material for template
 MatAtlas = bpy.data.materials.new(name="atlas_material")
-MatAtlas.diffuse_color = (0.199638, 0.199638, 0.199638)
-MatAtlas.use_transparency = True
-MatAtlas.alpha = 0.7
-MatAtlas.ambient = 0.453521
-MatAtlas.alpha = 0.55
-MatAtlas.emit = 0.21
-MatAtlas.translucency = 0.870422
-MatAtlas.subsurface_scattering.ior = 0.1
+MatAtlas.use_nodes=True
+MatAtlas.node_tree.nodes["Principled BSDF"].inputs[0].default_value = (0.199638, 0.199638, 0.199638, 1)
+MatAtlas.blend_method='BLEND'
+MatAtlas.shadow_method='NONE'
+MatAtlas.node_tree.nodes["Principled BSDF"].inputs[18].default_value = 0.5
+MatAtlas.node_tree.nodes["Principled BSDF"].inputs[5].default_value = 1
+MatAtlas.node_tree.nodes["Principled BSDF"].inputs[7].default_value = 0.281818
+# matNodes=MatAtlas.node_tree
+# mixShader=matNodes.nodes.new('ShaderNodeMixShader')
+# GlassNode=matNodes.nodes.new('ShaderNodeBsdfGlass')
+# GlassNode.inputs[0].default_value = (0.5, 0.5, 0.5, 0.5)
+# outNode=MatAtlas.node_tree.nodes['Material Output']
+# matNodes.links.new(outNode.inputs[0],GlassNode.outputs[0])
+
 
 #Prepare Materials for up to 2 meshes of the statistical maps
 MatGenes = []
@@ -162,7 +184,10 @@ MatGenes.append(bpy.data.materials.new(name="gene_material_2"))
 
 i = 0
 for col in color:
-	MatGenes[i].diffuse_color = (col[0],col[1],col[2])
+	MatGenes[i].use_nodes=True
+	MatGenes[i].node_tree.nodes["Principled BSDF"].inputs[0].default_value  = (col[0],col[1],col[2],1)
+	MatGenes[i].node_tree.nodes["Principled BSDF"].inputs[4].default_value = 1
+
 	i = i+1
 
 #Apply colours
@@ -176,11 +201,14 @@ else:
 i = 0
 for stat_map in args.stat_map_path:
 	if gene_data[i].data.materials:
+
 		# assign to 1st material slot
 		gene_data[i].data.materials[0] = MatGenes[i]
+
 	else:
 		# no slots
 		gene_data[i].data.materials.append(MatGenes[i])
+
 	i += 1
 
 
@@ -197,9 +225,9 @@ bpy.data.scenes["Scene"].camera = Camera
 #bpy.data.scenes["Scene"].render.filepath = path + "/Pic1"
 #bpy.ops.render.render( write_still=True )
 
-Atlas.select=True
+Atlas.select_set(True)
 for Gene in gene_data:
-	Gene.select = True
+	Gene.select_set(True)
 #bpy.ops.transform.rotate(value=1.21921, axis=(-0.00457997, 0.716912, -0.697148), constraint_axis=(False, False, False), constraint_orientation='GLOBAL', mirror=False, proportional='DISABLED', proportional_edit_falloff='SMOOTH', proportional_size=1)
 
 
@@ -224,8 +252,15 @@ def take_pic_Loc(file_name,loc):
 	look_at(Camera,Atlas.location)
 	#bpy.ops.transform.rotate(value=-3.14, constraint_axis=(True, False, False), constraint_orientation='LOCAL', mirror=False, proportional='DISABLED', proportional_edit_falloff='SMOOTH', proportional_size=1)
 	#bpy.ops.transform.rotate(value=3.14, axis=(0, 0, -1), constraint_axis=(False, False, False), constraint_orientation='GLOBAL', mirror=False, proportional='DISABLED', proportional_edit_falloff='SMOOTH', proportional_size=1)
-	bpy.context.scene.render.alpha_mode = 'TRANSPARENT'
-	bpy.context.scene.render.layers["RenderLayer"].use_sky = False
+	bpy.context.scene.render.engine = 'CYCLES'
+	bpy.context.scene.cycles.samples = 20
+	bpy.context.scene.cycles.device = 'CPU'
+	# bpy.context.scene.view_settings.view_transform = 'Standard'
+	# bpy.context.scene.view_settings.look = 'Low Contrast'
+	bpy.context.scene.world.light_settings.use_ambient_occlusion = True
+
+	bpy.context.scene.view_settings.exposure = 1
+	bpy.context.scene.render.film_transparent = True
 	bpy.context.scene.render.image_settings.file_format = 'PNG'
 	bpy.context.scene.render.image_settings.color_depth = '16'
 	bpy.context.scene.render.image_settings.color_mode = 'RGBA'
@@ -237,25 +272,34 @@ def take_pic_Loc(file_name,loc):
 #render and save image
 def take_pic(file_name):
 	deselect()
-	Camera.select= True
+	Camera.select_set(True)
 	#bpy.ops.transform.rotate(value=-3.14, constraint_axis=(True, False, False), constraint_orientation='LOCAL', mirror=False, proportional='DISABLED', proportional_edit_falloff='SMOOTH', proportional_size=1)
 	#bpy.ops.transform.rotate(value=3.14, axis=(0, 0, -1), constraint_axis=(False, False, False), constraint_orientation='GLOBAL', mirror=False, proportional='DISABLED', proportional_edit_falloff='SMOOTH', proportional_size=1)
-	bpy.context.scene.render.alpha_mode = 'TRANSPARENT'
-	bpy.context.scene.render.layers["RenderLayer"].use_sky = False
-	bpy.context.scene.render.resolution_x = 4500
-	bpy.context.scene.render.resolution_y = 5250
+	bpy.context.scene.render.engine = 'CYCLES'
+	bpy.context.scene.cycles.samples = 20
+	bpy.context.scene.cycles.device = 'CPU'
+	# bpy.context.scene.view_settings.view_transform = 'Standard'
+	# bpy.context.scene.view_settings.look = 'Low Contrast'
+	bpy.context.scene.world.light_settings.use_ambient_occlusion = True
+
+	bpy.context.scene.view_settings.exposure = 1
+	bpy.context.scene.render.film_transparent = True
 	bpy.context.scene.render.image_settings.file_format = 'PNG'
 	bpy.context.scene.render.image_settings.color_mode = 'RGBA'
 	bpy.context.scene.render.image_settings.color_depth = '16'
+	bpy.context.scene.render.resolution_x = 4500
+	bpy.context.scene.render.resolution_y = 5250
+	bpy.context.scene.render.resolution_percentage = 50
+
 	bpy.data.scenes["Scene"].render.filepath = path + "/" + file_name
 	bpy.ops.render.render( write_still=True )
 
 
 #Rotate mesh to view
 deselect()
-Atlas.select=True
+Atlas.select_set(True)
 for Gene in gene_data:
-	Gene.select = True
+	Gene.select_set(True)
 
 Atlas.rotation_euler[0] = 1.8326
 Atlas.rotation_euler[1] = 2.96706

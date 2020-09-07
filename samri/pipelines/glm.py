@@ -983,7 +983,7 @@ def l2_common_effect(l1_dir,
 			mymatch = 'subject{}.'.format(mylist)
 			datasink_substitutions.extend([(mymatch, '')])
 		common_fields = ''
-		common_fields += 'acq-'+data_selection.acquisitionuisition.drop_duplicates().item()
+		common_fields += 'acq-'+data_selection.acquisition.drop_duplicates().item()
 		try:
 			common_fields += '_run-'+data_selection.run.drop_duplicates().item()
 		except ValueError:
@@ -1014,7 +1014,7 @@ def l2_common_effect(l1_dir,
 	if groupby == "subject":
 		datasink_substitutions.extend([('subject', 'sub-')])
 		common_fields = ''
-		common_fields += 'acq-'+data_selection.acquisitionuisition.drop_duplicates().item()
+		common_fields += 'acq-'+data_selection.acquisition.drop_duplicates().item()
 		try:
 			common_fields += '_run-'+data_selection.run.drop_duplicates().item()
 		except ValueError:
@@ -1071,7 +1071,7 @@ def l2_common_effect(l1_dir,
 	elif groupby == "session":
 		datasink_substitutions.extend([('session', 'ses-')])
 		common_fields = ''
-		common_fields += 'acq-'+data_selection.acquisitionuisition.drop_duplicates().item()
+		common_fields += 'acq-'+data_selection.acquisition.drop_duplicates().item()
 		try:
 			common_fields += '_run-'+data_selection.run.drop_duplicates().item()
 		except ValueError:
@@ -1108,7 +1108,7 @@ def l2_common_effect(l1_dir,
 	elif groupby == "task":
 		datasink_substitutions.extend([('task', 'task-')])
 		common_fields = ''
-		common_fields += 'acq-'+data_selection.acquisitionuisition.drop_duplicates().item()
+		common_fields += 'acq-'+data_selection.acquisition.drop_duplicates().item()
 		try:
 			common_fields += '_run-'+data_selection.run.drop_duplicates().item()
 		except ValueError:
@@ -1149,8 +1149,8 @@ def l2_common_effect(l1_dir,
 	elif groupby == "none":
 		common_fields = ''
 		try:
-			if not data_selection.acquisitionuisition.drop_duplicates().isnull().values.any():
-				common_fields += 'acq-'+data_selection.acquisitionuisition.drop_duplicates().item()
+			if not data_selection.acquisition.drop_duplicates().isnull().values.any():
+				common_fields += 'acq-'+data_selection.acquisition.drop_duplicates().item()
 		except AttributeError:
 			pass
 		try:
@@ -1358,6 +1358,7 @@ def l2_controlled_effect(l1_dir,
 	data_selection['control'] = False
 	control_data_selection['control'] = True
 	data_selection = pd.concat([control_data_selection, data_selection])
+
 	if not out_dir:
 		out_dir = path.join(out_base,workflow_name)
 	workdir_name = workflow_name+'_work'
@@ -1398,15 +1399,15 @@ def l2_controlled_effect(l1_dir,
 	#	varcopes_list = data_selection[data_selection['modality']=='varcb']['path'].tolist()
 	#	copes_list = data_selection[data_selection['modality']=='cope']['path'].tolist()
 	try:
-		varcopeonly = data_selection[data_selection['modality']=='varcb']['path']
 		copeonly = data_selection[data_selection['modality']=='cope']['path']
+		varcopeonly = data_selection[data_selection['modality']=='varcb']['path']
 	except KeyError:
-		varcopeonly = data_selection[data_selection['path'].str.contains('desc-varcb')]
 		copeonly = data_selection[data_selection['path'].str.contains('desc-cope')]
+		varcopeonly = data_selection[data_selection['path'].str.contains('desc-varcb')]
 	copes_list = copeonly['path'].tolist()
 	varcopes_list = varcopeonly['path'].tolist()
-	print(copes_list)
-	print(varcopes_list)
+	print('copes',copes_list)
+	print('varcopes',varcopes_list)
 	#copeonly = data_selection[data_selection['modality']=='cope']
 	#copes = copeonly['path'].tolist()
 	#varcopes = data_selection[data_selection['modality']=='varcb']['path'].tolist()

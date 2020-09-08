@@ -125,7 +125,7 @@ def bru2bids(measurements_base,
 		dataset_name = measurements_base
 	description = {
 		'Name':dataset_name,
-		'BIDSVersion':'1.2.0',
+		'BIDSVersion':'1.4.1',
 		}
 	if dataset_authors:
 		description['Authors'] = dataset_authors

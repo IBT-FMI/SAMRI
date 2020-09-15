@@ -35,6 +35,7 @@ N_PROCS=max(N_PROCS-4, 2)
 def bru2bids(measurements_base,
 	bids_extra=['acq','run'],
 	dataset_authors=[],
+	dataset_funding=[],
 	dataset_license='',
 	dataset_name=False,
 	debug=False,
@@ -65,6 +66,8 @@ def bru2bids(measurements_base,
 	dataset_authors : list of string, optional
 		A list of dataset author names, which will be written into the BIDS metadata file.
 		Generally not needed, unless this is important for you.
+	dataset_funding : list, optional
+		List of strings specifying funding sources, corresponds to the BIDS "Funding" field.
 	dataset_license : string, optional
 		A dataset license name that will be written into the BIDS metadata file.
 		Generally not needed, unless this is important for you.
@@ -118,7 +121,7 @@ def bru2bids(measurements_base,
 	workdir = path.join(out_base,workdir_name)
 
 	if not os.path.exists(out_dir):
-		    os.makedirs(out_dir)
+		os.makedirs(out_dir)
 
 	# BIDS needs a descriptor file
 	if not dataset_name:
@@ -129,6 +132,8 @@ def bru2bids(measurements_base,
 		}
 	if dataset_authors:
 		description['Authors'] = dataset_authors
+	if dataset_funding:
+		description['Funding'] = dataset_funding
 	if dataset_license:
 		description['License'] = dataset_license
 	with open(path.join(out_dir,'dataset_description.json'), 'w') as f:
@@ -425,8 +430,12 @@ def bru2bids(measurements_base,
 			except (FileNotFoundError, OSError):
 				pass
 
-	# Create essions files
+	# Create sessions files
 	sessions_file(out_dir, data_selection)
+
+	if len(os.listdir(out_dir) ) == 0:
+		shutil.rmtree(out_dir)
+		print("Empty BIDS directory was produced, removing.")
 
 	# Introduce the notion of validation:
 	print('\n'

@@ -384,7 +384,6 @@ def drs_activity(roi,
 	Other parameter customizations are hard-coded below.
 	"""
 	import pandas as pd
-	from samri.plotting import summary
 	from samri.report import roi
 	from samri.utilities import bids_substitution_iterator
 	from samri.fetch.local import roi_from_atlaslabel

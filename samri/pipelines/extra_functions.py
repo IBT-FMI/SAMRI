@@ -309,8 +309,12 @@ def write_bids_metadata_file(scan_dir, extraction_dicts,
 					adjustments_end = m.groupdict()['value']
 					adjustments_end = parse_paravision_date(adjustments_end)
 					break
-		adjustments_duration = adjustments_end - adjustments_start
-		metadata['DelayAfterTrigger'] = adjustments_duration.total_seconds()
+		try:
+			adjustments_duration = adjustments_end - adjustments_start
+		except UnboundLocalError:
+			metadata['DelayAfterTrigger'] = 0
+		else:
+			metadata['DelayAfterTrigger'] = adjustments_duration.total_seconds()
 
 	if task:
 		metadata['TaskName'] = task

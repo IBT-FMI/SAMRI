@@ -606,6 +606,8 @@ def sessions_file(out_dir, df,
 		Pandas Dataframe containing columns including 'measurement', 'session', and 'subject'.
 	"""
 
+	import numpy as np
+
 	for sub_dir in os.listdir(out_dir):
 		sub_path = os.path.join(out_dir,sub_dir)
 		if os.path.isdir(sub_path) and sub_dir[:4] == 'sub-':
@@ -619,9 +621,13 @@ def sessions_file(out_dir, df,
 					acq_time = os.path.basename(acq_time)
 					acq_time = acq_time.split('_')[:2]
 					acq_time = '_'.join(acq_time)
-					acq_time = datetime.strptime(acq_time, '%Y%m%d_%H%M%S')
-					d['session_id'] = ses_dir
-					d['acq_time'] = acq_time.isoformat()
+					try:
+						acq_time = datetime.strptime(acq_time, '%Y%m%d_%H%M%S')
+					except ValueError:
+						d['acq_time'] = np.nan
+					else:
+						d['session_id'] = ses_dir
+						d['acq_time'] = acq_time.isoformat()
 					sessions_data.append(d)
 			keys = sessions_data[0].keys()
 			with open(os.path.join(sub_path,'{}_sessions.tsv'.format(sub_dir)), "w+") as f:

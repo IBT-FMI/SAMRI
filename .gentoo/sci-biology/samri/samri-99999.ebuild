@@ -1,9 +1,9 @@
-# Copyright 1999-2019 Gentoo Foundation
+# Copyright 1999-2020 Gentoo Authors
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI=7
 
-PYTHON_COMPAT=( python{3_5,3_6} )
+PYTHON_COMPAT=( python3_7 )
 
 inherit distutils-r1
 
@@ -28,9 +28,10 @@ RDEPEND="
 	>=dev-python/matplotlib-2.0.2[${PYTHON_USEDEP}]
 	>=dev-python/numpy-1.13.3[${PYTHON_USEDEP}]
 	dev-python/pandas[${PYTHON_USEDEP}]
+	dev-python/scipy[${PYTHON_USEDEP}]
 	dev-python/seaborn[${PYTHON_USEDEP}]
 	dev-python/statsmodels[${PYTHON_USEDEP}]
-	media-gfx/blender[${PYTHON_USEDEP}]
+	>=media-gfx/blender-2.83.4
 	>=sci-biology/fsl-5.0.9
 	sci-biology/bru2nii
 	atlases? ( sci-biology/mouse-brain-atlases )
@@ -38,13 +39,12 @@ RDEPEND="
 	sci-libs/nibabel[${PYTHON_USEDEP}]
 	>=sci-libs/nipy-0.4.1[${PYTHON_USEDEP}]
 	>=sci-libs/nipype-1.0.0[${PYTHON_USEDEP}]
-	<=sci-libs/pybids-0.6.5[${PYTHON_USEDEP}]
+	sci-libs/pybids[${PYTHON_USEDEP}]
 	sci-libs/scikits_image[${PYTHON_USEDEP}]
-	sci-libs/scipy[${PYTHON_USEDEP}]
 	sci-biology/ants
 	sci-biology/afni
 	sci-biology/nilearn[${PYTHON_USEDEP}]
-	"
+"
 
 REQUIRED_USE="test? ( atlases )"
 

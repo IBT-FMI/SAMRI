@@ -430,6 +430,15 @@ def bru2bids(measurements_base,
 			except (FileNotFoundError, OSError):
 				pass
 
+	# Copy participants/subjects file
+	for ext in ['.tsv','.json']:
+		participants_file = path.join(measurements_base,'participants')+ext
+		participants_file_copy = path.join(out_dir,'participants')+ext
+		try:
+			shutil.copyfile(participants_file,participants_file_copy)
+		except FileNotFoundError:
+			pass
+
 	# Create sessions files
 	sessions_file(out_dir, data_selection)
 

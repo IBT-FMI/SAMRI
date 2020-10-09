@@ -399,7 +399,11 @@ def roi_masking(substitution, ts_file_template, betas_file_template, design_file
 		print('Not found:','\n',event_file)
 		return None,None,None,None,None
 	try:
-		subplot_title = "Subject {} | Session {}".format(str(substitution["subject"]),str(substitution["session"]))
+		subplot_title = "Subject {} | Session {} | Run {}".format(
+			str(substitution["subject"]),
+			str(substitution["session"]),
+			str(substitution["run"]),
+			)
 	except KeyError:
 		subplot_title = ''
 	timecourse = np.mean(timecourse, axis=0)

@@ -15,6 +15,7 @@ except ModuleNotFoundError:
 	from bids_validator import BIDSValidator
 from copy import deepcopy
 from datetime import datetime
+from shutil import copyfile
 
 GENERIC_PHASES = {
 	"f_only_translation":{
@@ -235,9 +236,10 @@ def bids_data_selection(base, structural_match, functional_match, subjects, sess
 	except KeyError:
 		pass
 
+	if verbose:
+		print(df)
+		print(df.columns)
 	# drop event files
-	print(df)
-	print(df.columns)
 	# PyBIDS 0.6.5 and 0.10.2 compatibility
 	try:
 		df = df[df.type != 'events']
@@ -634,3 +636,29 @@ def sessions_file(out_dir, df,
 				dict_writer = csv.DictWriter(f, keys, delimiter='\t')
 				dict_writer.writeheader()
 				dict_writer.writerows(sessions_data)
+
+def copy_bids_files(bids_in, bids_out):
+	"""Copy BIDS metadata files.
+
+	Parameters
+	----------
+
+	bids_in : str
+		Input BIDS data directory.
+	out_out : str
+		Output BIDS data directory.
+	"""
+
+	bids_file_list = [
+		'participants.tsv',
+		'participants.json',
+		'dataset_description.json',
+		]
+	for i in bids_file_list:
+		in_file = os.path.join(bids_in,i)
+		out_file = os.path.join(bids_out,i)
+		try:
+			copyfile(in_file,out_file)
+		except:
+			print('Copying {} to {} failed.'.format(in_file,out_file))
+			pass

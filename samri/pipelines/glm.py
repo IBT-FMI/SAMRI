@@ -18,7 +18,7 @@ from nipype.interfaces.fsl.model import Level1Design
 
 from samri.pipelines.extra_interfaces import SpecifyModel
 from samri.pipelines.extra_functions import select_from_datafind_df, corresponding_eventfile, get_bids_scan, physiofile_ts, eventfile_add_habituation, regressor
-from samri.pipelines.utils import bids_dict_to_source, ss_to_path, iterfield_selector, datasource_exclude, bids_dict_to_dir
+from samri.pipelines.utils import bids_dict_to_source, copy_bids_files, ss_to_path, iterfield_selector, datasource_exclude, bids_dict_to_dir
 from samri.report.roi import ts
 from samri.utilities import N_PROCS
 
@@ -329,7 +329,7 @@ def l1(preprocessing_dir,
 
 	n_jobs = max(int(round(mp.cpu_count()*n_jobs_percentage)),2)
 	workflow.run(plugin="MultiProc", plugin_args={'n_procs' : n_jobs})
-	copyfile(os.path.join(preprocessing_dir,'dataset_description.json'),os.path.join(out_dir,'dataset_description.json'))
+	copy_bids_files(preprocessing_dir, os.path.join(out_base,workflow_name))
 	if not keep_work:
 		shutil.rmtree(path.join(out_base,workdir_name))
 
@@ -598,7 +598,7 @@ def l1_physio(preprocessing_dir, physiology_identifier,
 
 	n_jobs = max(int(round(mp.cpu_count()*n_jobs_percentage)),2)
 	workflow.run(plugin="MultiProc", plugin_args={'n_procs' : n_jobs})
-	copyfile(os.path.join(preprocessing_dir,'dataset_description.json'),os.path.join(out_dir,'dataset_description.json'))
+	copy_bids_files(preprocessing_dir, os.path.join(out_base,workflow_name))
 	if not keep_work:
 		shutil.rmtree(path.join(out_base,workdir_name))
 
@@ -850,7 +850,7 @@ def seed(preprocessing_dir, seed_mask,
 
 	n_jobs = max(int(round(mp.cpu_count()*n_jobs_percentage)),2)
 	workflow.run(plugin="MultiProc", plugin_args={'n_procs' : n_jobs})
-	copyfile(os.path.join(preprocessing_dir,'dataset_description.json'),os.path.join(out_dir,'dataset_description.json'))
+	copy_bids_files(preprocessing_dir, os.path.join(out_base,workflow_name))
 	if not keep_work:
 		shutil.rmtree(path.join(out_base,workdir_name))
 

@@ -7,7 +7,6 @@ import shutil
 from copy import deepcopy
 from itertools import product
 from os import path
-from shutil import copyfile
 
 import multiprocessing as mp
 import nipype.interfaces.io as nio
@@ -20,7 +19,7 @@ from samri.fetch.templates import fetch_rat_waxholm
 from samri.pipelines.extra_functions import corresponding_physiofile, get_bids_scan, write_bids_events_file, force_dummy_scans, BIDS_METADATA_EXTRACTION_DICTS
 from samri.pipelines.extra_interfaces import VoxelResize, FSLOrient
 from samri.pipelines.nodes import *
-from samri.pipelines.utils import bids_data_selection, fslmaths_invert_values, ss_to_path, GENERIC_PHASES
+from samri.pipelines.utils import bids_data_selection, copy_bids_files, fslmaths_invert_values, ss_to_path, GENERIC_PHASES
 
 DUMMY_SCANS=10
 
@@ -294,6 +293,7 @@ def legacy(bids_base, template,
 		print('We could not write the DOT file for visualization (`dot` function from the graphviz package). This is non-critical to the processing, but you should get this fixed.')
 
 	workflow.run(plugin="MultiProc", plugin_args={'n_procs' : n_jobs})
+	copy_bids_files(bids_base, os.path.join(out_base,workflow_name))
 	if not keep_work:
 		workdir = path.join(workflow.base_dir,workdir_name)
 		try:
@@ -635,7 +635,7 @@ def generic(bids_base, template,
 		print('We could not write the DOT file for visualization (`dot` function from the graphviz package). This is non-critical to the processing, but you should get this fixed.')
 
 	workflow.run(plugin="MultiProc", plugin_args={'n_procs' : n_jobs})
-	copyfile(os.path.join(bids_base,'dataset_description.json'),os.path.join(out_base,workflow_name,'dataset_description.json'))
+	copy_bids_files(bids_base, os.path.join(out_base,workflow_name))
 	if not keep_work:
 		workdir = path.join(workflow.base_dir,workdir_name)
 		try:

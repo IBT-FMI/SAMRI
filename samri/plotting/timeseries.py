@@ -213,6 +213,7 @@ def multi(timecourses,
 	x_label="TR [1s]",
 	model_line_multiplier=2,
 	scale_x=False,
+	ncols=2,
 	):
 	"""Plot multiple timecourses on an intelligently scaled multi-axis figure.
 
@@ -230,6 +231,8 @@ def multi(timecourses,
 		For compactness, this title is actually assigned to the y-label field, and can be placed left or right of the plot (corresponding to `False` or `True` values of the `quantitative` attribute, respectively)
 	ax_size : list, optional
 		A list of two floats or integers, giving the width and height of the constituent axes of the figures.
+	ncols : int, optional
+		The number of columns on which to distribute the axes.
 	"""
 
 	if isinstance(timecourses, pd.DataFrame):
@@ -252,7 +255,6 @@ def multi(timecourses,
 		plt.style.use(path.join(this_path,"samri.conf"))
 
 	if len(timecourses) > 1:
-		ncols = 2
 		max_rowspan = int(np.ceil((len(timecourses) / float(ncols))))
 		min_rowspan = int(np.floor((len(timecourses) / float(ncols))))
 		fig, axes = plt.subplots(figsize=(ax_size[0]*ncols,ax_size[1]*max_rowspan), nrows=max_rowspan*min_rowspan, ncols=ncols)

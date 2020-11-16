@@ -211,7 +211,7 @@ def multi(timecourses,
 	ax_size=[28,4],
 	unit_ticking=False,
 	x_label="TR [1s]",
-	model_line_multiplier=2,
+	model_line_multiplier=1.25,
 	scale_x=False,
 	ncols=2,
 	):

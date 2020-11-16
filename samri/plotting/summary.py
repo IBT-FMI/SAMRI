@@ -327,6 +327,7 @@ def p_roi_masking(substitution, ts_file_template, beta_file_template, p_file_tem
 
 def roi_masking(substitution, ts_file_template, betas_file_template, design_file_template, event_file_template, roi,
 	scale_design=True,
+	subplot_title_template='Subject {subject} | Session {session} | Run {run}',
 	):
 	"""Apply a substitution pattern to timecourse, beta, and design file templates - and mask the data of the former two according to a roi; optionally scales the design by the mean beta.
 
@@ -346,6 +347,8 @@ def roi_masking(substitution, ts_file_template, betas_file_template, design_file
 		Path to the region of interest file based on which to create a mask for the time course and beta files. The file should be in NIfTI format.
 	scale_design : string
 		Whether or not to scale the design timecourse by the mean beta of the region of interest.
+	subplot_title_template : string
+		A formattable string used to compute subplot titles; should contain "{subject}", "{session}", and "{run}".
 
 	Returns
 	-------
@@ -399,10 +402,10 @@ def roi_masking(substitution, ts_file_template, betas_file_template, design_file
 		print('Not found:','\n',event_file)
 		return None,None,None,None,None
 	try:
-		subplot_title = "Subject {} | Session {} | Run {}".format(
-			str(substitution["subject"]),
-			str(substitution["session"]),
-			str(substitution["run"]),
+		subplot_title = subplot_title_template.format(
+			subject=str(substitution["subject"]),
+			session=str(substitution["session"]),
+			run=str(substitution["run"]),
 			)
 	except KeyError:
 		subplot_title = ''
@@ -422,6 +425,7 @@ def ts_overviews(substitutions, roi,
 	n_jobs=False,
 	n_jobs_percentage=0.6,
 	scale_design=True,
+	subplot_title_template='Subject {subject} | Session {session} | Run {run}',
 	):
 
 	timecourses = []
@@ -443,6 +447,7 @@ def ts_overviews(substitutions, roi,
 		[event_file_template]*len(substitutions),
 		[roi]*len(substitutions),
 		[scale_design]*len(substitutions),
+		[subplot_title_template]*len(substitutions),
 		))
 	timecourses, designs, roi_maps, event_dfs, subplot_titles = zip(*substitutions_data)
 

@@ -592,7 +592,7 @@ def write_bids_events_file(scan_dir,
 def physiofile_ts(in_file, column_name,
 	save=True,
 	):
-	"""Based on a BIDS timecourse path, get the corresponding BIDS physiology file."""
+	"""Based on a BIDS timecourse path and a physiological regressor name, get the corresponding timecourse."""
 
 	from os import path
 	import json

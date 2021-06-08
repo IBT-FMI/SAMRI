@@ -38,7 +38,7 @@ def sort_by_occurence(assignments):
 def assignment_from_paths(path_list,
 	components=4,
 	covariance='spherical',
-	mask='/usr/share/mouse-brain-atlases/dsurqec_200micron_mask.nii',
+	mask='/usr/share/mouse-brain-templates/dsurqec_200micron_mask.nii',
 	save_as='',
 	):
 	"""Segment list of paths into Gaussian mixtures

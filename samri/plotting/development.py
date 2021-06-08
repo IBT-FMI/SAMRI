@@ -19,7 +19,7 @@ from samri.analysis import fc
 #def overview(workflow, identifiers,
 #	cut_coords=[None, [0,-4.5,-3.3]],
 #	threshold=2.5,
-#	template='/usr/share/mouse-brain-atlases/dsurqec_40micron_masked.nii',
+#	template='/usr/share/mouse-brain-templates/dsurqec_40micron_masked.nii',
 #	orientation="portrait",
 #	save_as="",
 #	):
@@ -99,7 +99,7 @@ def qc_regressor(sessions, subjects, scans, workflow_name, mask,
 		)
 
 def single_ts_seed_connectivity(
-	template='/usr/share/mouse-brain-atlases/dsurqec_40micron_masked.nii',
+	template='/usr/share/mouse-brain-templates/dsurqec_40micron_masked.nii',
 	save_as="fcs.pdf"
 	):
 	connectivity_img2 = fc.seed_based_connectivity(
@@ -120,7 +120,7 @@ def single_ts_seed_connectivity(
 		)
 
 def seed_connectivity_overview(
-	template='/usr/share/mouse-brain-atlases/dsurqec_40micron_masked.nii',
+	template='/usr/share/mouse-brain-templates/dsurqec_40micron_masked.nii',
 	cut_coords=[None,[0,-4.9,-3.3]],
 	plot=False,
 	):
@@ -149,7 +149,7 @@ def seed_connectivity_overview(
 		"~/ni_data/ofM.dr/",
 		"composite",
 		)
-	fc_results = fc.seed_based(substitutions, "~/ni_data/templates/roi/DSURQEc_dr_xs.nii.gz", '/usr/share/mouse-brain-atlases/dsurqec_200micron_mask.nii',
+	fc_results = fc.seed_based(substitutions, "~/ni_data/templates/roi/DSURQEc_dr_xs.nii.gz", '/usr/share/mouse-brain-templates/dsurqec_200micron_mask.nii',
 		ts_file_template="~/ni_data/ofM.dr/preprocessing/{preprocessing_dir}/sub-{subject}/ses-{session}/func/sub-{subject}_ses-{session}_task-{task}.nii.gz",
 		)
 
@@ -185,8 +185,8 @@ def seed_connectivity_overview(
 			)
 
 def functional_connectivity(ts="~/ni_data/ofM.dr/preprocessing/as_composite/sub-5690/ses-ofM_aF/func/sub-5690_ses-ofM_aF_task-EPI_CBV_chr_longSOA.nii.gz",
-	labels_img='/usr/share/mouse-brain-atlases/dsurqec_40micron_labels.nii',
-	labels = '/usr/share/mouse-brain-atlases/dsurqec_mapping.csv',
+	labels_img='/usr/share/mouse-brain-templates/dsurqec_40micron_labels.nii',
+	labels = '/usr/share/mouse-brain-templates/dsurqec_mapping.csv',
 	):
 	"""
 	simple fc example

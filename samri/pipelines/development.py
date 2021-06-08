@@ -20,8 +20,8 @@ def dbu(
 		functional_blur_xy=.4,
 		functional_registration_method="functional",
 		keep_work=True,
-		template='/usr/share/mouse-brain-atlases/dsurqec_200micron.nii',
-		registration_mask='/usr/share/mouse-brain-atlases/dsurqec_200micron_mask.nii',
+		template='/usr/share/mouse-brain-templates/dsurqec_200micron.nii',
+		registration_mask='/usr/share/mouse-brain-templates/dsurqec_200micron_mask.nii',
 		actual_size=True,
 		verbose=True,
 		)
@@ -39,8 +39,8 @@ def ss():
 		functional_blur_xy=.4,
 		functional_registration_method="composite",
 		keep_work=True,
-		template='/usr/share/mouse-brain-atlases/dsurqec_200micron.nii',
-		registration_mask='/usr/share/mouse-brain-atlases/dsurqec_200micron_mask.nii',
+		template='/usr/share/mouse-brain-templates/dsurqec_200micron.nii',
+		registration_mask='/usr/share/mouse-brain-templates/dsurqec_200micron_mask.nii',
 		actual_size=True,
 		verbose=True,
 		)
@@ -50,7 +50,7 @@ def anova_fc():
 	glm.l2_anova("~/ni_data/ofM.dr/fc/drs_seed/",
 		workflow_name="anova_fc",
 		keep_work=True,
-		mask='/usr/share/mouse-brain-atlases/dsurqec_200micron_mask.nii',
+		mask='/usr/share/mouse-brain-templates/dsurqec_200micron_mask.nii',
 		include={
 			'session':['ofM','ofMaF','ofMcF1','ofMcF2','ofMpF'],
 			'subject':['5691',"5689","5690","5700"],
@@ -62,7 +62,7 @@ def anova():
 	glm.l2_anova("~/ni_data/ofM.dr/bids/l1/generic/",
 		workflow_name="anova",
 		keep_work=False,
-		mask='/usr/share/mouse-brain-atlases/dsurqec_200micron_mask.nii',
+		mask='/usr/share/mouse-brain-templates/dsurqec_200micron_mask.nii',
 		include={
 			'session':['ofM','ofMaF','ofMcF1','ofMcF2','ofMpF'],
 			'subject':['5691',"5689","5690","5700","6451","6460","6456","6461","6462"],
@@ -71,7 +71,7 @@ def anova():
 	#glm.l2_anova("~/ni_data/ofM.dr/l1/composite/",
 	#	workflow_name="anova_control",
 	#	keep_work=False,
-	#	mask='/usr/share/mouse-brain-atlases/dsurqec_200micron_mask.nii',
+	#	mask='/usr/share/mouse-brain-templates/dsurqec_200micron_mask.nii',
 	#	include={
 	#		'session':['ofM','ofMaF','ofMcF1','ofMcF2','ofMpF'],
 	#		'subject':["6262","6255","5694","5706",'5704'],
@@ -80,7 +80,7 @@ def anova():
 	#glm.l2_anova("~/ni_data/ofM.dr/l1/composite/",
 	#	workflow_name="anova",
 	#	keep_work=False,
-	#	mask='/usr/share/mouse-brain-atlases/dsurqec_200micron_mask.nii',
+	#	mask='/usr/share/mouse-brain-templates/dsurqec_200micron_mask.nii',
 	#	include={
 	#		'session':['ofM','ofMaF','ofMcF1','ofMcF2','ofMpF'],
 	#		'subject':['5691',"5689","5690","5700"],
@@ -97,7 +97,7 @@ def typical_resp(data_path='~/ni_data/ofM.dr/bids/', l1_dir='l1', workflow_name=
 			},
 		groupby="session",
 		keep_work=True,
-		mask='/usr/share/mouse-brain-atlases/dsurqec_200micron_mask.nii',
+		mask='/usr/share/mouse-brain-templates/dsurqec_200micron_mask.nii',
 		)
 
 def test_dual_regression(group_level="migp"):

@@ -145,8 +145,8 @@ def test_single_generic():
 	single_generic(
 		'/usr/share/samri_bidsdata/bids/sub-4007/ses-ofM/func/sub-4007_ses-ofM_task-JogB_acq-EPIlowcov_run-1_cbv.nii.gz',
 		'/usr/share/samri_bidsdata/bids/sub-4007/ses-ofM/anat/sub-4007_ses-ofM_acq-TurboRARElowcov_T2w.nii.gz',
-		'/usr/share/mouse-brain-atlases/dsurqec_200micron.nii',
-		mask='/usr/share/mouse-brain-atlases/dsurqec_200micron_mask.nii',
+		'/usr/share/mouse-brain-templates/dsurqec_200micron.nii',
+		mask='/usr/share/mouse-brain-templates/dsurqec_200micron_mask.nii',
 		phases=TEST_PHASES,
 		s_phases=['s_rigid','affine','syn'],
 		f_phases=['f_rigid'],
@@ -154,8 +154,8 @@ def test_single_generic():
 #single_generic(
 #	'~/ni_data/ofM.dr/bids_collapsed/sub-4001/ses-ofMcf"/func/sub-4001_ses-ofMcF2_task-JogB_acq-EPIlowcov_run-1_cbv.nii.gz',
 #	'~/ni_data/ofM.dr/bids_collapsed/sub-4001/ses-ofMcF2/anat/sub-4001_ses-ofMcF2_acq-TurboRARElowcov_T2w.nii.gz',
-#	'/usr/share/mouse-brain-atlases/dsurqec_200micron.nii',
-#	mask='/usr/share/mouse-brain-atlases/dsurqec_200micron_mask.nii',
+#	'/usr/share/mouse-brain-templates/dsurqec_200micron.nii',
+#	mask='/usr/share/mouse-brain-templates/dsurqec_200micron_mask.nii',
 #	phases=NEWPHASES,
 #	s_phases=['s_rigid','affine','syn'],
 #	f_phases=['f_rigid'],

@@ -577,8 +577,8 @@ def select_template(template, registration_mask):
 	"""Select the template and mask to be used, this supports special string values which select default SAMRI settings"""
 	if template:
 		if template == "mouse":
-			template = '/usr/share/mouse-brain-atlases/dsurqec_200micron.nii'
-			registration_mask = '/usr/share/mouse-brain-atlases/dsurqec_200micron_mask.nii'
+			template = '/usr/share/mouse-brain-templates/dsurqec_200micron.nii'
+			registration_mask = '/usr/share/mouse-brain-templates/dsurqec_200micron_mask.nii'
 		elif template == "rat":
 			from samri.fetch.templates import fetch_rat_waxholm
 			template = fetch_rat_waxholm()['template']

@@ -48,7 +48,7 @@ sns.pointplot(
 
 #ax2 = plt.axes(roi_coordinates)
 #stat_map = path.abspath(path.expanduser('~/ni_data/ofM.dr/bids/l2/best_responders/sessionofM/tstat1.nii.gz'))
-#template = path.abspath(path.expanduser('/usr/share/mouse-brain-atlases/dsurqec_40micron_masked.nii'))
+#template = path.abspath(path.expanduser('/usr/share/mouse-brain-templates/dsurqec_40micron_masked.nii'))
 #maps.stat(stat_maps=[stat_map],
 #	template=template,
 #	cut_coords=[(0,-4.3,-3.3)],

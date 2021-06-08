@@ -292,8 +292,8 @@ def session_irregularity_filter(bids_path, exclude_irregularities):
 
 
 def ordered_structures(
-	atlas='/usr/share/mouse-brain-atlases/dsurqec_40micron_labels.nii',
-	mapping='/usr/share/mouse-brain-atlases/dsurqe_labels.csv',
+	atlas='/usr/share/mouse-brain-templates/dsurqec_40micron_labels.nii',
+	mapping='/usr/share/mouse-brain-templates/dsurqe_labels.csv',
 	label_columns=['right label','left label'],
 	structure_column='Structure',
 	remove_zero_label=True,

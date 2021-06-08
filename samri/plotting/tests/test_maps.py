@@ -12,7 +12,7 @@ def test_atlas_labels_longtime():
        maps.atlas_labels()
 
 def test_atlas_labels():
-       mapping = pd.read_csv('/usr/share/mouse-brain-atlases/dsurqe_labels.csv')
+       mapping = pd.read_csv('/usr/share/mouse-brain-templates/dsurqe_labels.csv')
        mapping = mapping.iloc[::60, :]
        maps.atlas_labels(mapping=mapping)
 
@@ -67,7 +67,7 @@ def test_population_roi_over_time():
 	      )
 
        ax2 = plt.axes(roi_coordinates)
-       maps.atlas_label('/usr/share/mouse-brain-atlases/dsurqec_200micron_roi-dr.nii',
+       maps.atlas_label('/usr/share/mouse-brain-templates/dsurqec_200micron_roi-dr.nii',
 	       scale=0.3,
 	       color="#E69F00",
 	       ax=ax2,

@@ -26,8 +26,8 @@ def test_multi_roi_timeseries():
 		validate_for_template="{data_dir}/l1/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_task-JogB_acq-EPIlowcov_run-{run}_{modality}.nii.gz",
 		)
 
-	mapping='/usr/share/mouse-brain-atlases/dsurqe_labels.csv'
-	atlas='/usr/share/mouse-brain-atlases/dsurqec_40micron_labels.nii'
+	mapping='/usr/share/mouse-brain-templates/dsurqe_labels.csv'
+	atlas='/usr/share/mouse-brain-templates/dsurqec_40micron_labels.nii'
 	my_roi = roi_from_atlaslabel(atlas,
 		mapping=mapping,
 		label_names=['cortex'],

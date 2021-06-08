@@ -17,8 +17,8 @@ def vta_full(
 	# Assuming data cobnverted to BIDS
 	bids_base = '~/ni_data/ofM.vta/bids'
 
-	#full_prep(bids_base, '/usr/share/mouse-brain-atlases/dsurqec_200micron.nii',
-	#	registration_mask='/usr/share/mouse-brain-atlases/dsurqec_200micron_mask.nii',
+	#full_prep(bids_base, '/usr/share/mouse-brain-templates/dsurqec_200micron.nii',
+	#	registration_mask='/usr/share/mouse-brain-templates/dsurqec_200micron_mask.nii',
 	#	functional_match={'type':['cbv',],},
 	#	structural_match={'acquisition':['TurboRARE']},
 	#	actual_size=True,
@@ -31,7 +31,7 @@ def vta_full(
 	#	out_dir='~/ni_data/ofM.vta/l1',
 	#	workflow_name=workflow_name,
 	#	habituation="confound",
-	#	mask='/usr/share/mouse-brain-atlases/dsurqec_200micron_mask.nii',
+	#	mask='/usr/share/mouse-brain-templates/dsurqec_200micron_mask.nii',
 	#	# We need the workdir to extract the betas
 	#	keep_work=True,
 	#	)
@@ -44,7 +44,7 @@ def vta_full(
 	print(substitutions)
 	iter_significant_signal(path_template,
 		substitutions=substitutions,
-		mask_path='/usr/share/mouse-brain-atlases/dsurqec_200micron_mask.nii',
+		mask_path='/usr/share/mouse-brain-templates/dsurqec_200micron_mask.nii',
 		save_as='~/ni_data/ofM.dr/vta/generic/total_significance.csv'
 		)
 
@@ -111,7 +111,7 @@ def temporal_qc_al_in_one():
 
 def reg_cc(
         path = "~/ni_data/ofM.dr/preprocessing/composite",
-        template = '/usr/share/mouse-brain-atlases/dsurqec_200micron.nii',
+        template = '/usr/share/mouse-brain-templates/dsurqec_200micron.nii',
         radius=8,
         autofind=False,
         plot=False,

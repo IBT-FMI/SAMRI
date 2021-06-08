@@ -2,7 +2,7 @@ def test_contours_single():
 	from samri.plotting.maps import contour_slices
 	import matplotlib.pyplot as plt
 
-	file_template = '/usr/share/mouse-brain-atlases/dsurqec_200micron_masked.nii'
+	file_template = '/usr/share/mouse-brain-templates/dsurqec_200micron_masked.nii'
 
 	cmap = plt.get_cmap('tab20').colors
 	contour_slices('/usr/share/samri_bidsdata/preprocessing/sub-4007/ses-ofM/func/sub-4007_ses-ofM_task-JogB_acq-EPIlowcov_run-1_cbv.nii.gz',
@@ -50,7 +50,7 @@ def test_contours_substitutions():
 			)
 
 		cmap = plt.get_cmap('tab20').colors
-		contour_slices('/usr/share/mouse-brain-atlases/dsurqec_40micron.nii',
+		contour_slices('/usr/share/mouse-brain-templates/dsurqec_40micron.nii',
 			alpha=[0.6],
 			colors=cmap[::2],
 			figure_title='Multi-Session Fit and Coherence Control',

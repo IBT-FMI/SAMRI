@@ -150,7 +150,7 @@ def l1(preprocessing_dir,
 
 	glm = pe.Node(interface=fsl.GLM(), name='glm', iterfield='design')
 	if mask == 'mouse':
-		mask = '/usr/share/mouse-brain-atlases/dsurqec_200micron_mask.nii'
+		mask = '/usr/share/mouse-brain-templates/dsurqec_200micron_mask.nii'
 		glm.inputs.mask = path.abspath(path.expanduser(mask))
 	else:
 		glm.inputs.mask = path.abspath(path.expanduser(mask))
@@ -458,7 +458,7 @@ def l1_physio(preprocessing_dir, physiology_identifier,
 
 	glm = pe.Node(interface=fsl.GLM(), name='glm', iterfield='design')
 	if mask == 'mouse':
-		mask = '/usr/share/mouse-brain-atlases/dsurqec_200micron_mask.nii'
+		mask = '/usr/share/mouse-brain-templates/dsurqec_200micron_mask.nii'
 		glm.inputs.mask = path.abspath(path.expanduser(mask))
 	else:
 		glm.inputs.mask = path.abspath(path.expanduser(mask))
@@ -713,7 +713,7 @@ def seed(preprocessing_dir, seed_mask,
 	glm = pe.Node(interface=fsl.GLM(), name='glm', iterfield='design')
 
 	if mask == 'mouse':
-		mask = '/usr/share/mouse-brain-atlases/dsurqec_200micron_mask.nii'
+		mask = '/usr/share/mouse-brain-templates/dsurqec_200micron_mask.nii'
 		(make_regressor, level1design, [('output', 'session_info')]),
 		glm.inputs.mask = path.abspath(path.expanduser(mask))
 	else:
@@ -888,7 +888,7 @@ def l2_common_effect(l1_dir,
 	keep_work=False,
 	keep_crashdump=False,
 	tr=1,
-	mask='/usr/share/mouse-brain-atlases/dsurqec_200micron_mask.nii',
+	mask='/usr/share/mouse-brain-templates/dsurqec_200micron_mask.nii',
 	match={},
 	n_jobs_percentage=1,
 	out_base="",
@@ -1289,7 +1289,7 @@ def l2_controlled_effect(l1_dir,
 	control_dir='',
 	keep_work=False,
 	tr=1,
-	mask='/usr/share/mouse-brain-atlases/dsurqec_200micron_mask.nii',
+	mask='/usr/share/mouse-brain-templates/dsurqec_200micron_mask.nii',
 	match={},
 	control_match={},
 	n_jobs_percentage=1,
@@ -1497,7 +1497,7 @@ def l2_anova(l1_dir,
 	tr=1,
 	keep_crashdump=False,
 	workflow_name="generic",
-	mask='/usr/share/mouse-brain-atlases/dsurqec_200micron_mask.nii',
+	mask='/usr/share/mouse-brain-templates/dsurqec_200micron_mask.nii',
 	n_jobs_percentage=1,
 	exclude={},
 	include={},

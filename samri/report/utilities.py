@@ -137,7 +137,7 @@ def pattern_df(img_path, pattern,
 		return df
 
 def voxels_for_comparison(img1_path, img2_path,
-	mask_path='/usr/share/mouse-brain-atlases/dsurqec_200micron_mask.nii',
+	mask_path='/usr/share/mouse-brain-templates/dsurqec_200micron_mask.nii',
 	resample_voxel_size=[],
 	replace_nan_with=0.,
 	):

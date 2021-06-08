@@ -85,7 +85,7 @@ def structural_registration(template, num_threads=4):
 	return registration, s_warp, f_warp
 
 def generic_registration(template,
-	structural_mask='/usr/share/mouse-brain-atlases/dsurqec_200micron_mask.nii',
+	structural_mask='/usr/share/mouse-brain-templates/dsurqec_200micron_mask.nii',
 	functional_mask='',
 	num_threads=4,
 	phase_dictionary=GENERIC_PHASES,
@@ -181,7 +181,7 @@ def generic_registration(template,
 	return s_registration, s_warp, f_registration, f_warp
 
 def functional_registration(template,
-	mask='/usr/share/mouse-brain-atlases/dsurqec_200micron_mask.nii',
+	mask='/usr/share/mouse-brain-templates/dsurqec_200micron_mask.nii',
 	num_threads=4,
 	phase_dictionary=GENERIC_PHASES,
 	f_phases=["f_only_translation",'similarity',"affine","syn"],

@@ -244,8 +244,8 @@ def atlasassignment(data_path='~/ni_data/ofM.dr/bids/l2/anova/anova_zfstat.nii.g
 
 	from copy import deepcopy
 
-	atlas_filename = '/usr/share/mouse-brain-atlases/dsurqec_40micron_labels.nii'
-	mapping = '/usr/share/mouse-brain-atlases/dsurqe_labels.csv'
+	atlas_filename = '/usr/share/mouse-brain-templates/dsurqec_40micron_labels.nii'
+	mapping = '/usr/share/mouse-brain-templates/dsurqe_labels.csv'
 	atlas_filename = path.abspath(path.expanduser(atlas_filename))
 	mapping = path.abspath(path.expanduser(mapping))
 	data_path = path.abspath(path.expanduser(data_path))
@@ -374,8 +374,8 @@ def analytic_pattern_per_session(substitutions, analytic_pattern,
 	return df
 
 def drs_activity(roi,
-	atlas='/usr/share/mouse-brain-atlases/dsurqec_40micron_labels.nii',
-	mapping='/usr/share/mouse-brain-atlases/dsurqe_labels.csv',
+	atlas='/usr/share/mouse-brain-templates/dsurqec_40micron_labels.nii',
+	mapping='/usr/share/mouse-brain-templates/dsurqe_labels.csv',
 	):
 	"""
 	TODO : make more generalizable, too many hardcoded values

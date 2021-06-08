@@ -33,8 +33,8 @@ def test_prepare_feature_map():
 def test_summary_atlas():
 	from samri.fetch.local import summary_atlas
 
-	mapping='/usr/share/mouse-brain-atlases/dsurqe_labels.csv'
-	atlas='/usr/share/mouse-brain-atlases/dsurqec_40micron_labels.nii'
+	mapping='/usr/share/mouse-brain-templates/dsurqe_labels.csv'
+	atlas='/usr/share/mouse-brain-templates/dsurqec_40micron_labels.nii'
 	summary={
 		1:{
 			'structure':'Hippocampus',
@@ -70,8 +70,8 @@ def test_summary_atlas():
 def test_roi_from_atlaslabel():
 	from samri.fetch.local import roi_from_atlaslabel
 
-	mapping='/usr/share/mouse-brain-atlases/dsurqe_labels.csv'
-	atlas='/usr/share/mouse-brain-atlases/dsurqec_40micron_labels.nii'
+	mapping='/usr/share/mouse-brain-templates/dsurqe_labels.csv'
+	atlas='/usr/share/mouse-brain-templates/dsurqec_40micron_labels.nii'
 
 	my_roi = roi_from_atlaslabel(atlas,
 		mapping=mapping,

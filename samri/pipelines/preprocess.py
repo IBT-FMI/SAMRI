@@ -709,8 +709,8 @@ def common_select(bids_base, out_base, workflow_name, template, registration_mas
 
 	if template:
 		if template == "mouse":
-			template = '/usr/share/mouse-brain-atlases/dsurqec_200micron.nii'
-			registration_mask = '/usr/share/mouse-brain-atlases/dsurqec_200micron_mask.nii'
+			template = '/usr/share/mouse-brain-templates/dsurqec_200micron.nii'
+			registration_mask = '/usr/share/mouse-brain-templates/dsurqec_200micron_mask.nii'
 		elif template == "rat":
 			from samri.fetch.templates import fetch_rat_waxholm
 			template = fetch_rat_waxholm()['template']

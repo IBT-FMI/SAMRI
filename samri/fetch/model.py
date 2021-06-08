@@ -7,7 +7,7 @@ from samri.fetch.local import prepare_abi_connectivity_maps
 def abi_connectivity_map(identifier,
 	exclude_experiments=[],
 	keep_work=False,
-	mask='/usr/share/mouse-brain-atlases/dsurqec_200micron_mask.nii',
+	mask='/usr/share/mouse-brain-templates/dsurqec_200micron_mask.nii',
 	prepare_root='/var/tmp/{user}/samri/abi_connectivity/',
 	prepare_subdirs='sub-{experiment}/ses-1/anat/sub-{experiment}_ses-1_desc-cope.nii.gz',
 	save_as_cope='',

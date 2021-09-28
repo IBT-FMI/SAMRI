@@ -19,10 +19,10 @@ Otherwise you will need to manually fetch, unpack, and move such data to the cor
 wget http://chymera.eu/distfiles/mouse-brain-templates-0.5.3.tar.xz
 tar xf mouse-brain-templates-0.5.3.tar.xz
 mv mouse_brain_atlases /usr/share/
-wget http://chymera.eu/distfiles/samri_bindata-0.1.2.tar.xz
+wget http://chymera.eu/distfiles/samri_bindata-0.4.tar.xz
 tar xf samri_bindata-0.4.tar.xz
 mv samri_bindata /usr/share/
-wget http://chymera.eu/distfiles/samri_bidsdata-0.2.1.tar.xz
+wget http://chymera.eu/distfiles/samri_bidsdata-0.3.tar.xz
 tar xf samri_bidsdata-0.3.tar.xz
 mv samri_bidsdata /usr/share/
 ```

@@ -31,7 +31,7 @@ RDEPEND="
 	dev-python/scipy[${PYTHON_USEDEP}]
 	dev-python/seaborn[${PYTHON_USEDEP}]
 	dev-python/statsmodels[${PYTHON_USEDEP}]
-	>=media-gfx/blender-2.83.4
+	media-gfx/blender:2.91
 	>=sci-biology/fsl-5.0.9
 	sci-biology/bru2nii
 	atlases? ( sci-biology/mouse-brain-atlases )

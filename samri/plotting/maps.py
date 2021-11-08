@@ -622,6 +622,22 @@ def _create_3Dplot(stat_maps,
 	vmax : int
 		max for colorbar range.
 	"""
+
+	# First we need to determine the blender command, as this might be suffixed with a version string, here goes:
+	import re
+	command_paths = os.getenv('PATH').split(':')
+	command_paths = list(set(command_paths))
+	blender_candidates = []
+	for command_path in command_paths:
+		try:
+			for available_command in os.listdir(command_path):
+				blender_candidate = re.match('^blender[-,0-9+\.]*$',available_command)
+				if blender_candidate:
+					blender_candidates.append(blender_candidate.string)
+		except FileNotFoundError:
+			pass
+	blender_candidates = sorted(blender_candidates, reverse=True)
+
 	# The following imports a lot of extra functions, and is only required for this function.
 	from samri.plotting.create_mesh_featuremaps import create_mesh
 
@@ -667,29 +683,36 @@ def _create_3Dplot(stat_maps,
 	col_plus = mcolors.to_hex([col_plus[0],col_plus[1],col_plus[2]])
 	col_minus = mcolors.to_hex([col_minus[0],col_minus[1],col_minus[2]])
 	script_loc = os.path.join(os.path.dirname(os.path.abspath(__file__)),'blender_visualization.py')
-	cli = ['blender', '-b', '-P', script_loc,'--','-t',template_mesh]
+	cli_arguments = ['-b', '-P', script_loc,'--','-t',template_mesh]
 
 	for path in obj_paths:
 		if not path is None:
-			cli.append('-s')
-			cli.append(path)
+			cli_arguments.append('-s')
+			cli_arguments.append(path)
 			if "neg_mesh" in path:
-				cli.append('-c')
-				cli.append(col_minus)
+				cli_arguments.append('-c')
+				cli_arguments.append(col_minus)
 			if "pos_mesh" in path:
-				cli.append('-c'),
-				cli.append(col_plus)
+				cli_arguments.append('-c'),
+				cli_arguments.append(col_plus)
 
 	s = ""
 	for path in obj_paths:
 		if not path is None:
 			s = os.path.splitext(os.path.basename(path))[0].split('_')[0]
 	filename_3Dplot = "3Dplot_{}.png".format(s)
-	cli.append('-n')
-	cli.append(filename_3Dplot)
+	cli_arguments.append('-n')
+	cli_arguments.append(filename_3Dplot)
 
-	#python script cannot be run directly, need to start blender in background via command line, then run script.
-	subprocess.run(cli,check=True,stdout=open(os.devnull,'wb'))
+	# Python script cannot be run directly, need to start blender in background via command line, then run script.
+	# Further the blender executable may be versioned, and we cycle from the most recent to the oldest:
+	for blender_candidate in blender_candidates:
+		cli = [blender_candidate] + cli_arguments
+		try:
+			subprocess.run(cli,check=True,stdout=open(os.devnull,'wb'))
+			break
+		except:
+			pass
 
 	path_3Dplot = "/tmp/{}".format(filename_3Dplot)
 	mesh = plt.imread(path_3Dplot)

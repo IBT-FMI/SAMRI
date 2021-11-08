@@ -112,6 +112,67 @@ def ts(img_path,
 	ts_medians = np.mean(masked_data, axis=0)
 	return ts_means, ts_medians
 
+def ts_multi(img_paths,
+	mask=False,
+	substitution={},
+	top_voxel='',
+	save_as='ts_multi.csv',
+	metric='median',
+	):
+	"""
+	Create a `.csv` file containing filenames on the first column and per-scan timecourse average or median values on subsequent columns.
+	Wraps `samri.report.roi.ts()`.
+
+	Parameters
+	----------
+
+	img_paths : list of str
+		List of paths to NIfTI file from which the ROI is to be extracted.
+	maks : nilearn.NiftiMasker or str, optional
+		Nilearn `nifti1.Nifti1Image` object to use for masking the desired ROI, or string specifying the path of a mask file.
+	top_voxel : str or list, optional
+		Path to NIfTI file or files based on the within-mask top-value voxel of which to create a sub-mask for time course extraction.
+		Note that this file *needs* to be in the exact same affine space as the mask file.
+	metric : str, optional
+		Either "median" or "mean", specifying which metric for the ROI estimation to select.
+	"""
+	# Imports are needed for usage as nipype nodes.
+
+	n_jobs_abs = mp.cpu_count()-4
+	n_jobs_rel = round(mp.cpu_count()/2)
+	n_jobs = max([n_jobs_abs,n_jobs_rel,1])
+
+	ts_list = Parallel(n_jobs=n_jobs, verbose=0, backend="threading")(map(delayed(ts),
+		img_paths,
+		[mask]*len(img_paths),
+		[False]*len(img_paths),
+		[top_voxel]*len(img_paths),
+		))
+	if metric == 'mean':
+		ts_list = [i[0] for i in ts_list]
+	elif metric == 'median':
+		ts_list = [i[1] for i in ts_list]
+
+	min_len = len(ts_list[0])
+	new_ts_list = []
+	for ix,i in enumerate(ts_list):
+		scan_len = len(i)
+		if scan_len < min_len:
+			min_len = scan_len
+		new_i = [img_paths[ix]]
+		new_i.extend(i)
+		new_ts_list.append(new_i)
+
+	column_numbers = [i for i in range(min_len)]
+	columns = ['path']
+	columns.extend(column_numbers)
+
+	df = pd.DataFrame(new_ts_list,
+		columns=columns,
+		)
+	df.to_csv(save_as)
+
+
 def from_img_threshold(image, threshold,
 	two_tailed=False,
 	save_as='',

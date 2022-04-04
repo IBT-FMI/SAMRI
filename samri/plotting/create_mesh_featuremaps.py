@@ -40,11 +40,11 @@ def write_obj(name,verts,faces,normals,values,affine=None,one=False):
 	name : str
 		Ouput file name.
 	verts : array
-		Spatial coordinates for vertices as returned by skimage.measure.marching_cubes_lewiner().
+		Spatial coordinates for vertices as returned by skimage.measure.marching_cubes().
 	faces : array
-		List of faces, referencing indices of verts as returned by skimage.measure.marching_cubes_lewiner().
+		List of faces, referencing indices of verts as returned by skimage.measure.marching_cubes().
 	normals : array
-		Normal direction of each vertex as returned by skimage.measure.marching_cubes_lewiner().
+		Normal direction of each vertex as returned by skimage.measure.marching_cubes().
 	affine : array,optional
 		If given, vertices coordinates are affine transformed to create mesh with correct origin and size.
 	one : bool
@@ -112,7 +112,7 @@ def create_mesh(stat_map,threshold,
 		img_data = numpy.absolute(img_data)
 		neg = True
 	#run marching cube
-	verts, faces, normals, values = measure.marching_cubes_lewiner(img_data,threshold)
+	verts, faces, normals, values = measure.marching_cubes(img_data,threshold)
 
 	#save mesh as .obj
 	filename_prefix = hash(str(verts)) + hash(str(faces)) + hash(str(normals)) + hash(str(values))
@@ -128,7 +128,7 @@ def create_mesh(stat_map,threshold,
 	if numpy.min(img_data) < 0 and positive_only == False and neg == False:
 		img_data[img_data > 0] = 0
 		img_data = numpy.absolute(img_data)
-		verts, faces, normals, values = measure.marching_cubes_lewiner(img_data,threshold)
+		verts, faces, normals, values = measure.marching_cubes(img_data,threshold)
 		output_file_neg = filename_prefix + "neg_mesh.obj"
 		output_path_neg = os.path.join(path,output_file_neg)
 		write_obj(output_path_neg,verts,faces,normals,values,affine = img.affine,one=one)

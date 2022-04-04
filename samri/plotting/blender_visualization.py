@@ -162,12 +162,24 @@ deselect()
 ##Create Material for template
 MatAtlas = bpy.data.materials.new(name="atlas_material")
 MatAtlas.use_nodes=True
-MatAtlas.node_tree.nodes["Principled BSDF"].inputs[0].default_value = (0.199638, 0.199638, 0.199638, 1)
+# Please use input names as they are more unambiguous than numerical identifiers.
+#MatAtlas.node_tree.nodes["Principled BSDF"].inputs[0].default_value = (0.199638, 0.199638, 0.199638, 1)
+#MatAtlas.node_tree.nodes["Principled BSDF"].inputs['Base Color'].default_value = (0.199638, 0.199638, 0.199638, 1)
+MatAtlas.node_tree.nodes["Principled BSDF"].inputs['Base Color'].default_value = (0.1, 0.1, 0.1, 1)
 MatAtlas.blend_method='BLEND'
 MatAtlas.shadow_method='NONE'
-MatAtlas.node_tree.nodes["Principled BSDF"].inputs[19].default_value = 0.5
-MatAtlas.node_tree.nodes["Principled BSDF"].inputs[5].default_value = 1
-MatAtlas.node_tree.nodes["Principled BSDF"].inputs[7].default_value = 0.281818
+MatAtlas.node_tree.nodes["Principled BSDF"].inputs['Specular'].default_value = 1
+MatAtlas.node_tree.nodes["Principled BSDF"].inputs['Roughness'].default_value = 0.3
+MatAtlas.node_tree.nodes["Principled BSDF"].inputs['Alpha'].default_value = 0.5
+# Transmission-based transparency seems to give poorer depth representation than alpha-based transparency
+#MatAtlas.node_tree.nodes["Principled BSDF"].inputs['Transmission'].default_value = 1.0
+#MatAtlas.node_tree.nodes["Principled BSDF"].inputs['IOR'].default_value = 0.9
+#MatAtlas.node_tree.nodes["Principled BSDF"].inputs['Transmission Roughness'].default_value = 0.9
+#MatAtlas.node_tree.nodes["Principled BSDF"].inputs['Metallic'].default_value = 0.281818
+#MatAtlas.node_tree.nodes["Principled BSDF"].inputs['Anisotropic'].default_value = 0.9
+#MatAtlas.node_tree.nodes["Principled BSDF"].inputs['Roughness'].default_value = 0.9
+
+# Other tries, possibly deprecated
 # matNodes=MatAtlas.node_tree
 # mixShader=matNodes.nodes.new('ShaderNodeMixShader')
 # GlassNode=matNodes.nodes.new('ShaderNodeBsdfGlass')
@@ -185,8 +197,9 @@ MatGenes.append(bpy.data.materials.new(name="gene_material_2"))
 i = 0
 for col in color:
 	MatGenes[i].use_nodes=True
-	MatGenes[i].node_tree.nodes["Principled BSDF"].inputs[0].default_value  = (col[0],col[1],col[2],1)
-	MatGenes[i].node_tree.nodes["Principled BSDF"].inputs[4].default_value = 1
+	MatGenes[i].node_tree.nodes["Principled BSDF"].inputs['Base Color'].default_value  = (col[0],col[1],col[2],1)
+	MatGenes[i].node_tree.nodes["Principled BSDF"].inputs['Metallic'].default_value = 1
+	MatGenes[i].node_tree.nodes["Principled BSDF"].inputs['Clearcoat'].default_value = 1
 
 	i = i+1
 
@@ -292,6 +305,15 @@ def take_pic(file_name):
 	bpy.context.scene.render.resolution_percentage = 50
 
 	bpy.data.scenes["Scene"].render.filepath = path + "/" + file_name
+	print(f"Le file: {path}/{file_name}")
+	print(f"Le file: {path}/{file_name}")
+	print(f"Le file: {path}/{file_name}")
+	print(f"Le file: {path}/{file_name}")
+	print(f"Le file: {path}/{file_name}")
+	print(f"Le file: {path}/{file_name}")
+	print(f"Le file: {path}/{file_name}")
+	print(f"Le file: {path}/{file_name}")
+	print(f"Le file: {path}/{file_name}")
 	bpy.ops.render.render( write_still=True )
 
 

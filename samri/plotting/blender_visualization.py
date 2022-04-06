@@ -305,15 +305,6 @@ def take_pic(file_name):
 	bpy.context.scene.render.resolution_percentage = 50
 
 	bpy.data.scenes["Scene"].render.filepath = path + "/" + file_name
-	print(f"Le file: {path}/{file_name}")
-	print(f"Le file: {path}/{file_name}")
-	print(f"Le file: {path}/{file_name}")
-	print(f"Le file: {path}/{file_name}")
-	print(f"Le file: {path}/{file_name}")
-	print(f"Le file: {path}/{file_name}")
-	print(f"Le file: {path}/{file_name}")
-	print(f"Le file: {path}/{file_name}")
-	print(f"Le file: {path}/{file_name}")
 	bpy.ops.render.render( write_still=True )
 
 

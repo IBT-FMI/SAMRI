@@ -1,4 +1,4 @@
-# Copyright 1999-2020 Gentoo Authors
+# Copyright 1999-2022 Gentoo Authors
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI=7
@@ -34,7 +34,7 @@ RDEPEND="
 	media-gfx/blender:2.91
 	>=sci-biology/fsl-5.0.9
 	sci-biology/bru2nii
-	atlases? ( sci-biology/mouse-brain-atlases )
+	atlases? ( sci-biology/mouse-brain-templates )
 	labbookdb? ( sci-libs/labbookdb[${PYTHON_USEDEP}] )
 	sci-libs/nibabel[${PYTHON_USEDEP}]
 	>=sci-libs/nipy-0.4.1[${PYTHON_USEDEP}]

@@ -16,13 +16,13 @@ If dependencies were managed via Portage (e.g. on Gentoo Linux) mouse brain atla
 Otherwise you will need to manually fetch, unpack, and move such data to the correct directories, with the following commands:
 
 ```
-wget http://chymera.eu/distfiles/mouse-brain-templates-0.5.3.tar.xz
+wget http://resources.chymera.eu/distfiles/mouse-brain-templates-0.5.3.tar.xz
 tar xf mouse-brain-templates-0.5.3.tar.xz
 mv mouse_brain_atlases /usr/share/
-wget http://chymera.eu/distfiles/samri_bindata-0.4.tar.xz
+wget http://resources.chymera.eu/distfiles/samri_bindata-0.4.tar.xz
 tar xf samri_bindata-0.4.tar.xz
 mv samri_bindata /usr/share/
-wget http://chymera.eu/distfiles/samri_bidsdata-0.3.tar.xz
+wget http://resources.chymera.eu/distfiles/samri_bidsdata-0.3.tar.xz
 tar xf samri_bidsdata-0.3.tar.xz
 mv samri_bidsdata /usr/share/
 ```
@@ -133,8 +133,8 @@ For manual dependency management and overview you may use the following list:
 
 Needed for package testing:
 * [pytest](https://pytest.org/en/latest/)
-* SAMRI example binary data: [download link](http://chymera.eu/distfiles/samri_bindata-0.3.tar.xz)
-* SAMRI example BIDS data: [download link](http://chymera.eu/distfiles/samri_bidsdata-0.3.tar.xz)
+* SAMRI example binary data: [download link](http://resources.chymera.eu/distfiles/samri_bindata-0.3.tar.xz)
+* SAMRI example BIDS data: [download link](http://resources.chymera.eu/distfiles/samri_bidsdata-0.3.tar.xz)
 
 Needed only in conjunction with LabbookDB metadata management:
 * [LabbookDB](https://github.com/TheChymera/LabbookDB)

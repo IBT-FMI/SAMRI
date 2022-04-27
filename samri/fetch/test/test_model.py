@@ -1,6 +1,6 @@
 def test_abi_connectivity_map():
 	from samri.fetch.model import abi_connectivity_map
-	abi_connectivity_map('Ventral_tegmental_area',
+	abi_connectivity_map('ventral_tegmental_area',
 		invert_lr_experiments=[
 			"127651139",
 			"127796728",

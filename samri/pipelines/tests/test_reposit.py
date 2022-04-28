@@ -4,12 +4,12 @@ BRU_DIR = '/usr/share/samri_bindata/'
 # The `20180730_053743_6587_1_1` measurement is acquired with the (incorrect) Bruker ParaVision Prone (i.e. supine) orientation.
 # This is relevant for testing the flip_if_needed function
 
-def test_bru2bids():
+def test_bru2bids(tmp_path):
 	bru2bids(BRU_DIR,
 		inflated_size=False,
 		functional_match={"acquisition":["EPI"]},
 		structural_match={"acquisition":["TurboRARE"]},
-		out_base='/var/tmp/samri_testing/pytest/',
+		out_base=tmp_path,
 		#keep_crashdump=True,
 		keep_work=True,
 		)

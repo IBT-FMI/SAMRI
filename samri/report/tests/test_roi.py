@@ -26,20 +26,20 @@ def test_ts():
 
 	assert np.shape(means) == np.shape(medians) == (1440,)
 
-def test_atlasassignment():
+def test_atlasassignment(tmp_path):
 	from samri.report.roi import atlasassignment
 
 	atlasassignment(data_path='/usr/share/mouse-brain-templates/dsurqec_200micron_roi-dr.nii',
 		null_label=0.0,
 		verbose=False,
 		lateralized=False,
-		save_as='/var/tmp/samri_testing/pytest/atlasassignment.csv',
+		save_as=f'{tmp_path}/samri_testing/pytest/atlasassignment.csv',
 		)
 	atlasassignment(data_path='/usr/share/mouse-brain-templates/dsurqec_200micron_roi-dr.nii',
 		null_label=0.0,
 		verbose=False,
 		lateralized=True,
-		save_as='/var/tmp/samri_testing/pytest/atlasassignment_lateralized.csv',
+		save_as=f'{tmp_path}/samri_testing/pytest/atlasassignment_lateralized.csv',
 		)
 
 def test_erode():

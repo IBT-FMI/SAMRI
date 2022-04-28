@@ -8,6 +8,7 @@ import sys
 import io
 import math
 import os
+import getpass
 
 #Here we import internal nilearn functions, YOLO!
 from nilearn._utils.niimg import _safe_get_data
@@ -760,7 +761,6 @@ def _plots_overlay(display,display_3Dplot):
 	# Somehow the bounding boxes in the PGF file are messed up leading to the figure being displaced partly or wholly out of the field of view.
 	# Originally documented on zenhost configuration (partial displacement), lately appeared across multiple configurations (total displacement).
 	# Can hopefully be deleted in the future.
-	import getpass
 	this_user = getpass.getuser()
 	dummy_output='/var/tmp/{}_samri_plot3d.png'.format(this_user)
 	plt.savefig(dummy_output)
@@ -1264,7 +1264,7 @@ def atlas_labels(
 	atlas='/usr/share/mouse-brain-templates/dsurqec_40micron_labels.nii',
 	mapping='/usr/share/mouse-brain-templates/dsurqe_labels.csv',
 	template='/usr/share/mouse-brain-templates/dsurqec_40micron_masked.nii',
-	target_dir='/var/tmp/samri_atlas_labels',
+	target_dir='/var/tmp/samri-{user}/atlas_labels',
 	structure_column='Structure',
 	label_column_l='left label',
 	label_column_r='right label',
@@ -1294,6 +1294,9 @@ def atlas_labels(
 		The format as which the image files should be saved.
 	"""
 
+	user = getpass.getuser()
+
+	target_dir = target_dir.format(user=user)
 
 	if not os.path.exists(target_dir):
 		os.makedirs(target_dir)

@@ -2,11 +2,11 @@ from samri.pipelines.glm import l1, l1_physio, seed
 
 PREPROCESS_BASE = '/usr/share/samri_bidsdata/preprocessing'
 
-def test_l1():
+def test_l1(tmp_path):
 	l1(PREPROCESS_BASE,
 		mask='mouse',
 		match={'session': ['ofMaF'], 'acq':['EPIlowcov']},
-		out_base='/var/tmp/samri_testing/pytest/',
+		out_base=tmp_path,
 		workflow_name='l1',
 		)
 

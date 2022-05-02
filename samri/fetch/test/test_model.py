@@ -1,4 +1,4 @@
-def test_abi_connectivity_map():
+def test_abi_connectivity_map(tmp_path):
 	from samri.fetch.model import abi_connectivity_map
 	abi_connectivity_map('ventral_tegmental_area',
 		invert_lr_experiments=[
@@ -19,7 +19,7 @@ def test_abi_connectivity_map():
 			"304337288",
 			],
 		exclude_experiments=['175736945','301062306'],
-		save_as_zstat='/var/tmp/samri_testing/pytest/vta_zstat.nii.gz',
-		save_as_tstat='/var/tmp/samri_testing/pytest/vta_tstat.nii.gz',
-		save_as_cope='/var/tmp/samri_testing/pytest/vta_cope.nii.gz',
+		save_as_zstat=f'{tmp_path}/vta_zstat.nii.gz',
+		save_as_tstat=f'{tmp_path}/vta_tstat.nii.gz',
+		save_as_cope=f'{tmp_path}/vta_cope.nii.gz',
 		)

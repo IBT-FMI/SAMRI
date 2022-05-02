@@ -1,3 +1,4 @@
+import getpass
 import glob
 import nibabel as nib
 import numpy as np
@@ -11,7 +12,7 @@ from sklearn.preprocessing import minmax_scale, MinMaxScaler
 def prepare_abi_connectivity_maps(identifier,
 	abi_data_root='/usr/share/ABI-connectivity-data/',
 	invert_lr_experiments=[],
-	reposit_path='/var/tmp/samri/abi_connectivity/{identifier}/sub-{experiment}/ses-1/anat/sub-{experiment}_ses-1_cope.nii.gz',
+	reposit_path='/var/tmp/samri-{user}/abi_connectivity/{identifier}/sub-{experiment}/ses-1/anat/sub-{experiment}_ses-1_cope.nii.gz',
 	**kwargs
 	):
 	"""
@@ -32,10 +33,12 @@ def prepare_abi_connectivity_maps(identifier,
 		Generally this should be a temporal path, which ideally is deleted after the prepared data is used.
 	"""
 
+	user = getpass.getuser()
+
 	for experiment_path in glob.glob(path.join(abi_data_root,identifier)+"*"):
 		experiment = experiment_path[-9:]
 		invert_lr = experiment in invert_lr_experiments
-		save_as = reposit_path.format(identifier=identifier,experiment=experiment)
+		save_as = reposit_path.format(user=user, identifier=identifier, experiment=experiment)
 		prepare_feature_map(experiment_path,
 			invert_lr = invert_lr,
 			save_as=save_as,

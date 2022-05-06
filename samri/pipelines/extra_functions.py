@@ -408,10 +408,11 @@ def write_bids_physio_file(scan_dir,
 		nii_basename, ext = os.path.splitext(nii_name)
 		if ext == '.gz':
 			nii_basename, ext = os.path.splitext(nii_name)
-		nii_basename_segments = nii_basename.split('_')
-		nii_basename_segments = [i for i in nii_basename_segments if '-' in i]
-		nii_basename = '_'.join(nii_basename_segments)
-		out_file = '{}_physio.tsv'.format(nii_basename)
+		nii_pathname, nii_filename = os.path.split(nii_basename)
+		nii_filename_segments = nii_filename.split('_')
+		nii_filename_segments = [i for i in nii_filename_segments if '-' in i]
+		nii_filename = '_'.join(nii_filename_segments)
+		out_file = os.path.join(nii_pathname,f'{nii_filename}_physio.tsv')
 
 	out_file = os.path.abspath(os.path.expanduser(out_file))
 	scan_dir = os.path.abspath(os.path.expanduser(scan_dir))

@@ -10,7 +10,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 import statsmodels.formula.api as smf
-from joblib import Parallel, delayed
+from joblib import Memory, Parallel, delayed
 from matplotlib import rcParams
 from nilearn.input_data import NiftiMasker
 from nipype.interfaces.io import DataFinder
@@ -383,7 +383,12 @@ def roi_masking(substitution, ts_file_template, betas_file_template, design_file
 		mask_map = nib.load(roi)
 	else:
 		mask_map = roi
-	masker = NiftiMasker(mask_img=roi, target_affine=ts_img.affine, memory=path.expanduser('~/.nilearn_cache'), memory_level=1)
+	# Specifying memory object fails with:
+	# https://ppb.chymera.eu/cc4f38.log
+	# https://github.com/nilearn/nilearn/issues/3256
+	#my_memory = Memory(path.abspath(path.expanduser('~/.nilearn_cache')))
+	#masker = NiftiMasker(mask_img=roi, target_affine=ts_img.affine, memory=my_memory, memory_level=1)
+	masker = NiftiMasker(mask_img=roi, target_affine=ts_img.affine, memory_level=1)
 	timecourse = masker.fit_transform(ts_img)
 	timecourse = timecourse.T
 	try:

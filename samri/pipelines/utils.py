@@ -222,8 +222,8 @@ def bids_data_selection(base, structural_match, functional_match, subjects, sess
 				print("Is not BIDS-formatted.")
 			else:
 				print("Detected!")
-	#layout = BIDSLayout(base, validate=False)
-	layout = BIDSLayout(base,validate=False,derivatives=True)
+	#layout = BIDSLayout(base, validate=False, derivatives=True)
+	layout = BIDSLayout(base,validate=False)
 	try:
 		df = layout.as_data_frame()
 	except AttributeError:

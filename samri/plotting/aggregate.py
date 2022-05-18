@@ -283,9 +283,12 @@ def roi_distributions(df,
 		hspace=hspace,
 		)
 
+
 	# Remove axes details that don't play will with overlap
 	g.set_titles("")
-	g.set(yticks=[])
+	
+	# Ensure there are no Y-axis labels.
+	g.set(yticks=[],ylabel=None)
 
 	if save_as:
 		save_as = path.abspath(path.expanduser(save_as))

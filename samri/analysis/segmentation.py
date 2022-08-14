@@ -13,8 +13,10 @@ def assign_gaussian(data, n_components, covariance_type,
 		n_init=n_init,
 		)
 	classifier.fit(data)
+	aic = classifier.aic(data)
+	bic = classifier.bic(data)
 	assignment = classifier.predict(data)
-	return assignment, classifier
+	return assignment, classifier, aic, bic
 
 def sort_by_occurence(assignments):
 	"""Change unique values in array to ordinal integers based on the number of occurences.
@@ -78,10 +80,10 @@ def assignment_from_paths(path_list,
 		data = data[mask_data]
 		all_data.append(data)
 	all_data = np.array(all_data)
-	assignments, classifier = assign_gaussian(all_data.T,components,covariance)
+	assignments, classifier, aic, bic= assign_gaussian(all_data.T,components,covariance)
 	assignments = sort_by_occurence(assignments)
 
-	assignments_, classifier = assign_gaussian(all_data.T,4,'spherical')
+	assignments_, classifier, aic_, bic_ = assign_gaussian(all_data.T,components,covariance)
 	assignments_ = sort_by_occurence(assignments_)
 	retest_accuracy = np.mean(assignments_.ravel() == assignments.ravel()) * 100
 
@@ -94,4 +96,4 @@ def assignment_from_paths(path_list,
 	if save_as:
 		nib.save(assignment_img, save_as)
 
-	return assignment_img, retest_accuracy
+	return assignment_img, retest_accuracy, aic, aic_, bic, bic_

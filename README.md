@@ -72,7 +72,7 @@ as such, given any other alternative, **we do not recommend this approach**:
 ````
 git clone https://github.com/IBT-FMI/SAMRI.git
 cd SAMRI
-python setup.py install --user
+pip install --user .
 ````
 
 If you are getting a `Permission denied (publickey)` error upon trying to clone, you can either:
@@ -91,7 +91,7 @@ git clone git@github.com:IBT-FMI/SAMRI.git
 cd SAMRI
 echo "export PATH=\$HOME/.local/bin/:\$PATH" >> ~/.bashrc
 source ~/.bashrc
-python setup.py develop --user
+pip install --user -e .
 ````
 
 If you are getting a `Permission denied (publickey)` error upon trying to clone, you can either:

@@ -911,7 +911,7 @@ def get_data_selection(workflow_base,
 											except KeyError:
 												line_considered = False
 												break
-										if line_considered:
+										if line_considered and os.path.isdir(os.path.join(sub_dir,str(int(number)))):
 											measurement_copy['scan_type'] = str(scan_type).strip(' ')
 											measurement_copy['scan'] = str(int(number))
 											measurement_copy['run'] = run_counter

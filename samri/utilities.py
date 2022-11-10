@@ -114,6 +114,12 @@ def bids_autofind(bids_dir,
 		try:
 			substitution["modality"] = datafind_res.outputs.modality[ix]
 		except AttributeError: pass
+		try:
+			substitution["contrast_label"] = datafind_res.outputs.contrast_label[ix]
+		except AttributeError: pass
+		try:
+			substitution["suffix"] = datafind_res.outputs.suffix[ix]
+		except AttributeError: pass
 		reconstructed_path = path.abspath(path.expanduser(path_template.format(**substitution)))
 		original_path = path.abspath(path.expanduser(i))
 		if reconstructed_path != original_path:

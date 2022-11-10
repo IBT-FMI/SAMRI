@@ -32,7 +32,7 @@ GENERIC_PHASES = {
 		"smoothing_sigmas":[2,1,0],
 		"sigma_units":"vox",
 		"shrink_factors":[4,2,1],
-		"use_estimate_learning_rate_once":False,
+		#"use_estimate_learning_rate_once":False,
 		"use_histogram_matching":True,
 		},
 	"f_translation":{
@@ -49,7 +49,7 @@ GENERIC_PHASES = {
 		"smoothing_sigmas":[1,0],
 		"sigma_units":"vox",
 		"shrink_factors":[2,1],
-		"use_estimate_learning_rate_once":False,
+		#"use_estimate_learning_rate_once":False,
 		"use_histogram_matching":True,
 		},
 	"s_translation":{
@@ -66,7 +66,7 @@ GENERIC_PHASES = {
 		"smoothing_sigmas":[2,1,0],
 		"sigma_units":"vox",
 		"shrink_factors":[4,2,1],
-		"use_estimate_learning_rate_once":False,
+		#"use_estimate_learning_rate_once":False,
 		"use_histogram_matching":False,
 		},
 	"similarity":{
@@ -83,7 +83,7 @@ GENERIC_PHASES = {
 		"smoothing_sigmas":[0],
 		"sigma_units":"vox",
 		"shrink_factors":[1],
-		"use_estimate_learning_rate_once":False,
+		#"use_estimate_learning_rate_once":False,
 		"use_histogram_matching":True,
 		},
 	"affine":{
@@ -100,7 +100,7 @@ GENERIC_PHASES = {
 		"smoothing_sigmas":[0],
 		"sigma_units":"vox",
 		"shrink_factors":[1],
-		"use_estimate_learning_rate_once":False,
+		#"use_estimate_learning_rate_once":False,
 		"use_histogram_matching":True,
 		},
 	"syn":{
@@ -124,7 +124,7 @@ GENERIC_PHASES = {
 		"smoothing_sigmas":[0],
 		"sigma_units":"vox",
 		"shrink_factors":[1],
-		"use_estimate_learning_rate_once":False,
+		#"use_estimate_learning_rate_once":False,
 		"use_histogram_matching":False,
 		},
 	}
@@ -144,7 +144,7 @@ TRANSFORM_PHASES = {
 		"smoothing_sigmas":[3,2,1,0],
 		"sigma_units":"vox",
 		"shrink_factors":[8,4,2,1],
-		"use_estimate_learning_rate_once":False,
+		#"use_estimate_learning_rate_once":False,
 		"use_histogram_matching":True,
 		},
 	"affine":{
@@ -161,7 +161,7 @@ TRANSFORM_PHASES = {
 		"smoothing_sigmas":[2,1,0],
 		"sigma_units":"vox",
 		"shrink_factors":[4,2,1],
-		"use_estimate_learning_rate_once":False,
+		#"use_estimate_learning_rate_once":False,
 		"use_histogram_matching":True,
 		},
 	"syn":{
@@ -178,7 +178,7 @@ TRANSFORM_PHASES = {
 		"smoothing_sigmas":[3,2,1,0],
 		"sigma_units":"vox",
 		"shrink_factors":[8,4,2,1],
-		"use_estimate_learning_rate_once":False,
+		#"use_estimate_learning_rate_once":False,
 		"use_histogram_matching":True,
 		},
 	}

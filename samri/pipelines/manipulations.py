@@ -113,7 +113,7 @@ def transform_feature(feature, source_reference, target_reference,
 	registration.inputs.smoothing_sigmas = [i["smoothing_sigmas"] for i in s_parameters]
 	registration.inputs.sigma_units = [i["sigma_units"] for i in s_parameters]
 	registration.inputs.shrink_factors = [i["shrink_factors"] for i in s_parameters]
-	registration.inputs.use_estimate_learning_rate_once = [i["use_estimate_learning_rate_once"] for i in s_parameters]
+	#registration.inputs.use_estimate_learning_rate_once = [i["use_estimate_learning_rate_once"] for i in s_parameters]
 	registration.inputs.use_histogram_matching = [i["use_histogram_matching"] for i in s_parameters]
 	registration.inputs.winsorize_lower_quantile = 0.05
 	registration.inputs.winsorize_upper_quantile = 0.95

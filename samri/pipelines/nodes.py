@@ -58,7 +58,7 @@ def structural_registration(template, num_threads=4):
 	registration.inputs.smoothing_sigmas = [[4, 2, 1], [4, 2, 1]]
 	registration.inputs.sigma_units = ['vox', 'vox']
 	registration.inputs.shrink_factors = [[3, 2, 1],[3, 2, 1]]
-	registration.inputs.use_estimate_learning_rate_once = [True, True]
+	#registration.inputs.use_estimate_learning_rate_once = [True, True]
 	# if the fixed_image is not acquired similarly to the moving_image (e.g. RARE to histological (e.g. AMBMC)) this should be False
 	registration.inputs.use_histogram_matching = [False, False]
 	registration.inputs.winsorize_lower_quantile = 0.005
@@ -118,7 +118,7 @@ def generic_registration(template,
 	s_registration.inputs.smoothing_sigmas = [i["smoothing_sigmas"] for i in s_parameters]
 	s_registration.inputs.sigma_units = [i["sigma_units"] for i in s_parameters]
 	s_registration.inputs.shrink_factors = [i["shrink_factors"] for i in s_parameters]
-	s_registration.inputs.use_estimate_learning_rate_once = [i["use_estimate_learning_rate_once"] for i in s_parameters]
+	#s_registration.inputs.use_estimate_learning_rate_once = [i["use_estimate_learning_rate_once"] for i in s_parameters]
 	s_registration.inputs.use_histogram_matching = [i["use_histogram_matching"] for i in s_parameters]
 	s_registration.inputs.winsorize_lower_quantile = 0.005
 	s_registration.inputs.winsorize_upper_quantile = 0.995
@@ -149,7 +149,7 @@ def generic_registration(template,
 	f_registration.inputs.smoothing_sigmas = [i["smoothing_sigmas"] for i in f_parameters]
 	f_registration.inputs.sigma_units = [i["sigma_units"] for i in f_parameters]
 	f_registration.inputs.shrink_factors = [i["shrink_factors"] for i in f_parameters]
-	f_registration.inputs.use_estimate_learning_rate_once = [i["use_estimate_learning_rate_once"] for i in f_parameters]
+	#f_registration.inputs.use_estimate_learning_rate_once = [i["use_estimate_learning_rate_once"] for i in f_parameters]
 	f_registration.inputs.use_histogram_matching = [i["use_histogram_matching"] for i in f_parameters]
 	f_registration.inputs.winsorize_lower_quantile = 0.05
 	f_registration.inputs.winsorize_upper_quantile = 0.95
@@ -211,7 +211,7 @@ def functional_registration(template,
 	f_registration.inputs.smoothing_sigmas = [i["smoothing_sigmas"] for i in f_parameters]
 	f_registration.inputs.sigma_units = [i["sigma_units"] for i in f_parameters]
 	f_registration.inputs.shrink_factors = [i["shrink_factors"] for i in f_parameters]
-	f_registration.inputs.use_estimate_learning_rate_once = [i["use_estimate_learning_rate_once"] for i in f_parameters]
+	#f_registration.inputs.use_estimate_learning_rate_once = [i["use_estimate_learning_rate_once"] for i in f_parameters]
 	f_registration.inputs.use_histogram_matching = [i["use_histogram_matching"] for i in f_parameters]
 	f_registration.inputs.winsorize_lower_quantile = 0.05
 	f_registration.inputs.winsorize_upper_quantile = 0.95

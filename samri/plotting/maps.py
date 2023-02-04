@@ -1350,6 +1350,7 @@ def slices(heatmap_image,
 	negative_only=False,
 	skip_start=0,
 	skip_end=0,
+	no_ticks=False,
 	):
 	"""
 	Plot coronal `bg_image` slices at a given spacing, and overlay contours from a list of NIfTI files.
@@ -1540,6 +1541,9 @@ def slices(heatmap_image,
 			cmap=cmap,
 			really_draw=True,
 			)
+		if no_ticks:
+			cax.set_yticks([])
+
 	if positive_only:
 		vmin = 0
 	elif negative_only:

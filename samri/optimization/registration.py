@@ -60,7 +60,7 @@ def structural_rigid_affine(template="/Users/marksm/GitHub/mriPipeline/ants_test
 	struct_registration.inputs.smoothing_sigmas = [[4, 2, 1], [4, 2, 1]]
 	struct_registration.inputs.sigma_units = ['vox', 'vox']
 	struct_registration.inputs.shrink_factors = [[4, 2, 1],[3, 2, 1]]
-	struct_registration.inputs.use_estimate_learning_rate_once = [True, True]
+	#struct_registration.inputs.use_estimate_learning_rate_once = [True, True]
 	# if the fixed_image is not acquired similarly to the moving_image (e.g. RARE to histological (e.g. AMBMC)) this should be False
 	struct_registration.inputs.use_histogram_matching = [False, False]
 	struct_registration.inputs.winsorize_lower_quantile = 0.005
@@ -127,7 +127,7 @@ def structural_rigid_flirt_nonlin_syn(template="/Users/marksm/GitHub/mriPipeline
 	struct_registration.inputs.smoothing_sigmas = [[4, 2, 1]]
 	struct_registration.inputs.sigma_units = ['vox']
 	struct_registration.inputs.shrink_factors = [[4, 2, 1]]
-	struct_registration.inputs.use_estimate_learning_rate_once = [True]
+	#struct_registration.inputs.use_estimate_learning_rate_once = [True]
 	# if the fixed_image is not acquired similarly to the moving_image (e.g. RARE to histological (e.g. AMBMC)) this should be False
 	struct_registration.inputs.use_histogram_matching = [False,]
 	struct_registration.inputs.winsorize_lower_quantile = 0.005
@@ -185,7 +185,7 @@ def structural_rigid(template="/Users/marksm/GitHub/mriPipeline/ants_test/templa
 	struct_registration.inputs.smoothing_sigmas = [[4, 2, 1],]
 	struct_registration.inputs.sigma_units = ['vox',]
 	struct_registration.inputs.shrink_factors = [[4, 2, 1],]
-	struct_registration.inputs.use_estimate_learning_rate_once = [True,]
+	#struct_registration.inputs.use_estimate_learning_rate_once = [True,]
 	# if the fixed_image is not acquired similarly to the moving_image (e.g. RARE to histological (e.g. AMBMC)) this should be False
 	struct_registration.inputs.use_histogram_matching = [False,]
 	struct_registration.inputs.winsorize_lower_quantile = 0.005
@@ -252,7 +252,7 @@ def functional_per_participant_test():
 			registration.inputs.smoothing_sigmas = [[4, 2, 1]] * 2 + [[1, 0.5, 0]]
 			registration.inputs.sigma_units = ['vox'] * 3
 			registration.inputs.shrink_factors = [[3, 2, 1]]*2 + [[4, 2, 1]]
-			registration.inputs.use_estimate_learning_rate_once = [True] * 3
+			#registration.inputs.use_estimate_learning_rate_once = [True] * 3
 			registration.inputs.use_histogram_matching = [False] * 2 + [True]
 			registration.inputs.winsorize_lower_quantile = 0.005
 			registration.inputs.winsorize_upper_quantile = 0.995
@@ -349,7 +349,7 @@ def structural_to_functional_per_participant_test(subjects_sessions,
 			struct_registration.inputs.smoothing_sigmas = [[4, 2, 1], [4, 2, 1]]
 			struct_registration.inputs.sigma_units = ['vox', 'vox']
 			struct_registration.inputs.shrink_factors = [[3, 2, 1],[3, 2, 1]]
-			struct_registration.inputs.use_estimate_learning_rate_once = [True, True]
+			#struct_registration.inputs.use_estimate_learning_rate_once = [True, True]
 			# if the fixed_image is not acquired similarly to the moving_image (e.g. RARE to histological (e.g. AMBMC)) this should be False
 			struct_registration.inputs.use_histogram_matching = [False, False]
 			struct_registration.inputs.winsorize_lower_quantile = 0.005
@@ -462,7 +462,7 @@ def canonical_(subjects_participants,
 			struct_registration.inputs.smoothing_sigmas = [[4, 2, 1], [4, 2, 1]]
 			struct_registration.inputs.sigma_units = ['vox', 'vox']
 			struct_registration.inputs.shrink_factors = [[3, 2, 1],[3, 2, 1]]
-			struct_registration.inputs.use_estimate_learning_rate_once = [True, True]
+			#struct_registration.inputs.use_estimate_learning_rate_once = [True, True]
 			# if the fixed_image is not acquired similarly to the moving_image (e.g. RARE to histological (e.g. AMBMC)) this should be False
 			struct_registration.inputs.use_histogram_matching = [False, False]
 			struct_registration.inputs.winsorize_lower_quantile = 0.005
@@ -505,7 +505,7 @@ def canonical_(subjects_participants,
 			func_registration.inputs.smoothing_sigmas = [[4, 2, 1]] # [1,0.5,0]
 			func_registration.inputs.sigma_units = ['vox']
 			func_registration.inputs.shrink_factors = [[3, 2, 1]]
-			func_registration.inputs.use_estimate_learning_rate_once = [True]
+			#func_registration.inputs.use_estimate_learning_rate_once = [True]
 			func_registration.inputs.use_histogram_matching = [False]
 			func_registration.inputs.winsorize_lower_quantile = 0.005
 			func_registration.inputs.winsorize_upper_quantile = 0.995
@@ -617,7 +617,7 @@ def canonical(subjects_participants, regdir, f2s,
 			struct_registration.inputs.smoothing_sigmas = [[4, 2, 1], [4, 2, 1]]
 			struct_registration.inputs.sigma_units = ['vox', 'vox']
 			struct_registration.inputs.shrink_factors = [[3, 2, 1],[3, 2, 1]]
-			struct_registration.inputs.use_estimate_learning_rate_once = [True, True]
+			#struct_registration.inputs.use_estimate_learning_rate_once = [True, True]
 			# if the fixed_image is not acquired similarly to the moving_image (e.g. RARE to histological (e.g. AMBMC)) this should be False
 			struct_registration.inputs.use_histogram_matching = [False, False]
 			struct_registration.inputs.winsorize_lower_quantile = 0.005
@@ -660,7 +660,7 @@ def canonical(subjects_participants, regdir, f2s,
 			func_registration.inputs.smoothing_sigmas = [[4, 2, 1]] # [1,0.5,0]
 			func_registration.inputs.sigma_units = ['vox']
 			func_registration.inputs.shrink_factors = [[3, 2, 1]]
-			func_registration.inputs.use_estimate_learning_rate_once = [True]
+			#func_registration.inputs.use_estimate_learning_rate_once = [True]
 			func_registration.inputs.use_histogram_matching = [False]
 			func_registration.inputs.winsorize_lower_quantile = 0.005
 			func_registration.inputs.winsorize_upper_quantile = 0.995

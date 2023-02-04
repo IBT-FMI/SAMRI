@@ -2,6 +2,7 @@
 
 # SAMRI
 [![Build Status](https://travis-ci.org/IBT-FMI/SAMRI.svg?branch=master)](https://travis-ci.org/IBT-FMI/SAMRI)
+[![Gentoo (::science)](https://repology.org/badge/version-for-repo/gentoo_ovl_science/samri.svg?header=Gentoo%20%28%3A%3Ascience%29)](https://repology.org/project/samri/versions)
 
 SAMRI (Small Animal Magnetic Resonance Imaging) — pronounced "Sam-rye" — provides fMRI preprocessing, metadata parsing, and data analysis functions and workflows.
 SAMRI integrates functionalities from a number of other packages (listed under the [dependencies section](#dependencies) below) to create higher-level tools.

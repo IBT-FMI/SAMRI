@@ -651,9 +651,9 @@ def corresponding_physiofile(nii_path):
 	meta_physiofile = path.join(nii_dir,stripped_name+'_physio.json')
 
 	if not path.isfile(physiofile):
-		physiofile = ''
+		physiofile = "/dev/null"
 	if not path.isfile(meta_physiofile):
-		meta_physiofile = ''
+		meta_physiofile = "/dev/null"
 
 	return physiofile, meta_physiofile
 

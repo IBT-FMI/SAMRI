@@ -660,5 +660,4 @@ def copy_bids_files(bids_in, bids_out):
 		try:
 			copyfile(in_file,out_file)
 		except:
-			print('Copying {} to {} failed.'.format(in_file,out_file))
 			pass

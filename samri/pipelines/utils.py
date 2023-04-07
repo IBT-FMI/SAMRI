@@ -279,7 +279,7 @@ def bids_data_selection(base, structural_match, functional_match, subjects, sess
 						_df = _df.loc[_df[match].isin(functional_match[match])]
 					res_df = res_df.append(_df)
 				else:
-					for match in structural_match.keys():
+					for match in functional_match.keys():
 						_df = filter_data(_df, match, functional_match[match])
 						res_df = res_df.append(_df)
 			except:

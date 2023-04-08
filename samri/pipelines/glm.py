@@ -957,8 +957,8 @@ def l2_common_effect(l1_dir,
 	#	varcopes_list = data_selection[data_selection['modality']=='varcb']['path'].tolist()
 	#	copes_list = data_selection[data_selection['modality']=='cope']['path'].tolist()
 	try:
-		varcopes_list = data_selection[data_selection['modality']=='varcb']['path'].tolist()
-		copes_list = data_selection[data_selection['modality']=='cope']['path'].tolist()
+		varcopes_list = data_selection[data_selection['desc']=='varcb']['path'].tolist()
+		copes_list = data_selection[data_selection['desc']=='cope']['path'].tolist()
 	except KeyError:
 		varcopes_list=data_selection[data_selection['path'].str.contains('desc-varcb')]
 		copes_list=data_selection[data_selection['path'].str.contains('desc-cope')]
@@ -1399,8 +1399,8 @@ def l2_controlled_effect(l1_dir,
 	#	varcopes_list = data_selection[data_selection['modality']=='varcb']['path'].tolist()
 	#	copes_list = data_selection[data_selection['modality']=='cope']['path'].tolist()
 	try:
-		copeonly = data_selection[data_selection['modality']=='cope']['path']
-		varcopeonly = data_selection[data_selection['modality']=='varcb']['path']
+		copeonly = data_selection[data_selection['desc']=='cope']['path']
+		varcopeonly = data_selection[data_selection['desc']=='varcb']['path']
 	except KeyError:
 		copeonly = data_selection[data_selection['path'].str.contains('desc-cope')]
 		varcopeonly = data_selection[data_selection['path'].str.contains('desc-varcb')]

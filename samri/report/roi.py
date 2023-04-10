@@ -214,6 +214,11 @@ def from_img_threshold(image, threshold,
 	else:
 		roi = roi_pos
 	roi = 1*roi
+
+	# np.int64, as resulting by default, can cause issues with object reuse.
+	new_dtype = np.int32
+	roi = roi.astype(new_dtype)
+
 	roi = nib.Nifti1Image(roi, affine, header)
 
 	if save_as:

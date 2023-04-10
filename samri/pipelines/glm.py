@@ -1406,8 +1406,8 @@ def l2_controlled_effect(l1_dir,
 		varcopeonly = data_selection[data_selection['path'].str.contains('desc-varcb')]
 	copes_list = copeonly['path'].tolist()
 	varcopes_list = varcopeonly['path'].tolist()
-	print('copes',copes_list)
-	print('varcopes',varcopes_list)
+	print('List of copes: ',copes_list)
+	print('List of varcopes: ',varcopes_list)
 	#copeonly = data_selection[data_selection['modality']=='cope']
 	#copes = copeonly['path'].tolist()
 	#varcopes = data_selection[data_selection['modality']=='varcb']['path'].tolist()

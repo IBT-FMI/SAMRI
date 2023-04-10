@@ -473,11 +473,11 @@ def drs_activity(roi,
 	substitutions = bids_substitution_iterator(
 		["ofM","ofMaF","ofMcF1","ofMcF2","ofMpF"],
 		['5691',"5689","5690","5700","6451","6460","6456","6461","6462"],
-                ["CogB",],
-                "~/ni_data/ofM.dr",
-                source_workflow,
-                acquisitions=["EPI",],
-                validate_for_template='{data_dir}/l1/{l1_dir}/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_acq-{acquisition}_task-{task}_cbv_tstat.nii.gz',
+		["CogB",],
+		"~/ni_data/ofM.dr",
+		source_workflow,
+		acquisitions=["EPI",],
+		validate_for_template='{data_dir}/l1/{l1_dir}/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_acq-{acquisition}_task-{task}_cbv_tstat.nii.gz',
 		)
 	if mapping and atlas:
 		df = roi.per_session(substitutions,
@@ -496,10 +496,10 @@ def drs_activity(roi,
 	substitutions_ = bids_substitution_iterator(
 		["ofM","ofMaF","ofMcF1","ofMcF2","ofMpF"],
 		["6262","6255","5694","5706",'5704','6455','6459'],
-                ["CogB",],
-                "~/ni_data/ofM.dr",
-                source_workflow,
-                acquisitions=["EPI",],
+		["CogB",],
+		"~/ni_data/ofM.dr",
+		source_workflow,
+		acquisitions=["EPI",],
 		validate_for_template='{data_dir}/l1/{l1_dir}/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_acq-{acquisition}_task-{task}_cbv_tstat.nii.gz',
 		)
 	if mapping and atlas:

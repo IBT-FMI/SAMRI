@@ -411,9 +411,6 @@ def roi_sums(df,
 	# Draw the densities in a few steps
 	lw = mpl.rcParams['lines.linewidth']
 	g.map(sns.barplot, target_label, clip_on=False)
-	#g.map(sns.kdeplot, value_label, clip_on=False, gridsize=500, shade=True, alpha=1, lw=lw/4.*3, bw=bw)
-	#g.map(sns.kdeplot, value_label, clip_on=False, gridsize=500, color="w", lw=lw, bw=bw)
-	#g.map(plt.axhline, y=0, lw=lw, clip_on=False)
 
 	# Define and use a simple function to label the plot in axes coordinates
 	g.map(apply_label, target_label,

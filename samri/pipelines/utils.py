@@ -236,6 +236,9 @@ def bids_data_selection(base, structural_match, functional_match, subjects, sess
 	except KeyError:
 		pass
 
+	# We should ignore dotdirs unless they're in the base path.
+	df = df[~df.path.str.contains(base + ".*/\.")]
+
 	if verbose:
 		print(df)
 		print(df.columns)

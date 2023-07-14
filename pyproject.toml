@@ -3,6 +3,6 @@ requires = ["setuptools"]
 build-backend = 'setuptools.build_meta'
 
 [tool.codespell]
-skip = '.git,*.pdf,*.svg'
+skip = '.git,*.pdf,*.svg,*.scanProgram,configscan,subject'
 #
 # ignore-words-list = ''

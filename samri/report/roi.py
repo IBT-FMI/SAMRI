@@ -57,7 +57,7 @@ def ts(img_path,
 
 	img_path : str
 		Path to NIfTI file from which the ROI is to be extracted.
-	maks : nilearn.NiftiMasker or str, optional
+	mask : nilearn.NiftiMasker or str, optional
 		Nilearn `nifti1.Nifti1Image` object to use for masking the desired ROI, or string specifying the path of a mask file.
 	substitution : dict, optional
 		A dictionary with keys which include 'subject' and 'session'.
@@ -128,7 +128,7 @@ def ts_multi(img_paths,
 
 	img_paths : list of str
 		List of paths to NIfTI file from which the ROI is to be extracted.
-	maks : nilearn.NiftiMasker or str, optional
+	mask : nilearn.NiftiMasker or str, optional
 		Nilearn `nifti1.Nifti1Image` object to use for masking the desired ROI, or string specifying the path of a mask file.
 	top_voxel : str or list, optional
 		Path to NIfTI file or files based on the within-mask top-value voxel of which to create a sub-mask for time course extraction.

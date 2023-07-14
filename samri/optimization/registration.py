@@ -79,7 +79,7 @@ def structural_rigid_flirt_nonlin_syn(template="/Users/marksm/GitHub/mriPipeline
 	):
 
 	"""Experimental Registration. Performs Rigid body transformation using FSL's FLIRT,
-	including transformations of the coordinate systems. Subsequently ANTs' SyN performes
+	including transformations of the coordinate systems. Subsequently ANTs' SyN performs
 	the non-linear part of the Registration process.
 	"""
 

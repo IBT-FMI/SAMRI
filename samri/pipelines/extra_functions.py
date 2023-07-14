@@ -1056,7 +1056,7 @@ def regressor(timecourse,
 	----------
 	timecourse : list or numpy.ndarray
 		List or NumPy array containing the extracted regressor timecourse.
-	scan_path : str, opional
+	scan_path : str, optional
 		Path to the prospective scan to be analyzed, should have a temporal (4th NIfTI) dimension equal to the length of the timecourse parameter.
 	name : str, optional
 		Name for the regressor.

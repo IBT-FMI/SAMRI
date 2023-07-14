@@ -19,7 +19,7 @@ def assign_gaussian(data, n_components, covariance_type,
 	return assignment, classifier, aic, bic
 
 def sort_by_occurence(assignments):
-	"""Change unique values in array to ordinal integers based on the number of occurences.
+	"""Change unique values in array to ordinal integers based on the number of occurrences.
 	Parameters
 	----------
 

@@ -85,7 +85,7 @@ def iter_measure_sim(file_template, reference, substitutions,
 	save_as="",
 	mask="",
 	):
-	"""Create a `pandas.DataFrame` (optionally savable as `.csv`), containing the similarity scores and BIDS identifier fields for images from a BIDS directory.
+	"""Create a `pandas.DataFrame` (optionally saveable as `.csv`), containing the similarity scores and BIDS identifier fields for images from a BIDS directory.
 	"""
 
 	reference = path.abspath(path.expanduser(reference))
@@ -103,7 +103,7 @@ def iter_measure_sim(file_template, reference, substitutions,
 		))
 
 	df = pd.DataFrame.from_dict(similarity_data)
-	df.dropna(axis=0, how='any', inplace=True) #some rows will be emtpy
+	df.dropna(axis=0, how='any', inplace=True) #some rows will be empty
 
 	if save_as:
 		save_as = path.abspath(path.expanduser(save_as))

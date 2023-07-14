@@ -47,14 +47,14 @@ def plot_connectivity_matrix(correlation_matrix,
 	Path to correlation matrix as csv file.
 
 	figsize : (int,int)
-	Tupel defining plotsize.
+	Tuple defining plotsize.
 
 	labels : str
 	Path to csv file containing annotations for NIFTI atlas.
 
 	"""
 
-	#TODO: fomatting
+	#TODO: formatting
 	labels = path.abspath(path.expanduser(labels))
 	# fix labels loaded from website (through templates.py)
 	if('itksnap' in labels):

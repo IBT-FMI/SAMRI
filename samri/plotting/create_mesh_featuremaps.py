@@ -38,7 +38,7 @@ def write_obj(name,verts,faces,normals,values,affine=None,one=False):
 	Parameters
 	-----------
 	name : str
-		Ouput file name.
+		Output file name.
 	verts : array
 		Spatial coordinates for vertices as returned by skimage.measure.marching_cubes().
 	faces : array

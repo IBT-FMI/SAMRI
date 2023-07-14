@@ -43,7 +43,7 @@ def diagnose(bids_base,
 	tr=None,
 	workflow_name="diagnostic",
 	):
-	'''Run a basic independent component analysis diagnotic (using FSL's MELODIC) on functional MRI data stored in a BIDS directory tree.
+	'''Run a basic independent component analysis diagnostic (using FSL's MELODIC) on functional MRI data stored in a BIDS directory tree.
 
 	Parameters
 	----------

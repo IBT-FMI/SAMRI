@@ -143,7 +143,7 @@ Needed only in conjunction with LabbookDB metadata management:
 ## Contributing
 
 As this is a top-level data analysis package, tests cannot be reliably performed without example data.
-While such data is packaged and correctly depended on by SAMRI, the long duration of runnign the tests cannot be easily mitigated.
+While such data is packaged and correctly depended on by SAMRI, the long duration of running the tests cannot be easily mitigated.
 We thus recommend running the tests locally before submitting a pull request, and pasting the log.
 Tests can be run and a log recorded via:
 

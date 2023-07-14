@@ -39,7 +39,7 @@ def add_fc_roi_data(data_path, seed_masker, brain_masker,
 		Path under which to save the resultind NIfTI.
 		It can be a formattable string containing key references from the `substitutions` dictionary.
 	substitution : dict, optional
-		Dictionary containig keys corresponding to the formattable fields in `data_path` and/or `save_as`. If `dictionary_return` is `True`, the resulting FC NIfTI will be appended to this dictionary under the `'result'` key.
+		Dictionary containing keys corresponding to the formattable fields in `data_path` and/or `save_as`. If `dictionary_return` is `True`, the resulting FC NIfTI will be appended to this dictionary under the `'result'` key.
 
 	Returns
 	-------

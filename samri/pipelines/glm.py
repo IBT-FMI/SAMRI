@@ -1312,7 +1312,7 @@ def l2_controlled_effect(l1_dir,
 
 	control_dir : str, optional
 		Directory where the BIDS hierarchy for the control data is located.
-		If the value of this parameter evaluates as false, the control data will be assumed to aslo reside in `l1_dir`.
+		If the value of this parameter evaluates as false, the control data will be assumed to also reside in `l1_dir`.
 	n_jobs_percentage : float, optional
 		Percentage of the cores present on the machine which to maximally use for deploying jobs in parallel.
 	run_mode : {'ols', 'fe', 'flame1', 'flame12'}, optional

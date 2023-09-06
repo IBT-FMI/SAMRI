@@ -268,7 +268,7 @@ def p_roi_masking(substitution, ts_file_template, beta_file_template, p_file_tem
 	Path to the region of interest file based on which to create a mask for the time course and beta files. The file should be in NIfTI format.
 
 	brain_mask : string
-	Path to the a mask file in the *exact same* coordinate space as the input image. This is very important, as the mask is needed to crop out artefactual p=0 values. These cannot just be filtered out nummerically, since it is possible that the GLM resturns p=0 for the most significant results.
+	Path to the a mask file in the *exact same* coordinate space as the input image. This is very important, as the mask is needed to crop out artefactual p=0 values. These cannot just be filtered out nummerically, since it is possible that the GLM returns p=0 for the most significant results.
 
 	Returns
 	-------

@@ -25,7 +25,7 @@ def df_threshold_volume(df,
 	n_jobs_percentage=0.8,
 	):
 	"""
-	Return a `pandas.DataFrame` (optionally savable as `.csv`), containing the total volume of brain space exceeding a value.
+	Return a `pandas.DataFrame` (optionally saveable as `.csv`), containing the total volume of brain space exceeding a value.
 	This function is a Pandas Dataframe based iteration wrapper of `samri.report.snr.threshold_volume()` using the SAMRI file_template/substitution model.
 
 	Parameters
@@ -105,7 +105,7 @@ def iter_threshold_volume(file_template, substitutions,
 	save_as='',
 	):
 	"""
-	Return a `pandas.DataFrame` (optionally savable as `.csv`), containing the total volume of brain space exceeding a value.
+	Return a `pandas.DataFrame` (optionally saveable as `.csv`), containing the total volume of brain space exceeding a value.
 	This function is an iteration wrapper of `samri.report.snr.threshold_volume()` using the SAMRI file_template/substitution model.
 
 	Parameters
@@ -290,7 +290,7 @@ def iter_significant_signal(file_template, substitutions,
 	exclude_ones=False,
 	):
 	"""
-	Create a `pandas.DataFrame` (optionally savable as `.csv`), containing the means and medians of a number of p-value maps specified by a file template supporting substitution and a substitution list of dictionaries.
+	Create a `pandas.DataFrame` (optionally saveable as `.csv`), containing the means and medians of a number of p-value maps specified by a file template supporting substitution and a substitution list of dictionaries.
 	This function is an iteration wrapper of `samri.report.snr.significant_signal()` using the SAMRI file_template/substitution model.
 
 	Parameters
@@ -348,7 +348,7 @@ def df_significant_signal(df,
 	path_column='path',
 	):
 	"""
-	Create a `pandas.DataFrame` (optionally savable as `.csv`), containing the means and medians of a number of p-value maps specified by a file template supporting substitution and a substitution list of dictionaries.
+	Create a `pandas.DataFrame` (optionally saveable as `.csv`), containing the means and medians of a number of p-value maps specified by a file template supporting substitution and a substitution list of dictionaries.
 	This function is a Pandas DataFrame based iteration wrapper of `samri.report.snr.significant_signal()` using the SAMRI file_template/substitution model.
 
 	Parameters
@@ -409,7 +409,7 @@ def df_roi_data(df,
 	zero_threshold=0.1,
 	):
 	"""
-	Create a `pandas.DataFrame` (optionally savable as `.csv`), containing new means and medians columns of the values located within a roi in the files specified by the path column of an input DataFrame.
+	Create a `pandas.DataFrame` (optionally saveable as `.csv`), containing new means and medians columns of the values located within a roi in the files specified by the path column of an input DataFrame.
 	This function is a Pandas DataFrame based iteration wrapper of `samri.report.utils.roi_data()`.
 
 	Parameters
@@ -530,7 +530,7 @@ def iter_base_metrics(file_template, substitutions,
 	save_as='',
 	):
 	"""
-	Create a `pandas.DataFrame` (optionally savable as `.csv`), containing base metrics (mean, median, mode, standard deviation) at each 4th dimension point of a 4D NIfTI file.
+	Create a `pandas.DataFrame` (optionally saveable as `.csv`), containing base metrics (mean, median, mode, standard deviation) at each 4th dimension point of a 4D NIfTI file.
 	This function is an iteration wrapper of `samri.report.snr.base_metrics()` using the SAMRI file_template/substitution model.
 
 	Parameters

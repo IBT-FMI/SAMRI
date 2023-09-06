@@ -82,7 +82,7 @@ def roi_based(
 	):
 	"""Plot timecourses and design for measurements. should be deprecated in favour of multi.
 
-	Parameteres
+	Parameters
 	-----------
 
 	beta_filename : str, optional

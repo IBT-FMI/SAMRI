@@ -165,7 +165,7 @@ def bids_substitution_iterator(sessions, subjects,
 		String identifying the preprocessing work directory name from which to provide an iterator. If `None` the preprocessing work directory name is assumed to be the preprocessing pipeline name (`preprocessing_dir`) suffixed with the string `"_work"`.
 	validate_for_template : str, optional
 		Template string for which to check whether a file exists.
-		If no file exists given a substitution dictionary, that dictionary will not be added to the retuned list.
+		If no file exists given a substitution dictionary, that dictionary will not be added to the returned list.
 		If this variable is an empty string (or otherwise evaluates as False) no check is performed, and all dictionaries (i.e. all input value permutations) are returned.
 
 	Returns
@@ -233,7 +233,7 @@ def collapse(img,
 	min_dim=3,
 	):
 	"""
-	Collapse a nibabel image allong its last axis
+	Collapse a nibabel image along its last axis
 
 	Parameters
 	----------

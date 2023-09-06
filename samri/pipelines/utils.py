@@ -352,7 +352,7 @@ def parse_paravision_date(pv_date):
 	Notes
 	-----
 
-	The datetime object produced does not contain a timezone, and should therefor only be used to determine time deltas relative to other datetimes from the same session.
+	The datetime object produced does not contain a timezone, and should therefore only be used to determine time deltas relative to other datetimes from the same session.
 	"""
 	from datetime import datetime
 
@@ -405,7 +405,7 @@ def datasource_exclude(in_files, excludes, output="files"):
 	----------
 
 	in_files : list
-	A list of flie names.
+	A list of file names.
 
 	excludes : dictionary
 	A dictionary with keys which are "subjects", "sessions", or "scans", and values which are lists giving the subject, session, or scan identifier respectively.

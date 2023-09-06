@@ -78,7 +78,7 @@ def legacy(bids_base, template,
 	n_jobs : int, optional
 		Number of processors to maximally use for the workflow; if unspecified a best guess will be estimate based on `n_jobs_percentage` and hardware (but not on current load).
 	n_jobs_percentage : float, optional
-		Percentage of available processors (as in available hardware, not available free load) to maximally use for the workflow (this is overriden by `n_jobs`).
+		Percentage of available processors (as in available hardware, not available free load) to maximally use for the workflow (this is overridden by `n_jobs`).
 	out_base : str, optional
 		Output base directory - inside which a directory named `workflow_name` (as well as associated directories) will be created.
 	realign : {"space","time","spacetime",""}, optional
@@ -367,7 +367,7 @@ def generic(bids_base, template,
 	n_jobs : int, optional
 		Number of processors to maximally use for the workflow; if unspecified a best guess will be estimate based on `n_jobs_percentage` and hardware (but not on current load).
 	n_jobs_percentage : float, optional
-		Percentage of available processors (as in available hardware, not available free load) to maximally use for the workflow (this is overriden by `n_jobs`).
+		Percentage of available processors (as in available hardware, not available free load) to maximally use for the workflow (this is overridden by `n_jobs`).
 	out_base : str, optional
 		Output base directory --- inside which a directory named `workflow_name`(as well as associated directories) will be created.
 	realign : {"space","time","spacetime",""}, optional

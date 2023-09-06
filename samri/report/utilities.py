@@ -25,7 +25,7 @@ def roi_df(img_path, masker,
 
 	img_path : str
 		Path to NIfTI file from which the ROI is to be extracted.
-	makser : nilearn.NiftiMasker
+	masker : nilearn.NiftiMasker
 		Nilearn `nifti1.Nifti1Image` object to use for masking the desired ROI.
 	substitution : dict, optional
 		A dictionary with keys which include 'subject' and 'session'.
@@ -70,7 +70,7 @@ def roi_data(img_path, masker,
 
 	img_path : str
 		Path to NIfTI file from which the ROI is to be extracted.
-	makser : nilearn.NiftiMasker
+	masker : nilearn.NiftiMasker
 		Nilearn `nifti1.Nifti1Image` object to use for masking the desired ROI.
 	exclude_zero : bool, optional
 		Whether to filter out zero values.

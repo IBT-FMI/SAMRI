@@ -145,7 +145,7 @@ def summary_atlas(atlas,
 		Path to CSV file which contains columns matching the values assigned to the `label_column_l`, `label_column_r`, `structure_column` parameters of this function.
 	summary : dict, optional
 		Dictionary with keys which are integers, and values which are dictionaries, whose keys in turn are:
-			* 'structure': accepting any value assignement
+			* 'structure': accepting any value assignment
 			* 'summarize': the value of which is a list of strings which are present on the `mapping` data file column entitled according to `structure_column`.
 			* 'laterality': the value of which is one of {'','both','left','right'}
 	"""

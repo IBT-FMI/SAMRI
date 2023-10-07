@@ -92,17 +92,17 @@ def seed_based(bids_base,
 	infosource = pe.Node(interface=util.IdentityInterface(fields=['path'], mandatory_inputs=False), name="infosource")
 	infosource.iterables = [('path', paths)]
 
-	bids_filename = pe.Node(name='bids_filename', interface=util.Function(function=out_path,input_names=inspect.getargspec(out_path)[0], output_names=['filename']))
+	bids_filename = pe.Node(name='bids_filename', interface=util.Function(function=out_path,input_names=inspect.getfullargspec(out_path)[0], output_names=['filename']))
 	bids_filename.inputs.selection_df = data_selection
 
-	bids_container = pe.Node(name='path_container', interface=util.Function(function=container,input_names=inspect.getargspec(container)[0], output_names=['container']))
+	bids_container = pe.Node(name='path_container', interface=util.Function(function=container,input_names=inspect.getfullargspec(container)[0], output_names=['container']))
 	bids_container.inputs.selection_df = data_selection
 
 	datasink = pe.Node(nio.DataSink(), name='datasink')
 	datasink.inputs.base_directory = path.abspath(path.join(bids_base,'..','diagnostic'))
 	datasink.inputs.parameterization = False
 
-	report_tr = pe.Node(name='report_tr', interface=util.Function(function=get_tr,input_names=inspect.getargspec(get_tr)[0], output_names=['tr']))
+	report_tr = pe.Node(name='report_tr', interface=util.Function(function=get_tr,input_names=inspect.getfullargspec(get_tr)[0], output_names=['tr']))
 	report_tr.inputs.ndim = 4
 
 	workflow_connections = [

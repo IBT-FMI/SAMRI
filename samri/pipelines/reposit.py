@@ -195,7 +195,7 @@ def bru2bids(measurements_base,
 		if not os.path.exists(workdir):
 			os.makedirs(workdir)
 		f_data_selection.to_csv(path.join(workdir,'f_data_selection.csv'))
-		get_f_scan = pe.Node(name='get_f_scan', interface=util.Function(function=get_bids_scan,input_names=inspect.getargspec(get_bids_scan)[0], output_names=[
+		get_f_scan = pe.Node(name='get_f_scan', interface=util.Function(function=get_bids_scan,input_names=inspect.getfullargspec(get_bids_scan)[0], output_names=[
 			'scan_path', 'typ', 'task', 'nii_path', 'nii_name', 'eventfile_name', 'subject_session', 'metadata_filename', 'dict_slice', 'ind_type',
 			]))
 		get_f_scan.inputs.ignore_exception = True
@@ -207,16 +207,16 @@ def bru2bids(measurements_base,
 		f_bru2nii.inputs.actual_size = not inflated_size
 		f_bru2nii.inputs.compress = True
 
-		f_metadata_file = pe.Node(name='metadata_file', interface=util.Function(function=write_bids_metadata_file,input_names=inspect.getargspec(write_bids_metadata_file)[0], output_names=['out_file']))
+		f_metadata_file = pe.Node(name='metadata_file', interface=util.Function(function=write_bids_metadata_file,input_names=inspect.getfullargspec(write_bids_metadata_file)[0], output_names=['out_file']))
 		f_metadata_file.inputs.extraction_dicts = BIDS_METADATA_EXTRACTION_DICTS
 
-		f_flip = pe.Node(name='f_flip', interface=util.Function(function=flip_if_needed,input_names=inspect.getargspec(flip_if_needed)[0], output_names=['out_file']))
+		f_flip = pe.Node(name='f_flip', interface=util.Function(function=flip_if_needed,input_names=inspect.getfullargspec(flip_if_needed)[0], output_names=['out_file']))
 		f_flip.inputs.data_selection = f_data_selection
 
-		events_file = pe.Node(name='events_file', interface=util.Function(function=write_bids_events_file,input_names=inspect.getargspec(write_bids_events_file)[0], output_names=['out_file']))
+		events_file = pe.Node(name='events_file', interface=util.Function(function=write_bids_events_file,input_names=inspect.getfullargspec(write_bids_events_file)[0], output_names=['out_file']))
 		events_file.ignore_exception = True
 
-		physio_file = pe.Node(name='physio_file', interface=util.Function(function=write_bids_physio_file,input_names=inspect.getargspec(write_bids_physio_file)[0], output_names=['out_file','out_metadata_file']))
+		physio_file = pe.Node(name='physio_file', interface=util.Function(function=write_bids_physio_file,input_names=inspect.getfullargspec(write_bids_physio_file)[0], output_names=['out_file','out_metadata_file']))
 
 		workflow_connections = [
 			(get_f_scan, datasink, [(('subject_session',ss_to_path), 'container')]),
@@ -288,7 +288,7 @@ def bru2bids(measurements_base,
 		if not os.path.exists(workdir):
 			os.makedirs(workdir)
 		d_data_selection.to_csv(path.join(workdir,'d_data_selection.csv'))
-		get_d_scan = pe.Node(name='get_d_scan', interface=util.Function(function=get_bids_scan,input_names=inspect.getargspec(get_bids_scan)[0], output_names=[
+		get_d_scan = pe.Node(name='get_d_scan', interface=util.Function(function=get_bids_scan,input_names=inspect.getfullargspec(get_bids_scan)[0], output_names=[
 			'scan_path', 'typ', 'task', 'nii_path', 'nii_name', 'eventfile_name', 'subject_session', 'metadata_filename', 'dict_slice', 'ind_type',
 			]))
 		get_d_scan.inputs.ignore_exception = True
@@ -302,7 +302,7 @@ def bru2bids(measurements_base,
 		d_bru2nii.inputs.actual_size = not inflated_size
 		d_bru2nii.inputs.compress = True
 
-		d_metadata_file = pe.Node(name='metadata_file', interface=util.Function(function=write_bids_metadata_file,input_names=inspect.getargspec(write_bids_metadata_file)[0], output_names=['out_file']))
+		d_metadata_file = pe.Node(name='metadata_file', interface=util.Function(function=write_bids_metadata_file,input_names=inspect.getfullargspec(write_bids_metadata_file)[0], output_names=['out_file']))
 		d_metadata_file.inputs.extraction_dicts = BIDS_METADATA_EXTRACTION_DICTS
 
 		workflow_connections = [
@@ -359,7 +359,7 @@ def bru2bids(measurements_base,
 		if not os.path.exists(workdir):
 			os.makedirs(workdir)
 		s_data_selection.to_csv(path.join(workdir,'s_data_selection.csv'))
-		get_s_scan = pe.Node(name='get_s_scan', interface=util.Function(function=get_bids_scan,input_names=inspect.getargspec(get_bids_scan)[0], output_names=[
+		get_s_scan = pe.Node(name='get_s_scan', interface=util.Function(function=get_bids_scan,input_names=inspect.getfullargspec(get_bids_scan)[0], output_names=[
 			'scan_path', 'typ', 'task', 'nii_path', 'nii_name', 'eventfile_name', 'subject_session', 'metadata_filename', 'dict_slice', 'ind_type',
 			]))
 		get_s_scan.inputs.ignore_exception = True
@@ -373,10 +373,10 @@ def bru2bids(measurements_base,
 		s_bru2nii.inputs.actual_size = not inflated_size
 		s_bru2nii.inputs.compress = True
 
-		s_metadata_file = pe.Node(name='metadata_file', interface=util.Function(function=write_bids_metadata_file,input_names=inspect.getargspec(write_bids_metadata_file)[0], output_names=['out_file']))
+		s_metadata_file = pe.Node(name='metadata_file', interface=util.Function(function=write_bids_metadata_file,input_names=inspect.getfullargspec(write_bids_metadata_file)[0], output_names=['out_file']))
 		s_metadata_file.inputs.extraction_dicts = BIDS_METADATA_EXTRACTION_DICTS
 
-		s_flip = pe.Node(name='s_flip', interface=util.Function(function=flip_if_needed,input_names=inspect.getargspec(flip_if_needed)[0], output_names=['out_file']))
+		s_flip = pe.Node(name='s_flip', interface=util.Function(function=flip_if_needed,input_names=inspect.getfullargspec(flip_if_needed)[0], output_names=['out_file']))
 		s_flip.inputs.data_selection = s_data_selection
 
 		workflow_connections = [

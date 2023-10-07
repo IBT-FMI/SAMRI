@@ -108,13 +108,13 @@ def l1(preprocessing_dir,
 		os.makedirs(workdir)
 	data_selection.to_csv(path.join(workdir,'data_selection.csv'))
 
-	get_scan = pe.Node(name='get_scan', interface=util.Function(function=get_bids_scan,input_names=inspect.getargspec(get_bids_scan)[0], output_names=['scan_path','scan_type','task', 'nii_path', 'nii_name', 'events_name', 'subject_session', 'metadata_filename', 'dict_slice', 'ind_type']))
+	get_scan = pe.Node(name='get_scan', interface=util.Function(function=get_bids_scan,input_names=inspect.getfullargspec(get_bids_scan)[0], output_names=['scan_path','scan_type','task', 'nii_path', 'nii_name', 'events_name', 'subject_session', 'metadata_filename', 'dict_slice', 'ind_type']))
 	get_scan.inputs.ignore_exception = True
 	get_scan.inputs.data_selection = data_selection
 	get_scan.inputs.bids_base = preprocessing_dir
 	get_scan.iterables = ("ind_type", ind)
 
-	eventfile = pe.Node(name='eventfile', interface=util.Function(function=corresponding_eventfile,input_names=inspect.getargspec(corresponding_eventfile)[0], output_names=['eventfile']))
+	eventfile = pe.Node(name='eventfile', interface=util.Function(function=corresponding_eventfile,input_names=inspect.getfullargspec(corresponding_eventfile)[0], output_names=['eventfile']))
 
 	if invert:
 		invert = pe.Node(interface=fsl.ImageMaths(), name="invert")
@@ -165,23 +165,23 @@ def l1(preprocessing_dir,
 		out_file_name_base = 'sub-{{subject}}_ses-{{session}}_task-{{task}}_acq-{{acquisition}}_run-{{run}}_desc-{}_{{modality}}.{}'
 
 
-	betas_filename = pe.Node(name='betas_filename', interface=util.Function(function=bids_dict_to_source,input_names=inspect.getargspec(bids_dict_to_source)[0], output_names=['filename']))
+	betas_filename = pe.Node(name='betas_filename', interface=util.Function(function=bids_dict_to_source,input_names=inspect.getfullargspec(bids_dict_to_source)[0], output_names=['filename']))
 	betas_filename.inputs.source_format = out_file_name_base.format('betas','nii.gz')
-	cope_filename = pe.Node(name='cope_filename', interface=util.Function(function=bids_dict_to_source,input_names=inspect.getargspec(bids_dict_to_source)[0], output_names=['filename']))
+	cope_filename = pe.Node(name='cope_filename', interface=util.Function(function=bids_dict_to_source,input_names=inspect.getfullargspec(bids_dict_to_source)[0], output_names=['filename']))
 	cope_filename.inputs.source_format = out_file_name_base.format('cope','nii.gz')
-	varcb_filename = pe.Node(name='varcb_filename', interface=util.Function(function=bids_dict_to_source,input_names=inspect.getargspec(bids_dict_to_source)[0], output_names=['filename']))
+	varcb_filename = pe.Node(name='varcb_filename', interface=util.Function(function=bids_dict_to_source,input_names=inspect.getfullargspec(bids_dict_to_source)[0], output_names=['filename']))
 	varcb_filename.inputs.source_format = out_file_name_base.format('varcb','nii.gz')
-	tstat_filename = pe.Node(name='tstat_filename', interface=util.Function(function=bids_dict_to_source,input_names=inspect.getargspec(bids_dict_to_source)[0], output_names=['filename']))
+	tstat_filename = pe.Node(name='tstat_filename', interface=util.Function(function=bids_dict_to_source,input_names=inspect.getfullargspec(bids_dict_to_source)[0], output_names=['filename']))
 	tstat_filename.inputs.source_format = out_file_name_base.format('tstat','nii.gz')
-	zstat_filename = pe.Node(name='zstat_filename', interface=util.Function(function=bids_dict_to_source,input_names=inspect.getargspec(bids_dict_to_source)[0], output_names=['filename']))
+	zstat_filename = pe.Node(name='zstat_filename', interface=util.Function(function=bids_dict_to_source,input_names=inspect.getfullargspec(bids_dict_to_source)[0], output_names=['filename']))
 	zstat_filename.inputs.source_format = out_file_name_base.format('zstat','nii.gz')
-	pstat_filename = pe.Node(name='pstat_filename', interface=util.Function(function=bids_dict_to_source,input_names=inspect.getargspec(bids_dict_to_source)[0], output_names=['filename']))
+	pstat_filename = pe.Node(name='pstat_filename', interface=util.Function(function=bids_dict_to_source,input_names=inspect.getfullargspec(bids_dict_to_source)[0], output_names=['filename']))
 	pstat_filename.inputs.source_format = out_file_name_base.format('pstat','nii.gz')
-	pfstat_filename = pe.Node(name='pfstat_filename', interface=util.Function(function=bids_dict_to_source,input_names=inspect.getargspec(bids_dict_to_source)[0], output_names=['filename']))
+	pfstat_filename = pe.Node(name='pfstat_filename', interface=util.Function(function=bids_dict_to_source,input_names=inspect.getfullargspec(bids_dict_to_source)[0], output_names=['filename']))
 	pfstat_filename.inputs.source_format = out_file_name_base.format('pfstat','nii.gz')
-	design_filename = pe.Node(name='design_filename', interface=util.Function(function=bids_dict_to_source,input_names=inspect.getargspec(bids_dict_to_source)[0], output_names=['filename']))
+	design_filename = pe.Node(name='design_filename', interface=util.Function(function=bids_dict_to_source,input_names=inspect.getfullargspec(bids_dict_to_source)[0], output_names=['filename']))
 	design_filename.inputs.source_format = out_file_name_base.format('design','mat')
-	designimage_filename = pe.Node(name='designimage_filename', interface=util.Function(function=bids_dict_to_source,input_names=inspect.getargspec(bids_dict_to_source)[0], output_names=['filename']))
+	designimage_filename = pe.Node(name='designimage_filename', interface=util.Function(function=bids_dict_to_source,input_names=inspect.getfullargspec(bids_dict_to_source)[0], output_names=['filename']))
 	designimage_filename.inputs.source_format = out_file_name_base.format('design','png')
 
 	design_rename = pe.Node(interface=util.Rename(), name='design_rename')
@@ -234,7 +234,7 @@ def l1(preprocessing_dir,
 		level1design.inputs.orthogonalization = {1: {0:0,1:0,2:0}, 2: {0:1,1:1,2:0}}
 		specify_model.inputs.bids_condition_column = 'samri_l1_regressors'
 		specify_model.inputs.bids_amplitude_column = 'samri_l1_amplitude'
-		add_habituation = pe.Node(name='add_habituation', interface=util.Function(function=eventfile_add_habituation,input_names=inspect.getargspec(eventfile_add_habituation)[0], output_names=['out_file']))
+		add_habituation = pe.Node(name='add_habituation', interface=util.Function(function=eventfile_add_habituation,input_names=inspect.getfullargspec(eventfile_add_habituation)[0], output_names=['out_file']))
 		# Regressor names need to be prefixed with "e" plus a numerator so that Level1Design will be certain to conserve the order.
 		add_habituation.inputs.original_stimulation_value='1stim'
 		add_habituation.inputs.habituation_value='2habituation'
@@ -412,17 +412,17 @@ def l1_physio(preprocessing_dir, physiology_identifier,
 		os.makedirs(workdir)
 	data_selection.to_csv(path.join(workdir,'data_selection.csv'))
 
-	get_scan = pe.Node(name='get_scan', interface=util.Function(function=get_bids_scan,input_names=inspect.getargspec(get_bids_scan)[0], output_names=['scan_path','scan_type','task', 'nii_path', 'nii_name', 'events_name', 'subject_session', 'metadata_filename', 'dict_slice', 'ind_type']))
+	get_scan = pe.Node(name='get_scan', interface=util.Function(function=get_bids_scan,input_names=inspect.getfullargspec(get_bids_scan)[0], output_names=['scan_path','scan_type','task', 'nii_path', 'nii_name', 'events_name', 'subject_session', 'metadata_filename', 'dict_slice', 'ind_type']))
 	get_scan.inputs.ignore_exception = True
 	get_scan.inputs.data_selection = data_selection
 	get_scan.inputs.bids_base = preprocessing_dir
 	get_scan.iterables = ("ind_type", ind)
 
-	physiofile = pe.Node(name='physiofile', interface=util.Function(function=physiofile_ts,input_names=inspect.getargspec(physiofile_ts)[0], output_names=['nii_file','ts']))
+	physiofile = pe.Node(name='physiofile', interface=util.Function(function=physiofile_ts,input_names=inspect.getfullargspec(physiofile_ts)[0], output_names=['nii_file','ts']))
 	physiofile.inputs.column_name = physiology_identifier
 	physiofile.inputs.ignore_exception = True
 
-	make_regressor = pe.Node(name='make_regressor', interface=util.Function(function=regressor,input_names=inspect.getargspec(regressor)[0], output_names=['output']))
+	make_regressor = pe.Node(name='make_regressor', interface=util.Function(function=regressor,input_names=inspect.getfullargspec(regressor)[0], output_names=['output']))
 	make_regressor.inputs.hpf = highpass_sigma
 	make_regressor.inputs.name = physiology_identifier
 
@@ -472,23 +472,23 @@ def l1_physio(preprocessing_dir, physiology_identifier,
 	else:
 		out_file_name_base = 'sub-{{subject}}_ses-{{session}}_task-{{task}}_acq-{{acquisition}}_run-{{run}}_desc-{}_{{modality}}.{}'
 
-	betas_filename = pe.Node(name='betas_filename', interface=util.Function(function=bids_dict_to_source,input_names=inspect.getargspec(bids_dict_to_source)[0], output_names=['filename']))
+	betas_filename = pe.Node(name='betas_filename', interface=util.Function(function=bids_dict_to_source,input_names=inspect.getfullargspec(bids_dict_to_source)[0], output_names=['filename']))
 	betas_filename.inputs.source_format = out_file_name_base.format('betas','nii.gz')
-	cope_filename = pe.Node(name='cope_filename', interface=util.Function(function=bids_dict_to_source,input_names=inspect.getargspec(bids_dict_to_source)[0], output_names=['filename']))
+	cope_filename = pe.Node(name='cope_filename', interface=util.Function(function=bids_dict_to_source,input_names=inspect.getfullargspec(bids_dict_to_source)[0], output_names=['filename']))
 	cope_filename.inputs.source_format = out_file_name_base.format('cope','nii.gz')
-	varcb_filename = pe.Node(name='varcb_filename', interface=util.Function(function=bids_dict_to_source,input_names=inspect.getargspec(bids_dict_to_source)[0], output_names=['filename']))
+	varcb_filename = pe.Node(name='varcb_filename', interface=util.Function(function=bids_dict_to_source,input_names=inspect.getfullargspec(bids_dict_to_source)[0], output_names=['filename']))
 	varcb_filename.inputs.source_format = out_file_name_base.format('varcb','nii.gz')
-	tstat_filename = pe.Node(name='tstat_filename', interface=util.Function(function=bids_dict_to_source,input_names=inspect.getargspec(bids_dict_to_source)[0], output_names=['filename']))
+	tstat_filename = pe.Node(name='tstat_filename', interface=util.Function(function=bids_dict_to_source,input_names=inspect.getfullargspec(bids_dict_to_source)[0], output_names=['filename']))
 	tstat_filename.inputs.source_format = out_file_name_base.format('tstat','nii.gz')
-	zstat_filename = pe.Node(name='zstat_filename', interface=util.Function(function=bids_dict_to_source,input_names=inspect.getargspec(bids_dict_to_source)[0], output_names=['filename']))
+	zstat_filename = pe.Node(name='zstat_filename', interface=util.Function(function=bids_dict_to_source,input_names=inspect.getfullargspec(bids_dict_to_source)[0], output_names=['filename']))
 	zstat_filename.inputs.source_format = out_file_name_base.format('zstat','nii.gz')
-	pstat_filename = pe.Node(name='pstat_filename', interface=util.Function(function=bids_dict_to_source,input_names=inspect.getargspec(bids_dict_to_source)[0], output_names=['filename']))
+	pstat_filename = pe.Node(name='pstat_filename', interface=util.Function(function=bids_dict_to_source,input_names=inspect.getfullargspec(bids_dict_to_source)[0], output_names=['filename']))
 	pstat_filename.inputs.source_format = out_file_name_base.format('pstat','nii.gz')
-	pfstat_filename = pe.Node(name='pfstat_filename', interface=util.Function(function=bids_dict_to_source,input_names=inspect.getargspec(bids_dict_to_source)[0], output_names=['filename']))
+	pfstat_filename = pe.Node(name='pfstat_filename', interface=util.Function(function=bids_dict_to_source,input_names=inspect.getfullargspec(bids_dict_to_source)[0], output_names=['filename']))
 	pfstat_filename.inputs.source_format = out_file_name_base.format('pfstat','nii.gz')
-	design_filename = pe.Node(name='design_filename', interface=util.Function(function=bids_dict_to_source,input_names=inspect.getargspec(bids_dict_to_source)[0], output_names=['filename']))
+	design_filename = pe.Node(name='design_filename', interface=util.Function(function=bids_dict_to_source,input_names=inspect.getfullargspec(bids_dict_to_source)[0], output_names=['filename']))
 	design_filename.inputs.source_format = out_file_name_base.format('design','mat')
-	designimage_filename = pe.Node(name='designimage_filename', interface=util.Function(function=bids_dict_to_source,input_names=inspect.getargspec(bids_dict_to_source)[0], output_names=['filename']))
+	designimage_filename = pe.Node(name='designimage_filename', interface=util.Function(function=bids_dict_to_source,input_names=inspect.getfullargspec(bids_dict_to_source)[0], output_names=['filename']))
 	designimage_filename.inputs.source_format = out_file_name_base.format('design','png')
 
 	design_rename = pe.Node(interface=util.Rename(), name='design_rename')
@@ -679,13 +679,13 @@ def seed(preprocessing_dir, seed_mask,
 		os.makedirs(workdir)
 	data_selection.to_csv(path.join(workdir,'data_selection.csv'))
 
-	get_scan = pe.Node(name='get_scan', interface=util.Function(function=get_bids_scan,input_names=inspect.getargspec(get_bids_scan)[0], output_names=['scan_path','scan_type','task', 'nii_path', 'nii_name', 'events_name', 'subject_session', 'metadata_filename', 'dict_slice', 'ind_type']))
+	get_scan = pe.Node(name='get_scan', interface=util.Function(function=get_bids_scan,input_names=inspect.getfullargspec(get_bids_scan)[0], output_names=['scan_path','scan_type','task', 'nii_path', 'nii_name', 'events_name', 'subject_session', 'metadata_filename', 'dict_slice', 'ind_type']))
 	get_scan.inputs.ignore_exception = True
 	get_scan.inputs.data_selection = data_selection
 	get_scan.inputs.bids_base = preprocessing_dir
 	get_scan.iterables = ("ind_type", ind)
 
-	compute_seed = pe.Node(name='compute_seed', interface=util.Function(function=ts,input_names=inspect.getargspec(ts)[0], output_names=['means','medians']))
+	compute_seed = pe.Node(name='compute_seed', interface=util.Function(function=ts,input_names=inspect.getfullargspec(ts)[0], output_names=['means','medians']))
 	if erode_iterations:
 		from samri.report.roi import erode
 		eroded_seed = '/var/tmp/samri_seed_eroded_{}.nii.gz'.format(erode_iterations)
@@ -694,7 +694,7 @@ def seed(preprocessing_dir, seed_mask,
 	else:
 		compute_seed.inputs.mask = path.abspath(path.expanduser(seed_mask))
 
-	make_regressor = pe.Node(name='make_regressor', interface=util.Function(function=regressor,input_names=inspect.getargspec(regressor)[0], output_names=['output']))
+	make_regressor = pe.Node(name='make_regressor', interface=util.Function(function=regressor,input_names=inspect.getfullargspec(regressor)[0], output_names=['output']))
 	make_regressor.inputs.hpf = highpass_sigma
 	make_regressor.inputs.name = 'seed'
 
@@ -728,21 +728,21 @@ def seed(preprocessing_dir, seed_mask,
 	else:
 		out_file_name_base = 'sub-{{subject}}_ses-{{session}}_task-{{task}}_acq-{{acquisition}}_run-{{run}}_desc-{}_{{modality}}.{}'
 
-	betas_filename = pe.Node(name='betas_filename', interface=util.Function(function=bids_dict_to_source,input_names=inspect.getargspec(bids_dict_to_source)[0], output_names=['filename']))
+	betas_filename = pe.Node(name='betas_filename', interface=util.Function(function=bids_dict_to_source,input_names=inspect.getfullargspec(bids_dict_to_source)[0], output_names=['filename']))
 	betas_filename.inputs.source_format = out_file_name_base.format('betas','nii.gz')
-	cope_filename = pe.Node(name='cope_filename', interface=util.Function(function=bids_dict_to_source,input_names=inspect.getargspec(bids_dict_to_source)[0], output_names=['filename']))
+	cope_filename = pe.Node(name='cope_filename', interface=util.Function(function=bids_dict_to_source,input_names=inspect.getfullargspec(bids_dict_to_source)[0], output_names=['filename']))
 	cope_filename.inputs.source_format = out_file_name_base.format('cope','nii.gz')
-	varcb_filename = pe.Node(name='varcb_filename', interface=util.Function(function=bids_dict_to_source,input_names=inspect.getargspec(bids_dict_to_source)[0], output_names=['filename']))
+	varcb_filename = pe.Node(name='varcb_filename', interface=util.Function(function=bids_dict_to_source,input_names=inspect.getfullargspec(bids_dict_to_source)[0], output_names=['filename']))
 	varcb_filename.inputs.source_format = out_file_name_base.format('varcb','nii.gz')
-	tstat_filename = pe.Node(name='tstat_filename', interface=util.Function(function=bids_dict_to_source,input_names=inspect.getargspec(bids_dict_to_source)[0], output_names=['filename']))
+	tstat_filename = pe.Node(name='tstat_filename', interface=util.Function(function=bids_dict_to_source,input_names=inspect.getfullargspec(bids_dict_to_source)[0], output_names=['filename']))
 	tstat_filename.inputs.source_format = out_file_name_base.format('tstat','nii.gz')
-	zstat_filename = pe.Node(name='zstat_filename', interface=util.Function(function=bids_dict_to_source,input_names=inspect.getargspec(bids_dict_to_source)[0], output_names=['filename']))
+	zstat_filename = pe.Node(name='zstat_filename', interface=util.Function(function=bids_dict_to_source,input_names=inspect.getfullargspec(bids_dict_to_source)[0], output_names=['filename']))
 	zstat_filename.inputs.source_format = out_file_name_base.format('zstat','nii.gz')
-	pstat_filename = pe.Node(name='pstat_filename', interface=util.Function(function=bids_dict_to_source,input_names=inspect.getargspec(bids_dict_to_source)[0], output_names=['filename']))
+	pstat_filename = pe.Node(name='pstat_filename', interface=util.Function(function=bids_dict_to_source,input_names=inspect.getfullargspec(bids_dict_to_source)[0], output_names=['filename']))
 	pstat_filename.inputs.source_format = out_file_name_base.format('pstat','nii.gz')
-	pfstat_filename = pe.Node(name='pfstat_filename', interface=util.Function(function=bids_dict_to_source,input_names=inspect.getargspec(bids_dict_to_source)[0], output_names=['filename']))
+	pfstat_filename = pe.Node(name='pfstat_filename', interface=util.Function(function=bids_dict_to_source,input_names=inspect.getfullargspec(bids_dict_to_source)[0], output_names=['filename']))
 	pfstat_filename.inputs.source_format = out_file_name_base.format('pfstat','nii.gz')
-	design_filename = pe.Node(name='design', interface=util.Function(function=bids_dict_to_source,input_names=inspect.getargspec(bids_dict_to_source)[0], output_names=['filename']))
+	design_filename = pe.Node(name='design', interface=util.Function(function=bids_dict_to_source,input_names=inspect.getfullargspec(bids_dict_to_source)[0], output_names=['filename']))
 	design_filename.inputs.source_format = out_file_name_base.format('design','mat')
 
 	design_rename = pe.Node(interface=util.Rename(), name='design_rename')
@@ -786,7 +786,7 @@ def seed(preprocessing_dir, seed_mask,
 		]
 
 	if top_voxel:
-		voxel_filename = pe.Node(name='voxel_filename', interface=util.Function(function=bids_dict_to_source,input_names=inspect.getargspec(bids_dict_to_source)[0], output_names=['filename']))
+		voxel_filename = pe.Node(name='voxel_filename', interface=util.Function(function=bids_dict_to_source,input_names=inspect.getfullargspec(bids_dict_to_source)[0], output_names=['filename']))
 		voxel_filename.inputs.source_format = top_voxel
 		workflow_connections.extend([
 			(get_scan, voxel_filename, [('dict_slice', 'bids_dictionary')]),
@@ -991,14 +991,14 @@ def l2_common_effect(l1_dir,
 		infosource = pe.Node(interface=util.IdentityInterface(fields=['iterable']), name="infosource")
 		infosource.iterables = [('iterable', target_set)]
 
-		copes = pe.Node(name='copes', interface=util.Function(function=select_from_datafind_df, input_names=inspect.getargspec(select_from_datafind_df)[0], output_names=['selection']))
+		copes = pe.Node(name='copes', interface=util.Function(function=select_from_datafind_df, input_names=inspect.getfullargspec(select_from_datafind_df)[0], output_names=['selection']))
 		# Remove when =pybids-0.10.2 is fully supported
 		#copes.inputs.bids_dictionary_override = {'modality':'cope', 'alias':''}
 		copes.inputs.bids_dictionary_override = {'desc':'cope', 'alias':''}
 		copes.inputs.df = data_selection
 		copes.inputs.list_output = True
 
-		varcopes = pe.Node(name='varcopes', interface=util.Function(function=select_from_datafind_df, input_names=inspect.getargspec(select_from_datafind_df)[0], output_names=['selection']))
+		varcopes = pe.Node(name='varcopes', interface=util.Function(function=select_from_datafind_df, input_names=inspect.getfullargspec(select_from_datafind_df)[0], output_names=['selection']))
 		# Remove when =pybids-0.10.2 is fully supported
 		#varcopes.inputs.bids_dictionary_override = {'modality':'varcb', 'alias':''}
 		varcopes.inputs.bids_dictionary_override = {'desc':'varcb', 'alias':''}
@@ -1028,14 +1028,14 @@ def l2_common_effect(l1_dir,
 		infosource = pe.Node(interface=util.IdentityInterface(fields=['iterable']), name="infosource")
 		infosource.iterables = [('iterable', subjects)]
 
-		copes = pe.Node(name='copes', interface=util.Function(function=select_from_datafind_df, input_names=inspect.getargspec(select_from_datafind_df)[0], output_names=['selection']))
+		copes = pe.Node(name='copes', interface=util.Function(function=select_from_datafind_df, input_names=inspect.getfullargspec(select_from_datafind_df)[0], output_names=['selection']))
 		# Remove when =pybids-0.10.2 is fully supported
 		#copes.inputs.bids_dictionary_override = {'modality':'cope'}
 		copes.inputs.bids_dictionary_override = {'desc':'cope'}
 		copes.inputs.df = data_selection
 		copes.inputs.list_output = True
 
-		varcopes = pe.Node(name='varcopes', interface=util.Function(function=select_from_datafind_df, input_names=inspect.getargspec(select_from_datafind_df)[0], output_names=['selection']))
+		varcopes = pe.Node(name='varcopes', interface=util.Function(function=select_from_datafind_df, input_names=inspect.getfullargspec(select_from_datafind_df)[0], output_names=['selection']))
 		# Remove when =pybids-0.10.2 is fully supported
 		#varcopes.inputs.bids_dictionary_override = {'modality':'varcb'}
 		varcopes.inputs.bids_dictionary_override = {'desc':'varcb'}
@@ -1085,14 +1085,14 @@ def l2_common_effect(l1_dir,
 		infosource = pe.Node(interface=util.IdentityInterface(fields=['iterable']), name="infosource")
 		infosource.iterables = [('iterable', sessions)]
 
-		copes = pe.Node(name='copes', interface=util.Function(function=select_from_datafind_df, input_names=inspect.getargspec(select_from_datafind_df)[0], output_names=['selection']))
+		copes = pe.Node(name='copes', interface=util.Function(function=select_from_datafind_df, input_names=inspect.getfullargspec(select_from_datafind_df)[0], output_names=['selection']))
 		# Remove when =pybids-0.10.2 is fully supported
 		#copes.inputs.bids_dictionary_override = {'modality':'cope'}
 		copes.inputs.bids_dictionary_override = {'desc':'cope'}
 		copes.inputs.df = data_selection
 		copes.inputs.list_output = True
 
-		varcopes = pe.Node(name='varcopes', interface=util.Function(function=select_from_datafind_df, input_names=inspect.getargspec(select_from_datafind_df)[0], output_names=['selection']))
+		varcopes = pe.Node(name='varcopes', interface=util.Function(function=select_from_datafind_df, input_names=inspect.getfullargspec(select_from_datafind_df)[0], output_names=['selection']))
 		# Remove when =pybids-0.10.2 is fully supported
 		#varcopes.inputs.bids_dictionary_override = {'modality':'varcb'}
 		varcopes.inputs.bids_dictionary_override = {'desc':'varcb'}
@@ -1126,14 +1126,14 @@ def l2_common_effect(l1_dir,
 		infosource = pe.Node(interface=util.IdentityInterface(fields=['iterable']), name="infosource")
 		infosource.iterables = [('iterable', iters)]
 
-		copes = pe.Node(name='copes', interface=util.Function(function=select_from_datafind_df, input_names=inspect.getargspec(select_from_datafind_df)[0], output_names=['selection']))
+		copes = pe.Node(name='copes', interface=util.Function(function=select_from_datafind_df, input_names=inspect.getfullargspec(select_from_datafind_df)[0], output_names=['selection']))
 		# Remove when =pybids-0.10.2 is fully supported
 		#copes.inputs.bids_dictionary_override = {'modality':'cope'}
 		copes.inputs.bids_dictionary_override = {'desc':'cope'}
 		copes.inputs.df = data_selection
 		copes.inputs.list_output = True
 
-		varcopes = pe.Node(name='varcopes', interface=util.Function(function=select_from_datafind_df, input_names=inspect.getargspec(select_from_datafind_df)[0], output_names=['selection']))
+		varcopes = pe.Node(name='varcopes', interface=util.Function(function=select_from_datafind_df, input_names=inspect.getfullargspec(select_from_datafind_df)[0], output_names=['selection']))
 		# Remove when =pybids-0.10.2 is fully supported
 		#varcopes.inputs.bids_dictionary_override = {'modality':'varcb'}
 		varcopes.inputs.bids_dictionary_override = {'desc':'varcb'}
@@ -1167,14 +1167,14 @@ def l2_common_effect(l1_dir,
 		datasink_substitutions.extend([('zstat1.nii.gz', common_fields+'_'+'zstat.nii.gz')])
 		datasink.inputs.substitutions = datasink_substitutions
 
-		copes = pe.Node(name='copes', interface=util.Function(function=select_from_datafind_df, input_names=inspect.getargspec(select_from_datafind_df)[0], output_names=['selection']))
+		copes = pe.Node(name='copes', interface=util.Function(function=select_from_datafind_df, input_names=inspect.getfullargspec(select_from_datafind_df)[0], output_names=['selection']))
 		# Remove when =pybids-0.10.2 is fully supported
 		#copes.inputs.bids_dictionary_override = {'modality':'cope'}
 		copes.inputs.bids_dictionary_override = {'desc':'cope'}
 		copes.inputs.df = data_selection
 		copes.inputs.list_output = True
 
-		varcopes = pe.Node(name='varcopes', interface=util.Function(function=select_from_datafind_df, input_names=inspect.getargspec(select_from_datafind_df)[0], output_names=['selection']))
+		varcopes = pe.Node(name='varcopes', interface=util.Function(function=select_from_datafind_df, input_names=inspect.getfullargspec(select_from_datafind_df)[0], output_names=['selection']))
 		# Remove when =pybids-0.10.2 is fully supported
 		#varcopes.inputs.bids_dictionary_override = {'modality':'varcb'}
 		varcopes.inputs.bids_dictionary_override = {'desc':'varcb'}
@@ -1212,11 +1212,11 @@ def l2_common_effect(l1_dir,
 	if isinstance(select_input_volume,int):
 		from samri.pipelines.extra_functions import extract_volumes
 
-		copextract = pe.Node(name='copextract', interface=util.Function(function=extract_volumes, input_names=inspect.getargspec(extract_volumes)[0], output_names=['out_files']))
+		copextract = pe.Node(name='copextract', interface=util.Function(function=extract_volumes, input_names=inspect.getfullargspec(extract_volumes)[0], output_names=['out_files']))
 		copextract.inputs.axis=3
 		copextract.inputs.volume=select_input_volume
 
-		varcopextract = pe.Node(name='varcopextract', interface=util.Function(function=extract_volumes, input_names=inspect.getargspec(extract_volumes)[0], output_names=['out_files']))
+		varcopextract = pe.Node(name='varcopextract', interface=util.Function(function=extract_volumes, input_names=inspect.getfullargspec(extract_volumes)[0], output_names=['out_files']))
 		varcopextract.inputs.axis=3
 		varcopextract.inputs.volume=select_input_volume
 

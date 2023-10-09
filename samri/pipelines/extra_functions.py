@@ -867,8 +867,7 @@ def get_data_selection(workflow_base,
 			try:
 				state_file = open(os.path.join(workflow_base,sub_dir,"subject"), "r")
 				read_variables=0 #count variables so that breaking takes place after both have been read
-				while True:
-					current_line = state_file.readline()
+				for current_line in state_file:
 					if "##$SUBJECT_id=" in current_line:
 						entry=re.sub("[<>\n]", "", state_file.readline())
 						if not match_exclude_ss(entry, match, exclude, selected_measurement, 'subject'):
@@ -885,19 +884,62 @@ def get_data_selection(workflow_base,
 						read_variables +=1 #count recorded variables
 						selected_measurement['PV_position'] = position
 					if read_variables == 3:
-						selected_measurement['measurement'] = sub_dir
-						scan_program_file = os.path.join(workflow_base,sub_dir,"ScanProgram.scanProgram")
-						scan_dir_resolved = False
+						break
+				selected_measurement['measurement'] = sub_dir
+				scan_program_file = os.path.join(workflow_base,sub_dir,"ScanProgram.scanProgram")
+				scan_dir_resolved = False
+				if selected_measurement.get('subject') and selected_measurement.get('session') and not selected_measurement.get('PV_position'):
+					selected_measurement['PV_position'] = 'UDEFINED'
+				try:
+					with open(scan_program_file) as search:
+						for line in search:
+							line_considered = True
+							measurement_copy = deepcopy(selected_measurement)
+							if re.match(r'^[ \t]+<displayName>[a-zA-Z0-9-_]+? \(E\d+\)</displayName>[\r\n]+', line):
+								if fail_suffix and re.match(r'^.+?{} \(E\d+\)</displayName>[\r\n]+'.format(fail_suffix), line):
+									continue
+								m = re.match(r'^[ \t]+<displayName>(?P<scan_type>.+?) \(E(?P<number>\d+)\)</displayName>[\r\n]+', line)
+								number = m.groupdict()['number']
+								scan_type = m.groupdict()['scan_type']
+								bids_keys = layout.parse_file_entities('{}/{}'.format(bids_temppath,scan_type))
+								for key in match:
+									# Session and subject fields are not recorded in scan_type and were already checked at this point.
+									if key in ['session', 'subject']:
+										continue
+									try:
+										if bids_keys[key] not in match[key]:
+											line_considered = False
+											break
+									except KeyError:
+										line_considered = False
+										break
+								if line_considered and os.path.isdir(os.path.join(sub_dir,str(int(number)))):
+									measurement_copy['scan_type'] = str(scan_type).strip(' ')
+									measurement_copy['scan'] = str(int(number))
+									measurement_copy['run'] = run_counter
+									scan_type, measurement_copy = assign_modality(scan_type, measurement_copy)
+									measurement_copy.update(bids_keys)
+									run_counter += 1
+									selected_measurements.append(measurement_copy)
+									scan_dir_resolved = True
+					if not scan_dir_resolved:
+						raise IOError()
+				except IOError:
+					for sub_sub_dir in os.listdir(os.path.join(workflow_base,sub_dir)):
+						measurement_copy = deepcopy(selected_measurement)
+						acqp_file_path = os.path.join(workflow_base,sub_dir,sub_sub_dir,"acqp")
+						scan_subdir_resolved = False
 						try:
-							with open(scan_program_file) as search:
+							with open(acqp_file_path,'r') as search:
 								for line in search:
 									line_considered = True
-									measurement_copy = deepcopy(selected_measurement)
-									if re.match(r'^[ \t]+<displayName>[a-zA-Z0-9-_]+? \(E\d+\)</displayName>[\r\n]+', line):
-										if fail_suffix and re.match(r'^.+?{} \(E\d+\)</displayName>[\r\n]+'.format(fail_suffix), line):
+									if scan_subdir_resolved:
+										break
+									if re.match(r'^(?!/)<[a-zA-Z0-9-_]+?-[a-zA-Z0-9-_]+?>[\r\n]+', line):
+										if fail_suffix and re.match(r'^.+?{}$'.format(fail_suffix), line):
 											continue
-										m = re.match(r'^[ \t]+<displayName>(?P<scan_type>.+?) \(E(?P<number>\d+)\)</displayName>[\r\n]+', line)
-										number = m.groupdict()['number']
+										number = sub_sub_dir
+										m = re.match(r'^(?!/)<(?P<scan_type>.+?)>[\r\n]+', line)
 										scan_type = m.groupdict()['scan_type']
 										bids_keys = layout.parse_file_entities('{}/{}'.format(bids_temppath,scan_type))
 										for key in match:
@@ -911,60 +953,19 @@ def get_data_selection(workflow_base,
 											except KeyError:
 												line_considered = False
 												break
-										if line_considered and os.path.isdir(os.path.join(sub_dir,str(int(number)))):
+										if line_considered:
 											measurement_copy['scan_type'] = str(scan_type).strip(' ')
 											measurement_copy['scan'] = str(int(number))
 											measurement_copy['run'] = run_counter
-											scan_type, measurement_copy = assign_modality(scan_type, measurement_copy)
+											scan_type, measurement_copy= assign_modality(scan_type, measurement_copy)
 											measurement_copy.update(bids_keys)
 											run_counter += 1
 											selected_measurements.append(measurement_copy)
-											scan_dir_resolved = True
-							if not scan_dir_resolved:
-								raise IOError()
-						except IOError:
-							for sub_sub_dir in os.listdir(os.path.join(workflow_base,sub_dir)):
-								measurement_copy = deepcopy(selected_measurement)
-								acqp_file_path = os.path.join(workflow_base,sub_dir,sub_sub_dir,"acqp")
-								scan_subdir_resolved = False
-								try:
-									with open(acqp_file_path,'r') as search:
-										for line in search:
-											line_considered = True
-											if scan_subdir_resolved:
-												break
-											if re.match(r'^(?!/)<[a-zA-Z0-9-_]+?-[a-zA-Z0-9-_]+?>[\r\n]+', line):
-												if fail_suffix and re.match(r'^.+?{}$'.format(fail_suffix), line):
-													continue
-												number = sub_sub_dir
-												m = re.match(r'^(?!/)<(?P<scan_type>.+?)>[\r\n]+', line)
-												scan_type = m.groupdict()['scan_type']
-												bids_keys = layout.parse_file_entities('{}/{}'.format(bids_temppath,scan_type))
-												for key in match:
-													# Session and subject fields are not recorded in scan_type and were already checked at this point.
-													if key in ['session', 'subject']:
-														continue
-													try:
-														if bids_keys[key] not in match[key]:
-															line_considered = False
-															break
-													except KeyError:
-														line_considered = False
-														break
-												if line_considered:
-													measurement_copy['scan_type'] = str(scan_type).strip(' ')
-													measurement_copy['scan'] = str(int(number))
-													measurement_copy['run'] = run_counter
-													scan_type, measurement_copy= assign_modality(scan_type, measurement_copy)
-													measurement_copy.update(bids_keys)
-													run_counter += 1
-													selected_measurements.append(measurement_copy)
-													scan_subdir_resolved = True
-										else:
-											pass
-								except IOError:
+											scan_subdir_resolved = True
+								else:
 									pass
-						break #prevent loop from going on forever
+						except IOError:
+							pass
 			except IOError:
 				print('Could not open {}'.format(os.path.join(workflow_base,sub_dir,"subject")))
 				pass

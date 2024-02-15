@@ -405,64 +405,88 @@ def generic(bids_base, template,
 	if not n_jobs:
 		n_jobs = max(int(round(mp.cpu_count()*n_jobs_percentage)),2)
 
-	find_physio = pe.Node(name='find_physio', interface=util.Function(function=corresponding_physiofile,input_names=inspect.getfullargspec(corresponding_physiofile)[0], output_names=['physiofile','meta_physiofile']))
-
-	get_f_scan = pe.Node(name='get_f_scan', interface=util.Function(function=get_bids_scan,input_names=inspect.getfullargspec(get_bids_scan)[0], output_names=['scan_path','scan_type','task', 'nii_path', 'nii_name', 'events_name', 'subject_session', 'metadata_filename', 'dict_slice', 'ind_type']))
-	get_f_scan.inputs.ignore_exception = True
-	get_f_scan.inputs.data_selection = data_selection
-	get_f_scan.inputs.bids_base = bids_base
-	get_f_scan.iterables = ("ind_type", func_ind)
-
-	dummy_scans = pe.Node(name='dummy_scans', interface=util.Function(function=force_dummy_scans,input_names=inspect.getfullargspec(force_dummy_scans)[0], output_names=['out_file','deleted_scans']))
-	dummy_scans.inputs.desired_dummy_scans = enforce_dummy_scans
-
-	events_file = pe.Node(name='events_file', interface=util.Function(function=write_bids_events_file,input_names=inspect.getfullargspec(write_bids_events_file)[0], output_names=['out_file']))
-
 	datasink = pe.Node(nio.DataSink(), name='datasink')
 	datasink.inputs.base_directory = out_dir
 	datasink.inputs.parameterization = False
 
-	workflow_connections = [
-		(get_f_scan, dummy_scans, [('nii_path', 'in_file')]),
-		(dummy_scans, events_file, [('deleted_scans', 'forced_dummy_scans')]),
-		(get_f_scan, events_file, [
-			('nii_path', 'timecourse_file'),
-			('task', 'task'),
-			('scan_path', 'scan_dir')
-			]),
-		(get_f_scan, find_physio, [('nii_path', 'nii_path')]),
-		(events_file, datasink, [('out_file', 'func.@events')]),
-		(find_physio, datasink, [('physiofile', 'func.@physio')]),
-		(find_physio, datasink, [('meta_physiofile', 'func.@meta_physio')]),
-		(get_f_scan, events_file, [('events_name', 'out_file')]),
-		(get_f_scan, datasink, [(('subject_session',ss_to_path), 'container')]),
-		]
-
-	if realign == "space":
-		realigner = pe.Node(interface=spm.Realign(), name="realigner")
-		realigner.inputs.register_to_mean = True
-		workflow_connections.extend([
-			(dummy_scans, realigner, [('out_file', 'in_file')]),
-			])
-
-	elif realign == "spacetime":
-		realigner = pe.Node(interface=nipy.SpaceTimeRealigner(), name="realigner")
-		realigner.inputs.slice_times = "asc_alt_2"
-		realigner.inputs.tr = tr
-		realigner.inputs.slice_info = 3 #3 for coronal slices (2 for horizontal, 1 for sagittal)
-		workflow_connections.extend([
-			(dummy_scans, realigner, [('out_file', 'in_file')]),
-			])
-
-	elif realign == "time":
-		realigner = pe.Node(interface=fsl.SliceTimer(), name="slicetimer")
-		realigner.inputs.time_repetition = tr
-		workflow_connections.extend([
-			(dummy_scans, realigner, [('out_file', 'in_file')]),
-			])
+	workflow_connections = []
 
 	#ADDING SELECTABLE NODES AND EXTENDING WORKFLOW AS APPROPRIATE:
 	s_biascorrect, f_biascorrect = real_size_nodes()
+
+	if not functional_scan_types.any():
+		functional_registration_method = False
+
+	if functional_scan_types.any():
+		find_physio = pe.Node(name='find_physio', interface=util.Function(function=corresponding_physiofile,input_names=inspect.getfullargspec(corresponding_physiofile)[0], output_names=['physiofile','meta_physiofile']))
+
+		workflow_connections.extend([
+			(find_physio, datasink, [('physiofile', 'func.@physio')]),
+			(find_physio, datasink, [('meta_physiofile', 'func.@meta_physio')]),
+			])
+
+		get_f_scan = pe.Node(name='get_f_scan', interface=util.Function(function=get_bids_scan,input_names=inspect.getfullargspec(get_bids_scan)[0], output_names=['scan_path','scan_type','task', 'nii_path', 'nii_name', 'events_name', 'subject_session', 'metadata_filename', 'dict_slice', 'ind_type']))
+		get_f_scan.inputs.ignore_exception = True
+		get_f_scan.inputs.data_selection = data_selection
+		get_f_scan.inputs.bids_base = bids_base
+		get_f_scan.iterables = ("ind_type", func_ind)
+
+		dummy_scans = pe.Node(name='dummy_scans', interface=util.Function(function=force_dummy_scans,input_names=inspect.getfullargspec(force_dummy_scans)[0], output_names=['out_file','deleted_scans']))
+		dummy_scans.inputs.desired_dummy_scans = enforce_dummy_scans
+
+		events_file = pe.Node(name='events_file', interface=util.Function(function=write_bids_events_file,input_names=inspect.getfullargspec(write_bids_events_file)[0], output_names=['out_file']))
+
+		workflow_connections.extend([
+			(get_f_scan, dummy_scans, [('nii_path', 'in_file')]),
+			(dummy_scans, events_file, [('deleted_scans', 'forced_dummy_scans')]),
+			(get_f_scan, events_file, [
+				('nii_path', 'timecourse_file'),
+				('task', 'task'),
+				('scan_path', 'scan_dir')
+				]),
+			(get_f_scan, find_physio, [('nii_path', 'nii_path')]),
+			(events_file, datasink, [('out_file', 'func.@events')]),
+			(get_f_scan, events_file, [('events_name', 'out_file')]),
+			(get_f_scan, datasink, [(('subject_session',ss_to_path), 'container')]),
+			])
+
+		if realign == "space":
+			realigner = pe.Node(interface=spm.Realign(), name="realigner")
+			realigner.inputs.register_to_mean = True
+			workflow_connections.extend([
+				(dummy_scans, realigner, [('out_file', 'in_file')]),
+				])
+
+		elif realign == "spacetime":
+			realigner = pe.Node(interface=nipy.SpaceTimeRealigner(), name="realigner")
+			realigner.inputs.slice_times = "asc_alt_2"
+			realigner.inputs.tr = tr
+			realigner.inputs.slice_info = 3 #3 for coronal slices (2 for horizontal, 1 for sagittal)
+			workflow_connections.extend([
+				(dummy_scans, realigner, [('out_file', 'in_file')]),
+				])
+
+		elif realign == "time":
+			realigner = pe.Node(interface=fsl.SliceTimer(), name="slicetimer")
+			realigner.inputs.time_repetition = tr
+			workflow_connections.extend([
+				(dummy_scans, realigner, [('out_file', 'in_file')]),
+				])
+
+		if functional_blur_xy:
+			blur = pe.Node(interface=afni.preprocess.BlurToFWHM(), name="blur")
+			blur.inputs.fwhmxy = functional_blur_xy
+			workflow_connections.extend([
+				(get_f_scan, blur, [('nii_name','out_file')]),
+				(f_warp, blur, [('output_image', 'in_file')]),
+				(blur, datasink, [('out_file', 'func')]),
+				])
+		else:
+			workflow_connections.extend([
+				(get_f_scan, f_warp, [('nii_name','output_image')]),
+				(f_warp, datasink, [('output_image', 'func')]),
+				])
+
 
 	if structural_scan_types.any():
 		s_data_selection = deepcopy(data_selection)
@@ -473,6 +497,8 @@ def generic(bids_base, template,
 		get_s_scan.inputs.ignore_exception = True
 		get_s_scan.inputs.data_selection = s_data_selection
 		get_s_scan.inputs.bids_base = bids_base
+		if not functional_scan_types.any():
+			get_s_scan.iterables = ("ind_type", struct_ind)
 
 		s_register, s_warp, f_register, f_warp = generic_registration(template,
 			structural_mask=registration_mask,
@@ -493,8 +519,12 @@ def generic(bids_base, template,
 				(s_warp, datasink, [('output_image', 'anat')]),
 				])
 
+		if functional_scan_types.any():
+			workflow_connections.extend([
+				(get_f_scan, get_s_scan, [('subject_session', 'selector')]),
+				])
+
 		workflow_connections.extend([
-			(get_f_scan, get_s_scan, [('subject_session', 'selector')]),
 			(get_s_scan, s_warp, [('nii_name','output_image')]),
 			(get_s_scan, s_biascorrect, [('nii_path', 'input_image')]),
 			])
@@ -598,19 +628,6 @@ def generic(bids_base, template,
 				])
 
 
-	if functional_blur_xy:
-		blur = pe.Node(interface=afni.preprocess.BlurToFWHM(), name="blur")
-		blur.inputs.fwhmxy = functional_blur_xy
-		workflow_connections.extend([
-			(get_f_scan, blur, [('nii_name','out_file')]),
-			(f_warp, blur, [('output_image', 'in_file')]),
-			(blur, datasink, [('out_file', 'func')]),
-			])
-	else:
-		workflow_connections.extend([
-			(get_f_scan, f_warp, [('nii_name','output_image')]),
-			(f_warp, datasink, [('output_image', 'func')]),
-			])
 
 
 	workflow_config = {'execution': {'crashdump_dir': path.join(out_base,'crashdump'),}}
@@ -743,8 +760,11 @@ def common_select(bids_base, out_base, workflow_name, template, registration_mas
 		functional_scan_types = data_selection.loc[data_selection['type'] == 'func']['acq'].values
 		structural_scan_types = data_selection.loc[data_selection['type'] == 'anat']['acq'].values
 	except KeyError:
-		functional_scan_types = data_selection.loc[data_selection['datatype'] == 'func']['acquisition'].values
-		structural_scan_types = data_selection.loc[data_selection['datatype'] == 'anat']['acquisition'].values
+		try:
+			functional_scan_types = data_selection.loc[data_selection['datatype'] == 'func']['acquisition'].values
+			structural_scan_types = data_selection.loc[data_selection['datatype'] == 'anat']['acquisition'].values
+		except KeyError:
+			pass
 	# we start to define nipype workflow elements (nodes, connections, meta)
 	subjects_sessions = data_selection[["subject","session"]].drop_duplicates().values.tolist()
 

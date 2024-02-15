@@ -276,31 +276,26 @@ def bids_data_selection(base, structural_match, functional_match, subjects, sess
 		res_df = pd.DataFrame()
 		if functional_match:
 			_df = deepcopy(df)
-			try:
-				if joint_conditions:
-					for match in functional_match.keys():
-						_df = _df.loc[_df[match].isin(functional_match[match])]
-					res_df = res_df.append(_df)
-				else:
-					for match in functional_match.keys():
-						_df = filter_data(_df, match, functional_match[match])
-						res_df = res_df.append(_df)
-			except:
-				pass
+			if joint_conditions:
+				for match in functional_match.keys():
+					_df = _df.loc[_df[match].isin(functional_match[match])]
+				res_df = pd.concat([res_df, _df], ignore_index=True)
+			else:
+				for match in functional_match.keys():
+					_df = filter_data(_df, match, functional_match[match])
+					res_df = pd.concat([res_df, _df], ignore_index=True)
 		if structural_match:
 			_df = deepcopy(df)
-			try:
-				if joint_conditions:
-					for match in structural_match.keys():
-						_df = _df.loc[_df[match].isin(structural_match[match])]
-					res_df = res_df.append(_df)
-				else:
-					for match in structural_match.keys():
-						_df = filter_data(_df, match, structural_match[match])
-						res_df = res_df.append(_df)
-			except:
-				pass
+			if joint_conditions:
+				for match in structural_match.keys():
+					_df = _df.loc[_df[match].isin(structural_match[match])]
+				res_df = pd.concat([res_df, _df], ignore_index=True)
+			else:
+				for match in structural_match.keys():
+					_df = filter_data(_df, match, structural_match[match])
+					res_df = pd.concat([res_df, _df], ignore_index=True)
 		df = res_df
+
 
 	if subjects:
 		df = filter_data(df, 'subject', subjects)
@@ -332,7 +327,7 @@ def filter_data(df, col_name, entries):
 	for entry in entries:
 		if(entry in in_df):
 			_df = df[df[col_name] == entry]
-			res_df = res_df.append(_df)
+			res_df = pd.concat([res_df, _df])
 	return res_df
 
 def parse_paravision_date(pv_date):

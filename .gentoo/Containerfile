@@ -20,7 +20,7 @@ ARG FEATURES="-ipc-sandbox -network-sandbox -pid-sandbox"
 #RUN mkdir /outputs
 
 COPY . /opt/SAMRI
-#RUN ls -lah /opt/SAMRI
+RUN ls -lah /opt/SAMRI
 COPY .gentoo/portage/ /etc/portage/
 COPY .gentoo/overlay/ /var/db/repos/local/
 #RUN ls -lah /etc/portage

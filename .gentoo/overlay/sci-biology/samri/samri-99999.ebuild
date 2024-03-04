@@ -59,13 +59,21 @@ distutils_enable_sphinx doc/source dev-python/sphinxcontrib-napoleon
 
 
 src_unpack() {
-	pwd
+	#pwd
+	echo "* This is S:"
 	echo "${S}"
+	echo "* This is S's parent directory:"
+	ls -lah "${S}"
 	mkdir "${S}"
-	echo "${WORKDIR}"
+	#echo "${WORKDIR}"
+	#echo "${DOTGENTOO_PACKAGE_ROOT}"
+	echo "* This is the dotgentoo root:"
 	echo "${DOTGENTOO_PACKAGE_ROOT}"
-	ls "${WORKDIR}"
-	cp -r -L "${DOTGENTOO_PACKAGE_ROOT}" "${S}"
+	echo "* This is what's in the dotgentoo root:"
+	ls -lah "${DOTGENTOO_PACKAGE_ROOT}"
+	cp -r -L "${DOTGENTOO_PACKAGE_ROOT}/." "${S}"
+	echo "* This is what's in S after we try to copy:"
+	ls -lah ${S}
 }
 
 src_prepare() {
